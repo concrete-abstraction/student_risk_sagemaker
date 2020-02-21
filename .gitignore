@@ -1,0 +1,8 @@
+Reference Files/*.pdf
+Reference Files/*.sas
+/*.csv
+*.R
+*.json
+*.code-workspace
+*.ipynb
+*.qgz
