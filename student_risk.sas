@@ -6,7 +6,7 @@
 
 %let dsn = cendev;
 %let lag_year = 1;
-%let start_cohort = 2013;
+%let start_cohort = 2015;
 %let end_cohort = 2019;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -67,11 +67,11 @@ run;
 				when a.adm_parent2_highest_educ_lvl = 'G' then 'bach'
 				when a.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
 					else 'missing'
-			end as parent2_highest_educ_lvl
-/* 			b.distance */
+			end as parent2_highest_educ_lvl,
+			b.distance
 		from &dsn..new_student_enrolled_vw as a
-/* 		inner join (select distinct targetid, distance from distance) as b */
-/* 			on substr(a.last_sch_postal,1,5) = b.targetid */
+		inner join (select distinct targetid, distance from distance) as b
+			on substr(a.last_sch_postal,1,5) = b.targetid
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'
@@ -115,13 +115,30 @@ run;
 	
 	proc sql;
 		create table plan_&cohort_year. as 
-		select distinct
+		select distinct 
 			emplid,
 			acad_plan,
 			acad_plan_descr,
 			plan_owner_org,
 			plan_owner_org_descr,
-			plan_owner_group_descrshort
+			plan_owner_group_descrshort,
+			case when plan_owner_group_descrshort = 'Business' then 1 else 0 end as business,
+			case when plan_owner_group_descrshort = 'CAHNREXT' then 1 else 0 end as cahnrext,
+			case when plan_owner_group_descrshort = 'CAS' then 1 else 0 end as cas,
+			case when plan_owner_group_descrshort = 'Comm' then 1 else 0 end as comm,
+			case when plan_owner_group_descrshort = 'Education' then 1 else 0 end as education,
+			case when plan_owner_group_descrshort = 'Med Sci' then 1 else 0 end as med_sci,
+			case when plan_owner_group_descrshort = 'Medicine' then 1 else 0 end as medicine,
+			case when plan_owner_group_descrshort = 'Nursing' then 1 else 0 end as nursing,
+			case when plan_owner_group_descrshort = 'Pharmacy' then 1 else 0 end as pharmacy,
+			case when plan_owner_group_descrshort = 'Provost' then 1 else 0 end as provost,
+			case when plan_owner_group_descrshort = 'VCEA' then 1 else 0 end as vcea,
+			case when plan_owner_group_descrshort = 'Vet Med' then 1 else 0 end as vet_med,
+			case when plan_owner_group_descrshort not in ('Business','CAHNREXT','CAS','Comm',
+														'Education','Med Sci','Medicine','Nursing',
+														'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
+			end as groupless,
+			lsamp_stem_flag
 		from &dsn..student_acad_prog_plan_vw
 		where snapshot = 'census'
 			and aid_year = "&cohort_year."
@@ -138,6 +155,7 @@ run;
 			a.emplid,
 			b.snapshot as need_snap,
 			a.aid_year,
+			a.fed_efc,
 			a.fed_need
 		from &dsn..fa_award_period as a
 		inner join (select distinct aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
@@ -239,7 +257,21 @@ run;
 			d.plan_owner_org,
 			d.plan_owner_org_descr,
 			d.plan_owner_group_descrshort,
+			d.business,
+			d.cahnrext,
+			d.cas,
+			d.comm,
+			d.education,
+			d.med_sci,
+			d.medicine,
+			d.nursing,
+			d.pharmacy,
+			d.provost,
+			d.vcea,
+			d.vet_med,
+			d.lsamp_stem_flag,
 			e.need_snap,
+			e.fed_efc,
 			e.fed_need,
 			f.aid_snap,
 			f.total_disb,
@@ -298,6 +330,7 @@ data full_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
@@ -309,9 +342,9 @@ data full_set;
 	unmet_need_ofr = fed_need - total_offer;
 run;
 
-proc means data=full_set median q1 q3;
-	var age;
-run;
+/* proc means data=full_set median q1 q3; */
+/* 	var age; */
+/* run; */
 
 data training_set;
 	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
@@ -323,6 +356,7 @@ data training_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
@@ -344,6 +378,7 @@ data testing_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
@@ -353,6 +388,11 @@ data testing_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+run;
+
+filename full 'Z:/Nathan/Models/student_risk/full_set.csv' encoding="utf-8";
+
+proc export data=full_set outfile=full dbms=csv replace;
 run;
 
 filename training 'Z:/Nathan/Models/student_risk/training_set.csv' encoding="utf-8";

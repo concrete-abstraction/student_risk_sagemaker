@@ -14,15 +14,18 @@ training_set = pd.read_csv('Z:/Nathan/Models/student_risk/training_set.csv', enc
 testing_set = pd.read_csv('Z:/Nathan/Models/student_risk/testing_set.csv', encoding='utf-8')
 
 logit_df = training_set[['enrl_ind', 
+                        # 'acad_year',
                         'age_group', 
+                        # 'age',
                         'male',
-                        'marital_status',
+                        # 'marital_status',
                         # 'Distance',
                         # 'underrep_minority', 
                         'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
+                        'LSAMP_STEM_Flag',
                         'high_school_gpa', 
                         'cum_adj_transfer_hours',
                         'resident',
@@ -41,25 +44,40 @@ logit_df = training_set[['enrl_ind',
                         'term_credit_hours',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'plan_owner_group_descrshort',
+                        # 'business',
+                        'cahnrext',
+                        'cas',
+                        'comm',
+                        'education',
+                        'med_sci',
+                        'medicine',
+                        'nursing',
+                        'pharmacy',
+                        'provost',
+                        'vcea',
+                        'vet_med',
                         'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
                         # 'qvalue',
-                        # 'fed_efc',
-                        'unmet_need_disb'
+                        'fed_efc',
+                        'fed_need',
+                        'unmet_need_ofr'
                         ]].dropna()
 
 training_set = training_set[['enrl_ind', 
+                            # 'acad_year',
                             'age_group', 
+                            # 'age', 
                             'male',
-                            'marital_status',
+                            # 'marital_status',
                             # 'Distance',
                             # 'underrep_minority', 
                             'ipeds_ethnic_group_descrshort',
                             'pell_eligibility_ind', 
                             # 'pell_recipient_ind',
-                            'first_gen_flag', 
+                            'first_gen_flag',
+                            'LSAMP_STEM_Flag', 
                             'high_school_gpa', 
                             'cum_adj_transfer_hours',
                             'resident',
@@ -78,27 +96,42 @@ training_set = training_set[['enrl_ind',
                             'term_credit_hours',
                             # 'ACAD_PLAN',
                             # 'plan_owner_org',
-                            'plan_owner_group_descrshort',
+                            # 'business',
+                            'cahnrext',
+                            'cas',
+                            'comm',
+                            'education',
+                            'med_sci',
+                            'medicine',
+                            'nursing',
+                            'pharmacy',
+                            'provost',
+                            'vcea',
+                            'vet_med',
                             'last_sch_proprietorship',
                             'sat_erws',
                             'sat_mss',
                             # 'qvalue',
-                            # 'fed_efc',
-                            'unmet_need_disb'
+                            'fed_efc',
+                            'fed_need',
+                            'unmet_need_ofr'
                             ]].dropna()
 
-testing_set = testing_set[['enrl_ind',
+testing_set = testing_set[['enrl_ind', 
+                            # 'acad_year',
                             'age_group', 
+                            # 'age', 
                             'male',
-                            'marital_status',
+                            # 'marital_status',
                             # 'Distance',
                             # 'underrep_minority', 
                             'ipeds_ethnic_group_descrshort',
                             'pell_eligibility_ind', 
                             # 'pell_recipient_ind',
-                            'first_gen_flag', 
+                            'first_gen_flag',
+                            'LSAMP_STEM_Flag', 
                             'high_school_gpa', 
-                            'cum_adj_transfer_hours', 
+                            'cum_adj_transfer_hours',
                             'resident',
                             'father_wsu_flag',
                             'mother_wsu_flag',
@@ -115,24 +148,39 @@ testing_set = testing_set[['enrl_ind',
                             'term_credit_hours',
                             # 'ACAD_PLAN',
                             # 'plan_owner_org',
-                            'plan_owner_group_descrshort',
+                            # 'business',
+                            'cahnrext',
+                            'cas',
+                            'comm',
+                            'education',
+                            'med_sci',
+                            'medicine',
+                            'nursing',
+                            'pharmacy',
+                            'provost',
+                            'vcea',
+                            'vet_med',
                             'last_sch_proprietorship',
                             'sat_erws',
                             'sat_mss',
                             # 'qvalue',
-                            # 'fed_efc',
-                            'unmet_need_disb'
+                            'fed_efc',
+                            'fed_need',
+                            'unmet_need_ofr'
                             ]].dropna()
 
-x_train = training_set[['age_group', 
+x_train = training_set[[# 'acad_year',
+                        'age_group', 
+                        # 'age', 
                         'male',
-                        'marital_status',
+                        # 'marital_status',
                         # 'Distance',
                         # 'underrep_minority', 
                         'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
+                        'LSAMP_STEM_Flag',
                         'high_school_gpa', 
                         'cum_adj_transfer_hours',
                         'resident',
@@ -151,24 +199,39 @@ x_train = training_set[['age_group',
                         'term_credit_hours',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'plan_owner_group_descrshort',
+                        # 'business',
+                        'cahnrext',
+                        'cas',
+                        'comm',
+                        'education',
+                        'med_sci',
+                        'medicine',
+                        'nursing',
+                        'pharmacy',
+                        'provost',
+                        'vcea',
+                        'vet_med',
                         'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
                         # 'qvalue',
-                        # 'fed_efc',
-                        'unmet_need_disb'
+                        'fed_efc',
+                        'fed_need',
+                        'unmet_need_ofr'
                         ]]
 
-x_test = testing_set[['age_group', 
+x_test = testing_set[[# 'acad_year', 
+                        'age_group',
+                        # 'age', 
                         'male',
-                        'marital_status',
+                        # 'marital_status',
                         # 'Distance',
                         # 'underrep_minority', 
                         'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
+                        'LSAMP_STEM_Flag',
                         'high_school_gpa', 
                         'cum_adj_transfer_hours',
                         'resident',
@@ -187,13 +250,25 @@ x_test = testing_set[['age_group',
                         'term_credit_hours',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'plan_owner_group_descrshort',
+                        # 'business',
+                        'cahnrext',
+                        'cas',
+                        'comm',
+                        'education',
+                        'med_sci',
+                        'medicine',
+                        'nursing',
+                        'pharmacy',
+                        'provost',
+                        'vcea',
+                        'vet_med',
                         'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
                         # 'qvalue',
-                        # 'fed_efc',
-                        'unmet_need_disb'
+                        'fed_efc',
+                        'fed_need',
+                        'unmet_need_ofr'
                         ]]
 
 y_train = training_set['enrl_ind']
@@ -203,21 +278,25 @@ y_test = testing_set['enrl_ind']
 # plt.show()
 
 preprocess = make_column_transformer(
-    (MinMaxScaler(), ['sat_erws',
+    (MinMaxScaler(), [# 'age',
+                        'sat_erws',
                         'sat_mss',
                         # 'Distance', 
                         # 'qvalue', 
                         'term_credit_hours',
                         'high_school_gpa', 
-                        'cum_adj_transfer_hours', 
-                        'unmet_need_disb'
+                        'cum_adj_transfer_hours',
+                        'fed_efc',
+                        'fed_need', 
+                        'unmet_need_ofr'
                         ]),
-    (OneHotEncoder(drop='first'), ['age_group',
-                                    'marital_status',
-                                    'first_gen_flag', 
+    (OneHotEncoder(drop='first'), [# 'acad_year', 
+                                    'age_group',
+                                    # 'marital_status',
+                                    'first_gen_flag',
+                                    'LSAMP_STEM_Flag', 
                                     # 'ACAD_PLAN',
                                     # 'plan_owner_org',
-                                    'plan_owner_group_descrshort',
                                     'ipeds_ethnic_group_descrshort',
                                     'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
@@ -230,11 +309,12 @@ preprocess = make_column_transformer(
 x_train = preprocess.fit_transform(x_train)
 x_test = preprocess.fit_transform(x_test)
 
-y, x = dmatrices('enrl_ind ~ age_group + male + marital_status + ipeds_ethnic_group_descrshort \
-                + pell_eligibility_ind + first_gen_flag + high_school_gpa + cum_adj_transfer_hours \
+y, x = dmatrices('enrl_ind ~ age_group + male + ipeds_ethnic_group_descrshort \
+                + pell_eligibility_ind + first_gen_flag + LSAMP_STEM_Flag + high_school_gpa + cum_adj_transfer_hours \
                 + resident + father_wsu_flag + mother_wsu_flag + parent1_highest_educ_lvl \
                 + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours \
-                + plan_owner_group_descrshort + last_sch_proprietorship + sat_erws + sat_mss + unmet_need_disb', data=logit_df, return_type='matrix')
+                + cahnrext + cas + comm + education + med_sci + medicine + nursing + pharmacy + provost + vcea + vet_med \
+                + last_sch_proprietorship + sat_erws + sat_mss + fed_efc + fed_need + unmet_need_ofr', data=logit_df, return_type='matrix')
 
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
@@ -242,16 +322,19 @@ print(logit_res.summary())
 
 # lr = LogitBoost(n_estimators=1000, bootstrap=True, random_state=0)
 # lr.fit(x_train, y_train)
-# boost_score = lr.score(x_train, y_train)
-# print(boost_score)
 
-lr = LogisticRegression(penalty='l2', solver='saga', max_iter=500)
+lr = LogisticRegression(penalty='elasticnet', solver='saga', max_iter=500, l1_ratio=.25)
 lr.fit(x_train, y_train)
-train_score = lr.score(x_train, y_train)
-print(train_score)
+
+print(f"Overall accuracy (training): {lr.score(x_train, y_train):.4f}")
 
 lr_probs = lr.predict_proba(x_train)
 lr_probs = lr_probs[:, 1]
+lr_auc = roc_auc_score(y_train, lr_probs)
+print(f"ROC AUC (training): {lr_auc:.4f}")
+
+print(f"Overall accuracy (testing): {lr.score(x_test, y_test):.4f}")
+print(f"Number of features used: {np.sum(lr.coef_ != 0)}")
 
 fpr, tpr, thresholds = roc_curve(y_train, lr_probs, drop_intermediate=False)
 
@@ -259,11 +342,5 @@ plt.plot(fpr, tpr, color='red', lw=2, label='ROC CURVE')
 plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('ROC CURVE')
+plt.title('ROC CURVE (TRAINING)')
 plt.show()
-
-lr_auc = roc_auc_score(y_train, lr_probs)
-print('Logistic: ROC AUC=%.3f' % (lr_auc))
-
-y_pred = lr.predict(x_test)
-print(y_pred)
