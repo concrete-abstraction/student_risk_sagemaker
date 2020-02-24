@@ -262,7 +262,7 @@ testing_set = testing_set[[
 pred_outcome = testing_set[[ 
                             'emplid',
                             'enrl_ind'
-                            ]]
+                            ]].copy(deep=True)
 
 x_train = training_set[[
                         # 'acad_year',
