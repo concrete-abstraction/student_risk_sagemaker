@@ -7,25 +7,28 @@ from statsmodels.discrete.discrete_model import Logit
 from sklearn.compose import make_column_transformer
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PolynomialFeatures, StandardScaler
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
-from logitboost import LogitBoost
 
 training_set = pd.read_csv('Z:/Nathan/Models/student_risk/training_set.csv', encoding='utf-8')
 testing_set = pd.read_csv('Z:/Nathan/Models/student_risk/testing_set.csv', encoding='utf-8')
 
-logit_df = training_set[['enrl_ind', 
+logit_df = training_set[[
+                        'enrl_ind', 
                         # 'acad_year',
-                        'age_group', 
-                        # 'age',
+                        # 'age_group', 
+                        'age',
                         'male',
                         # 'marital_status',
-                        # 'Distance',
+                        'Distance',
                         # 'underrep_minority', 
                         'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
-                        'LSAMP_STEM_Flag',
+                        # 'LSAMP_STEM_Flag',
+                        'anywhere_STEM_Flag',
                         'high_school_gpa', 
                         'cum_adj_transfer_hours',
                         'resident',
@@ -42,6 +45,7 @@ logit_df = training_set[['enrl_ind',
                         'IB',
                         'AICE', 
                         'term_credit_hours',
+                        'athlete',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
                         # 'business',
@@ -59,25 +63,54 @@ logit_df = training_set[['enrl_ind',
                         'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
+                        'attendee_alive',
+                        'attendee_campus_visit',
+                        'attendee_cashe',
+                        'attendee_destination',
+                        'attendee_experience',
+                        'attendee_fcd_pullman',
+                        'attendee_fced',
+                        'attendee_fcoc',
+                        'attendee_fcod',
+                        'attendee_group_visit',
+                        'attendee_honors_visit',
+                        'attendee_imagine_tomorrow',
+                        'attendee_imagine_u',
+                        'attendee_la_bienvenida',
+                        'attendee_lvp_camp',
+                        'attendee_oos_destination',
+                        'attendee_oos_experience',
+                        'attendee_preview',
+                        'attendee_preview_jrs',
+                        'attendee_shaping',
+                        'attendee_top_scholars',
+                        'attendee_transfer_day',
+                        'attendee_vibes',
+                        'attendee_welcome_center',
+                        'attendee_any_visitation_ind',
+                        # 'attendee_total_visits',
                         # 'qvalue',
                         'fed_efc',
                         'fed_need',
                         'unmet_need_ofr'
                         ]].dropna()
 
-training_set = training_set[['enrl_ind', 
+training_set = training_set[[
+                            'emplid',
+                            'enrl_ind', 
                             # 'acad_year',
-                            'age_group', 
-                            # 'age', 
+                            # 'age_group', 
+                            'age', 
                             'male',
                             # 'marital_status',
-                            # 'Distance',
+                            'Distance',
                             # 'underrep_minority', 
                             'ipeds_ethnic_group_descrshort',
                             'pell_eligibility_ind', 
                             # 'pell_recipient_ind',
                             'first_gen_flag',
-                            'LSAMP_STEM_Flag', 
+                            # 'LSAMP_STEM_Flag',
+                            'anywhere_STEM_Flag', 
                             'high_school_gpa', 
                             'cum_adj_transfer_hours',
                             'resident',
@@ -94,6 +127,7 @@ training_set = training_set[['enrl_ind',
                             'IB',
                             'AICE', 
                             'term_credit_hours',
+                            'athlete',
                             # 'ACAD_PLAN',
                             # 'plan_owner_org',
                             # 'business',
@@ -111,25 +145,54 @@ training_set = training_set[['enrl_ind',
                             'last_sch_proprietorship',
                             'sat_erws',
                             'sat_mss',
+                            'attendee_alive',
+                            'attendee_campus_visit',
+                            'attendee_cashe',
+                            'attendee_destination',
+                            'attendee_experience',
+                            'attendee_fcd_pullman',
+                            'attendee_fced',
+                            'attendee_fcoc',
+                            'attendee_fcod',
+                            'attendee_group_visit',
+                            'attendee_honors_visit',
+                            'attendee_imagine_tomorrow',
+                            'attendee_imagine_u',
+                            'attendee_la_bienvenida',
+                            'attendee_lvp_camp',
+                            'attendee_oos_destination',
+                            'attendee_oos_experience',
+                            'attendee_preview',
+                            'attendee_preview_jrs',
+                            'attendee_shaping',
+                            'attendee_top_scholars',
+                            'attendee_transfer_day',
+                            'attendee_vibes',
+                            'attendee_welcome_center',
+                            'attendee_any_visitation_ind',
+                            # 'attendee_total_visits',
                             # 'qvalue',
                             'fed_efc',
                             'fed_need',
                             'unmet_need_ofr'
                             ]].dropna()
 
-testing_set = testing_set[['enrl_ind', 
+testing_set = testing_set[[
+                            'emplid',
+                            'enrl_ind', 
                             # 'acad_year',
-                            'age_group', 
-                            # 'age', 
+                            # 'age_group', 
+                            'age', 
                             'male',
                             # 'marital_status',
-                            # 'Distance',
+                            'Distance',
                             # 'underrep_minority', 
                             'ipeds_ethnic_group_descrshort',
                             'pell_eligibility_ind', 
                             # 'pell_recipient_ind',
                             'first_gen_flag',
-                            'LSAMP_STEM_Flag', 
+                            # 'LSAMP_STEM_Flag', 
+                            'anywhere_STEM_Flag',
                             'high_school_gpa', 
                             'cum_adj_transfer_hours',
                             'resident',
@@ -146,6 +209,7 @@ testing_set = testing_set[['enrl_ind',
                             'IB',
                             'AICE', 
                             'term_credit_hours',
+                            'athlete',
                             # 'ACAD_PLAN',
                             # 'plan_owner_org',
                             # 'business',
@@ -163,24 +227,57 @@ testing_set = testing_set[['enrl_ind',
                             'last_sch_proprietorship',
                             'sat_erws',
                             'sat_mss',
+                            'attendee_alive',
+                            'attendee_campus_visit',
+                            'attendee_cashe',
+                            'attendee_destination',
+                            'attendee_experience',
+                            'attendee_fcd_pullman',
+                            'attendee_fced',
+                            'attendee_fcoc',
+                            'attendee_fcod',
+                            'attendee_group_visit',
+                            'attendee_honors_visit',
+                            'attendee_imagine_tomorrow',
+                            'attendee_imagine_u',
+                            'attendee_la_bienvenida',
+                            'attendee_lvp_camp',
+                            'attendee_oos_destination',
+                            'attendee_oos_experience',
+                            'attendee_preview',
+                            'attendee_preview_jrs',
+                            'attendee_shaping',
+                            'attendee_top_scholars',
+                            'attendee_transfer_day',
+                            'attendee_vibes',
+                            'attendee_welcome_center',
+                            'attendee_any_visitation_ind',
+                            # 'attendee_total_visits',
                             # 'qvalue',
                             'fed_efc',
                             'fed_need',
                             'unmet_need_ofr'
                             ]].dropna()
 
-x_train = training_set[[# 'acad_year',
-                        'age_group', 
-                        # 'age', 
+pred_outcome = testing_set[[ 
+                            'emplid',
+                            'enrl_ind'
+                            ]]
+
+x_train = training_set[[
+                        # 'acad_year',
+                        # 'age_group', 
+                        'age', 
                         'male',
                         # 'marital_status',
-                        # 'Distance',
+                        'Distance',
                         # 'underrep_minority', 
                         'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
-                        'LSAMP_STEM_Flag',
+                        # 'LSAMP_STEM_Flag',
+                        'anywhere_STEM_Flag',
                         'high_school_gpa', 
                         'cum_adj_transfer_hours',
                         'resident',
@@ -197,6 +294,7 @@ x_train = training_set[[# 'acad_year',
                         'IB',
                         'AICE', 
                         'term_credit_hours',
+                        'athlete',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
                         # 'business',
@@ -214,24 +312,52 @@ x_train = training_set[[# 'acad_year',
                         'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
+                        'attendee_alive',
+                        'attendee_campus_visit',
+                        'attendee_cashe',
+                        'attendee_destination',
+                        'attendee_experience',
+                        'attendee_fcd_pullman',
+                        'attendee_fced',
+                        'attendee_fcoc',
+                        'attendee_fcod',
+                        'attendee_group_visit',
+                        'attendee_honors_visit',
+                        'attendee_imagine_tomorrow',
+                        'attendee_imagine_u',
+                        'attendee_la_bienvenida',
+                        'attendee_lvp_camp',
+                        'attendee_oos_destination',
+                        'attendee_oos_experience',
+                        'attendee_preview',
+                        'attendee_preview_jrs',
+                        'attendee_shaping',
+                        'attendee_top_scholars',
+                        'attendee_transfer_day',
+                        'attendee_vibes',
+                        'attendee_welcome_center',
+                        'attendee_any_visitation_ind',
+                        # 'attendee_total_visits',
                         # 'qvalue',
                         'fed_efc',
                         'fed_need',
                         'unmet_need_ofr'
                         ]]
 
-x_test = testing_set[[# 'acad_year', 
-                        'age_group',
-                        # 'age', 
+x_test = testing_set[[
+                        # 'acad_year', 
+                        # 'age_group',
+                        'age', 
                         'male',
                         # 'marital_status',
-                        # 'Distance',
+                        'Distance',
                         # 'underrep_minority', 
                         'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
-                        'LSAMP_STEM_Flag',
+                        # 'LSAMP_STEM_Flag',
+                        'anywhere_STEM_Flag',
                         'high_school_gpa', 
                         'cum_adj_transfer_hours',
                         'resident',
@@ -248,6 +374,7 @@ x_test = testing_set[[# 'acad_year',
                         'IB',
                         'AICE', 
                         'term_credit_hours',
+                        'athlete',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
                         # 'business',
@@ -265,6 +392,32 @@ x_test = testing_set[[# 'acad_year',
                         'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
+                        'attendee_alive',
+                        'attendee_campus_visit',
+                        'attendee_cashe',
+                        'attendee_destination',
+                        'attendee_experience',
+                        'attendee_fcd_pullman',
+                        'attendee_fced',
+                        'attendee_fcoc',
+                        'attendee_fcod',
+                        'attendee_group_visit',
+                        'attendee_honors_visit',
+                        'attendee_imagine_tomorrow',
+                        'attendee_imagine_u',
+                        'attendee_la_bienvenida',
+                        'attendee_lvp_camp',
+                        'attendee_oos_destination',
+                        'attendee_oos_experience',
+                        'attendee_preview',
+                        'attendee_preview_jrs',
+                        'attendee_shaping',
+                        'attendee_top_scholars',
+                        'attendee_transfer_day',
+                        'attendee_vibes',
+                        'attendee_welcome_center',
+                        'attendee_any_visitation_ind',
+                        # 'attendee_total_visits',
                         # 'qvalue',
                         'fed_efc',
                         'fed_need',
@@ -278,10 +431,12 @@ y_test = testing_set['enrl_ind']
 # plt.show()
 
 preprocess = make_column_transformer(
-    (MinMaxScaler(), [# 'age',
+    (MinMaxScaler(), [
+                        'age',
                         'sat_erws',
                         'sat_mss',
-                        # 'Distance', 
+                        # 'attendee_total_visits',
+                        'Distance', 
                         # 'qvalue', 
                         'term_credit_hours',
                         'high_school_gpa', 
@@ -290,11 +445,13 @@ preprocess = make_column_transformer(
                         'fed_need', 
                         'unmet_need_ofr'
                         ]),
-    (OneHotEncoder(drop='first'), [# 'acad_year', 
-                                    'age_group',
+    (OneHotEncoder(drop='first'), [
+                                    # 'acad_year', 
+                                    # 'age_group',
                                     # 'marital_status',
                                     'first_gen_flag',
-                                    'LSAMP_STEM_Flag', 
+                                    # 'LSAMP_STEM_Flag',
+                                    'anywhere_STEM_Flag', 
                                     # 'ACAD_PLAN',
                                     # 'plan_owner_org',
                                     'ipeds_ethnic_group_descrshort',
@@ -309,38 +466,80 @@ preprocess = make_column_transformer(
 x_train = preprocess.fit_transform(x_train)
 x_test = preprocess.fit_transform(x_test)
 
-y, x = dmatrices('enrl_ind ~ age_group + male + ipeds_ethnic_group_descrshort \
-                + pell_eligibility_ind + first_gen_flag + LSAMP_STEM_Flag + high_school_gpa + cum_adj_transfer_hours \
+y, x = dmatrices('enrl_ind ~ age + male + ipeds_ethnic_group_descrshort + Distance \
+                + pell_eligibility_ind + first_gen_flag + anywhere_STEM_Flag + high_school_gpa + cum_adj_transfer_hours \
                 + resident + father_wsu_flag + mother_wsu_flag + parent1_highest_educ_lvl \
-                + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours \
+                + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete \
                 + cahnrext + cas + comm + education + med_sci + medicine + nursing + pharmacy + provost + vcea + vet_med \
-                + last_sch_proprietorship + sat_erws + sat_mss + fed_efc + fed_need + unmet_need_ofr', data=logit_df, return_type='matrix')
+                + last_sch_proprietorship + sat_erws + sat_mss + attendee_any_visitation_ind + fed_efc + fed_need + unmet_need_ofr', data=logit_df, return_type='matrix')
 
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
 print(logit_res.summary())
 
-# lr = LogitBoost(n_estimators=1000, bootstrap=True, random_state=0)
-# lr.fit(x_train, y_train)
-
-lr = LogisticRegression(penalty='elasticnet', solver='saga', max_iter=500, l1_ratio=.25)
+lr = LogisticRegression(penalty='elasticnet', solver='saga', max_iter=500, l1_ratio=.5)
 lr.fit(x_train, y_train)
-
-print(f"Overall accuracy (training): {lr.score(x_train, y_train):.4f}")
 
 lr_probs = lr.predict_proba(x_train)
 lr_probs = lr_probs[:, 1]
 lr_auc = roc_auc_score(y_train, lr_probs)
-print(f"ROC AUC (training): {lr_auc:.4f}")
 
-print(f"Overall accuracy (testing): {lr.score(x_test, y_test):.4f}")
-print(f"Number of features used: {np.sum(lr.coef_ != 0)}")
+print(f"Overall accuracy for logistic model (training): {lr.score(x_train, y_train):.4f}")
+print(f"ROC AUC for logistic model (training): {lr_auc:.4f}")
+print(f"Overall accuracy for logistic model (testing): {lr.score(x_test, y_test):.4f}")
+print(f"Number of features used in logistic model: {np.sum(lr.coef_ != 0)}")
 
-fpr, tpr, thresholds = roc_curve(y_train, lr_probs, drop_intermediate=False)
+lr_fpr, lr_tpr, thresholds = roc_curve(y_train, lr_probs, drop_intermediate=False)
 
-plt.plot(fpr, tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot(lr_fpr, lr_tpr, color='red', lw=2, label='ROC CURVE')
 plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('ROC CURVE (TRAINING)')
+plt.title('LOGISTIC ROC CURVE (TRAINING)')
 plt.show()
+
+svc = SVC(kernel='linear', class_weight='balanced', probability=True)
+svc.fit(x_train, y_train)
+
+svc_probs = svc.predict_proba(x_train)
+svc_probs = svc_probs[:, 1]
+svc_auc = roc_auc_score(y_train, svc_probs)
+
+print(f"Overall accuracy for linear SVC model (training): {svc.score(x_train,y_train):.4f}")
+print(f"ROC AUC for linear SVC model (training): {svc_auc:.4f}")
+print(f"Overall accuracy for linear SVC model (testing): {svc.score(x_test, y_test):.4f}")
+print(f"Number of features used in linear SVC model: {np.sum(svc.coef_ != 0)}")
+
+svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
+
+plt.plot(svc_fpr, svc_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('LINEAR SVC ROC CURVE (TRAINING)')
+plt.show()
+
+rfc = RandomForestClassifier(class_weight='balanced')
+rfc.fit(x_train, y_train)
+
+rfc_probs = rfc.predict_proba(x_train)
+rfc_probs = rfc_probs[:, 1]
+rfc_auc = roc_auc_score(y_train, rfc_probs)
+
+print(f"Overall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}")
+print(f"ROC AUC for random forest model (training): {rfc_auc:.4f}")
+print(f"Overall accuracy for random forest model (testing): {rfc.score(x_test, y_test):.4f}")
+
+rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
+
+plt.plot(rfc_fpr, rfc_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('RANDOM FOREST ROC CURVE (TRAINING)')
+plt.show()
+
+pred_outcome['lr pred'] = lr.predict(x_test)
+pred_outcome['svc_pred'] = svc.predict(x_test)
+pred_outcome['rfc_pred'] = rfc.predict(x_test)
+pred_outcome.to_csv('Z:/Nathan/Models/student_risk/pred_outcome.csv', encoding='utf-8', index=False)

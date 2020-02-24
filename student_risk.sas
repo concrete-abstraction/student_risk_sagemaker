@@ -5,11 +5,13 @@
 * ---------------------------------------------------------------------- ;
 
 %let dsn = cendev;
+%let adm = adm;
 %let lag_year = 1;
 %let start_cohort = 2015;
 %let end_cohort = 2019;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
+libname &adm. odbc dsn=&adm. schema=dbo;
 
 proc import out=distance
 	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\distance_matrix.csv"
@@ -138,7 +140,10 @@ run;
 														'Education','Med Sci','Medicine','Nursing',
 														'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
 			end as groupless,
-			lsamp_stem_flag
+			case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595') then 1 else 0
+			end as split_plan,
+			lsamp_stem_flag,
+			anywhere_stem_flag
 		from &dsn..student_acad_prog_plan_vw
 		where snapshot = 'census'
 			and aid_year = "&cohort_year."
@@ -147,6 +152,7 @@ run;
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 			and primary_plan_flag = 'Y'
+			and calculated split_plan = 0
 	;quit;
 	
 	proc sql;
@@ -158,8 +164,9 @@ run;
 			a.fed_efc,
 			a.fed_need
 		from &dsn..fa_award_period as a
-		inner join (select distinct aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
-			on a.aid_year = b.aid_year
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
+			on a.emplid = b.emplid
+				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."	
 			and a.award_period in ('A','B')
@@ -176,8 +183,9 @@ run;
 			sum(a.offer_amt) as total_offer,
 			sum(a.accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw) as b
-			on a.aid_year = b.aid_year
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw) as b
+			on a.emplid = b.emplid
+				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."
 			and a.award_period in ('A','B')
@@ -242,6 +250,75 @@ run;
 		by emplid;
 		id ext_subject_area;
 	run;
+	
+	proc sql;
+		create table visitation_&cohort_year. as
+		select distinct a.emplid,
+			b.snap_date,
+			a.attendee_afr_am_scholars_visit,
+			a.attendee_alive,
+			a.attendee_campus_visit,
+			a.attendee_cashe,
+			a.attendee_destination,
+			a.attendee_experience,
+			a.attendee_fcd_pullman,
+			a.attendee_fced,
+			a.attendee_fcoc,
+			a.attendee_fcod,
+			a.attendee_group_visit,
+			a.attendee_honors_visit,
+			a.attendee_imagine_tomorrow,
+			a.attendee_imagine_u,
+			a.attendee_la_bienvenida,
+			a.attendee_lvp_camp,
+			a.attendee_oos_destination,
+			a.attendee_oos_experience,
+			a.attendee_preview,
+			a.attendee_preview_jrs,
+			a.attendee_shaping,
+			a.attendee_top_scholars,
+			a.attendee_transfer_day,
+			a.attendee_vibes,
+			a.attendee_welcome_center,
+			a.attendee_any_visitation_ind,
+			a.attendee_total_visits
+		from &adm..UGRD_visitation_attendee as a
+		inner join (select distinct emplid, max(snap_date) as snap_date 
+					from &adm..UGRD_visitation_attendee 
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+					group by emplid) as b
+			on a.emplid = b.emplid
+				and a.snap_date = b.snap_date
+		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+	;quit;
+	
+	proc sql;
+		create table athlete_&cohort_year. as
+		select distinct 
+			emplid,
+			case when (mbaseball = 'Y' 
+				or mbasketball = 'Y'
+				or mfootball = 'Y'
+				or mgolf = 'Y'
+				or mitrack = 'Y'
+				or motrack = 'Y'
+				or mxcountry = 'Y'
+				or wbasketball = 'Y'
+				or wgolf = 'Y'
+				or witrack = 'Y'
+				or wotrack = 'Y'
+				or wsoccer = 'Y'
+				or wswimming = 'Y'
+				or wtennis = 'Y'
+				or wvolleyball = 'Y'
+				or wvrowing = 'Y'
+				or wxcountry = 'Y') then 1 else 0
+			end as athlete
+		from &dsn..student_athlete_vw
+		where snapshot = 'census'
+			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+			and ugrd_adj_admit_type = 'FRS'
+	;quit;
 
 	proc sql;
 		create table dataset_&cohort_year. as
@@ -270,6 +347,7 @@ run;
 			d.vcea,
 			d.vet_med,
 			d.lsamp_stem_flag,
+			d.anywhere_stem_flag,
 			e.need_snap,
 			e.fed_efc,
 			e.fed_need,
@@ -291,7 +369,34 @@ run;
 			i.rs,
 			i.chs,
 			i.ib,
-			i.aice
+			i.aice,
+			j.attendee_alive,
+			j.attendee_campus_visit,
+			j.attendee_cashe,
+			j.attendee_destination,
+			j.attendee_experience,
+			j.attendee_fcd_pullman,
+			j.attendee_fced,
+			j.attendee_fcoc,
+			j.attendee_fcod,
+			j.attendee_group_visit,
+			j.attendee_honors_visit,
+			j.attendee_imagine_tomorrow,
+			j.attendee_imagine_u,
+			j.attendee_la_bienvenida,
+			j.attendee_lvp_camp,
+			j.attendee_oos_destination,
+			j.attendee_oos_experience,
+			j.attendee_preview,
+			j.attendee_preview_jrs,
+			j.attendee_shaping,
+			j.attendee_top_scholars,
+			j.attendee_transfer_day,
+			j.attendee_vibes,
+			j.attendee_welcome_center,
+			j.attendee_any_visitation_ind,
+			j.attendee_total_visits,
+			k.athlete
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -312,6 +417,10 @@ run;
  			on a.emplid = h.emplid
  		left join preparatory_&cohort_year. as i
  			on a.emplid = i.emplid
+ 		left join visitation_&cohort_year. as j
+ 			on a.emplid = j.emplid
+ 		left join athlete_&cohort_year. as k
+ 			on a.emplid = k.emplid
 	;quit;
 	
 	%end;
@@ -330,6 +439,7 @@ data full_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
@@ -356,6 +466,7 @@ data training_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
@@ -378,6 +489,7 @@ data testing_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
