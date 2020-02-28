@@ -22,8 +22,8 @@ logit_df = training_set[[
                         'male',
                         # 'marital_status',
                         'Distance',
-                        # 'underrep_minority', 
-                        'ipeds_ethnic_group_descrshort',
+                        'underrep_minority', 
+                        # 'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
@@ -87,8 +87,8 @@ logit_df = training_set[[
                         'attendee_transfer_day',
                         'attendee_vibes',
                         'attendee_welcome_center',
-                        'attendee_any_visitation_ind',
-                        # 'attendee_total_visits',
+                        # 'attendee_any_visitation_ind',
+                        'attendee_total_visits',
                         # 'qvalue',
                         'fed_efc',
                         'fed_need',
@@ -466,18 +466,18 @@ preprocess = make_column_transformer(
 x_train = preprocess.fit_transform(x_train)
 x_test = preprocess.fit_transform(x_test)
 
-y, x = dmatrices('enrl_ind ~ age + male + ipeds_ethnic_group_descrshort + Distance \
+y, x = dmatrices('enrl_ind ~ age + male + underrep_minority \
                 + pell_eligibility_ind + first_gen_flag + anywhere_STEM_Flag + high_school_gpa + cum_adj_transfer_hours \
                 + resident + father_wsu_flag + mother_wsu_flag + parent1_highest_educ_lvl \
                 + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete \
                 + cahnrext + cas + comm + education + med_sci + medicine + nursing + pharmacy + provost + vcea + vet_med \
-                + last_sch_proprietorship + sat_erws + sat_mss + attendee_any_visitation_ind + fed_efc + fed_need + unmet_need_ofr', data=logit_df, return_type='matrix')
+                + last_sch_proprietorship + sat_erws + sat_mss + attendee_total_visits + fed_efc + fed_need + unmet_need_ofr', data=logit_df, return_type='matrix')
 
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
 print(logit_res.summary())
 
-lr = LogisticRegression(penalty='elasticnet', solver='saga', max_iter=500, l1_ratio=.5)
+lr = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=.75)
 lr.fit(x_train, y_train)
 
 lr_probs = lr.predict_proba(x_train)
