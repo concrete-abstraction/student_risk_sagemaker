@@ -204,7 +204,8 @@ run;
 			a.act_read,
 			a.act_math,
 			largest(1, a.sat_erws, xw_one.sat_erws, xw_three.sat_erws) as sat_erws,
-			largest(1, a.sat_mss, xw_two.sat_mss, xw_four.sat_mss) as sat_mss
+			largest(1, a.sat_mss, xw_two.sat_mss, xw_four.sat_mss) as sat_mss,
+			largest(1, (a.sat_erws + a.sat_mss), (xw_one.sat_erws + xw_two.sat_mss), (xw_three.sat_erws + xw_four.sat_mss)) as sat_comp
 		from &dsn..new_freshmen_test_score_vw as a
 		left join &dsn..xw_sat_i_to_sat_erws as xw_one
 			on (a.sat_i_verb + a.sat_i_wr) = xw_one.sat_i_verb_plus_wr
@@ -293,6 +294,49 @@ run;
 	;quit;
 	
 	proc sql;
+		create table visitation_detail_&cohort_year. as
+		select distinct a.emplid,
+			a.snap_date,
+			a.go2,
+			a.ocv_dt,
+			a.ocv_fcd,
+			a.ocv_fprv,
+			a.ocv_gdt,
+			a.ocv_jprv,
+			a.ri_col,
+			a.ri_fair,
+			a.ri_hsv,
+			a.ri_nac,
+			a.ri_wac,
+			a.ri_other,
+			a.tap,
+			a.tst,
+			a.vi_chegg,
+			a.vi_crn,
+			a.vi_cxc,
+			a.vi_mco,
+			a.np_group,
+			a.out_group,
+			a.ref_group,
+			a.ocv_da,
+			a.ocv_ea,
+			a.ocv_fced,
+			a.ocv_fcoc,
+			a.ocv_fcod,
+			a.ocv_oosd,
+			a.ocv_oose,
+			a.ocv_ve
+		from &adm..UGRD_visitation as a
+		inner join (select distinct emplid, max(snap_date) as snap_date 
+					from &adm..UGRD_visitation 
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+					group by emplid) as b
+			on a.emplid = b.emplid
+				and a.snap_date = b.snap_date
+		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+	;quit;
+			
+	proc sql;
 		create table athlete_&cohort_year. as
 		select distinct 
 			emplid,
@@ -363,6 +407,7 @@ run;
 			g.act_math,
 			g.sat_erws,
 			g.sat_mss,
+			g.sat_comp,
 			h.ad_dta,
 			h.ad_ast,
 			i.ap,
