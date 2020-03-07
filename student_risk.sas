@@ -12,12 +12,7 @@
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
-
-proc import out=distance
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\distance_matrix.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
+libname acs "Z:\Nathan\Models\student_risk\Supplemental Files";
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\act_to_sat_engl_read.xlsx"
@@ -70,10 +65,28 @@ run;
 				when a.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
 					else 'missing'
 			end as parent2_highest_educ_lvl,
-			b.distance
+			b.distance,
+			c.median_inc,
+			c.gini_indx,
+			d.pvrt_total/d.pvrt_base as pvrt_rate,
+			e.educ_rate,
+			f.pop/(g.area*3.861E-7) as pop_dens,
+			h.median_value
 		from &dsn..new_student_enrolled_vw as a
-		inner join (select distinct targetid, distance from distance) as b
+		left join acs.distance as b
 			on substr(a.last_sch_postal,1,5) = b.targetid
+		left join acs.acs_income as c
+			on substr(a.last_sch_postal,1,5) = c.geoid
+		left join acs.acs_poverty as d
+			on substr(a.last_sch_postal,1,5) = d.geoid
+		left join acs.acs_education as e
+			on substr(a.last_sch_postal,1,5) = e.geoid
+		left join acs.acs_demo as f
+			on substr(a.last_sch_postal,1,5) = f.geoid
+		left join acs.acs_area as g
+			on substr(a.last_sch_postal,1,5) = put(g.geoid, 5.)
+		left join acs.acs_housing as h
+			on substr(a.last_sch_postal,1,5) = h.geoid
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'
