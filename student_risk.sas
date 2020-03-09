@@ -71,7 +71,15 @@ run;
 			d.pvrt_total/d.pvrt_base as pvrt_rate,
 			e.educ_rate,
 			f.pop/(g.area*3.861E-7) as pop_dens,
-			h.median_value
+			h.median_value,
+			i.race_blk/i.race_tot as pct_blk,
+			i.race_ai/i.race_tot as pct_ai,
+			i.race_asn/i.race_tot as pct_asn,
+			i.race_hawi/i.race_tot as pct_hawi,
+			i.race_oth/i.race_tot as pct_oth,
+			i.race_two/i.race_tot as pct_two,
+			(i.race_blk + i.race_ai + i.race_asn + i.race_hawi + i.race_oth + i.race_two)/i.race_tot as pct_non,
+			j.ethnic_hisp/j.ethnic_tot as pct_hisp
 		from &dsn..new_student_enrolled_vw as a
 		left join acs.distance as b
 			on substr(a.last_sch_postal,1,5) = b.targetid
@@ -87,6 +95,10 @@ run;
 			on substr(a.last_sch_postal,1,5) = put(g.geoid, 5.)
 		left join acs.acs_housing as h
 			on substr(a.last_sch_postal,1,5) = h.geoid
+		left join acs.acs_race as i
+			on substr(a.last_sch_postal,1,5) = i.geoid
+		left join acs.acs_ethnicity as j
+			on substr(a.last_sch_postal,1,5) = j.geoid
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'
