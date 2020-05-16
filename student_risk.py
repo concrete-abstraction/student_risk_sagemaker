@@ -709,8 +709,8 @@ print(vif.round(1))
 penalty = ['l1', 'l2']
 C = np.logspace(0, 4, 10)
 
-hyperparamters = dict(penalty=penalty, C=C)
-gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparamters, verbose=0, n_jobs=-1)
+hyperparameters = dict(penalty=penalty, C=C)
+gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best Penalty: {best_model.best_estimator_.get_params()["penalty"]}')
@@ -719,8 +719,8 @@ print(f'Best C: {best_model.best_estimator_.get_params()["C"]}')
 #%%
 l1_ratio = np.linspace(0, 1, 10)
 
-hyperparamters = dict(l1_ratio=l1_ratio)
-gridsearch = GridSearchCV(LogisticRegression(penalty='l1', solver='saga', class_weight='balanced'), hyperparamters, verbose=0, n_jobs=-1)
+hyperparameters = dict(l1_ratio=l1_ratio)
+gridsearch = GridSearchCV(LogisticRegression(penalty='l1', solver='saga', class_weight='balanced'), hyperparameters, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best L1 Ratio: {best_model.best_estimator_.get_params()["l1_ratio"]}')
@@ -750,14 +750,14 @@ plt.show()
 #%%
 C = np.logspace(0, 4, 10)
 
-hyperparamters = dict(C=C)
-gridsearch = GridSearchCV(SVC(kernel='linear', class_weight='balanced'), hyperparamters, verbose=0, n_jobs=-1)
+hyperparameters = dict(C=C)
+gridsearch = GridSearchCV(SVC(kernel='linear', class_weight='balanced'), hyperparameters, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best C: {best_model.best_estimator_.get_params()["C"]}')
 
 #%%
-svc = SVC(kernel='sigmoid', class_weight='linear', probability=True)
+svc = SVC(kernel='linear', class_weight='balanced', probability=True)
 svc.fit(x_train, y_train)
 
 svc_probs = svc.predict_proba(x_train)
