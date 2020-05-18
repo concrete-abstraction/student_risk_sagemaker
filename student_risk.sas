@@ -402,6 +402,20 @@ run;
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and ugrd_adj_admit_type = 'FRS'
 	;quit;
+	
+	proc sql;
+		create table remedial_&cohort_year. as
+		select distinct
+			emplid,
+			case when grading_basis_enrl in ('REM','RMS','RMP') 	then 1
+																	else 0
+																	end as remedial
+		from &dsn..class_registration_vw
+		where snapshot = 'census'
+			and aid_year = "&cohort_year."
+			and grading_basis_enrl in ('REM','RMS','RMP')
+		order by emplid
+	;quit;
 
 	proc sql;
 		create table dataset_&cohort_year. as
@@ -480,7 +494,8 @@ run;
 			j.attendee_welcome_center,
 			j.attendee_any_visitation_ind,
 			j.attendee_total_visits,
-			k.athlete
+			k.athlete,
+			l.remedial
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -505,6 +520,8 @@ run;
  			on a.emplid = j.emplid
  		left join athlete_&cohort_year. as k
  			on a.emplid = k.emplid
+		left join remedial_&cohort_year. as l
+ 			on a.emplid = l.emplid
 	;quit;
 	
 	%end;
@@ -529,6 +546,7 @@ data full_set;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;	
+	if remedial = . then remedial = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	unmet_need_disb = fed_need - total_disb;
@@ -556,6 +574,7 @@ data training_set;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
+	if remedial = . then remedial = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	unmet_need_disb = fed_need - total_disb;
@@ -579,6 +598,7 @@ data testing_set;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
+	if remedial = . then remedial = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	unmet_need_disb = fed_need - total_disb;
