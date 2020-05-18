@@ -740,9 +740,10 @@ print(vif.round(1))
 
 #%%
 # Logistic hyperparameter tuning
-penalty = ['l1', 'l2']
-C = np.logspace(0, 4, 10, endpoint=True)
-hyperparameters = dict(penalty=penalty, C=C)
+hyperparameters = [{'penalty': ['l1'],
+                    'C': np.logspace(0, 4, 5, endpoint=True)},
+                    {'penalty': ['l2'],
+                    'C': np.logspace(0, 4, 5, endpoint=True)}]
 
 gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
