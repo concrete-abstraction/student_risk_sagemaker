@@ -416,6 +416,20 @@ run;
 			and grading_basis_enrl in ('REM','RMS','RMP')
 		order by emplid
 	;quit;
+	
+	proc sql;
+		create table date_&cohort_year. as
+		select distinct
+			min(emplid) as emplid,
+			min(week_from_term_begin_dt) as min_week_from_term_begin_dt,
+			max(week_from_term_begin_dt) as max_week_from_term_begin_dt,
+			count(week_from_term_begin_dt) as count_week_from_term_begin_dt
+		from &adm..UGRD_shortened_vw
+		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+			and ugrd_applicant_counting_ind = 1
+		group by emplid
+		order by emplid;
+	;quit;
 
 	proc sql;
 		create table dataset_&cohort_year. as
@@ -495,7 +509,10 @@ run;
 			j.attendee_any_visitation_ind,
 			j.attendee_total_visits,
 			k.athlete,
-			l.remedial
+			l.remedial,
+			m.min_week_from_term_begin_dt,
+			m.max_week_from_term_begin_dt,
+			m.count_week_from_term_begin_dt
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -522,6 +539,8 @@ run;
  			on a.emplid = k.emplid
 		left join remedial_&cohort_year. as l
  			on a.emplid = l.emplid
+ 		left join date_&cohort_year. as m
+ 			on a.emplid = m.emplid
 	;quit;
 	
 	%end;

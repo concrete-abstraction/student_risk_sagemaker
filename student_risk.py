@@ -7,10 +7,11 @@ from patsy import dmatrices
 from statsmodels.api import OLS
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import make_column_transformer
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PolynomialFeatures, StandardScaler
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.svm import SVC
+from sklearn.svm import SVC, LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 from sklearn.model_selection import GridSearchCV
@@ -31,7 +32,7 @@ training_awe = training_set[[
                             'sat_mss',
                             'educ_rate',
                             'gini_indx',
-                            'median_inc'
+                            'median_inc'                
                             ]].dropna()
 
 awe_x_train = training_awe[[
@@ -116,6 +117,9 @@ logit_df = training_set[[
                         # 'age_group', 
                         'age',
                         'male',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
                         # 'pop_dens',
@@ -124,8 +128,8 @@ logit_df = training_set[[
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
-                        # 'LSAMP_STEM_Flag',
-                        'anywhere_STEM_Flag',
+                        'LSAMP_STEM_Flag',
+                        # 'anywhere_STEM_Flag',
                         # 'high_school_gpa',
                         'awe_instrument',
                         'cum_adj_transfer_hours',
@@ -227,6 +231,9 @@ training_set = training_set[[
                             # 'age_group', 
                             'age', 
                             'male',
+                            # 'min_week_from_term_begin_dt',
+                            # 'max_week_from_term_begin_dt',
+                            'count_week_from_term_begin_dt',
                             # 'marital_status',
                             # 'Distance',
                             # 'pop_dens',
@@ -235,8 +242,8 @@ training_set = training_set[[
                             'pell_eligibility_ind', 
                             # 'pell_recipient_ind',
                             'first_gen_flag',
-                            # 'LSAMP_STEM_Flag',
-                            'anywhere_STEM_Flag', 
+                            'LSAMP_STEM_Flag',
+                            # 'anywhere_STEM_Flag', 
                             # 'high_school_gpa', 
                             'awe_instrument',
                             'cum_adj_transfer_hours',
@@ -338,6 +345,9 @@ testing_set = testing_set[[
                             # 'age_group', 
                             'age', 
                             'male',
+                            # 'min_week_from_term_begin_dt',
+                            # 'max_week_from_term_begin_dt',
+                            'count_week_from_term_begin_dt',
                             # 'marital_status',
                             # 'Distance',
                             # 'pop_dens',
@@ -346,8 +356,8 @@ testing_set = testing_set[[
                             'pell_eligibility_ind', 
                             # 'pell_recipient_ind',
                             'first_gen_flag',
-                            # 'LSAMP_STEM_Flag', 
-                            'anywhere_STEM_Flag',
+                            'LSAMP_STEM_Flag', 
+                            # 'anywhere_STEM_Flag',
                             # 'high_school_gpa',
                             'awe_instrument', 
                             'cum_adj_transfer_hours',
@@ -452,6 +462,9 @@ x_train = training_set[[
                         # 'age_group', 
                         'age', 
                         'male',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
                         # 'pop_dens',
@@ -460,8 +473,8 @@ x_train = training_set[[
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
-                        # 'LSAMP_STEM_Flag',
-                        'anywhere_STEM_Flag',
+                        'LSAMP_STEM_Flag',
+                        # 'anywhere_STEM_Flag',
                         # 'high_school_gpa',
                         'awe_instrument', 
                         'cum_adj_transfer_hours',
@@ -561,6 +574,9 @@ x_test = testing_set[[
                         # 'age_group',
                         'age', 
                         'male',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
                         # 'pop_dens',
@@ -569,8 +585,8 @@ x_test = testing_set[[
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
-                        # 'LSAMP_STEM_Flag',
-                        'anywhere_STEM_Flag',
+                        'LSAMP_STEM_Flag',
+                        # 'anywhere_STEM_Flag',
                         # 'high_school_gpa',
                         'awe_instrument', 
                         'cum_adj_transfer_hours',
@@ -678,6 +694,9 @@ plt.show()
 preprocess = make_column_transformer(
     (MinMaxScaler(), [
                         'age',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'sat_erws',
                         # 'sat_mss',
                         'sat_comp',
@@ -700,8 +719,8 @@ preprocess = make_column_transformer(
                                     # 'age_group',
                                     # 'marital_status',
                                     'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    'anywhere_STEM_Flag', 
+                                    'LSAMP_STEM_Flag',
+                                    # 'anywhere_STEM_Flag', 
                                     # 'ACAD_PLAN',
                                     # 'plan_owner_org',
                                     'ipeds_ethnic_group_descrshort',
@@ -718,9 +737,9 @@ x_test = preprocess.fit_transform(x_test)
 
 #%%
 # Standard logistic model
-y, x = dmatrices('enrl_ind ~ age + male + underrep_minority + pct_blk + pct_ai + pct_asn + pct_hawi + pct_oth + pct_two + pct_hisp \
+y, x = dmatrices('enrl_ind ~ age + male + count_week_from_term_begin_dt + underrep_minority + pct_blk + pct_ai + pct_asn + pct_hawi + pct_oth + pct_two + pct_hisp \
                 + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-                + pell_eligibility_ind + first_gen_flag + anywhere_STEM_Flag + awe_instrument + cum_adj_transfer_hours \
+                + pell_eligibility_ind + first_gen_flag + LSAMP_STEM_Flag + awe_instrument + cum_adj_transfer_hours \
                 + resident + father_wsu_flag + mother_wsu_flag + parent1_highest_educ_lvl + gini_indx + median_inc + educ_rate \
                 + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete + remedial \
                 + cahnrext + cas + comm + education + med_sci + medicine + nursing + pharmacy + provost + vcea + vet_med \
@@ -741,9 +760,9 @@ print(vif.round(1))
 #%%
 # Logistic hyperparameter tuning
 hyperparameters = [{'penalty': ['l1'],
-                    'C': np.logspace(0, 4, 5, endpoint=True)},
+                    'C': np.logspace(0, 4, 20, endpoint=True)},
                     {'penalty': ['l2'],
-                    'C': np.logspace(0, 4, 5, endpoint=True)}]
+                    'C': np.logspace(0, 4, 20, endpoint=True)}]
 
 gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
@@ -762,7 +781,6 @@ lreg_auc = roc_auc_score(y_train, lreg_probs)
 print(f'Overall accuracy for logistic model (training): {lreg.score(x_train, y_train):.4f}')
 print(f'ROC AUC for logistic model (training): {lreg_auc:.4f}')
 print(f'Overall accuracy for logistic model (testing): {lreg.score(x_test, y_test):.4f}')
-print(f'Number of features used in logistic model: {np.sum(lreg.coef_ != 0)}')
 
 lreg_fpr, lreg_tpr, thresholds = roc_curve(y_train, lreg_probs, drop_intermediate=False)
 
@@ -775,30 +793,26 @@ plt.show()
 
 #%%
 # SVC hyperparameter tuning
-hyperparameters = [{'kernel': ['linear'],
-                    'C': np.logspace(0, 4, 5, endpoint=True)},
-                    {'kernel': ['rbf'],
-                    'C': np.logspace(0, 4, 5, endpoint=True),
-                    'gamma': np.logspace(0, 4, 5, endpoint=True)}]
+hyperparameters = [{'penalty': ['l1', 'l2'],
+                    'C': np.logspace(0, 4, 20, endpoint=True)}]
 
-gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
+gridsearch = GridSearchCV(LinearSVC(class_weight='balanced', dual=False), hyperparameters, cv=5, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # SVC model
-svc = SVC(kernel='linear', class_weight='balanced', probability=True)
+svc = CalibratedClassifierCV(base_estimator=LinearSVC(penalty='l2', C=1.6238, class_weight='balanced', dual=False), cv=5)
 svc.fit(x_train, y_train)
 
 svc_probs = svc.predict_proba(x_train)
 svc_probs = svc_probs[:, 1]
 svc_auc = roc_auc_score(y_train, svc_probs)
 
-print(f'Overall accuracy for linear SVC model (training): {svc.score(x_train,y_train):.4f}')
+print(f'Overall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
 print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}')
 print(f'Overall accuracy for linear SVC model (testing): {svc.score(x_test, y_test):.4f}')
-print(f'Number of features used in linear SVC model: {np.sum(svc.coef_ != 0)}')
 
 svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
 
@@ -842,6 +856,38 @@ plt.xlabel('TREE DEPTH')
 plt.show()
 
 #%%
+# Random forest max_features tuning
+max_features = np.linspace(0.025, 1, 40, endpoint=True)
+
+train_results = []
+test_results = []
+
+for max_feature in max_features:
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_depth=7, max_features=max_feature, n_jobs=-1)
+    rfc.fit(x_train, y_train)
+    
+    rfc_train = rfc.predict_proba(x_train)
+    rfc_train = rfc_train[:,1]
+    rfc_auc = roc_auc_score(y_train, rfc_train)
+    
+    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
+    train_results.append(rfc_auc)
+
+    rfc_test = rfc.predict_proba(x_test)
+    rfc_test = rfc_test[:,1]
+    rfc_auc = roc_auc_score(y_test, rfc_test)
+
+    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
+    test_results.append(rfc_auc)
+
+line1, = plt.plot(max_features, train_results, 'b', label='AUC (TRAINING)')
+line2, = plt.plot(max_features, test_results, 'r', label='AUC (TESTING)')
+plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
+plt.ylabel('AUC SCORE')
+plt.xlabel('MAX FEATURES')
+plt.show()
+
+#%%
 # Random forest min_samples_split tuning
 min_samples_splits = np.linspace(0.025, 1, 40, endpoint=True)
 
@@ -849,7 +895,7 @@ train_results = []
 test_results = []
 
 for min_samples_split in min_samples_splits:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features='sqrt', max_depth=16, min_samples_split=min_samples_split, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features=0.1, max_depth=7, min_samples_split=min_samples_split, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -881,7 +927,7 @@ train_results = []
 test_results = []
 
 for min_samples_leaf in min_samples_leafs:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features='sqrt', max_depth=16, min_samples_split=0.025, min_samples_leaf=min_samples_leaf, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features=0.1, max_depth=7, min_samples_split=0.025, min_samples_leaf=min_samples_leaf, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -907,7 +953,7 @@ plt.show()
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features='sqrt', max_depth=16, min_samples_split=0.025, min_samples_leaf=0.1)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.1, max_depth=7, min_samples_split=0.025, min_samples_leaf=0.1)
 rfc.fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
