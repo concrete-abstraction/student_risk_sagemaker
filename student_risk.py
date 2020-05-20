@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import statsmodels.graphics.api as smg
 from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
 from statsmodels.api import OLS
@@ -131,7 +132,7 @@ logit_df = training_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         # 'high_school_gpa',
-                        'awe_instrument',
+                        # 'awe_instrument',
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -191,7 +192,7 @@ logit_df = training_set[[
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
-                        'sat_comp',
+                        # 'sat_comp',
                         'attendee_alive',
                         'attendee_campus_visit',
                         'attendee_cashe',
@@ -245,7 +246,7 @@ training_set = training_set[[
                             'LSAMP_STEM_Flag',
                             # 'anywhere_STEM_Flag', 
                             # 'high_school_gpa', 
-                            'awe_instrument',
+                            # 'awe_instrument',
                             'cum_adj_transfer_hours',
                             'resident',
                             'father_wsu_flag',
@@ -305,7 +306,7 @@ training_set = training_set[[
                             # 'last_sch_proprietorship',
                             # 'sat_erws',
                             # 'sat_mss',
-                            'sat_comp',
+                            # 'sat_comp',
                             'attendee_alive',
                             'attendee_campus_visit',
                             'attendee_cashe',
@@ -359,7 +360,7 @@ testing_set = testing_set[[
                             'LSAMP_STEM_Flag', 
                             # 'anywhere_STEM_Flag',
                             # 'high_school_gpa',
-                            'awe_instrument', 
+                            # 'awe_instrument', 
                             'cum_adj_transfer_hours',
                             'resident',
                             'father_wsu_flag',
@@ -419,7 +420,7 @@ testing_set = testing_set[[
                             # 'last_sch_proprietorship',
                             # 'sat_erws',
                             # 'sat_mss',
-                            'sat_comp',
+                            # 'sat_comp',
                             'attendee_alive',
                             'attendee_campus_visit',
                             'attendee_cashe',
@@ -476,7 +477,7 @@ x_train = training_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         # 'high_school_gpa',
-                        'awe_instrument', 
+                        # 'awe_instrument', 
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -536,7 +537,7 @@ x_train = training_set[[
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
-                        'sat_comp',
+                        # 'sat_comp',
                         'attendee_alive',
                         'attendee_campus_visit',
                         'attendee_cashe',
@@ -588,7 +589,7 @@ x_test = testing_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         # 'high_school_gpa',
-                        'awe_instrument', 
+                        # 'awe_instrument', 
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -648,7 +649,7 @@ x_test = testing_set[[
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
-                        'sat_comp',
+                        # 'sat_comp',
                         'attendee_alive',
                         'attendee_campus_visit',
                         'attendee_cashe',
@@ -690,6 +691,11 @@ x_train.hist(bins=50)
 plt.show()
 
 #%%
+corr_matrix = x_train.corr()
+smg.plot_corr(corr_matrix, xnames=x_train.columns)
+plt.show()
+
+#%%
 # Preprocess data
 preprocess = make_column_transformer(
     (MinMaxScaler(), [
@@ -699,7 +705,7 @@ preprocess = make_column_transformer(
                         'count_week_from_term_begin_dt',
                         # 'sat_erws',
                         # 'sat_mss',
-                        'sat_comp',
+                        # 'sat_comp',
                         # 'attendee_total_visits',
                         # 'Distance',
                         # 'pop_dens', 
@@ -708,7 +714,7 @@ preprocess = make_column_transformer(
                         # 'median_value',
                         'term_credit_hours',
                         # 'high_school_gpa',
-                        'awe_instrument',
+                        # 'awe_instrument',
                         'cum_adj_transfer_hours',
                         'fed_efc',
                         'fed_need', 
@@ -739,11 +745,11 @@ x_test = preprocess.fit_transform(x_test)
 # Standard logistic model
 y, x = dmatrices('enrl_ind ~ age + male + count_week_from_term_begin_dt + underrep_minority + pct_blk + pct_ai + pct_asn + pct_hawi + pct_oth + pct_two + pct_hisp \
                 + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-                + pell_eligibility_ind + first_gen_flag + LSAMP_STEM_Flag + awe_instrument + cum_adj_transfer_hours \
-                + resident + father_wsu_flag + mother_wsu_flag + parent1_highest_educ_lvl + gini_indx + median_inc + educ_rate \
-                + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete + remedial \
+                + pell_eligibility_ind + LSAMP_STEM_Flag + cum_adj_transfer_hours \
+                + resident + father_wsu_flag + mother_wsu_flag + gini_indx + median_inc + educ_rate \
+                + parent1_highest_educ_lvl + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete + remedial \
                 + cahnrext + cas + comm + education + med_sci + medicine + nursing + pharmacy + provost + vcea + vet_med \
-                + sat_comp + attendee_total_visits + fed_efc + fed_need + unmet_need_ofr', data=logit_df, return_type='dataframe')
+                + attendee_total_visits + fed_efc + fed_need + unmet_need_ofr', data=logit_df, return_type='dataframe')
 
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
@@ -771,7 +777,7 @@ print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # Logistic model
-lreg = LogisticRegression(penalty='l1', solver='saga', max_iter=500, C=1.0, n_jobs=-1)
+lreg = LogisticRegression(penalty='l1', solver='saga', class_weight='balanced', max_iter=500, C=2.6367, n_jobs=-1)
 lreg.fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
@@ -793,17 +799,20 @@ plt.show()
 
 #%%
 # SVC hyperparameter tuning
-hyperparameters = [{'penalty': ['l1', 'l2'],
-                    'C': np.logspace(0, 4, 20, endpoint=True)}]
+hyperparameters = [{'kernel': ['linear'],
+                    'C': np.logspace(0, 4, 5, endpoint=True)},
+                    {'kernel': ['rbf'],
+                    'C': np.logspace(0, 4, 5, endpoint=True),
+                    'gamma': np.logspace(0, 4, 5, endpoint=True)}]
 
-gridsearch = GridSearchCV(LinearSVC(class_weight='balanced', dual=False), hyperparameters, cv=5, verbose=0, n_jobs=-1)
+gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # SVC model
-svc = CalibratedClassifierCV(base_estimator=LinearSVC(penalty='l2', C=1.6238, class_weight='balanced', dual=False), cv=5)
+svc = SVC(class_weight='balanced', probability=True)
 svc.fit(x_train, y_train)
 
 svc_probs = svc.predict_proba(x_train)
