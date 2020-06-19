@@ -15,7 +15,9 @@ from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
+from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RepeatedStratifiedKFold
 
 #%%
 # Import pre-split data
@@ -453,6 +455,8 @@ testing_set = testing_set[[
                             'unmet_need_ofr'
                             ]].dropna()
 
+testing_set = testing_set.reset_index()
+
 pred_outcome = testing_set[[ 
                             'emplid',
                             'enrl_ind'
@@ -812,8 +816,11 @@ print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # SVC model
-svc = SVC(class_weight='balanced', probability=True)
+svc = SVC(kernel='linear', class_weight='balanced', probability=True)
 svc.fit(x_train, y_train)
+
+probs = CalibratedClassifierCV(svc, method='sigmoid', cv='prefit')
+probs.fit(x_test, y_test)
 
 svc_probs = svc.predict_proba(x_train)
 svc_probs = svc_probs[:, 1]
@@ -983,8 +990,23 @@ plt.title('RANDOM FOREST ROC CURVE (TRAINING)')
 plt.show()
 
 #%%
+
+lreg_pred_probs = lreg.predict_proba(x_test)
+lreg_pred_probs = lreg_pred_probs[:, 1]
+svc_pred_probs = probs.predict_proba(x_test)
+svc_pred_probs = svc_pred_probs[:, 1]
+rfc_pred_probs = rfc.predict_proba(x_test)
+rfc_pred_probs = rfc_pred_probs[:, 1]
+
+#%%
 # Model predictions
-pred_outcome['lr pred'] = lreg.predict(x_test)
+
+pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
+pred_outcome['lr_pred'] = lreg.predict(x_test)
+pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
 pred_outcome['svc_pred'] = svc.predict(x_test)
+pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
 pred_outcome['rfc_pred'] = rfc.predict(x_test)
 pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\pred_outcome.csv', encoding='utf-8', index=False)
+
+# %%
