@@ -106,11 +106,99 @@ reg.fit(awe_x_test, awe_y_test)
 
 testing_awe_pred = pd.DataFrame()
 testing_awe_pred['emplid'] = testing_awe['emplid']
-testing_awe_pred['actual'] = testing_awe['high_school_gpa']
-testing_awe_pred['predicted'] = reg.predict(awe_x_test)
-testing_awe_pred['awe_instrument'] = testing_awe_pred['actual'] - testing_awe_pred['predicted']
+testing_awe_pred['awe_actual'] = testing_awe['high_school_gpa']
+testing_awe_pred['awe_predicted'] = reg.predict(awe_x_test)
+testing_awe_pred['awe_instrument'] = testing_awe_pred['awe_actual'] - testing_awe_pred['awe_predicted']
 
 testing_set = testing_set.join(testing_awe_pred.set_index('emplid'), on='emplid')
+
+#%%
+# Training CDI instrumental variable
+training_cdi = training_set[[
+                            'emplid',
+                            'high_school_gpa',
+                            'class_count',
+                            'sat_erws',
+                            'sat_mss',
+                            'underrep_minority',
+                            'male',
+                            'median_inc',
+                            'avg_difficulty'                
+                            ]].dropna()
+
+cdi_x_train = training_cdi[[
+                            'high_school_gpa',
+                            'class_count',
+                            'sat_erws',
+                            'sat_mss',
+                            'underrep_minority',
+                            'male',
+                            'median_inc'  
+                            ]]
+
+cdi_y_train = training_cdi[[
+                            'avg_difficulty'
+                            ]]
+
+y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + sat_erws + sat_mss + underrep_minority + male + median_inc', data=training_cdi, return_type='dataframe')
+reg_mod = OLS(y, x)
+reg_res = reg_mod.fit()
+print(reg_res.summary())
+
+reg = LinearRegression()
+reg.fit(cdi_x_train, cdi_y_train)
+
+training_cdi_pred = pd.DataFrame()
+training_cdi_pred['emplid'] = training_cdi['emplid']
+training_cdi_pred['cdi_actual'] = training_cdi['avg_difficulty']
+training_cdi_pred['cdi_predicted'] = reg.predict(cdi_x_train)
+training_cdi_pred['cdi_instrument'] = training_cdi_pred['cdi_actual'] - training_cdi_pred['cdi_predicted']
+
+training_set = training_set.join(training_cdi_pred.set_index('emplid'), on='emplid')
+
+#%%
+# Testing CDI instrumental variable
+testing_cdi = testing_set[[
+                            'emplid',
+                            'high_school_gpa',
+                            'class_count',
+                            'sat_erws',
+                            'sat_mss',
+                            'underrep_minority',
+                            'male',
+                            'median_inc',
+                            'avg_difficulty'                
+                            ]].dropna()
+
+cdi_x_test = testing_cdi[[
+                            'high_school_gpa',
+                            'class_count',
+                            'sat_erws',
+                            'sat_mss',
+                            'underrep_minority',
+                            'male',
+                            'median_inc'  
+                            ]]
+
+cdi_y_test = testing_cdi[[
+                            'avg_difficulty'
+                            ]]
+
+y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + sat_erws + sat_mss + underrep_minority + male + median_inc', data=testing_cdi, return_type='dataframe')
+reg_mod = OLS(y, x)
+reg_res = reg_mod.fit()
+print(reg_res.summary())
+
+reg = LinearRegression()
+reg.fit(cdi_x_test, cdi_y_test)
+
+testing_cdi_pred = pd.DataFrame()
+testing_cdi_pred['emplid'] = testing_cdi['emplid']
+testing_cdi_pred['cdi_actual'] = testing_cdi['avg_difficulty']
+testing_cdi_pred['cdi_predicted'] = reg.predict(cdi_x_test)
+testing_cdi_pred['cdi_instrument'] = testing_cdi_pred['cdi_actual'] - testing_cdi_pred['cdi_predicted']
+
+testing_set = testing_set.join(testing_cdi_pred.set_index('emplid'), on='emplid')
 
 #%%
 # Prepare dataframes
@@ -133,8 +221,10 @@ logit_df = training_set[[
                         'first_gen_flag', 
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        # 'high_school_gpa',
-                        # 'awe_instrument',
+                        'high_school_gpa',
+                        'awe_instrument',
+                        'cdi_instrument',
+                        'avg_difficulty',
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -247,8 +337,10 @@ training_set = training_set[[
                             'first_gen_flag',
                             'LSAMP_STEM_Flag',
                             # 'anywhere_STEM_Flag', 
-                            # 'high_school_gpa', 
-                            # 'awe_instrument',
+                            'high_school_gpa', 
+                            'awe_instrument',
+                            'cdi_instrument',
+                            'avg_difficulty',
                             'cum_adj_transfer_hours',
                             'resident',
                             'father_wsu_flag',
@@ -361,8 +453,10 @@ testing_set = testing_set[[
                             'first_gen_flag',
                             'LSAMP_STEM_Flag', 
                             # 'anywhere_STEM_Flag',
-                            # 'high_school_gpa',
-                            # 'awe_instrument', 
+                            'high_school_gpa',
+                            'awe_instrument',
+                            'cdi_instrument',
+                            'avg_difficulty',
                             'cum_adj_transfer_hours',
                             'resident',
                             'father_wsu_flag',
@@ -480,8 +574,10 @@ x_train = training_set[[
                         'first_gen_flag', 
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        # 'high_school_gpa',
-                        # 'awe_instrument', 
+                        'high_school_gpa',
+                        'awe_instrument', 
+                        'cdi_instrument',
+                        'avg_difficulty',
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -592,8 +688,10 @@ x_test = testing_set[[
                         'first_gen_flag', 
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        # 'high_school_gpa',
-                        # 'awe_instrument', 
+                        'high_school_gpa',
+                        'awe_instrument', 
+                        'cdi_instrument',
+                        'avg_difficulty',
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -717,8 +815,10 @@ preprocess = make_column_transformer(
                         'median_inc',
                         # 'median_value',
                         'term_credit_hours',
-                        # 'high_school_gpa',
+                        'high_school_gpa',
                         # 'awe_instrument',
+                        # 'cdi_instrument',
+                        'avg_difficulty',
                         'cum_adj_transfer_hours',
                         'fed_efc',
                         'fed_need', 
@@ -749,7 +849,7 @@ x_test = preprocess.fit_transform(x_test)
 # Standard logistic model
 y, x = dmatrices('enrl_ind ~ age + male + count_week_from_term_begin_dt + underrep_minority + pct_blk + pct_ai + pct_asn + pct_hawi + pct_oth + pct_two + pct_hisp \
                 + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-                + pell_eligibility_ind + LSAMP_STEM_Flag + cum_adj_transfer_hours \
+                + pell_eligibility_ind + LSAMP_STEM_Flag + cum_adj_transfer_hours + avg_difficulty + high_school_gpa + awe_instrument + cdi_instrument \
                 + resident + father_wsu_flag + mother_wsu_flag + gini_indx + median_inc + educ_rate \
                 + parent1_highest_educ_lvl + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete + remedial \
                 + cahnrext + cas + comm + education + med_sci + medicine + nursing + pharmacy + provost + vcea + vet_med \
@@ -805,7 +905,7 @@ plt.show()
 # SVC hyperparameter tuning
 hyperparameters = [{'kernel': ['linear'],
                     'C': np.logspace(0, 4, 5, endpoint=True)},
-                    {'kernel': ['rbf'],
+                    {'kernel': ['sigmoid'],
                     'C': np.logspace(0, 4, 5, endpoint=True),
                     'gamma': np.logspace(0, 4, 5, endpoint=True)}]
 

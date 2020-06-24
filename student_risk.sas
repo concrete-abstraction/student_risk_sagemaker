@@ -185,7 +185,7 @@ run;
 			anywhere_stem_flag
 		from &dsn..student_acad_prog_plan_vw
 		where snapshot = 'census'
-			and aid_year = "&cohort_year."
+			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
 			and substr(strm, 4, 1) = '7'
 			and adj_admit_campus = 'PULLM'
 			and acad_career = 'UGRD'
@@ -255,7 +255,7 @@ run;
 		left join act_to_sat_math as xw_four
  			on a.act_math = xw_four.act_math
 		where snapshot = 'census'
-	;quit;		
+	;quit;
 
 	proc sql;
 		create table degrees_&cohort_year. as
@@ -432,6 +432,122 @@ run;
 	;quit;
 
 	proc sql;
+		create table class_registration_&cohort_year. as
+		select distinct
+			emplid,
+			subject_catalog_nbr
+		from &dsn..class_registration_vw
+		where snapshot = 'census'
+			and full_acad_year = "&cohort_year."
+	;quit;
+	
+	proc sql;
+		create table class_difficulty_&cohort_year. as
+		select distinct
+			subject_catalog_nbr,
+			sum(total_grade_A) as total_grade_A,
+			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
+			sum(total_grade_A_minus) as total_grade_A_minus,
+			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
+			sum(total_grade_B_plus) as total_grade_B_plus,
+			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
+			sum(total_grade_B) as total_grade_B,
+			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
+			sum(total_grade_B_minus) as total_grade_B_minus,
+			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
+			sum(total_grade_C_plus) as total_grade_C_plus,
+			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
+			sum(total_grade_C) as total_grade_C,
+			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
+			sum(total_grade_C_minus) as total_grade_C_minus,
+			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
+			sum(total_grade_D_plus) as total_grade_D_plus,
+			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
+			sum(total_grade_D) as total_grade_D,
+			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
+			sum(total_grade_F) as total_grade_F,
+			sum(total_withdrawn) as total_withdrawn,
+			(calculated total_grade_A + calculated total_grade_A_minus 
+				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
+				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
+				+ calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as total_grades,
+			(calculated total_grade_A_GPA + calculated total_grade_A_minus_GPA 
+				+ calculated total_grade_B_plus_GPA + calculated total_grade_B_GPA + calculated total_grade_B_minus_GPA
+				+ calculated total_grade_C_plus_GPA + calculated total_grade_C_GPA + calculated total_grade_C_minus_GPA
+				+ calculated total_grade_D_plus_GPA + calculated total_grade_D_GPA) as total_grades_GPA,
+			(calculated total_grades_GPA / calculated total_grades) as class_average,
+			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
+				+ calculated total_grade_F + calculated total_withdrawn) as CDFW,
+			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F 
+				+ calculated total_withdrawn) as DFW				
+		from &dsn..class_vw
+		where snapshot = 'eot'
+			and full_acad_year = put(%eval(2018 - 1), 4.)
+			and ssr_component = 'LEC'
+		group by subject_catalog_nbr
+		order by subject_catalog_nbr
+	;quit;
+	
+	proc sql;
+		create table coursework_difficulty_&cohort_year. as
+		select
+			a.emplid,
+			count(a.subject_catalog_nbr) as class_count,
+			avg(b.class_average) as avg_difficulty
+		from class_registration_&cohort_year. as a
+		left join class_difficulty_&cohort_year. as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+		group by a.subject_catalog_nbr
+	;quit;
+	
+/* 	This still needs work. */
+	proc sql;
+		create table term_contact_hrs_&cohort_year. as
+		select distinct
+			a.emplid,
+			sum(b.lec_contact_hrs) as lec_contact_hrs,
+			sum(c.lab_contact_hrs) as lab_contact_hrs
+		from class_registration_&cohort_year. as a
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(2018 - 1), 4.)
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+/* 				and b.subject_catalog_nbr is not null */
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(2018 - 1), 4.)
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+/* 				and c.subject_catalog_nbr is not null */
+		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table exams_detail_&cohort_year. as
+		select distinct
+			emplid,
+			max(sat_sup_rwc) as sat_sup_rwc,
+			max(sat_sup_ce) as sat_sup_ce,
+			max(sat_sup_ha) as sat_sup_ha,
+			max(sat_sup_psda) as sat_sup_psda,
+			max(sat_sup_ei) as sat_sup_ei,
+			max(sat_sup_pam) as sat_sup_pam,
+			max(sat_sup_sec) as sat_sup_sec
+		from &dsn..student_test_comp_sat_w
+		where snapshot = 'census'
+		group by emplid
+	;quit;
+	
+	proc sql;
 		create table dataset_&cohort_year. as
 		select 
 			a.*,
@@ -512,7 +628,18 @@ run;
 			l.remedial,
 			m.min_week_from_term_begin_dt,
 			m.max_week_from_term_begin_dt,
-			m.count_week_from_term_begin_dt
+			m.count_week_from_term_begin_dt,
+			n.class_count,
+			(4.0 - n.avg_difficulty) as avg_difficulty,
+			o.lec_contact_hrs,
+			o.lab_contact_hrs,
+			p.sat_sup_rwc,
+			p.sat_sup_ce,
+			p.sat_sup_ha,
+			p.sat_sup_psda,
+			p.sat_sup_ei,
+			p.sat_sup_pam,
+			p.sat_sup_sec
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -541,6 +668,12 @@ run;
  			on a.emplid = l.emplid
  		left join date_&cohort_year. as m
  			on a.emplid = m.emplid
+ 		left join coursework_difficulty_&cohort_year. as n
+ 			on a.emplid = n.emplid
+ 		left join term_contact_hrs_&cohort_year. as o
+ 			on a.emplid = o.emplid
+ 		left join exams_detail_&cohort_year. as p
+ 			on a.emplid = p.emplid
 	;quit;
 	
 	%end;
@@ -568,6 +701,7 @@ data full_set;
 	if remedial = . then remedial = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_difficulty = . then avg_difficulty = 0;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
