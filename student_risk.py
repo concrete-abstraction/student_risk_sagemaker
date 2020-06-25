@@ -1,6 +1,7 @@
 #%%
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 import statsmodels.graphics.api as smg
 from matplotlib.legend_handler import HandlerLine2D
@@ -123,6 +124,7 @@ training_cdi = training_set[[
                             'underrep_minority',
                             'male',
                             'median_inc',
+                            'avg_pct_withdrawn',
                             'avg_difficulty'                
                             ]].dropna()
 
@@ -133,14 +135,15 @@ cdi_x_train = training_cdi[[
                             'sat_mss',
                             'underrep_minority',
                             'male',
-                            'median_inc'  
+                            'median_inc',
+                            'avg_pct_withdrawn'
                             ]]
 
 cdi_y_train = training_cdi[[
                             'avg_difficulty'
                             ]]
 
-y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + sat_erws + sat_mss + underrep_minority + male + median_inc', data=training_cdi, return_type='dataframe')
+y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=training_cdi, return_type='dataframe')
 reg_mod = OLS(y, x)
 reg_res = reg_mod.fit()
 print(reg_res.summary())
@@ -167,6 +170,7 @@ testing_cdi = testing_set[[
                             'underrep_minority',
                             'male',
                             'median_inc',
+                            'avg_pct_withdrawn',
                             'avg_difficulty'                
                             ]].dropna()
 
@@ -177,14 +181,15 @@ cdi_x_test = testing_cdi[[
                             'sat_mss',
                             'underrep_minority',
                             'male',
-                            'median_inc'  
+                            'median_inc',
+                            'avg_pct_withdrawn' 
                             ]]
 
 cdi_y_test = testing_cdi[[
                             'avg_difficulty'
                             ]]
 
-y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + sat_erws + sat_mss + underrep_minority + male + median_inc', data=testing_cdi, return_type='dataframe')
+y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=testing_cdi, return_type='dataframe')
 reg_mod = OLS(y, x)
 reg_res = reg_mod.fit()
 print(reg_res.summary())
@@ -222,9 +227,13 @@ logit_df = training_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         'high_school_gpa',
-                        'awe_instrument',
-                        'cdi_instrument',
-                        'avg_difficulty',
+                        # 'awe_instrument',
+                        # 'cdi_instrument',
+                        # 'avg_difficulty',
+                        'class_count',
+                        'avg_pct_withdrawn',
+                        'lec_contact_hrs',
+                        'lab_contact_hrs',
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -338,9 +347,13 @@ training_set = training_set[[
                             'LSAMP_STEM_Flag',
                             # 'anywhere_STEM_Flag', 
                             'high_school_gpa', 
-                            'awe_instrument',
-                            'cdi_instrument',
-                            'avg_difficulty',
+                            # 'awe_instrument',
+                            # 'cdi_instrument',
+                            # 'avg_difficulty',
+                            'class_count',
+                            'avg_pct_withdrawn',
+                            'lec_contact_hrs',
+                            'lab_contact_hrs',
                             'cum_adj_transfer_hours',
                             'resident',
                             'father_wsu_flag',
@@ -454,9 +467,13 @@ testing_set = testing_set[[
                             'LSAMP_STEM_Flag', 
                             # 'anywhere_STEM_Flag',
                             'high_school_gpa',
-                            'awe_instrument',
-                            'cdi_instrument',
-                            'avg_difficulty',
+                            # 'awe_instrument',
+                            # 'cdi_instrument',
+                            # 'avg_difficulty',
+                            'class_count',
+                            'avg_pct_withdrawn',
+                            'lec_contact_hrs',
+                            'lab_contact_hrs',
                             'cum_adj_transfer_hours',
                             'resident',
                             'father_wsu_flag',
@@ -575,9 +592,13 @@ x_train = training_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         'high_school_gpa',
-                        'awe_instrument', 
-                        'cdi_instrument',
-                        'avg_difficulty',
+                        # 'awe_instrument', 
+                        # 'cdi_instrument',
+                        # 'avg_difficulty',
+                        'class_count',
+                        'avg_pct_withdrawn',
+                        'lec_contact_hrs',
+                        'lab_contact_hrs',
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -689,9 +710,13 @@ x_test = testing_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         'high_school_gpa',
-                        'awe_instrument', 
-                        'cdi_instrument',
-                        'avg_difficulty',
+                        # 'awe_instrument', 
+                        # 'cdi_instrument',
+                        # 'avg_difficulty',
+                        'class_count',
+                        'avg_pct_withdrawn',
+                        'lec_contact_hrs',
+                        'lab_contact_hrs',
                         'cum_adj_transfer_hours',
                         'resident',
                         'father_wsu_flag',
@@ -818,7 +843,10 @@ preprocess = make_column_transformer(
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
+                        # 'avg_difficulty',
+                        'class_count',
+                        'lec_contact_hrs',
+                        'lab_contact_hrs',
                         'cum_adj_transfer_hours',
                         'fed_efc',
                         'fed_need', 
@@ -838,7 +866,6 @@ preprocess = make_column_transformer(
                                     'parent1_highest_educ_lvl',
                                     'parent2_highest_educ_lvl'
                                     ]),
-    # (PolynomialFeatures(interaction_only=True), ['male', 'underrep_minority']),
     remainder='passthrough'
 )
 
@@ -849,7 +876,8 @@ x_test = preprocess.fit_transform(x_test)
 # Standard logistic model
 y, x = dmatrices('enrl_ind ~ age + male + count_week_from_term_begin_dt + underrep_minority + pct_blk + pct_ai + pct_asn + pct_hawi + pct_oth + pct_two + pct_hisp \
                 + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-                + pell_eligibility_ind + LSAMP_STEM_Flag + cum_adj_transfer_hours + avg_difficulty + high_school_gpa + awe_instrument + cdi_instrument \
+                + pell_eligibility_ind + first_gen_flag + LSAMP_STEM_Flag + cum_adj_transfer_hours + high_school_gpa \
+                + avg_pct_withdrawn + class_count + lec_contact_hrs + lab_contact_hrs \
                 + resident + father_wsu_flag + mother_wsu_flag + gini_indx + median_inc + educ_rate \
                 + parent1_highest_educ_lvl + parent2_highest_educ_lvl + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete + remedial \
                 + cahnrext + cas + comm + education + med_sci + medicine + nursing + pharmacy + provost + vcea + vet_med \
@@ -872,16 +900,19 @@ print(vif.round(1))
 hyperparameters = [{'penalty': ['l1'],
                     'C': np.logspace(0, 4, 20, endpoint=True)},
                     {'penalty': ['l2'],
+                    'C': np.logspace(0, 4, 20, endpoint=True)},
+                    {'penalty': ['elasticnet'],
+                    'l1_ratio': np.linspace(0, 1, 11, endpoint=True),
                     'C': np.logspace(0, 4, 20, endpoint=True)}]
 
-gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
+gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, cv=10, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # Logistic model
-lreg = LogisticRegression(penalty='l1', solver='saga', class_weight='balanced', max_iter=500, C=2.6367, n_jobs=-1)
+lreg = LogisticRegression(penalty='l1', solver='saga', class_weight='balanced', max_iter=500, C=1.0, n_jobs=-1)
 lreg.fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
@@ -902,6 +933,16 @@ plt.title('LOGISTIC ROC CURVE (TRAINING)')
 plt.show()
 
 #%%
+# Logistic confusion matrix
+lreg_matrix = confusion_matrix(y_test, lreg.predict(x_test))
+lreg_df = pd.DataFrame(lreg_matrix)
+
+sns.heatmap(lreg_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+plt.title('CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
 # SVC hyperparameter tuning
 hyperparameters = [{'kernel': ['linear'],
                     'C': np.logspace(0, 4, 5, endpoint=True)},
@@ -909,7 +950,7 @@ hyperparameters = [{'kernel': ['linear'],
                     'C': np.logspace(0, 4, 5, endpoint=True),
                     'gamma': np.logspace(0, 4, 5, endpoint=True)}]
 
-gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
+gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=10, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best parameters: {gridsearch.best_params_}')
@@ -940,8 +981,18 @@ plt.title('LINEAR SVC ROC CURVE (TRAINING)')
 plt.show()
 
 #%%
+# SVC confusion matrix
+svc_matrix = confusion_matrix(y_test, svc.predict(x_test))
+svc_df = pd.DataFrame(svc_matrix)
+
+sns.heatmap(svc_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+plt.title('CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
 # Random forest max_depth tuning
-max_depths = np.linspace(1, 32, 32, endpoint=True)
+max_depths = np.linspace(1, 25, 25, endpoint=True)
 
 train_results = []
 test_results = []
@@ -1069,7 +1120,7 @@ plt.show()
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.1, max_depth=7, min_samples_split=0.025, min_samples_leaf=0.1)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.1, max_depth=7, min_samples_split=0.025, min_samples_leaf=0.05)
 rfc.fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
@@ -1090,7 +1141,17 @@ plt.title('RANDOM FOREST ROC CURVE (TRAINING)')
 plt.show()
 
 #%%
+# Random forest confusion matrix
+rfc_matrix = confusion_matrix(y_test, rfc.predict(x_test))
+rfc_df = pd.DataFrame(rfc_matrix)
 
+sns.heatmap(rfc_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+plt.title('CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# Prepare model predictions
 lreg_pred_probs = lreg.predict_proba(x_test)
 lreg_pred_probs = lreg_pred_probs[:, 1]
 svc_pred_probs = probs.predict_proba(x_test)
@@ -1099,8 +1160,7 @@ rfc_pred_probs = rfc.predict_proba(x_test)
 rfc_pred_probs = rfc_pred_probs[:, 1]
 
 #%%
-# Model predictions
-
+# Output model predictions
 pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
 pred_outcome['lr_pred'] = lreg.predict(x_test)
 pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)

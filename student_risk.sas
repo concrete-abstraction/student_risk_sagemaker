@@ -476,13 +476,16 @@ run;
 				+ calculated total_grade_C_plus_GPA + calculated total_grade_C_GPA + calculated total_grade_C_minus_GPA
 				+ calculated total_grade_D_plus_GPA + calculated total_grade_D_GPA) as total_grades_GPA,
 			(calculated total_grades_GPA / calculated total_grades) as class_average,
+			(calculated total_withdrawn / calculated total_grades) as pct_withdrawn,
 			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
 				+ calculated total_grade_F + calculated total_withdrawn) as CDFW,
+			(calculated CDFW / calculated total_grades) as pct_CDFW,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F 
-				+ calculated total_withdrawn) as DFW				
+				+ calculated total_withdrawn) as DFW,
+			(calculated DFW / calculated total_grades) as pct_DFW
 		from &dsn..class_vw
 		where snapshot = 'eot'
-			and full_acad_year = put(%eval(2018 - 1), 4.)
+			and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and ssr_component = 'LEC'
 		group by subject_catalog_nbr
 		order by subject_catalog_nbr
@@ -493,14 +496,16 @@ run;
 		select
 			a.emplid,
 			count(a.subject_catalog_nbr) as class_count,
-			avg(b.class_average) as avg_difficulty
+			avg(b.class_average) as avg_difficulty,
+			avg(b.pct_withdrawn) as avg_pct_withdrawn,
+			avg(b.pct_CDFW) as avg_pct_CDFW,
+			avg(b.pct_DFW) as avg_pct_DFW
 		from class_registration_&cohort_year. as a
 		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
-		group by a.subject_catalog_nbr
+		group by a.emplid
 	;quit;
 	
-/* 	This still needs work. */
 	proc sql;
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
@@ -512,22 +517,20 @@ run;
 						subject_catalog_nbr,
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
-					where snapshot = 'eot'
-						and full_acad_year = put(%eval(2018 - 1), 4.)
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
-/* 				and b.subject_catalog_nbr is not null */
 		left join (select distinct
 						subject_catalog_nbr,
 						max(term_contact_hrs) as lab_contact_hrs
 					from &dsn..class_vw
-					where snapshot = 'eot'
-						and full_acad_year = put(%eval(2018 - 1), 4.)
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr ) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
-/* 				and c.subject_catalog_nbr is not null */
 		group by a.emplid
 	;quit;
 	
@@ -631,6 +634,9 @@ run;
 			m.count_week_from_term_begin_dt,
 			n.class_count,
 			(4.0 - n.avg_difficulty) as avg_difficulty,
+			n.avg_pct_withdrawn,
+			n.avg_pct_CDFW,
+			n.avg_pct_DFW,
 			o.lec_contact_hrs,
 			o.lab_contact_hrs,
 			p.sat_sup_rwc,
@@ -702,9 +708,16 @@ data full_set;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
+	if lec_contact_hrs = . then lec_contact_hrs = 0;
+	if lab_contact_hrs = . then lab_contact_hrs = 0;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+run;
+
+/* Note: There should be no duplicates */
+proc sort data=full_set nodupkey dupout=dups;
+	by emplid;
 run;
 
 /* proc means data=full_set median q1 q3; */
@@ -730,6 +743,9 @@ data training_set;
 	if remedial = . then remedial = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_difficulty = . then avg_difficulty = 0;
+	if lec_contact_hrs = . then lec_contact_hrs = 0;
+	if lab_contact_hrs = . then lab_contact_hrs = 0;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
@@ -754,6 +770,9 @@ data testing_set;
 	if remedial = . then remedial = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_difficulty = . then avg_difficulty = 0;
+	if lec_contact_hrs = . then lec_contact_hrs = 0;
+	if lab_contact_hrs = . then lab_contact_hrs = 0;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
