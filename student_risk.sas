@@ -164,8 +164,30 @@ run;
 			plan_owner_org_descr,
 			plan_owner_group_descrshort,
 			case when plan_owner_group_descrshort = 'Business' then 1 else 0 end as business,
-			case when plan_owner_group_descrshort = 'CAHNREXT' then 1 else 0 end as cahnrext,
-			case when plan_owner_group_descrshort = 'CAS' then 1 else 0 end as cas,
+			case when plan_owner_group_descrshort = 'CAHNREXT' 
+				and plan_owner_org = '03_1240' then 1 else 0 end as cahnrs_anml,
+			case when plan_owner_group_descrshort = 'CAHNREXT' 
+				and plan_owner_org = '03_1990' then 1 else 0 end as cahnrs_envr,
+			case when plan_owner_group_descrshort = 'CAHNREXT' 
+				and plan_owner_org = '03_1150' then 1 else 0 end as cahnrs_econ,	
+			case when plan_owner_group_descrshort = 'CAHNREXT'
+				and plan_owner_org not in ('03_1240','03_1990','03_1150') then 1 else 0 end as cahnrext,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_1540' then 1 else 0 end as cas_chem,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_1710' then 1 else 0 end as cas_crim,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_2530' then 1 else 0 end as cas_math,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_2900' then 1 else 0 end as cas_psyc,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_8434' then 1 else 0 end as cas_biol,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_1830' then 1 else 0 end as cas_engl,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_2790' then 1 else 0 end as cas_phys,	
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org not in ('31_1540','31_1710','31_2530','31_2900','31_8434','31_1830','31_2790') then 1 else 0 end as cas,
 			case when plan_owner_group_descrshort = 'Comm' then 1 else 0 end as comm,
 			case when plan_owner_group_descrshort = 'Education' then 1 else 0 end as education,
 			case when plan_owner_group_descrshort = 'Med Sci' then 1 else 0 end as med_sci,
@@ -480,9 +502,14 @@ run;
 			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
 				+ calculated total_grade_F + calculated total_withdrawn) as CDFW,
 			(calculated CDFW / calculated total_grades) as pct_CDFW,
+			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
+				+ calculated total_grade_F) as CDF,
+			(calculated CDF / calculated total_grades) as pct_CDF,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F 
 				+ calculated total_withdrawn) as DFW,
-			(calculated DFW / calculated total_grades) as pct_DFW
+			(calculated DFW / calculated total_grades) as pct_DFW,
+			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
+			(calculated DF / calculated total_grades) as pct_DF
 		from &dsn..class_vw
 		where snapshot = 'eot'
 			and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
@@ -499,7 +526,9 @@ run;
 			avg(b.class_average) as avg_difficulty,
 			avg(b.pct_withdrawn) as avg_pct_withdrawn,
 			avg(b.pct_CDFW) as avg_pct_CDFW,
-			avg(b.pct_DFW) as avg_pct_DFW
+			avg(b.pct_CDF) as avg_pct_CDF,
+			avg(b.pct_DFW) as avg_pct_DFW,
+			avg(b.pct_DF) as avg_pct_DF
 		from class_registration_&cohort_year. as a
 		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -551,6 +580,27 @@ run;
 	;quit;
 	
 	proc sql;
+		create table housing_&cohort_year. as
+		select distinct
+			emplid,
+			camp_addr_indicator,
+			housing_reshall_indicator,
+			housing_ssa_indicator,
+			housing_family_indicator,
+			afl_reshall_indicator,
+			afl_ssa_indicator,
+			afl_family_indicator,
+			afl_greek_indicator,
+			afl_greek_life_indicator
+		from &dsn..new_student_enrolled_housing_vw
+		where snapshot = 'census'
+			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+			and adj_admit_campus = 'PULLM'
+			and acad_career = 'UGRD'
+			and adj_admit_type_cat = 'FRSH'
+	;quit;
+	
+	proc sql;
 		create table dataset_&cohort_year. as
 		select 
 			a.*,
@@ -565,7 +615,17 @@ run;
 			d.plan_owner_org_descr,
 			d.plan_owner_group_descrshort,
 			d.business,
+			d.cahnrs_anml,
+			d.cahnrs_envr,
+			d.cahnrs_econ,
 			d.cahnrext,
+			d.cas_chem,
+			d.cas_crim,
+			d.cas_math,
+			d.cas_psyc,
+			d.cas_biol,
+			d.cas_engl,
+			d.cas_phys,
 			d.cas,
 			d.comm,
 			d.education,
@@ -636,7 +696,9 @@ run;
 			(4.0 - n.avg_difficulty) as avg_difficulty,
 			n.avg_pct_withdrawn,
 			n.avg_pct_CDFW,
+			n.avg_pct_CDF,
 			n.avg_pct_DFW,
+			n.avg_pct_DF,
 			o.lec_contact_hrs,
 			o.lab_contact_hrs,
 			p.sat_sup_rwc,
@@ -645,7 +707,16 @@ run;
 			p.sat_sup_psda,
 			p.sat_sup_ei,
 			p.sat_sup_pam,
-			p.sat_sup_sec
+			p.sat_sup_sec,
+			q.camp_addr_indicator,
+			q.housing_reshall_indicator,
+			q.housing_ssa_indicator,
+			q.housing_family_indicator,
+			q.afl_reshall_indicator,
+			q.afl_ssa_indicator,
+			q.afl_family_indicator,
+			q.afl_greek_indicator,
+			q.afl_greek_life_indicator
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -680,6 +751,8 @@ run;
  			on a.emplid = o.emplid
  		left join exams_detail_&cohort_year. as p
  			on a.emplid = p.emplid
+ 		left join housing_&cohort_year. as q
+ 			on a.emplid = q.emplid
 	;quit;
 	
 	%end;
@@ -710,6 +783,15 @@ data full_set;
 	if avg_difficulty = . then avg_difficulty = 0;
 	if lec_contact_hrs = . then lec_contact_hrs = 0;
 	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
+	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
+	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
+	if housing_family_indicator ^= 'Y' then housing_family_indicator = 'N';
+	if afl_reshall_indicator ^= 'Y' then afl_reshall_indicator = 'N';
+	if afl_ssa_indicator ^= 'Y' then afl_ssa_indicator = 'N';
+	if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
+	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
+	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
@@ -746,6 +828,15 @@ data training_set;
 	if avg_difficulty = . then avg_difficulty = 0;
 	if lec_contact_hrs = . then lec_contact_hrs = 0;
 	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
+	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
+	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
+	if housing_family_indicator ^= 'Y' then housing_family_indicator = 'N';
+	if afl_reshall_indicator ^= 'Y' then afl_reshall_indicator = 'N';
+	if afl_ssa_indicator ^= 'Y' then afl_ssa_indicator = 'N';
+	if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
+	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
+	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
@@ -773,6 +864,15 @@ data testing_set;
 	if avg_difficulty = . then avg_difficulty = 0;
 	if lec_contact_hrs = . then lec_contact_hrs = 0;
 	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
+	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
+	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
+	if housing_family_indicator ^= 'Y' then housing_family_indicator = 'N';
+	if afl_reshall_indicator ^= 'Y' then afl_reshall_indicator = 'N';
+	if afl_ssa_indicator ^= 'Y' then afl_ssa_indicator = 'N';
+	if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
+	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
+	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;

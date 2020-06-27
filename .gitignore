@@ -10,3 +10,4 @@ Reference Files/*.sas
 *.xlsx
 *.sas7bdat
 *.txt
+*.sql
