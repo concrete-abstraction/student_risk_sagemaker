@@ -15,10 +15,11 @@ from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PolynomialFeature
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import VotingClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import RepeatedStratifiedKFold
 
 #%%
 # Import pre-split data
@@ -299,11 +300,15 @@ logit_df = training_set[[
                         'cas',
                         'comm',
                         'education',
-                        'med_sci',
                         'medicine',
                         'nursing',
                         'pharmacy',
                         'provost',
+                        'vcea_bioe',
+                        'vcea_cive',
+                        'vcea_desn',
+                        'vcea_eecs',
+                        'vcea_mech',
                         'vcea',
                         'vet_med',
                         # 'last_sch_proprietorship',
@@ -435,11 +440,15 @@ training_set = training_set[[
                             'cas',
                             'comm',
                             'education',
-                            'med_sci',
                             'medicine',
                             'nursing',
                             'pharmacy',
                             'provost',
+                            'vcea_bioe',
+                            'vcea_cive',
+                            'vcea_desn',
+                            'vcea_eecs',
+                            'vcea_mech',
                             'vcea',
                             'vet_med',
                             # 'last_sch_proprietorship',
@@ -571,11 +580,15 @@ testing_set = testing_set[[
                             'cas',
                             'comm',
                             'education',
-                            'med_sci',
                             'medicine',
                             'nursing',
                             'pharmacy',
                             'provost',
+                            'vcea_bioe',
+                            'vcea_cive',
+                            'vcea_desn',
+                            'vcea_eecs',
+                            'vcea_mech',
                             'vcea',
                             'vet_med',
                             # 'last_sch_proprietorship',
@@ -712,11 +725,15 @@ x_train = training_set[[
                         'cas',
                         'comm',
                         'education',
-                        'med_sci',
                         'medicine',
                         'nursing',
                         'pharmacy',
                         'provost',
+                        'vcea_bioe',
+                        'vcea_cive',
+                        'vcea_desn',
+                        'vcea_eecs',
+                        'vcea_mech',
                         'vcea',
                         'vet_med',
                         # 'last_sch_proprietorship',
@@ -846,11 +863,15 @@ x_test = testing_set[[
                         'cas',
                         'comm',
                         'education',
-                        'med_sci',
                         'medicine',
                         'nursing',
                         'pharmacy',
                         'provost',
+                        'vcea_bioe',
+                        'vcea_cive',
+                        'vcea_desn',
+                        'vcea_eecs',
+                        'vcea_mech',
                         'vcea',
                         'vet_med',
                         # 'last_sch_proprietorship',
@@ -963,7 +984,10 @@ y, x = dmatrices('enrl_ind ~ age + male + count_week_from_term_begin_dt + underr
                 + resident + Distance + gini_indx + median_inc + educ_rate \
                 + sat_erws + sat_mss \
                 + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete + remedial + honors_program_ind \
-                + cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext + cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas + comm + education + med_sci + medicine + nursing + pharmacy + provost + vcea + vet_med \
+                + cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
+                + cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
+                + comm + education + medicine + nursing + pharmacy + provost + vet_med \
+                + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea  \
                 + attendee_total_visits + unmet_need_ofr', data=logit_df, return_type='dataframe')
 
 logit_mod = Logit(y, x)
@@ -991,7 +1015,7 @@ print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # Logistic model
-lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.8, C=1.0, n_jobs=-1)
+lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.7, C=1.0, n_jobs=-1)
 lreg.fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
@@ -1017,17 +1041,14 @@ lreg_matrix = confusion_matrix(y_test, lreg.predict(x_test))
 lreg_df = pd.DataFrame(lreg_matrix)
 
 sns.heatmap(lreg_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('CONFUSION MATRIX'), plt.tight_layout()
+plt.title('LOGISTIC CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 #%%
 # SVC hyperparameter tuning
 hyperparameters = [{'kernel': ['linear'],
-                    'C': np.logspace(0, 4, 5, endpoint=True)},
-                    {'kernel': ['sigmoid'],
-                    'C': np.logspace(0, 4, 5, endpoint=True),
-                    'gamma': np.logspace(0, 4, 5, endpoint=True)}]
+                    'C': np.logspace(0, 4, 20, endpoint=True)}]
 
 gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=10, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
@@ -1039,8 +1060,8 @@ print(f'Best parameters: {gridsearch.best_params_}')
 svc = SVC(kernel='linear', class_weight='balanced', probability=True)
 svc.fit(x_train, y_train)
 
-probs = CalibratedClassifierCV(svc, method='sigmoid', cv='prefit')
-probs.fit(x_test, y_test)
+svc_cprobs = CalibratedClassifierCV(svc, method='sigmoid', cv='prefit')
+svc_cprobs.fit(x_test, y_test)
 
 svc_probs = svc.predict_proba(x_train)
 svc_probs = svc_probs[:, 1]
@@ -1065,7 +1086,7 @@ svc_matrix = confusion_matrix(y_test, svc.predict(x_test))
 svc_df = pd.DataFrame(svc_matrix)
 
 sns.heatmap(svc_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('CONFUSION MATRIX'), plt.tight_layout()
+plt.title('SVC CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
@@ -1109,7 +1130,7 @@ train_results = []
 test_results = []
 
 for max_feature in max_features:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_depth=7, max_features=max_feature, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_depth=8, max_features=max_feature, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -1141,7 +1162,7 @@ train_results = []
 test_results = []
 
 for min_samples_split in min_samples_splits:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features=0.1, max_depth=7, min_samples_split=min_samples_split, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features=0.075, max_depth=8, min_samples_split=min_samples_split, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -1173,7 +1194,7 @@ train_results = []
 test_results = []
 
 for min_samples_leaf in min_samples_leafs:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features=0.1, max_depth=7, min_samples_split=0.025, min_samples_leaf=min_samples_leaf, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=min_samples_leaf, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -1199,8 +1220,11 @@ plt.show()
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.1, max_depth=7, min_samples_split=0.025, min_samples_leaf=0.05)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=2000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025)
 rfc.fit(x_train, y_train)
+
+rfc_cprobs = CalibratedClassifierCV(rfc, method='sigmoid', cv='prefit')
+rfc_cprobs.fit(x_test, y_test)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]
@@ -1225,7 +1249,71 @@ rfc_matrix = confusion_matrix(y_test, rfc.predict(x_test))
 rfc_df = pd.DataFrame(rfc_matrix)
 
 sns.heatmap(rfc_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('CONFUSION MATRIX'), plt.tight_layout()
+plt.title('RANDOM FOREST CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# Multi-layer perceptron model
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.00001, learning_rate_init=0.001, n_iter_no_change=500)
+mlp.fit(x_train, y_train)
+
+mlp_probs = mlp.predict_proba(x_train)
+mlp_probs = mlp_probs[:, 1]
+mlp_auc = roc_auc_score(y_train, mlp_probs)
+
+print(f'Overall accuracy for multi-layer perceptron model (training): {mlp.score(x_train, y_train):.4f}')
+print(f'ROC AUC for multi-layer perceptron model (training): {mlp_auc:.4f}')
+print(f'Overall accuracy for multi-layer perceptron model (testing): {mlp.score(x_test, y_test):.4f}')
+
+mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=False)
+
+plt.plot(mlp_fpr, mlp_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('NEURAL NETWORK ROC CURVE (TRAINING)')
+plt.show()
+
+#%%
+# Multi-layer perceptron confusion matrix
+mlp_matrix = confusion_matrix(y_test, mlp.predict(x_test))
+mlp_df = pd.DataFrame(mlp_matrix)
+
+sns.heatmap(mlp_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+plt.title('NEURAL NETWORK CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# Ensemble model
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('svc', svc), ('rfc', rfc), ('mlp', mlp)], voting='soft', weights=[10,5,1,1])
+vcf.fit(x_train, y_train)
+
+vcf_probs = vcf.predict_proba(x_train)
+vcf_probs = vcf_probs[:, 1]
+vcf_auc = roc_auc_score(y_train, vcf_probs)
+
+print(f'Overall accuracy for ensemble model (training): {vcf.score(x_train, y_train):.4f}')
+print(f'ROC AUC for ensemble model (training): {vcf_auc:.4f}')
+print(f'Overall accuracy for ensemble model (testing): {vcf.score(x_test, y_test):.4f}')
+
+vcf_fpr, vcf_tpr, thresholds = roc_curve(y_train, vcf_probs, drop_intermediate=False)
+
+plt.plot(mlp_fpr, mlp_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('ENSEMBLE ROC CURVE (TRAINING)')
+plt.show()
+
+#%%
+# Ensemble confusion matrix
+vcf_matrix = confusion_matrix(y_test, vcf.predict(x_test))
+vcf_df = pd.DataFrame(vcf_matrix)
+
+sns.heatmap(vcf_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+plt.title('ENSEMBLE CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
@@ -1233,10 +1321,14 @@ plt.show()
 # Prepare model predictions
 lreg_pred_probs = lreg.predict_proba(x_test)
 lreg_pred_probs = lreg_pred_probs[:, 1]
-svc_pred_probs = probs.predict_proba(x_test)
+svc_pred_probs = svc_cprobs.predict_proba(x_test)
 svc_pred_probs = svc_pred_probs[:, 1]
-rfc_pred_probs = rfc.predict_proba(x_test)
+rfc_pred_probs = rfc_cprobs.predict_proba(x_test)
 rfc_pred_probs = rfc_pred_probs[:, 1]
+mlp_pred_probs = mlp.predict_proba(x_test)
+mlp_pred_probs = mlp_pred_probs[:, 1]
+vcf_pred_probs = vcf.predict_proba(x_test)
+vcf_pred_probs = vcf_pred_probs[:, 1]
 
 #%%
 # Output model predictions
@@ -1246,6 +1338,10 @@ pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
 pred_outcome['svc_pred'] = svc.predict(x_test)
 pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
 pred_outcome['rfc_pred'] = rfc.predict(x_test)
+pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
+pred_outcome['mlp_pred'] = mlp.predict(x_test)
+pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
+pred_outcome['vcf_pred'] = vcf.predict(x_test)
 pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\pred_outcome.csv', encoding='utf-8', index=False)
 
 # %%

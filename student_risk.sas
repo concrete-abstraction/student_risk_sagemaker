@@ -190,12 +190,22 @@ run;
 				and plan_owner_org not in ('31_1540','31_1710','31_2530','31_2900','31_8434','31_1830','31_2790') then 1 else 0 end as cas,
 			case when plan_owner_group_descrshort = 'Comm' then 1 else 0 end as comm,
 			case when plan_owner_group_descrshort = 'Education' then 1 else 0 end as education,
-			case when plan_owner_group_descrshort = 'Med Sci' then 1 else 0 end as med_sci,
-			case when plan_owner_group_descrshort = 'Medicine' then 1 else 0 end as medicine,
+			case when plan_owner_group_descrshort in ('Med Sci','Medicine') then 1 else 0 end as medicine,
 			case when plan_owner_group_descrshort = 'Nursing' then 1 else 0 end as nursing,
 			case when plan_owner_group_descrshort = 'Pharmacy' then 1 else 0 end as pharmacy,
 			case when plan_owner_group_descrshort = 'Provost' then 1 else 0 end as provost,
-			case when plan_owner_group_descrshort = 'VCEA' then 1 else 0 end as vcea,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_1520' then 1 else 0 end as vcea_bioe,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_1590' then 1 else 0 end as vcea_cive,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_1260' then 1 else 0 end as vcea_desn,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_1770' then 1 else 0 end as vcea_eecs,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_2540' then 1 else 0 end as vcea_mech,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org not in ('05_1520','05_1590','05_1260','05_1770','05_2540') then 1 else 0 end as vcea,				
 			case when plan_owner_group_descrshort = 'Vet Med' then 1 else 0 end as vet_med,
 			case when plan_owner_group_descrshort not in ('Business','CAHNREXT','CAS','Comm',
 														'Education','Med Sci','Medicine','Nursing',
@@ -601,6 +611,16 @@ run;
 	;quit;
 	
 	proc sql;
+		create table housing_detail_&cohort_year. as
+		select distinct
+			emplid,
+			'#' || put(building_id, z2.) as building_id
+		from &dsn..student_housing
+		where snapshot = 'census'
+			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+	;quit;
+	
+	proc sql;
 		create table dataset_&cohort_year. as
 		select 
 			a.*,
@@ -629,11 +649,15 @@ run;
 			d.cas,
 			d.comm,
 			d.education,
-			d.med_sci,
 			d.medicine,
 			d.nursing,
 			d.pharmacy,
 			d.provost,
+			d.vcea_bioe,
+			d.vcea_cive,
+			d.vcea_desn,
+			d.vcea_eecs,
+			d.vcea_mech,
 			d.vcea,
 			d.vet_med,
 			d.lsamp_stem_flag,
@@ -716,7 +740,8 @@ run;
 			q.afl_ssa_indicator,
 			q.afl_family_indicator,
 			q.afl_greek_indicator,
-			q.afl_greek_life_indicator
+			q.afl_greek_life_indicator,
+			r.building_id
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -753,6 +778,8 @@ run;
  			on a.emplid = p.emplid
  		left join housing_&cohort_year. as q
  			on a.emplid = q.emplid
+ 		 left join housing_detail_&cohort_year. as r
+ 			on a.emplid = r.emplid
 	;quit;
 	
 	%end;
