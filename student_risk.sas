@@ -685,6 +685,7 @@ run;
 			i.chs,
 			i.ib,
 			i.aice,
+			largest(1, i.ib, i.aice) as IB_AICE,
 			j.attendee_alive,
 			j.attendee_campus_visit,
 			j.attendee_cashe,
@@ -798,6 +799,7 @@ data full_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if ib_aice = . then ib_aice = 0;
 	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
@@ -843,6 +845,7 @@ data training_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if ib_aice = . then ib_aice = 0;	
 	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
@@ -879,6 +882,7 @@ data testing_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
+	if ib_aice = . then ib_aice = 0;
 	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;

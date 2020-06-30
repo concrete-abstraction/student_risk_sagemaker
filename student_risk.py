@@ -15,8 +15,8 @@ from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PolynomialFeature
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.svm import SVC, LinearSVC
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import VotingClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
@@ -278,8 +278,9 @@ logit_df = training_set[[
                         'AP',
                         'RS',
                         'CHS',
-                        'IB',
-                        'AICE', 
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE', 
                         'term_credit_hours',
                         'athlete',
                         'remedial',
@@ -418,8 +419,9 @@ training_set = training_set[[
                             'AP',
                             'RS',
                             'CHS',
-                            'IB',
-                            'AICE', 
+                            # 'IB',
+                            # 'AICE',
+                            'IB_AICE', 
                             'term_credit_hours',
                             'athlete',
                             'remedial',
@@ -558,8 +560,9 @@ testing_set = testing_set[[
                             'AP',
                             'RS',
                             'CHS',
-                            'IB',
-                            'AICE', 
+                            # 'IB',
+                            # 'AICE',
+                            'IB_AICE',
                             'term_credit_hours',
                             'athlete',
                             'remedial',
@@ -703,8 +706,9 @@ x_train = training_set[[
                         'AP',
                         'RS',
                         'CHS',
-                        'IB',
-                        'AICE', 
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE',
                         'term_credit_hours',
                         'athlete',
                         'remedial',
@@ -841,8 +845,9 @@ x_test = testing_set[[
                         'AP',
                         'RS',
                         'CHS',
-                        'IB',
-                        'AICE', 
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE', 
                         'term_credit_hours',
                         'athlete',
                         'remedial',
@@ -976,19 +981,20 @@ x_test = preprocess.fit_transform(x_test)
 
 #%%
 # Standard logistic model
-y, x = dmatrices('enrl_ind ~ age + male + count_week_from_term_begin_dt + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
+y, x = dmatrices('enrl_ind ~ age + male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + afl_greek_indicator + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-                + pell_eligibility_ind + LSAMP_STEM_Flag + cum_adj_transfer_hours + high_school_gpa \
+                + pell_eligibility_ind + LSAMP_STEM_Flag + athlete \
                 + first_gen_flag + father_wsu_flag + mother_wsu_flag \
-                + avg_pct_withdrawn + class_count + lec_contact_hrs + lab_contact_hrs \
+                + avg_pct_withdrawn + class_count + lec_contact_hrs + lab_contact_hrs + term_credit_hours \
                 + resident + Distance + gini_indx + median_inc + educ_rate \
                 + sat_erws + sat_mss \
-                + AD_DTA + AD_AST + AP + RS + CHS + IB + AICE + term_credit_hours + athlete + remedial + honors_program_ind \
+                + AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
+                + cum_adj_transfer_hours + high_school_gpa + remedial + honors_program_ind \
                 + cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
                 + cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
                 + comm + education + medicine + nursing + pharmacy + provost + vet_med \
                 + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea  \
-                + attendee_total_visits + unmet_need_ofr', data=logit_df, return_type='dataframe')
+                + count_week_from_term_begin_dt + attendee_total_visits + unmet_need_ofr', data=logit_df, return_type='dataframe')
 
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
@@ -1008,14 +1014,14 @@ hyperparameters = [{'penalty': ['elasticnet'],
                     'l1_ratio': np.linspace(0, 1, 11, endpoint=True),
                     'C': np.logspace(0, 4, 20, endpoint=True)}]
 
-gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, cv=10, verbose=0, n_jobs=-1)
+gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # Logistic model
-lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.7, C=1.0, n_jobs=-1)
+lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.0, C=1.0, n_jobs=-1)
 lreg.fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
@@ -1050,7 +1056,7 @@ plt.show()
 hyperparameters = [{'kernel': ['linear'],
                     'C': np.logspace(0, 4, 20, endpoint=True)}]
 
-gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=10, verbose=0, n_jobs=-1)
+gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best parameters: {gridsearch.best_params_}')
@@ -1098,7 +1104,7 @@ train_results = []
 test_results = []
 
 for max_depth in max_depths:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features='sqrt', max_depth=max_depth, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features='sqrt', max_depth=max_depth, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -1130,7 +1136,7 @@ train_results = []
 test_results = []
 
 for max_feature in max_features:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_depth=8, max_features=max_feature, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_depth=8, max_features=max_feature, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -1162,7 +1168,7 @@ train_results = []
 test_results = []
 
 for min_samples_split in min_samples_splits:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features=0.075, max_depth=8, min_samples_split=min_samples_split, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.075, max_depth=8, min_samples_split=min_samples_split, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -1194,7 +1200,7 @@ train_results = []
 test_results = []
 
 for min_samples_leaf in min_samples_leafs:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=min_samples_leaf, n_jobs=-1)
+    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=min_samples_leaf, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -1220,7 +1226,7 @@ plt.show()
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=2000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025)
 rfc.fit(x_train, y_train)
 
 rfc_cprobs = CalibratedClassifierCV(rfc, method='sigmoid', cv='prefit')
@@ -1287,7 +1293,7 @@ plt.show()
 
 #%%
 # Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('svc', svc), ('rfc', rfc), ('mlp', mlp)], voting='soft', weights=[10,5,1,1])
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('svc', svc), ('rfc', rfc), ('mlp', mlp)], voting='soft', weights=[1, 0.45, 0.025, 0.05])
 vcf.fit(x_train, y_train)
 
 vcf_probs = vcf.predict_proba(x_train)
