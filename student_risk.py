@@ -4,6 +4,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import statsmodels.graphics.api as smg
+import sklearn
+import matplotlib
 from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
 from statsmodels.api import OLS
@@ -20,6 +22,7 @@ from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
+from sklearn.externals import joblib
 
 #%%
 # Import pre-split data
@@ -1021,8 +1024,7 @@ print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # Logistic model
-lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.0, C=1.0, n_jobs=-1)
-lreg.fit(x_train, y_train)
+lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.0, C=1.0, n_jobs=-1).fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
 lreg_probs = lreg_probs[:, 1]
@@ -1063,8 +1065,7 @@ print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # SVC model
-svc = SVC(kernel='linear', class_weight='balanced', probability=True)
-svc.fit(x_train, y_train)
+svc = SVC(kernel='linear', class_weight='balanced', probability=True).fit(x_train, y_train)
 
 svc_cprobs = CalibratedClassifierCV(svc, method='sigmoid', cv='prefit')
 svc_cprobs.fit(x_test, y_test)
@@ -1226,8 +1227,7 @@ plt.show()
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025)
-rfc.fit(x_train, y_train)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025).fit(x_train, y_train)
 
 rfc_cprobs = CalibratedClassifierCV(rfc, method='sigmoid', cv='prefit')
 rfc_cprobs.fit(x_test, y_test)
@@ -1261,8 +1261,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.00001, learning_rate_init=0.001, n_iter_no_change=500)
-mlp.fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.00001, learning_rate_init=0.001, n_iter_no_change=500).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
@@ -1293,8 +1292,7 @@ plt.show()
 
 #%%
 # Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('svc', svc), ('rfc', rfc), ('mlp', mlp)], voting='soft', weights=[1, 0.45, 0.025, 0.05])
-vcf.fit(x_train, y_train)
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('svc', svc), ('rfc', rfc), ('mlp', mlp)], voting='soft', weights=[1, 0.45, 0.025, 0.05]).fit(x_train, y_train)
 
 vcf_probs = vcf.predict_proba(x_train)
 vcf_probs = vcf_probs[:, 1]
@@ -1350,4 +1348,7 @@ pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
 pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\pred_outcome.csv', encoding='utf-8', index=False)
 
-# %%
+#%%
+# Output model
+scikit_version = sklearn.__version__
+joblib.dump(vcf, f'model_{scikit_version}.pkl')

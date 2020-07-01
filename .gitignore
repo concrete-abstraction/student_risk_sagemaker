@@ -11,3 +11,4 @@ Reference Files/*.sas
 *.sas7bdat
 *.txt
 *.sql
+*.pkl
