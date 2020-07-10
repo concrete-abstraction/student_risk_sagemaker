@@ -1,14 +1,14 @@
-* ---------------------------------------------------------------------- ;
-*                                                                        ;
-*                             STUDENT RISK                               ;
-*                                                                        ;
-* ---------------------------------------------------------------------- ;
+* ------------------------------------------------------------------------------- ;
+*                                                                                 ;
+*                             STUDENT RISK (2 OF 2)                               ;
+*                                                                                 ;
+* ------------------------------------------------------------------------------- ;
 
 %let dsn = cendev;
 %let adm = adm;
 %let lag_year = 1;
 %let start_cohort = 2015;
-%let end_cohort = 2019;
+%let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
@@ -22,6 +22,18 @@ run;
 
 proc import out=act_to_sat_math
 	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\act_to_sat_math.xlsx"
+	dbms=XLSX REPLACE;
+	getnames=YES;
+run;
+
+proc import out=sdw_data
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\sdw_data.xlsx"
+	dbms=XLSX REPLACE;
+	getnames=YES;
+run;
+
+proc import out=finaid_subcatnbr_data
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\sdw_finaid_subcatnbr_data.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
@@ -138,22 +150,40 @@ run;
 			and ipeds_full_part_time = 'F'
 	;quit;
 	
-	proc sql;
-		create table enrolled_&cohort_year. as
-		select distinct 
-			emplid, 
-			term_code as cont_term,
-			enrl_ind
-		from &dsn..student_enrolled_vw
-		where snapshot = 'census'
-			and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-			and substr(strm, 4, 1) = '7'
-			and acad_career = 'UGRD'
-			and new_continue_status = 'CTU'
-			and term_credit_hours > 0
-		order by emplid
-	;quit;
-	
+	%if &cohort_year. < &end_cohort. %then %do;
+		proc sql;
+			create table enrolled_&cohort_year. as
+			select distinct 
+				emplid, 
+				term_code as cont_term,
+				enrl_ind
+			from &dsn..student_enrolled_vw
+			where snapshot = 'census'
+				and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+				and substr(strm, 4, 1) = '7'
+				and acad_career = 'UGRD'
+				and new_continue_status = 'CTU'
+				and term_credit_hours > 0
+			order by emplid
+		;quit;
+	%end;
+
+	%if &cohort_year. = &end_cohort. %then %do;
+		proc sql;
+			create table enrolled_&cohort_year. as
+			select distinct 
+				emplid, 
+				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
+				enrl_ind
+			from sdw_data
+			where full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+				and substr(strm, 4, 1) = '7'
+				and acad_career = 'UGRD'
+				and term_credit_hours > 0
+			order by emplid
+		;quit;
+	%end;
+
 	proc sql;
 		create table plan_&cohort_year. as 
 		select distinct 
@@ -568,7 +598,7 @@ run;
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as c
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 		group by a.emplid
 	;quit;
@@ -784,13 +814,103 @@ run;
 	;quit;
 	
 	%end;
+		
+	proc sql;
+		create table dataset_&cohort_year. as
+		select distinct 
+			a.*,
+			case when a.sex = 'M' then 1 
+					else 0
+			end as male,
+			b.*,
+			case when b.WA_residency = 'RES' then 1
+				else 0
+			end as resident,
+			case when b.adm_parent1_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
+				when b.adm_parent1_highest_educ_lvl = 'G' then 'bach'
+				when b.adm_parent1_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
+					else 'missing'
+			end as parent1_highest_educ_lvl,
+			case when b.adm_parent2_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
+				when b.adm_parent2_highest_educ_lvl = 'G' then 'bach'
+				when b.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
+					else 'missing'
+			end as parent2_highest_educ_lvl,
+			d.*,
+			case when d.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
+				else 0
+			end as underrep_minority,
+			substr(e.ext_org_postal,1,5) as targetid,
+			f.distance,
+			g.median_inc,
+			g.gini_indx,
+			h.pvrt_total/h.pvrt_base as pvrt_rate,
+			i.educ_rate,
+			j.pop/(k.area*3.861E-7) as pop_dens,
+			l.median_value,
+			m.race_blk/m.race_tot as pct_blk,
+			m.race_ai/m.race_tot as pct_ai,
+			m.race_asn/m.race_tot as pct_asn,
+			m.race_hawi/m.race_tot as pct_hawi,
+			m.race_oth/m.race_tot as pct_oth,
+			m.race_two/m.race_tot as pct_two,
+			(m.race_blk + m.race_ai + m.race_asn + m.race_hawi + m.race_oth + m.race_two)/m.race_tot as pct_non,
+			n.ethnic_hisp/n.ethnic_tot as pct_hisp,
+			case when o.locale = '11' then 1 else 0 end as city_large,
+			case when o.locale = '12' then 1 else 0 end as city_mid,
+			case when o.locale = '13' then 1 else 0 end as city_small,
+			case when o.locale = '21' then 1 else 0 end as suburb_large,
+			case when o.locale = '22' then 1 else 0 end as suburb_mid,
+			case when o.locale = '23' then 1 else 0 end as suburb_small,
+			case when o.locale = '31' then 1 else 0 end as town_fringe,
+			case when o.locale = '32' then 1 else 0 end as town_distant,
+			case when o.locale = '33' then 1 else 0 end as town_remote,
+			case when o.locale = '41' then 1 else 0 end as rural_fringe,
+			case when o.locale = '42' then 1 else 0 end as rural_distant,
+			case when o.locale = '43' then 1 else 0 end as rural_remote
+		from &adm..fact_u as a
+		left join &adm..xd_person_demo as b
+			on a.sid_per_demo = b.sid_per_demo
+		left join &adm..xd_admit_type as c
+			on a.sid_admit_type = c.sid_admit_type
+		left join &adm..xd_ipeds_ethnic_group as d
+			on a.sid_ipeds_ethnic_group = d.sid_ipeds_ethnic_group
+		left join &adm..xd_school as e
+			on a.sid_ext_org_id = e.sid_ext_org_id
+		left join acs.distance as f
+			on substr(e.ext_org_postal,1,5) = f.targetid
+		left join acs.acs_income as g
+			on substr(e.ext_org_postal,1,5) = g.geoid
+		left join acs.acs_poverty as h
+			on substr(e.ext_org_postal,1,5) = h.geoid
+		left join acs.acs_education as i
+			on substr(e.ext_org_postal,1,5) = i.geoid
+		left join acs.acs_demo as j
+			on substr(e.ext_org_postal,1,5) = j.geoid
+		left join acs.acs_area as k
+			on substr(e.ext_org_postal,1,5) = put(k.geoid, 5.)
+		left join acs.acs_housing as l
+			on substr(e.ext_org_postal,1,5) = l.geoid
+		left join acs.acs_race as m
+			on substr(e.ext_org_postal,1,5) = m.geoid
+		left join acs.acs_ethnicity as n
+			on substr(e.ext_org_postal,1,5) = n.geoid
+		left join acs.edge_locale14_zcta_table as o
+			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
+		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
+								from &adm..xd_snapshot)
+			and a.acad_career = 'UGRD' 
+			and a.campus = 'PULLM' 
+			and a.enrolled = 1
+			and c.admit_type in ('FRS','IFR','IPF')
+	;quit;
 	
 %mend loop;
 
 %loop;
 
 data full_set;
-	set dataset_&start_cohort.-dataset_&end_cohort.;
+	set dataset_&start_cohort.-dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -836,7 +956,7 @@ run;
 /* run; */
 
 data training_set;
-	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
+	set dataset_&start_cohort.-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -873,40 +993,8 @@ data training_set;
 run;
 
 data testing_set;
-	set dataset_&end_cohort.;
-	if enrl_ind = . then enrl_ind = 0;
-	if ad_dta = . then ad_dta = 0;
-	if ad_ast = . then ad_ast = 0;
-	if ap = . then ap = 0;
-	if rs = . then rs = 0;
-	if chs = . then chs = 0;
-	if ib = . then ib = 0;
-	if aice = . then aice = 0;
-	if ib_aice = . then ib_aice = 0;
-	if athlete = . then athlete = 0;
-	if fed_efc = . then fed_efc = 0;
-	if fed_need = . then fed_need = 0;
-	if total_disb = . then total_disb = 0;
-	if total_offer = . then total_offer = 0;
-	if total_accept = . then total_accept = 0;
-	if remedial = . then remedial = 0;
-	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
+	set dataset_%eval(&end_cohort. + &lag_year.);
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
-	if avg_difficulty = . then avg_difficulty = 0;
-	if lec_contact_hrs = . then lec_contact_hrs = 0;
-	if lab_contact_hrs = . then lab_contact_hrs = 0;
-	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
-	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
-	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
-	if housing_family_indicator ^= 'Y' then housing_family_indicator = 'N';
-	if afl_reshall_indicator ^= 'Y' then afl_reshall_indicator = 'N';
-	if afl_ssa_indicator ^= 'Y' then afl_ssa_indicator = 'N';
-	if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
-	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
-	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
-	unmet_need_disb = fed_need - total_disb;
-	unmet_need_acpt = fed_need - total_accept;
-	unmet_need_ofr = fed_need - total_offer;
 run;
 
 filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
