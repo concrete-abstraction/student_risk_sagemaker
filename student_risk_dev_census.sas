@@ -476,29 +476,29 @@ run;
 	proc sql;
 		create table class_difficulty_&cohort_year. as
 		select distinct
-			subject_catalog_nbr,
-			sum(total_grade_A) as total_grade_A,
+			a.subject_catalog_nbr,
+			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			sum(total_grade_A_minus) as total_grade_A_minus,
+			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			sum(total_grade_B_plus) as total_grade_B_plus,
+			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			sum(total_grade_B) as total_grade_B,
+			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			sum(total_grade_B_minus) as total_grade_B_minus,
+			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			sum(total_grade_C_plus) as total_grade_C_plus,
+			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			sum(total_grade_C) as total_grade_C,
+			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			sum(total_grade_C_minus) as total_grade_C_minus,
+			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			sum(total_grade_D_plus) as total_grade_D_plus,
+			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			sum(total_grade_D) as total_grade_D,
+			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			sum(total_grade_F) as total_grade_F,
-			sum(total_withdrawn) as total_withdrawn,
+			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
+			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -520,12 +520,22 @@ run;
 			(calculated DFW / calculated total_grades) as pct_DFW,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_grades) as pct_DF
-		from &dsn..class_vw
-		where snapshot = 'eot'
-			and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-			and ssr_component = 'LEC'
-		group by subject_catalog_nbr
-		order by subject_catalog_nbr
+		from &dsn..class_vw as a
+		left join &dsn..class_vw as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and b.snapshot = 'eot'
+				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and b.ssr_component = 'LEC'
+		left join &dsn..class_vw as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and c.snapshot = 'eot'
+				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and c.ssr_component = 'LAB'
+		where a.snapshot = 'eot'
+			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+			and a.ssr_component in ('LEC','LAB')
+		group by a.subject_catalog_nbr
+		order by a.subject_catalog_nbr
 	;quit;
 	
 	proc sql;

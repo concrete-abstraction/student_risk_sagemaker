@@ -506,29 +506,29 @@ run;
 	proc sql;
 		create table class_difficulty_&cohort_year. as
 		select distinct
-			subject_catalog_nbr,
-			sum(total_grade_A) as total_grade_A,
+			a.subject_catalog_nbr,
+			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			sum(total_grade_A_minus) as total_grade_A_minus,
+			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			sum(total_grade_B_plus) as total_grade_B_plus,
+			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			sum(total_grade_B) as total_grade_B,
+			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			sum(total_grade_B_minus) as total_grade_B_minus,
+			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			sum(total_grade_C_plus) as total_grade_C_plus,
+			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			sum(total_grade_C) as total_grade_C,
+			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			sum(total_grade_C_minus) as total_grade_C_minus,
+			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			sum(total_grade_D_plus) as total_grade_D_plus,
+			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			sum(total_grade_D) as total_grade_D,
+			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			sum(total_grade_F) as total_grade_F,
-			sum(total_withdrawn) as total_withdrawn,
+			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
+			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -550,12 +550,22 @@ run;
 			(calculated DFW / calculated total_grades) as pct_DFW,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_grades) as pct_DF
-		from &dsn..class_vw
-		where snapshot = 'eot'
-			and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-			and ssr_component = 'LEC'
-		group by subject_catalog_nbr
-		order by subject_catalog_nbr
+		from &dsn..class_vw as a
+		left join &dsn..class_vw as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and b.snapshot = 'eot'
+				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and b.ssr_component = 'LEC'
+		left join &dsn..class_vw as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and c.snapshot = 'eot'
+				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and c.ssr_component = 'LAB'
+		where a.snapshot = 'eot'
+			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+			and a.ssr_component in ('LEC','LAB')
+		group by a.subject_catalog_nbr
+		order by a.subject_catalog_nbr
 	;quit;
 	
 	proc sql;
@@ -814,6 +824,144 @@ run;
 	;quit;
 	
 	%end;
+	
+	proc sql;
+		create table class_registration_&cohort_year. as
+/* 		create table class_registration_2021 as */
+		select distinct
+			emplid,
+			subject_catalog_nbr
+		from finaid_subcatnbr_data
+		where full_acad_year = "&cohort_year."
+/* 		where full_acad_year = '2021' */
+	;quit;
+	
+	proc sql;
+		create table class_difficulty_&cohort_year. as
+/* 		create table class_difficulty_2021 as */
+		select distinct
+			a.subject_catalog_nbr,
+			case when a.grading_basis in ('REM','RMS','RMP') 	then 1
+																else 0
+																end as remedial,
+			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
+			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
+			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
+			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
+			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
+			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
+			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
+			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
+			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
+			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
+			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
+			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
+			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
+			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
+			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
+			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
+			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
+			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
+			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
+			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
+			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
+			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
+			(calculated total_grade_A + calculated total_grade_A_minus 
+				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
+				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
+				+ calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as total_grades,
+			(calculated total_grade_A_GPA + calculated total_grade_A_minus_GPA 
+				+ calculated total_grade_B_plus_GPA + calculated total_grade_B_GPA + calculated total_grade_B_minus_GPA
+				+ calculated total_grade_C_plus_GPA + calculated total_grade_C_GPA + calculated total_grade_C_minus_GPA
+				+ calculated total_grade_D_plus_GPA + calculated total_grade_D_GPA) as total_grades_GPA,
+			(calculated total_grades_GPA / calculated total_grades) as class_average,
+			(calculated total_withdrawn / calculated total_grades) as pct_withdrawn,
+			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
+				+ calculated total_grade_F + calculated total_withdrawn) as CDFW,
+			(calculated CDFW / calculated total_grades) as pct_CDFW,
+			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
+				+ calculated total_grade_F) as CDF,
+			(calculated CDF / calculated total_grades) as pct_CDF,
+			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F 
+				+ calculated total_withdrawn) as DFW,
+			(calculated DFW / calculated total_grades) as pct_DFW,
+			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
+			(calculated DF / calculated total_grades) as pct_DF
+		from &dsn..class_vw as a
+		left join &dsn..class_vw as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and b.snapshot = 'eot'
+				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+/* 				and b.full_acad_year = '2020' */
+				and b.ssr_component = 'LEC'
+		left join &dsn..class_vw as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and c.snapshot = 'eot'
+				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+/* 				and c.full_acad_year = '2020' */
+				and c.ssr_component = 'LAB'
+		where a.snapshot = 'eot'
+			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+/* 			and a.full_acad_year = '2020' */
+			and a.ssr_component in ('LEC','LAB')
+		group by a.subject_catalog_nbr
+		order by a.subject_catalog_nbr
+	;quit;
+	
+	proc sql;
+		create table coursework_difficulty_&cohort_year. as
+/* 		create table coursework_difficulty_2021 as */
+		select
+			a.emplid,
+			count(a.subject_catalog_nbr) as class_count,
+			case when count(b.remedial) > 0 	then 1 
+												else 0 
+												end as remedial,
+			avg(b.class_average) as avg_difficulty,
+			avg(b.pct_withdrawn) as avg_pct_withdrawn,
+			avg(b.pct_CDFW) as avg_pct_CDFW,
+			avg(b.pct_CDF) as avg_pct_CDF,
+			avg(b.pct_DFW) as avg_pct_DFW,
+			avg(b.pct_DF) as avg_pct_DF
+		from class_registration_&cohort_year. as a
+/* 		from class_registration_2021 as a */
+		left join class_difficulty_&cohort_year. as b
+/* 		left join class_difficulty_2021 as b */
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table term_contact_hrs_&cohort_year. as
+/* 		create table term_contact_hrs_2021 as */
+		select distinct
+			a.emplid,
+			sum(b.lec_contact_hrs) as lec_contact_hrs,
+			sum(c.lab_contact_hrs) as lab_contact_hrs
+		from class_registration_&cohort_year. as a
+/* 		from class_registration_2021 as a */
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+/* 						and full_acad_year = '2020' */
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+/* 						and full_acad_year = '2020' */
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr) as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+		group by a.emplid
+	;quit;
 		
 	proc sql;
 		create table dataset_&cohort_year. as
@@ -867,7 +1015,18 @@ run;
 			case when o.locale = '33' then 1 else 0 end as town_remote,
 			case when o.locale = '41' then 1 else 0 end as rural_fringe,
 			case when o.locale = '42' then 1 else 0 end as rural_distant,
-			case when o.locale = '43' then 1 else 0 end as rural_remote
+			case when o.locale = '43' then 1 else 0 end as rural_remote,
+			p.class_count,
+			(4.0 - p.avg_difficulty) as avg_difficulty,
+			p.avg_pct_withdrawn,
+			p.avg_pct_CDFW,
+			p.avg_pct_CDF,
+			p.avg_pct_DFW,
+			p.avg_pct_DF,
+			q.lec_contact_hrs,
+			q.lab_contact_hrs,
+			r.fed_need,
+			r.total_offer
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -897,6 +1056,16 @@ run;
 			on substr(e.ext_org_postal,1,5) = n.geoid
 		left join acs.edge_locale14_zcta_table as o
 			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
+ 		left join coursework_difficulty_&cohort_year. as p
+ 			on a.emplid = p.emplid
+ 		left join term_contact_hrs_&cohort_year. as q
+ 			on a.emplid = q.emplid
+ 		left join (select distinct emplid, 
+ 								max(fed_need) as fed_need, 
+ 								max(total_offer) as total_offer 
+ 						from finaid_subcatnbr_data
+ 						where full_acad_year = "&cohort_year." group by emplid) as r
+ 			on a.emplid = r.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..xd_snapshot)
 			and a.acad_career = 'UGRD' 
@@ -995,6 +1164,15 @@ run;
 data testing_set;
 	set dataset_%eval(&end_cohort. + &lag_year.);
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if fed_need = . then fed_need = 0;
+	if total_offer = . then total_offer = 0;
+	if remedial = . then remedial = 0;
+	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
+	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_difficulty = . then avg_difficulty = 0;
+	if lec_contact_hrs = . then lec_contact_hrs = 0;
+	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	unmet_need_ofr = fed_need - total_offer;
 run;
 
 filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
