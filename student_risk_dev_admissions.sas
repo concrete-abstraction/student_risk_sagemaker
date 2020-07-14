@@ -827,18 +827,15 @@ run;
 	
 	proc sql;
 		create table class_registration_&cohort_year. as
-/* 		create table class_registration_2021 as */
 		select distinct
 			emplid,
 			subject_catalog_nbr
 		from finaid_subcatnbr_data
 		where full_acad_year = "&cohort_year."
-/* 		where full_acad_year = '2021' */
 	;quit;
 	
 	proc sql;
 		create table class_difficulty_&cohort_year. as
-/* 		create table class_difficulty_2021 as */
 		select distinct
 			a.subject_catalog_nbr,
 			case when a.grading_basis in ('REM','RMS','RMP') 	then 1
@@ -892,17 +889,14 @@ run;
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and b.snapshot = 'eot'
 				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-/* 				and b.full_acad_year = '2020' */
 				and b.ssr_component = 'LEC'
 		left join &dsn..class_vw as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and c.snapshot = 'eot'
 				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-/* 				and c.full_acad_year = '2020' */
 				and c.ssr_component = 'LAB'
 		where a.snapshot = 'eot'
 			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-/* 			and a.full_acad_year = '2020' */
 			and a.ssr_component in ('LEC','LAB')
 		group by a.subject_catalog_nbr
 		order by a.subject_catalog_nbr
@@ -910,7 +904,6 @@ run;
 	
 	proc sql;
 		create table coursework_difficulty_&cohort_year. as
-/* 		create table coursework_difficulty_2021 as */
 		select
 			a.emplid,
 			count(a.subject_catalog_nbr) as class_count,
@@ -924,29 +917,24 @@ run;
 			avg(b.pct_DFW) as avg_pct_DFW,
 			avg(b.pct_DF) as avg_pct_DF
 		from class_registration_&cohort_year. as a
-/* 		from class_registration_2021 as a */
 		left join class_difficulty_&cohort_year. as b
-/* 		left join class_difficulty_2021 as b */
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 		group by a.emplid
 	;quit;
 	
 	proc sql;
 		create table term_contact_hrs_&cohort_year. as
-/* 		create table term_contact_hrs_2021 as */
 		select distinct
 			a.emplid,
 			sum(b.lec_contact_hrs) as lec_contact_hrs,
 			sum(c.lab_contact_hrs) as lab_contact_hrs
 		from class_registration_&cohort_year. as a
-/* 		from class_registration_2021 as a */
 		left join (select distinct
 						subject_catalog_nbr,
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-/* 						and full_acad_year = '2020' */
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -956,7 +944,6 @@ run;
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-/* 						and full_acad_year = '2020' */
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
@@ -1026,7 +1013,8 @@ run;
 			q.lec_contact_hrs,
 			q.lab_contact_hrs,
 			r.fed_need,
-			r.total_offer
+			r.total_offer,
+			s.term_credit_hours
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -1066,6 +1054,8 @@ run;
  						from finaid_subcatnbr_data
  						where full_acad_year = "&cohort_year." group by emplid) as r
  			on a.emplid = r.emplid
+ 		left join finaid_subcatnbr_data as s
+ 			on a.emplid = s.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..xd_snapshot)
 			and a.acad_career = 'UGRD' 
@@ -1113,6 +1103,7 @@ data full_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 /* Note: There should be no duplicates */
@@ -1159,6 +1150,7 @@ data training_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data testing_set;
@@ -1173,6 +1165,7 @@ data testing_set;
 	if lec_contact_hrs = . then lec_contact_hrs = 0;
 	if lab_contact_hrs = . then lab_contact_hrs = 0;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
