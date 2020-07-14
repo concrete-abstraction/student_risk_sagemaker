@@ -77,7 +77,7 @@ run;
 
 sas.submit("""
 proc import out=finaid_subcatnbr_data
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\sdw_finaid_subcatnbr_data.xlsx"
+	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\sdw_finaid_subcatnbr_data.xlsx\"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
@@ -1159,6 +1159,7 @@ data full_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data training_set;
@@ -1196,6 +1197,7 @@ data training_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data testing_set;
@@ -1210,6 +1212,7 @@ data testing_set;
 	if lec_contact_hrs = . then lec_contact_hrs = 0;
 	if lab_contact_hrs = . then lab_contact_hrs = 0;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 """)
 
@@ -2235,7 +2238,6 @@ lreg_auc = roc_auc_score(y_train, lreg_probs)
 
 print(f'Overall accuracy for logistic model (training): {lreg.score(x_train, y_train):.4f}')
 print(f'ROC AUC for logistic model (training): {lreg_auc:.4f}')
-# print(f'Overall accuracy for logistic model (testing): {lreg.score(x_test, y_test):.4f}')
 
 lreg_fpr, lreg_tpr, thresholds = roc_curve(y_train, lreg_probs, drop_intermediate=False)
 
@@ -2244,16 +2246,6 @@ plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('LOGISTIC ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Logistic confusion matrix
-lreg_matrix = confusion_matrix(y_test, lreg.predict(x_test))
-lreg_df = pd.DataFrame(lreg_matrix)
-
-sns.heatmap(lreg_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('LOGISTIC CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 #%%
@@ -2270,16 +2262,12 @@ print(f'Best parameters: {gridsearch.best_params_}')
 # SVC model
 svc = SVC(kernel='linear', class_weight='balanced', probability=True).fit(x_train, y_train)
 
-# svc_cprobs = CalibratedClassifierCV(svc, method='sigmoid', cv='prefit')
-# svc_cprobs.fit(x_test, y_test)
-
 svc_probs = svc.predict_proba(x_train)
 svc_probs = svc_probs[:, 1]
 svc_auc = roc_auc_score(y_train, svc_probs)
 
 print(f'Overall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
 print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}')
-# print(f'Overall accuracy for linear SVC model (testing): {svc.score(x_test, y_test):.4f}')
 
 svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
 
@@ -2291,21 +2279,10 @@ plt.title('LINEAR SVC ROC CURVE (TRAINING)')
 plt.show()
 
 #%%
-# SVC confusion matrix
-svc_matrix = confusion_matrix(y_test, svc.predict(x_test))
-svc_df = pd.DataFrame(svc_matrix)
-
-sns.heatmap(svc_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('SVC CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
-plt.show()
-
-#%%
 # Random forest max_depth tuning
 max_depths = np.linspace(1, 25, 25, endpoint=True)
 
 train_results = []
-test_results = []
 
 for max_depth in max_depths:
     rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features='sqrt', max_depth=max_depth, n_jobs=-1)
@@ -2318,15 +2295,7 @@ for max_depth in max_depths:
     rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
     train_results.append(rfc_auc)
 
-    rfc_test = rfc.predict_proba(x_test)
-    rfc_test = rfc_test[:,1]
-    rfc_auc = roc_auc_score(y_test, rfc_test)
-
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
-    test_results.append(rfc_auc)
-
 line1, = plt.plot(max_depths, train_results, 'b', label='AUC (TRAINING)')
-line2, = plt.plot(max_depths, test_results, 'r', label='AUC (TESTING)')
 plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
 plt.ylabel('AUC SCORE')
 plt.xlabel('TREE DEPTH')
@@ -2337,7 +2306,6 @@ plt.show()
 max_features = np.linspace(0.025, 1, 40, endpoint=True)
 
 train_results = []
-test_results = []
 
 for max_feature in max_features:
     rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_depth=8, max_features=max_feature, n_jobs=-1)
@@ -2350,15 +2318,7 @@ for max_feature in max_features:
     rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
     train_results.append(rfc_auc)
 
-    rfc_test = rfc.predict_proba(x_test)
-    rfc_test = rfc_test[:,1]
-    rfc_auc = roc_auc_score(y_test, rfc_test)
-
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
-    test_results.append(rfc_auc)
-
 line1, = plt.plot(max_features, train_results, 'b', label='AUC (TRAINING)')
-line2, = plt.plot(max_features, test_results, 'r', label='AUC (TESTING)')
 plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
 plt.ylabel('AUC SCORE')
 plt.xlabel('MAX FEATURES')
@@ -2369,7 +2329,6 @@ plt.show()
 min_samples_splits = np.linspace(0.025, 1, 40, endpoint=True)
 
 train_results = []
-test_results = []
 
 for min_samples_split in min_samples_splits:
     rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.075, max_depth=8, min_samples_split=min_samples_split, n_jobs=-1)
@@ -2382,15 +2341,7 @@ for min_samples_split in min_samples_splits:
     rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
     train_results.append(rfc_auc)
 
-    rfc_test = rfc.predict_proba(x_test)
-    rfc_test = rfc_test[:,1]
-    rfc_auc = roc_auc_score(y_test, rfc_test)
-
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
-    test_results.append(rfc_auc)
-
 line1, = plt.plot(min_samples_splits, train_results, 'b', label='AUC (TRAINING)')
-line2, = plt.plot(min_samples_splits, test_results, 'r', label='AUC (TESTING)')
 plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
 plt.ylabel('AUC SCORE')
 plt.xlabel('MIN SAMPLES SPLIT')
@@ -2401,7 +2352,6 @@ plt.show()
 min_samples_leafs = np.linspace(0.025, 0.5, 20, endpoint=True)
 
 train_results = []
-test_results = []
 
 for min_samples_leaf in min_samples_leafs:
     rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=min_samples_leaf, n_jobs=-1)
@@ -2414,15 +2364,7 @@ for min_samples_leaf in min_samples_leafs:
     rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
     train_results.append(rfc_auc)
 
-    rfc_test = rfc.predict_proba(x_test)
-    rfc_test = rfc_test[:,1]
-    rfc_auc = roc_auc_score(y_test, rfc_test)
-
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
-    test_results.append(rfc_auc)
-
 line1, = plt.plot(min_samples_leafs, train_results, 'b', label='AUC (TRAINING)')
-line2, = plt.plot(min_samples_leafs, test_results, 'r', label='AUC (TESTING)')
 plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
 plt.ylabel('AUC SCORE')
 plt.xlabel('MIN SAMPLES LEAF')
@@ -2432,16 +2374,12 @@ plt.show()
 # Random forest model
 rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025).fit(x_train, y_train)
 
-# rfc_cprobs = CalibratedClassifierCV(rfc, method='sigmoid', cv='prefit')
-# rfc_cprobs.fit(x_test, y_test)
-
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]
 rfc_auc = roc_auc_score(y_train, rfc_probs)
 
 print(f'Overall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
 print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}')
-# print(f'Overall accuracy for random forest model (testing): {rfc.score(x_test, y_test):.4f}')
 
 rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
 
@@ -2450,16 +2388,6 @@ plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('RANDOM FOREST ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Random forest confusion matrix
-rfc_matrix = confusion_matrix(y_test, rfc.predict(x_test))
-rfc_df = pd.DataFrame(rfc_matrix)
-
-sns.heatmap(rfc_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('RANDOM FOREST CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 #%%
@@ -2472,7 +2400,6 @@ mlp_auc = roc_auc_score(y_train, mlp_probs)
 
 print(f'Overall accuracy for multi-layer perceptron model (training): {mlp.score(x_train, y_train):.4f}')
 print(f'ROC AUC for multi-layer perceptron model (training): {mlp_auc:.4f}')
-# print(f'Overall accuracy for multi-layer perceptron model (testing): {mlp.score(x_test, y_test):.4f}')
 
 mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=False)
 
@@ -2481,16 +2408,6 @@ plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('NEURAL NETWORK ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Multi-layer perceptron confusion matrix
-mlp_matrix = confusion_matrix(y_test, mlp.predict(x_test))
-mlp_df = pd.DataFrame(mlp_matrix)
-
-sns.heatmap(mlp_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('NEURAL NETWORK CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 #%%
@@ -2503,7 +2420,6 @@ vcf_auc = roc_auc_score(y_train, vcf_probs)
 
 print(f'Overall accuracy for ensemble model (training): {vcf.score(x_train, y_train):.4f}')
 print(f'ROC AUC for ensemble model (training): {vcf_auc:.4f}')
-# print(f'Overall accuracy for ensemble model (testing): {vcf.score(x_test, y_test):.4f}')
 
 vcf_fpr, vcf_tpr, thresholds = roc_curve(y_train, vcf_probs, drop_intermediate=False)
 
@@ -2515,23 +2431,11 @@ plt.title('ENSEMBLE ROC CURVE (TRAINING)')
 plt.show()
 
 #%%
-# Ensemble confusion matrix
-vcf_matrix = confusion_matrix(y_test, vcf.predict(x_test))
-vcf_df = pd.DataFrame(vcf_matrix)
-
-sns.heatmap(vcf_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('ENSEMBLE CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
-plt.show()
-
-#%%
 # Prepare model predictions
 lreg_pred_probs = lreg.predict_proba(x_test)
 lreg_pred_probs = lreg_pred_probs[:, 1]
-# svc_pred_probs = svc_cprobs.predict_proba(x_test)
 svc_pred_probs = svc.predict_proba(x_test)
 svc_pred_probs = svc_pred_probs[:, 1]
-# rfc_pred_probs = rfc_cprobs.predict_proba(x_test)
 rfc_pred_probs = rfc.predict_proba(x_test)
 rfc_pred_probs = rfc_pred_probs[:, 1]
 mlp_pred_probs = mlp.predict_proba(x_test)
