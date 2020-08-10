@@ -53,7 +53,6 @@ run;
 	proc sql;
 		create table cohort_&cohort_year. as
 		select distinct a.*,
-			input(substr(a.term_descr15,1,4), 4.) as year,
 			substr(a.last_sch_postal,1,5) as targetid,
 			case when a.sex = 'M' then 1 
 				else 0
