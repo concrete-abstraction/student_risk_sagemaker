@@ -997,7 +997,25 @@ sas.submit("""
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 		group by a.emplid
 	;quit;
-		
+	
+	proc sql;
+		create table exams_&cohort_year. as 
+		select distinct
+			emplid,
+			max(case when test_component = 'MSS'	then score
+													else .
+													end) as sat_mss,
+			max(case when test_component = 'ERWS'		then score
+													else .
+													end) as sat_erws
+		from &adm..UGRD_student_test_comp
+		where (select max(snap_date) as snap_date from &adm..UGRD_student_test_comp) = snap_date
+			and strm = '2207'
+			and test_component in ('MSS','ERWS')
+		group by emplid
+		order by emplid
+	;quit;
+	
 	proc sql;
 		create table dataset_&cohort_year. as
 		select distinct 
@@ -1062,7 +1080,9 @@ sas.submit("""
 			q.lab_contact_hrs,
 			r.fed_need,
 			r.total_offer,
-			s.term_credit_hours
+			s.term_credit_hours,
+			t.sat_mss,
+			t.sat_erws
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -1104,8 +1124,10 @@ sas.submit("""
  			on a.emplid = r.emplid
  		left join finaid_subcatnbr_data as s
  			on a.emplid = s.emplid
+ 		left join exams_&cohort_year. as t
+ 			on a.emplid = t.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
-								from &adm..xd_snapshot)
+								from &adm..fact_u)
 			and a.acad_career = 'UGRD' 
 			and a.campus = 'PULLM' 
 			and a.enrolled = 1
@@ -1240,7 +1262,7 @@ run;
 HTML(sas_log['LOG'])
 
 #%%
-# Import pre-split data for validation
+# Import pre-split data
 training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\training_set.csv', encoding='utf-8')
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\testing_set.csv', encoding='utf-8')
 
@@ -1436,7 +1458,7 @@ logit_df = training_set[[
                         # 'max_week_from_term_begin_dt',
                         # 'count_week_from_term_begin_dt',
                         # 'marital_status',
-                        'Distance',
+                        # 'Distance',
                         # 'pop_dens',
                         'underrep_minority', 
                         # 'ipeds_ethnic_group_descrshort',
@@ -1470,7 +1492,7 @@ logit_df = training_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        'educ_rate',
+                        # 'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -1577,7 +1599,7 @@ training_set = training_set[[
 							# 'max_week_from_term_begin_dt',
 							# 'count_week_from_term_begin_dt',
 							# 'marital_status',
-							'Distance',
+							# 'Distance',
 							# 'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1611,7 +1633,7 @@ training_set = training_set[[
 							# 'pvrt_rate',
 							'median_inc',
 							# 'median_value',
-							'educ_rate',
+							# 'educ_rate',
 							'pct_blk',
 							'pct_ai',
 							# 'pct_asn',
@@ -1717,7 +1739,7 @@ testing_set = testing_set[[
 							# 'max_week_from_term_begin_dt',
 							# 'count_week_from_term_begin_dt',
 							# 'marital_status',
-							'Distance',
+							# 'Distance',
 							# 'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1751,7 +1773,7 @@ testing_set = testing_set[[
 							# 'pvrt_rate',
 							'median_inc',
 							# 'median_value',
-							'educ_rate',
+							# 'educ_rate',
 							'pct_blk',
 							'pct_ai',
 							# 'pct_asn',
@@ -1867,7 +1889,7 @@ x_train = training_set[[
 						# 'max_week_from_term_begin_dt',
 						# 'count_week_from_term_begin_dt',
 						# 'marital_status',
-						'Distance',
+						# 'Distance',
 						# 'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -1901,7 +1923,7 @@ x_train = training_set[[
 						# 'pvrt_rate',
 						'median_inc',
 						# 'median_value',
-						'educ_rate',
+						# 'educ_rate',
 						'pct_blk',
 						'pct_ai',
 						# 'pct_asn',
@@ -2006,7 +2028,7 @@ x_test = testing_set[[
 						# 'max_week_from_term_begin_dt',
 						# 'count_week_from_term_begin_dt',
 						# 'marital_status',
-						'Distance',
+						# 'Distance',
 						# 'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -2040,7 +2062,7 @@ x_test = testing_set[[
 						# 'pvrt_rate',
 						'median_inc',
 						# 'median_value',
-						'educ_rate',
+						# 'educ_rate',
 						'pct_blk',
 						'pct_ai',
 						# 'pct_asn',
@@ -2161,12 +2183,12 @@ preprocess = make_column_transformer(
                         # 'sat_mss',
                         # 'sat_comp',
                         # 'attendee_total_visits',
-                        'Distance',
+                        # 'Distance',
                         # 'pop_dens', 
                         # 'qvalue', 
                         'median_inc',
                         # 'median_value',
-                        # 'term_credit_hours',
+                        'term_credit_hours',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
@@ -2207,7 +2229,7 @@ y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_h
                 + pell_eligibility_ind \
                 + first_gen_flag \
                 + avg_pct_withdrawn + class_count + lec_contact_hrs + lab_contact_hrs \
-                + resident + Distance + gini_indx + median_inc + educ_rate \
+                + resident + gini_indx + median_inc \
             	+ high_school_gpa + remedial \
             	+ unmet_need_ofr', data=logit_df, return_type='dataframe')
 

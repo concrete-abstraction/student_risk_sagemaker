@@ -977,7 +977,7 @@ run;
 HTML(sas_log['LOG'])
 
 #%%
-# Import pre-split data for validation
+# Import pre-split data
 training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\training_set.csv', encoding='utf-8')
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\testing_set.csv', encoding='utf-8')
 

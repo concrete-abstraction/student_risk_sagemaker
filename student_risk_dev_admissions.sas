@@ -6,9 +6,11 @@
 
 %let dsn = cendev;
 %let adm = adm;
+%let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
 %let end_cohort = 2020;
+%let avg_cpi = .0134;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
@@ -38,6 +40,12 @@ proc import out=finaid_subcatnbr_data
 	getnames=YES;
 run;
 
+proc import out=cpi
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\cpi.xlsx"
+	dbms=XLSX REPLACE;
+	getnames=YES;
+run;
+
 %macro loop;
 	
 	%do cohort_year=&start_cohort. %to &end_cohort.;
@@ -45,6 +53,7 @@ run;
 	proc sql;
 		create table cohort_&cohort_year. as
 		select distinct a.*,
+			input(substr(a.term_descr15,1,4), 4.) as year,
 			substr(a.last_sch_postal,1,5) as targetid,
 			case when a.sex = 'M' then 1 
 				else 0
@@ -78,12 +87,15 @@ run;
 					else 'missing'
 			end as parent2_highest_educ_lvl,
 			b.distance,
-			c.median_inc,
+			l.cpi_2018_adj,
+			c.median_inc as median_inc_wo_cpi,
+			c.median_inc*l.cpi_2018_adj as median_inc,
 			c.gini_indx,
 			d.pvrt_total/d.pvrt_base as pvrt_rate,
-			e.educ_rate,
+			e.educ_total/e.educ_base as educ_rate,
 			f.pop/(g.area*3.861E-7) as pop_dens,
-			h.median_value,
+			h.median_value as median_value_wo_cpi,
+			h.median_value*l.cpi_2018_adj as median_value,
 			i.race_blk/i.race_tot as pct_blk,
 			i.race_ai/i.race_tot as pct_ai,
 			i.race_asn/i.race_tot as pct_asn,
@@ -107,24 +119,26 @@ run;
 		from &dsn..new_student_enrolled_vw as a
 		left join acs.distance as b
 			on substr(a.last_sch_postal,1,5) = b.targetid
-		left join acs.acs_income as c
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
 			on substr(a.last_sch_postal,1,5) = c.geoid
-		left join acs.acs_poverty as d
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
 			on substr(a.last_sch_postal,1,5) = d.geoid
-		left join acs.acs_education as e
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
 			on substr(a.last_sch_postal,1,5) = e.geoid
-		left join acs.acs_demo as f
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
 			on substr(a.last_sch_postal,1,5) = f.geoid
-		left join acs.acs_area as g
-			on substr(a.last_sch_postal,1,5) = put(g.geoid, 5.)
-		left join acs.acs_housing as h
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
+			on substr(a.last_sch_postal,1,5) = g.geoid
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
 			on substr(a.last_sch_postal,1,5) = h.geoid
-		left join acs.acs_race as i
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
 			on substr(a.last_sch_postal,1,5) = i.geoid
-		left join acs.acs_ethnicity as j
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
+		left join cpi as l
+			on input(a.full_acad_year, 4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'
@@ -949,7 +963,25 @@ run;
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 		group by a.emplid
 	;quit;
-		
+	
+	proc sql;
+		create table exams_&cohort_year. as 
+		select distinct
+			emplid,
+			max(case when test_component = 'MSS'	then score
+													else .
+													end) as sat_mss,
+			max(case when test_component = 'ERWS'		then score
+													else .
+													end) as sat_erws
+		from &adm..UGRD_student_test_comp
+		where (select max(snap_date) as snap_date from &adm..UGRD_student_test_comp) = snap_date
+			and strm = '2207'
+			and test_component in ('MSS','ERWS')
+		group by emplid
+		order by emplid
+	;quit;
+	
 	proc sql;
 		create table dataset_&cohort_year. as
 		select distinct 
@@ -980,7 +1012,7 @@ run;
 			g.median_inc,
 			g.gini_indx,
 			h.pvrt_total/h.pvrt_base as pvrt_rate,
-			i.educ_rate,
+			i.educ_total/i.educ_base as educ_rate,
 			j.pop/(k.area*3.861E-7) as pop_dens,
 			l.median_value,
 			m.race_blk/m.race_tot as pct_blk,
@@ -1014,7 +1046,9 @@ run;
 			q.lab_contact_hrs,
 			r.fed_need,
 			r.total_offer,
-			s.term_credit_hours
+			s.term_credit_hours,
+			t.sat_mss,
+			t.sat_erws
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -1026,21 +1060,21 @@ run;
 			on a.sid_ext_org_id = e.sid_ext_org_id
 		left join acs.distance as f
 			on substr(e.ext_org_postal,1,5) = f.targetid
-		left join acs.acs_income as g
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
 			on substr(e.ext_org_postal,1,5) = g.geoid
-		left join acs.acs_poverty as h
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
 			on substr(e.ext_org_postal,1,5) = h.geoid
-		left join acs.acs_education as i
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
 			on substr(e.ext_org_postal,1,5) = i.geoid
-		left join acs.acs_demo as j
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
 			on substr(e.ext_org_postal,1,5) = j.geoid
-		left join acs.acs_area as k
-			on substr(e.ext_org_postal,1,5) = put(k.geoid, 5.)
-		left join acs.acs_housing as l
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k
+			on substr(e.ext_org_postal,1,5) = k.geoid
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l
 			on substr(e.ext_org_postal,1,5) = l.geoid
-		left join acs.acs_race as m
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m
 			on substr(e.ext_org_postal,1,5) = m.geoid
-		left join acs.acs_ethnicity as n
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n
 			on substr(e.ext_org_postal,1,5) = n.geoid
 		left join acs.edge_locale14_zcta_table as o
 			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
@@ -1056,8 +1090,10 @@ run;
  			on a.emplid = r.emplid
  		left join finaid_subcatnbr_data as s
  			on a.emplid = s.emplid
+ 		left join exams_&cohort_year. as t
+ 			on a.emplid = t.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
-								from &adm..xd_snapshot)
+								from &adm..fact_u)
 			and a.acad_career = 'UGRD' 
 			and a.campus = 'PULLM' 
 			and a.enrolled = 1
@@ -1086,6 +1122,8 @@ data full_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;	
 	if remedial = . then remedial = 0;
+	if sat_mss = . then sat_mss = 0;
+	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
@@ -1133,6 +1171,8 @@ data training_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
+	if sat_mss = . then sat_mss = 0;
+	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
@@ -1159,6 +1199,8 @@ data testing_set;
 	if fed_need = . then fed_need = 0;
 	if total_offer = . then total_offer = 0;
 	if remedial = . then remedial = 0;
+	if sat_mss = . then sat_mss = 0;
+	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
