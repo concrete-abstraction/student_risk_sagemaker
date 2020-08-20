@@ -12,3 +12,6 @@ Reference Files/*.sas
 *.txt
 *.sql
 *.pkl
+*.log
+*.sas
+*.lst

@@ -11,9 +11,10 @@ import sklearn
 import sys
 import time
 from datetime import date
+from patsy import dmatrices
 from IPython.display import HTML
 from matplotlib.legend_handler import HandlerLine2D
-from patsy import dmatrices
+from os.path import isfile
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import make_column_transformer
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PolynomialFeatures, StandardScaler
@@ -31,7 +32,20 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
 # Create system log file
-# sys.stdout = open(f'log_d{date.today()}_v{scikit_version}.txt', 'w')
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open(f'Z:\\Nathan\\Models\\student_risk\\Logs\\log_{date.today()}_v{sklearn.__version__}.log', 'w')
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)  
+
+    def flush(self):
+        pass
+
+
+sys.stdout = Logger()
 
 #%%
 # Start SAS session
@@ -92,16 +106,24 @@ proc import out=act_to_sat_math
 """)
 
 sas.submit("""
-proc import out=sdw_data
-	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\sdw_data.xlsx\"
+proc import out=enrl_data
+	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\enrl_data.xlsx\"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
 """)
 
 sas.submit("""
-proc import out=finaid_subcatnbr_data
-	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\sdw_finaid_subcatnbr_data.xlsx\"
+proc import out=finaid_data
+	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\finaid_data.xlsx\"
+	dbms=XLSX REPLACE;
+	getnames=YES;
+run;
+""")
+
+sas.submit("""
+proc import out=subcatnbr_data
+	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\subcatnbr_data.xlsx\"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
@@ -262,15 +284,13 @@ sas.submit("""
 		proc sql;
 			create table enrolled_&cohort_year. as
 			select distinct 
-				emplid, 
-				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
+				id as emplid, 
+				input(substr(term, 1, 1) || '0' || substr(term, 2, 2) || '3', 5.) as cont_term,
 				enrl_ind
-			from sdw_data
-			where full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-				and substr(strm, 4, 1) = '7'
-				and acad_career = 'UGRD'
-				and term_credit_hours > 0
-			order by emplid
+			from enrl_data
+			where substr(term, 4, 1) = '7'
+				and career = 'UGRD'
+			order by id
 		;quit;
 	%end;
 
@@ -918,10 +938,9 @@ sas.submit("""
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
-			emplid,
-			subject_catalog_nbr
-		from finaid_subcatnbr_data
-		where full_acad_year = "&cohort_year."
+			id as emplid,
+			strip(subject) || ' ' || strip(catalog) as subject_catalog_nbr
+		from subcatnbr_data
 	;quit;
 	
 	proc sql;
@@ -1122,9 +1141,8 @@ sas.submit("""
 			q.lab_contact_hrs,
 			r.fed_need,
 			r.total_offer,
-			s.term_credit_hours,
-			t.sat_mss,
-			t.sat_erws
+			s.sat_mss,
+			s.sat_erws
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -1158,16 +1176,14 @@ sas.submit("""
  			on a.emplid = p.emplid
  		left join term_contact_hrs_&cohort_year. as q
  			on a.emplid = q.emplid
- 		left join (select distinct emplid, 
- 								max(fed_need) as fed_need, 
- 								max(total_offer) as total_offer 
- 						from finaid_subcatnbr_data
- 						where full_acad_year = "&cohort_year." group by emplid) as r
+ 		left join (select distinct id as emplid, 
+ 								fed_need, 
+ 								offer_amount as total_offer 
+ 						from finaid_data
+ 						where aid_yr = "&cohort_year." group by id) as r
  			on a.emplid = r.emplid
- 		left join finaid_subcatnbr_data as s
+ 		left join exams_&cohort_year. as s
  			on a.emplid = s.emplid
- 		left join exams_&cohort_year. as t
- 			on a.emplid = t.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..fact_u)
 			and a.acad_career = 'UGRD' 
@@ -1407,7 +1423,7 @@ logit_df = training_set[[
                         # # 'IB',
                         # # 'AICE',
                         # 'IB_AICE', 
-                        'term_credit_hours',
+                        # 'term_credit_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -1548,7 +1564,7 @@ training_set = training_set[[
 							# # 'IB',
 							# # 'AICE',
 							# 'IB_AICE', 
-							'term_credit_hours',
+							# 'term_credit_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1688,7 +1704,7 @@ testing_set = testing_set[[
 							# # 'IB',
 							# # 'AICE',
 							# 'IB_AICE', 
-							'term_credit_hours',
+							# 'term_credit_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1757,12 +1773,17 @@ testing_set = testing_set[[
 
 testing_set = testing_set.reset_index()
 
-pred_outcome = testing_set[[ 
+aggregate_outcome = testing_set[[ 
                             'emplid',
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
 							'resident'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+current_outcome = testing_set[[ 
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -1838,7 +1859,7 @@ x_train = training_set[[
 						# # 'IB',
 						# # 'AICE',
 						# 'IB_AICE', 
-						'term_credit_hours',
+						# 'term_credit_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -1977,7 +1998,7 @@ x_test = testing_set[[
 						# # 'IB',
 						# # 'AICE',
 						# 'IB_AICE', 
-						'term_credit_hours',
+						# 'term_credit_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2064,7 +2085,7 @@ preprocess = make_column_transformer(
                         # 'qvalue', 
                         'median_inc',
                         # 'median_value',
-                        'term_credit_hours',
+                        # 'term_credit_hours',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
@@ -2214,13 +2235,25 @@ print('Done\n')
 # Output model predictions
 print('Output model predictions and model...')
 
-pred_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
-pred_outcome['risk_pred'] = vcf.predict(x_test)
-pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\pred_outcome_2207_{date.today()}.csv', encoding='utf-8', index=False)
+aggregate_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
+aggregate_outcome['risk_pred'] = vcf.predict(x_test)
+aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
+
+if not isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
+	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
+	current_outcome['risk_pred'] = vcf.predict(x_test)
+	current_outcome['date'] = date.today()
+	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+else:
+	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
+	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
+	current_outcome['risk_pred'] = vcf.predict(x_test)
+	current_outcome['date'] = '8/20/2020'
+	concat_outcome = pd.concat([prior_outcome, current_outcome])
+	concat_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Output model
-scikit_version = sklearn.__version__
-joblib.dump(vcf, f'model_d{date.today()}_v{scikit_version}.pkl')
+joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\Models\\model_{date.today()}_v{sklearn.__version__}.pkl')
 
 print('Done\n')

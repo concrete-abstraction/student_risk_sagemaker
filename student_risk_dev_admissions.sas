@@ -13,6 +13,7 @@
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
+
 libname acs "Z:\Nathan\Models\student_risk\Supplemental Files";
 
 proc import out=act_to_sat_engl_read
@@ -27,14 +28,20 @@ proc import out=act_to_sat_math
 	getnames=YES;
 run;
 
-proc import out=sdw_data
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\sdw_data.xlsx"
+proc import out=enrl_data
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\enrl_data.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
 
-proc import out=finaid_subcatnbr_data
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\sdw_finaid_subcatnbr_data.xlsx"
+proc import out=finaid_data
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\finaid_data.xlsx"
+	dbms=XLSX REPLACE;
+	getnames=YES;
+run;
+
+proc import out=subcatnbr_data
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\subcatnbr_data.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
@@ -184,15 +191,13 @@ run;
 		proc sql;
 			create table enrolled_&cohort_year. as
 			select distinct 
-				emplid, 
-				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
+				id as emplid, 
+				input(substr(term, 1, 1) || '0' || substr(term, 2, 2) || '3', 5.) as cont_term,
 				enrl_ind
-			from sdw_data
-			where full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-				and substr(strm, 4, 1) = '7'
-				and acad_career = 'UGRD'
-				and term_credit_hours > 0
-			order by emplid
+			from enrl_data
+			where substr(term, 4, 1) = '7'
+				and career = 'UGRD'
+			order by id
 		;quit;
 	%end;
 
@@ -840,10 +845,9 @@ run;
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
-			emplid,
-			subject_catalog_nbr
-		from finaid_subcatnbr_data
-		where full_acad_year = "&cohort_year."
+			id as emplid,
+			strip(subject) || ' ' || strip(catalog) as subject_catalog_nbr
+		from subcatnbr_data
 	;quit;
 	
 	proc sql;
@@ -1044,9 +1048,8 @@ run;
 			q.lab_contact_hrs,
 			r.fed_need,
 			r.total_offer,
-			s.term_credit_hours,
-			t.sat_mss,
-			t.sat_erws
+			s.sat_mss,
+			s.sat_erws
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -1080,16 +1083,14 @@ run;
  			on a.emplid = p.emplid
  		left join term_contact_hrs_&cohort_year. as q
  			on a.emplid = q.emplid
- 		left join (select distinct emplid, 
- 								max(fed_need) as fed_need, 
- 								max(total_offer) as total_offer 
- 						from finaid_subcatnbr_data
- 						where full_acad_year = "&cohort_year." group by emplid) as r
+ 		left join (select distinct id as emplid, 
+ 								fed_need, 
+ 								offer_amount as total_offer 
+ 						from finaid_data
+ 						where aid_yr = "&cohort_year." group by id) as r
  			on a.emplid = r.emplid
- 		left join finaid_subcatnbr_data as s
+ 		left join exams_&cohort_year. as s
  			on a.emplid = s.emplid
- 		left join exams_&cohort_year. as t
- 			on a.emplid = t.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..fact_u)
 			and a.acad_career = 'UGRD' 
