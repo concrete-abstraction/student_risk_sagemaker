@@ -35,7 +35,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 class Logger(object):
     def __init__(self):
         self.terminal = sys.stdout
-        self.log = open(f'Z:\\Nathan\\Models\\student_risk\\Logs\\log_{date.today()}_v{sklearn.__version__}.log', 'w')
+        self.log = open(f'Z:\\Nathan\\Models\\student_risk\\Logs\\main\\log_{date.today()}_v{sklearn.__version__}.log', 'w')
 
     def write(self, message):
         self.terminal.write(message)
