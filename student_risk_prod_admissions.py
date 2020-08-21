@@ -106,30 +106,6 @@ proc import out=act_to_sat_math
 """)
 
 sas.submit("""
-proc import out=enrl_data
-	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\enrl_data.xlsx\"
-	dbms=XLSX REPLACE;
-	getnames=YES;
-run;
-""")
-
-sas.submit("""
-proc import out=finaid_data
-	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\finaid_data.xlsx\"
-	dbms=XLSX REPLACE;
-	getnames=YES;
-run;
-""")
-
-sas.submit("""
-proc import out=subcatnbr_data
-	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\subcatnbr_data.xlsx\"
-	dbms=XLSX REPLACE;
-	getnames=YES;
-run;
-""")
-
-sas.submit("""
 proc import out=cpi
 	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\cpi.xlsx\"
 	dbms=XLSX REPLACE;
@@ -284,13 +260,13 @@ sas.submit("""
 		proc sql;
 			create table enrolled_&cohort_year. as
 			select distinct 
-				id as emplid, 
-				input(substr(term, 1, 1) || '0' || substr(term, 2, 2) || '3', 5.) as cont_term,
-				enrl_ind
-			from enrl_data
-			where substr(term, 4, 1) = '7'
-				and career = 'UGRD'
-			order by id
+				emplid, 
+				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
+				casewhena_stdnt_enrl_status__e_t as enrl_ind
+			from acs.enrl_data
+			where substr(strm, 4, 1) = '7'
+				and acad_career = 'UGRD'
+			order by emplid
 		;quit;
 	%end;
 
@@ -938,9 +914,9 @@ sas.submit("""
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
-			id as emplid,
-			strip(subject) || ' ' || strip(catalog) as subject_catalog_nbr
-		from subcatnbr_data
+			emplid,
+			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr
+		from acs.subcatnbr_data
 	;quit;
 	
 	proc sql;
@@ -1176,11 +1152,11 @@ sas.submit("""
  			on a.emplid = p.emplid
  		left join term_contact_hrs_&cohort_year. as q
  			on a.emplid = q.emplid
- 		left join (select distinct id as emplid, 
+ 		left join (select distinct emplid, 
  								fed_need, 
- 								offer_amount as total_offer 
- 						from finaid_data
- 						where aid_yr = "&cohort_year." group by id) as r
+ 								sum_a_offer_amount_ as total_offer 
+ 						from acs.finaid_data
+ 						where aid_year = "&cohort_year." group by emplid) as r
  			on a.emplid = r.emplid
  		left join exams_&cohort_year. as s
  			on a.emplid = s.emplid
@@ -2246,9 +2222,10 @@ if not isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.cs
 	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
 else:
 	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
+	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_backup.csv', encoding='utf-8', index=False)
 	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 	current_outcome['risk_pred'] = vcf.predict(x_test)
-	current_outcome['date'] = '8/20/2020'
+	current_outcome['date'] = date.today()
 	concat_outcome = pd.concat([prior_outcome, current_outcome])
 	concat_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
 

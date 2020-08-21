@@ -28,24 +28,6 @@ proc import out=act_to_sat_math
 	getnames=YES;
 run;
 
-proc import out=enrl_data
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\enrl_data.xlsx"
-	dbms=XLSX REPLACE;
-	getnames=YES;
-run;
-
-proc import out=finaid_data
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\finaid_data.xlsx"
-	dbms=XLSX REPLACE;
-	getnames=YES;
-run;
-
-proc import out=subcatnbr_data
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\subcatnbr_data.xlsx"
-	dbms=XLSX REPLACE;
-	getnames=YES;
-run;
-
 proc import out=cpi
 	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\cpi.xlsx"
 	dbms=XLSX REPLACE;
@@ -191,13 +173,13 @@ run;
 		proc sql;
 			create table enrolled_&cohort_year. as
 			select distinct 
-				id as emplid, 
-				input(substr(term, 1, 1) || '0' || substr(term, 2, 2) || '3', 5.) as cont_term,
+				emplid, 
+				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
 				enrl_ind
-			from enrl_data
-			where substr(term, 4, 1) = '7'
-				and career = 'UGRD'
-			order by id
+			from acs.enrl_data
+			where substr(strm, 4, 1) = '7'
+				and acad_career = 'UGRD'
+			order by emplid
 		;quit;
 	%end;
 
@@ -845,9 +827,9 @@ run;
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
-			id as emplid,
-			strip(subject) || ' ' || strip(catalog) as subject_catalog_nbr
-		from subcatnbr_data
+			emplid,
+			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr
+		from acs.subcatnbr_data
 	;quit;
 	
 	proc sql;
@@ -1083,11 +1065,11 @@ run;
  			on a.emplid = p.emplid
  		left join term_contact_hrs_&cohort_year. as q
  			on a.emplid = q.emplid
- 		left join (select distinct id as emplid, 
+ 		left join (select distinct emplid, 
  								fed_need, 
- 								offer_amount as total_offer 
- 						from finaid_data
- 						where aid_yr = "&cohort_year." group by id) as r
+ 								total_offer 
+ 						from acs.finaid_data
+ 						where aid_year = "&cohort_year." group by emplid) as r
  			on a.emplid = r.emplid
  		left join exams_&cohort_year. as s
  			on a.emplid = s.emplid

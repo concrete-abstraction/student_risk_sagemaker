@@ -44,10 +44,9 @@ create table dir.subcatnbr_data as
 select * from connection to oracle 
 (
 
-SELECT DISTINCT A.EMPLID, B.SUBJECT, B.CATALOG_NBR,TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate
-
+SELECT DISTINCT A.EMPLID, B.SUBJECT, B.CATALOG_NBR, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate
 FROM PS_STDNT_ENRL_VW A, PS_CLASS_TBL B
-WHERE ( A.STRM = %bquote('&strm.')
+WHERE (A.STRM = %bquote('&strm.')
 AND A.STDNT_ENRL_STATUS = 'E'
 AND A.ACAD_CAREER = 'UGRD'
 AND A.ACAD_CAREER = B.ACAD_CAREER
@@ -64,13 +63,12 @@ create table dir.finaid_data as
 select * from connection to oracle 
 (
 
-SELECT DISTINCT A.EMPLID, A.INSTITUTION, A.AID_YEAR, A.ACAD_CAREER, SUM( A.OFFER_AMOUNT), B.FED_NEED,TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
+SELECT DISTINCT A.EMPLID, A.INSTITUTION, A.AID_YEAR, A.ACAD_CAREER, SUM(A.OFFER_AMOUNT) AS TOTAL_OFFER, B.FED_NEED, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
 FROM (PS_STDNT_AWARDS A 
 LEFT OUTER JOIN  PS_STDNT_AWD_PER B ON  A.EMPLID = B.EMPLID AND A.INSTITUTION = B.INSTITUTION AND A.AID_YEAR = B.AID_YEAR AND B.AWARD_PERIOD = A.AWARD_PERIOD)
-WHERE ( A.AID_YEAR = %bquote('&aid_year.') AND A.AWARD_STATUS = 'O' AND A.AWARD_PERIOD = 'A'
+WHERE (A.AID_YEAR = %bquote('&aid_year.') AND A.AWARD_STATUS = 'O' AND A.AWARD_PERIOD = 'A'
 AND A.AWARD_PERIOD = 'A' AND A.ACAD_CAREER = 'UGRD')
-GROUP BY  A.EMPLID,  A.INSTITUTION,  A.AID_YEAR,  A.ACAD_CAREER,  B.FED_NEED,sysdate
-
+GROUP BY  A.EMPLID,  A.INSTITUTION,  A.AID_YEAR,  A.ACAD_CAREER,  B.FED_NEED, sysdate
 
 ); 
 quit;
@@ -81,13 +79,11 @@ create table dir.enrl_data as
 select * from connection to oracle 
 (
 
-SELECT DISTINCT A.EMPLID, A.ACAD_CAREER, A.STRM, CASE WHEN  A.STDNT_ENRL_STATUS = 'E' THEN 1 ELSE 0 END,TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
+SELECT DISTINCT A.EMPLID, A.ACAD_CAREER, A.STRM, CASE WHEN A.STDNT_ENRL_STATUS = 'E' THEN 1 ELSE 0 END AS ENRL_IND, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
 FROM PS_STDNT_ENRL_VW A
-WHERE ( A.STRM = %bquote('&strm.')
+WHERE (A.STRM = %bquote('&strm.')
 AND A.ACAD_CAREER = 'UGRD'
 AND A.STDNT_ENRL_STATUS = 'E')
-
-
 
 ); 
 quit;
