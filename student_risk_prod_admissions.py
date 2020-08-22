@@ -262,7 +262,7 @@ sas.submit("""
 			select distinct 
 				emplid, 
 				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
-				casewhena_stdnt_enrl_status__e_t as enrl_ind
+				enrl_ind
 			from acs.enrl_data
 			where substr(strm, 4, 1) = '7'
 				and acad_career = 'UGRD'
@@ -1154,7 +1154,7 @@ sas.submit("""
  			on a.emplid = q.emplid
  		left join (select distinct emplid, 
  								fed_need, 
- 								sum_a_offer_amount_ as total_offer 
+ 								total_offer 
  						from acs.finaid_data
  						where aid_year = "&cohort_year." group by emplid) as r
  			on a.emplid = r.emplid
