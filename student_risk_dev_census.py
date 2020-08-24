@@ -36,6 +36,7 @@ sas = saspy.SASsession()
 sas.submit("""
 %let dsn = cendev;
 %let adm = adm;
+%let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
 %let end_cohort = 2019;
@@ -65,6 +66,14 @@ proc import out=act_to_sat_math
     dbms=XLSX REPLACE;
     getnames=YES;
     run;
+""")
+
+sas.submit("""
+proc import out=cpi
+	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\cpi.xlsx\"
+	dbms=XLSX REPLACE;
+	getnames=YES;
+run;
 """)
 
 #%%
@@ -110,12 +119,15 @@ sas.submit("""
 					else 'missing'
 			end as parent2_highest_educ_lvl,
 			b.distance,
-			c.median_inc,
+			l.cpi_2018_adj,
+			c.median_inc as median_inc_wo_cpi,
+			c.median_inc*l.cpi_2018_adj as median_inc,
 			c.gini_indx,
 			d.pvrt_total/d.pvrt_base as pvrt_rate,
-			e.educ_rate,
+			e.educ_total/e.educ_base as educ_rate,
 			f.pop/(g.area*3.861E-7) as pop_dens,
-			h.median_value,
+			h.median_value as median_value_wo_cpi,
+			h.median_value*l.cpi_2018_adj as median_value,
 			i.race_blk/i.race_tot as pct_blk,
 			i.race_ai/i.race_tot as pct_ai,
 			i.race_asn/i.race_tot as pct_asn,
@@ -139,24 +151,26 @@ sas.submit("""
 		from &dsn..new_student_enrolled_vw as a
 		left join acs.distance as b
 			on substr(a.last_sch_postal,1,5) = b.targetid
-		left join acs.acs_income as c
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
 			on substr(a.last_sch_postal,1,5) = c.geoid
-		left join acs.acs_poverty as d
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
 			on substr(a.last_sch_postal,1,5) = d.geoid
-		left join acs.acs_education as e
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
 			on substr(a.last_sch_postal,1,5) = e.geoid
-		left join acs.acs_demo as f
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
 			on substr(a.last_sch_postal,1,5) = f.geoid
-		left join acs.acs_area as g
-			on substr(a.last_sch_postal,1,5) = put(g.geoid, 5.)
-		left join acs.acs_housing as h
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
+			on substr(a.last_sch_postal,1,5) = g.geoid
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
 			on substr(a.last_sch_postal,1,5) = h.geoid
-		left join acs.acs_race as i
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
 			on substr(a.last_sch_postal,1,5) = i.geoid
-		left join acs.acs_ethnicity as j
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
+		left join cpi as l
+			on input(a.full_acad_year, 4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'
@@ -520,29 +534,29 @@ sas.submit("""
 	proc sql;
 		create table class_difficulty_&cohort_year. as
 		select distinct
-			subject_catalog_nbr,
-			sum(total_grade_A) as total_grade_A,
+			a.subject_catalog_nbr,
+			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			sum(total_grade_A_minus) as total_grade_A_minus,
+			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			sum(total_grade_B_plus) as total_grade_B_plus,
+			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			sum(total_grade_B) as total_grade_B,
+			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			sum(total_grade_B_minus) as total_grade_B_minus,
+			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			sum(total_grade_C_plus) as total_grade_C_plus,
+			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			sum(total_grade_C) as total_grade_C,
+			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			sum(total_grade_C_minus) as total_grade_C_minus,
+			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			sum(total_grade_D_plus) as total_grade_D_plus,
+			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			sum(total_grade_D) as total_grade_D,
+			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			sum(total_grade_F) as total_grade_F,
-			sum(total_withdrawn) as total_withdrawn,
+			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
+			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -564,12 +578,22 @@ sas.submit("""
 			(calculated DFW / calculated total_grades) as pct_DFW,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_grades) as pct_DF
-		from &dsn..class_vw
-		where snapshot = 'eot'
-			and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-			and ssr_component = 'LEC'
-		group by subject_catalog_nbr
-		order by subject_catalog_nbr
+		from &dsn..class_vw as a
+		left join &dsn..class_vw as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and b.snapshot = 'eot'
+				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and b.ssr_component = 'LEC'
+		left join &dsn..class_vw as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and c.snapshot = 'eot'
+				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and c.ssr_component = 'LAB'
+		where a.snapshot = 'eot'
+			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+			and a.ssr_component in ('LEC','LAB')
+		group by a.subject_catalog_nbr
+		order by a.subject_catalog_nbr
 	;quit;
 	
 	proc sql;
@@ -823,7 +847,7 @@ sas.submit("""
  			on a.emplid = p.emplid
  		left join housing_&cohort_year. as q
  			on a.emplid = q.emplid
- 		left join housing_detail_&cohort_year. as r
+ 		 left join housing_detail_&cohort_year. as r
  			on a.emplid = r.emplid
 	;quit;
 	
@@ -958,17 +982,17 @@ run;
 #%%
 # Export data
 sas_log = sas.submit("""
-filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
+filename full "Z:\\Nathan\\Models\\student_risk\\cfull_set.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\training_set.csv" encoding="utf-8";
+filename training "Z:\\Nathan\\Models\\student_risk\\ctraining_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\testing_set.csv" encoding="utf-8";
+filename testing "Z:\\Nathan\\Models\\student_risk\\ctesting_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -978,8 +1002,8 @@ HTML(sas_log['LOG'])
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\training_set.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\testing_set.csv', encoding='utf-8')
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\ctraining_set.csv', encoding='utf-8')
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\ctesting_set.csv', encoding='utf-8')
 
 #%%
 # Training AWE instrumental variable
@@ -1167,13 +1191,13 @@ logit_df = training_set[[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
-                        'age',
+                        # 'age',
                         'male',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
                         # 'marital_status',
-                        'Distance',
+                        # 'Distance',
                         # 'pop_dens',
                         'underrep_minority', 
                         # 'ipeds_ethnic_group_descrshort',
@@ -1188,7 +1212,7 @@ logit_df = training_set[[
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         # 'avg_pct_CDF',
@@ -1207,7 +1231,7 @@ logit_df = training_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        'educ_rate',
+                        # 'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -1242,31 +1266,31 @@ logit_df = training_set[[
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
                         # 'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
-                        'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
+                        # 'provost',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
@@ -1308,13 +1332,13 @@ training_set = training_set[[
                             'enrl_ind', 
                             # 'acad_year',
                             # 'age_group', 
-                            'age', 
+                            # 'age', 
                             'male',
                             # 'min_week_from_term_begin_dt',
                             # 'max_week_from_term_begin_dt',
                             'count_week_from_term_begin_dt',
                             # 'marital_status',
-                            'Distance',
+                            # 'Distance',
                             # 'pop_dens',
                             # 'underrep_minority', 
                             'ipeds_ethnic_group_descrshort',
@@ -1329,7 +1353,7 @@ training_set = training_set[[
                             # 'awe_instrument',
                             # 'cdi_instrument',
                             # 'avg_difficulty',
-                            'class_count',
+                            # 'class_count',
                             'avg_pct_withdrawn',
                             # 'avg_pct_CDFW',
                             # 'avg_pct_CDF',
@@ -1348,7 +1372,7 @@ training_set = training_set[[
                             # 'pvrt_rate',
                             'median_inc',
                             # 'median_value',
-                            'educ_rate',
+                            # 'educ_rate',
                             'pct_blk',
                             'pct_ai',
                             # 'pct_asn',
@@ -1383,31 +1407,31 @@ training_set = training_set[[
                             # 'ACAD_PLAN',
                             # 'plan_owner_org',
                             # 'business',
-                            'cahnrs_anml',
-                            'cahnrs_envr',
-                            'cahnrs_econ',
-                            'cahnrext',
-                            'cas_chem',
-                            'cas_crim',
-                            'cas_math',
-                            'cas_psyc',
-                            'cas_biol',
-                            'cas_engl',
-                            'cas_phys',
-                            'cas',
-                            'comm',
-                            'education',
-                            'medicine',
-                            'nursing',
-                            'pharmacy',
-                            'provost',
-                            'vcea_bioe',
-                            'vcea_cive',
-                            'vcea_desn',
-                            'vcea_eecs',
-                            'vcea_mech',
-                            'vcea',
-                            'vet_med',
+                            # 'cahnrs_anml',
+                            # 'cahnrs_envr',
+                            # 'cahnrs_econ',
+                            # 'cahnrext',
+                            # 'cas_chem',
+                            # 'cas_crim',
+                            # 'cas_math',
+                            # 'cas_psyc',
+                            # 'cas_biol',
+                            # 'cas_engl',
+                            # 'cas_phys',
+                            # 'cas',
+                            # 'comm',
+                            # 'education',
+                            # 'medicine',
+                            # 'nursing',
+                            # 'pharmacy',
+                            # 'provost',
+                            # 'vcea_bioe',
+                            # 'vcea_cive',
+                            # 'vcea_desn',
+                            # 'vcea_eecs',
+                            # 'vcea_mech',
+                            # 'vcea',
+                            # 'vet_med',
                             # 'last_sch_proprietorship',
                             'sat_erws',
                             'sat_mss',
@@ -1449,13 +1473,13 @@ testing_set = testing_set[[
                             'enrl_ind', 
                             # 'acad_year',
                             # 'age_group', 
-                            'age', 
+                            # 'age', 
                             'male',
                             # 'min_week_from_term_begin_dt',
                             # 'max_week_from_term_begin_dt',
                             'count_week_from_term_begin_dt',
                             # 'marital_status',
-                            'Distance',
+                            # 'Distance',
                             # 'pop_dens',
                             # 'underrep_minority', 
                             'ipeds_ethnic_group_descrshort',
@@ -1470,7 +1494,7 @@ testing_set = testing_set[[
                             # 'awe_instrument',
                             # 'cdi_instrument',
                             # 'avg_difficulty',
-                            'class_count',
+                            # 'class_count',
                             'avg_pct_withdrawn',
                             # 'avg_pct_CDFW',
                             # 'avg_pct_CDF',
@@ -1489,7 +1513,7 @@ testing_set = testing_set[[
                             # 'pvrt_rate',
                             'median_inc',
                             # 'median_value',
-                            'educ_rate',
+                            # 'educ_rate',
                             'pct_blk',
                             'pct_ai',
                             # 'pct_asn',
@@ -1524,31 +1548,31 @@ testing_set = testing_set[[
                             # 'ACAD_PLAN',
                             # 'plan_owner_org',
                             # 'business',
-                            'cahnrs_anml',
-                            'cahnrs_envr',
-                            'cahnrs_econ',
-                            'cahnrext',
-                            'cas_chem',
-                            'cas_crim',
-                            'cas_math',
-                            'cas_psyc',
-                            'cas_biol',
-                            'cas_engl',
-                            'cas_phys',
-                            'cas',
-                            'comm',
-                            'education',
-                            'medicine',
-                            'nursing',
-                            'pharmacy',
-                            'provost',
-                            'vcea_bioe',
-                            'vcea_cive',
-                            'vcea_desn',
-                            'vcea_eecs',
-                            'vcea_mech',
-                            'vcea',
-                            'vet_med',
+                            # 'cahnrs_anml',
+                            # 'cahnrs_envr',
+                            # 'cahnrs_econ',
+                            # 'cahnrext',
+                            # 'cas_chem',
+                            # 'cas_crim',
+                            # 'cas_math',
+                            # 'cas_psyc',
+                            # 'cas_biol',
+                            # 'cas_engl',
+                            # 'cas_phys',
+                            # 'cas',
+                            # 'comm',
+                            # 'education',
+                            # 'medicine',
+                            # 'nursing',
+                            # 'pharmacy',
+                            # 'provost',
+                            # 'vcea_bioe',
+                            # 'vcea_cive',
+                            # 'vcea_desn',
+                            # 'vcea_eecs',
+                            # 'vcea_mech',
+                            # 'vcea',
+                            # 'vet_med',
                             # 'last_sch_proprietorship',
                             'sat_erws',
                             'sat_mss',
@@ -1595,13 +1619,13 @@ pred_outcome = testing_set[[
 x_train = training_set[[
                         # 'acad_year',
                         # 'age_group', 
-                        'age', 
+                        # 'age', 
                         'male',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
                         # 'marital_status',
-                        'Distance',
+                        # 'Distance',
                         # 'pop_dens',
                         # 'underrep_minority', 
                         'ipeds_ethnic_group_descrshort',
@@ -1616,7 +1640,7 @@ x_train = training_set[[
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         # 'avg_pct_CDF',
@@ -1635,7 +1659,7 @@ x_train = training_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        'educ_rate',
+                        # 'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -1670,31 +1694,31 @@ x_train = training_set[[
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
                         # 'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
-                        'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
+                        # 'provost',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
@@ -1734,13 +1758,13 @@ x_train = training_set[[
 x_test = testing_set[[
                         # 'acad_year', 
                         # 'age_group',
-                        'age', 
+                        # 'age', 
                         'male',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
                         # 'marital_status',
-                        'Distance',
+                        # 'Distance',
                         # 'pop_dens',
                         # 'underrep_minority', 
                         'ipeds_ethnic_group_descrshort',
@@ -1755,7 +1779,7 @@ x_test = testing_set[[
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         # 'avg_pct_CDF',
@@ -1774,7 +1798,7 @@ x_test = testing_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        'educ_rate',
+                        # 'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -1809,31 +1833,31 @@ x_test = testing_set[[
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
                         # 'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
-                        'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
+                        # 'provost',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         'sat_erws',
                         'sat_mss',
@@ -1887,7 +1911,7 @@ plt.show()
 # Preprocess data
 preprocess = make_column_transformer(
     (MinMaxScaler(), [
-                        'age',
+                        # 'age',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
@@ -1895,7 +1919,7 @@ preprocess = make_column_transformer(
                         'sat_mss',
                         # 'sat_comp',
                         'attendee_total_visits',
-                        'Distance',
+                        # 'Distance',
                         # 'pop_dens', 
                         # 'qvalue', 
                         'median_inc',
@@ -1905,7 +1929,7 @@ preprocess = make_column_transformer(
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'lec_contact_hrs',
                         'lab_contact_hrs',
                         'cum_adj_transfer_hours',
@@ -1936,19 +1960,15 @@ x_test = preprocess.fit_transform(x_test)
 
 #%%
 # Standard logistic model
-y, x = dmatrices('enrl_ind ~ age + male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
+y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + afl_greek_indicator + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
                 + pell_eligibility_ind + LSAMP_STEM_Flag + athlete \
                 + first_gen_flag + father_wsu_flag + mother_wsu_flag \
-                + avg_pct_withdrawn + class_count + lec_contact_hrs + lab_contact_hrs + term_credit_hours \
-                + resident + Distance + gini_indx + median_inc + educ_rate \
+                + avg_pct_withdrawn + lec_contact_hrs + lab_contact_hrs + term_credit_hours \
+                + resident + gini_indx + median_inc \
                 + sat_erws + sat_mss \
                 + AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + cum_adj_transfer_hours + high_school_gpa + remedial + honors_program_ind \
-                + cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
-                + cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
-                + comm + education + medicine + nursing + pharmacy + provost + vet_med \
-                + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea  \
                 + count_week_from_term_begin_dt + attendee_total_visits + unmet_need_ofr', data=logit_df, return_type='dataframe')
 
 logit_mod = Logit(y, x)
@@ -2213,7 +2233,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.00001, learning_rate_init=0.001, n_iter_no_change=500).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.0001, learning_rate_init=0.001, max_iter=1500, n_iter_no_change=15).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]

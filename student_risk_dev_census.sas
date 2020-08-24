@@ -1,11 +1,12 @@
 * ------------------------------------------------------------------------------- ;
 *                                                                                 ;
-*                             STUDENT RISK (1 OF 2)                               ;
+*                             STUDENT RISK (2 OF 2)                               ;
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
 %let dsn = cendev;
 %let adm = adm;
+%let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
 %let end_cohort = 2019;
@@ -22,6 +23,12 @@ run;
 
 proc import out=act_to_sat_math
 	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\act_to_sat_math.xlsx"
+	dbms=XLSX REPLACE;
+	getnames=YES;
+run;
+
+proc import out=cpi
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\cpi.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
@@ -66,12 +73,15 @@ run;
 					else 'missing'
 			end as parent2_highest_educ_lvl,
 			b.distance,
-			c.median_inc,
+			l.cpi_2018_adj,
+			c.median_inc as median_inc_wo_cpi,
+			c.median_inc*l.cpi_2018_adj as median_inc,
 			c.gini_indx,
 			d.pvrt_total/d.pvrt_base as pvrt_rate,
-			e.educ_rate,
+			e.educ_total/e.educ_base as educ_rate,
 			f.pop/(g.area*3.861E-7) as pop_dens,
-			h.median_value,
+			h.median_value as median_value_wo_cpi,
+			h.median_value*l.cpi_2018_adj as median_value,
 			i.race_blk/i.race_tot as pct_blk,
 			i.race_ai/i.race_tot as pct_ai,
 			i.race_asn/i.race_tot as pct_asn,
@@ -95,24 +105,26 @@ run;
 		from &dsn..new_student_enrolled_vw as a
 		left join acs.distance as b
 			on substr(a.last_sch_postal,1,5) = b.targetid
-		left join acs.acs_income as c
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
 			on substr(a.last_sch_postal,1,5) = c.geoid
-		left join acs.acs_poverty as d
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
 			on substr(a.last_sch_postal,1,5) = d.geoid
-		left join acs.acs_education as e
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
 			on substr(a.last_sch_postal,1,5) = e.geoid
-		left join acs.acs_demo as f
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
 			on substr(a.last_sch_postal,1,5) = f.geoid
-		left join acs.acs_area as g
-			on substr(a.last_sch_postal,1,5) = put(g.geoid, 5.)
-		left join acs.acs_housing as h
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
+			on substr(a.last_sch_postal,1,5) = g.geoid
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
 			on substr(a.last_sch_postal,1,5) = h.geoid
-		left join acs.acs_race as i
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
 			on substr(a.last_sch_postal,1,5) = i.geoid
-		left join acs.acs_ethnicity as j
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
+		left join cpi as l
+			on input(a.full_acad_year, 4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'

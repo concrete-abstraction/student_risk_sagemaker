@@ -35,7 +35,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 class Logger(object):
     def __init__(self):
         self.terminal = sys.stdout
-        self.log = open(f'Z:\\Nathan\\Models\\student_risk\\Logs\\main\\log_adm_{date.today()}_v{sklearn.__version__}.log', 'w')
+        self.log = open(f'Z:\\Nathan\\Models\\student_risk\\Logs\\main\\log_cen_{date.today()}_v{sklearn.__version__}.log', 'w')
 
     def write(self, message):
         self.terminal.write(message)
@@ -63,7 +63,7 @@ sas.submit("""
 %let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
-%let end_cohort = 2020;
+%let end_cohort = 2019;
 """)
 
 print('Done\n')
@@ -234,38 +234,22 @@ sas.submit("""
 			and ipeds_full_part_time = 'F'
 	;quit;
 	
-	%if &cohort_year. < &end_cohort. %then %do;
-		proc sql;
-			create table enrolled_&cohort_year. as
-			select distinct 
-				emplid, 
-				term_code as cont_term,
-				enrl_ind
-			from &dsn..student_enrolled_vw
-			where snapshot = 'census'
-				and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-				and substr(strm, 4, 1) = '7'
-				and acad_career = 'UGRD'
-				and new_continue_status = 'CTU'
-				and term_credit_hours > 0
-			order by emplid
-		;quit;
-	%end;
-
-	%if &cohort_year. = &end_cohort. %then %do;
-		proc sql;
-			create table enrolled_&cohort_year. as
-			select distinct 
-				emplid, 
-				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
-				enrl_ind
-			from acs.enrl_data
-			where substr(strm, 4, 1) = '7'
-				and acad_career = 'UGRD'
-			order by emplid
-		;quit;
-	%end;
-
+	proc sql;
+		create table enrolled_&cohort_year. as
+		select distinct 
+			emplid, 
+			term_code as cont_term,
+			enrl_ind
+		from &dsn..student_enrolled_vw
+		where snapshot = 'census'
+			and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+			and substr(strm, 4, 1) = '7'
+			and acad_career = 'UGRD'
+			and new_continue_status = 'CTU'
+			and term_credit_hours > 0
+		order by emplid
+	;quit;
+	
 	proc sql;
 		create table plan_&cohort_year. as 
 		select distinct 
@@ -690,7 +674,7 @@ sas.submit("""
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr) as c
+					group by subject_catalog_nbr ) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 		group by a.emplid
 	;quit;
@@ -907,263 +891,6 @@ sas.submit("""
 	
 	%end;
 	
-	proc sql;
-		create table class_registration_&cohort_year. as
-		select distinct
-			emplid,
-			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr
-		from acs.subcatnbr_data
-	;quit;
-	
-	proc sql;
-		create table class_difficulty_&cohort_year. as
-		select distinct
-			a.subject_catalog_nbr,
-			case when a.grading_basis in ('REM','RMS','RMP') 	then 1
-																else 0
-																end as remedial,
-			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
-			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
-			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
-			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
-			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
-			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
-			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
-			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
-			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
-			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
-			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
-			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
-			(calculated total_grade_A + calculated total_grade_A_minus 
-				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
-				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
-				+ calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as total_grades,
-			(calculated total_grade_A_GPA + calculated total_grade_A_minus_GPA 
-				+ calculated total_grade_B_plus_GPA + calculated total_grade_B_GPA + calculated total_grade_B_minus_GPA
-				+ calculated total_grade_C_plus_GPA + calculated total_grade_C_GPA + calculated total_grade_C_minus_GPA
-				+ calculated total_grade_D_plus_GPA + calculated total_grade_D_GPA) as total_grades_GPA,
-			(calculated total_grades_GPA / calculated total_grades) as class_average,
-			(calculated total_withdrawn / calculated total_grades) as pct_withdrawn,
-			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
-				+ calculated total_grade_F + calculated total_withdrawn) as CDFW,
-			(calculated CDFW / calculated total_grades) as pct_CDFW,
-			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
-				+ calculated total_grade_F) as CDF,
-			(calculated CDF / calculated total_grades) as pct_CDF,
-			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F 
-				+ calculated total_withdrawn) as DFW,
-			(calculated DFW / calculated total_grades) as pct_DFW,
-			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
-			(calculated DF / calculated total_grades) as pct_DF
-		from &dsn..class_vw as a
-		left join &dsn..class_vw as b
-			on a.subject_catalog_nbr = b.subject_catalog_nbr
-				and b.snapshot = 'eot'
-				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and b.ssr_component = 'LEC'
-		left join &dsn..class_vw as c
-			on a.subject_catalog_nbr = c.subject_catalog_nbr
-				and c.snapshot = 'eot'
-				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and c.ssr_component = 'LAB'
-		where a.snapshot = 'eot'
-			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-			and a.ssr_component in ('LEC','LAB')
-		group by a.subject_catalog_nbr
-		order by a.subject_catalog_nbr
-	;quit;
-	
-	proc sql;
-		create table coursework_difficulty_&cohort_year. as
-		select
-			a.emplid,
-			count(a.subject_catalog_nbr) as class_count,
-			case when count(b.remedial) > 0 	then 1 
-												else 0 
-												end as remedial,
-			avg(b.class_average) as avg_difficulty,
-			avg(b.pct_withdrawn) as avg_pct_withdrawn,
-			avg(b.pct_CDFW) as avg_pct_CDFW,
-			avg(b.pct_CDF) as avg_pct_CDF,
-			avg(b.pct_DFW) as avg_pct_DFW,
-			avg(b.pct_DF) as avg_pct_DF
-		from class_registration_&cohort_year. as a
-		left join class_difficulty_&cohort_year. as b
-			on a.subject_catalog_nbr = b.subject_catalog_nbr
-		group by a.emplid
-	;quit;
-	
-	proc sql;
-		create table term_contact_hrs_&cohort_year. as
-		select distinct
-			a.emplid,
-			sum(b.lec_contact_hrs) as lec_contact_hrs,
-			sum(c.lab_contact_hrs) as lab_contact_hrs
-		from class_registration_&cohort_year. as a
-		left join (select distinct
-						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
-					from &dsn..class_vw
-					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-						and ssr_component = 'LEC'
-					group by subject_catalog_nbr) as b
-			on a.subject_catalog_nbr = b.subject_catalog_nbr
-		left join (select distinct
-						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
-					from &dsn..class_vw
-					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-						and ssr_component = 'LAB'
-					group by subject_catalog_nbr) as c
-			on a.subject_catalog_nbr = c.subject_catalog_nbr
-		group by a.emplid
-	;quit;
-	
-	proc sql;
-		create table exams_&cohort_year. as 
-		select distinct
-			emplid,
-			max(case when test_component = 'MSS'	then score
-													else .
-													end) as sat_mss,
-			max(case when test_component = 'ERWS'		then score
-													else .
-													end) as sat_erws
-		from &adm..UGRD_student_test_comp
-		where (select max(snap_date) as snap_date from &adm..UGRD_student_test_comp) = snap_date
-			and strm = '2207'
-			and test_component in ('MSS','ERWS')
-		group by emplid
-		order by emplid
-	;quit;
-	
-	proc sql;
-		create table dataset_&cohort_year. as
-		select distinct 
-			a.*,
-			case when a.sex = 'M' then 1 
-					else 0
-			end as male,
-			b.*,
-			case when b.WA_residency = 'RES' then 1
-				else 0
-			end as resident,
-			case when b.adm_parent1_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
-				when b.adm_parent1_highest_educ_lvl = 'G' then 'bach'
-				when b.adm_parent1_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
-					else 'missing'
-			end as parent1_highest_educ_lvl,
-			case when b.adm_parent2_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
-				when b.adm_parent2_highest_educ_lvl = 'G' then 'bach'
-				when b.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
-					else 'missing'
-			end as parent2_highest_educ_lvl,
-			d.*,
-			case when d.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
-				else 0
-			end as underrep_minority,
-			substr(e.ext_org_postal,1,5) as targetid,
-			f.distance,
-			g.median_inc,
-			g.gini_indx,
-			h.pvrt_total/h.pvrt_base as pvrt_rate,
-			i.educ_total/i.educ_base as educ_rate,
-			j.pop/(k.area*3.861E-7) as pop_dens,
-			l.median_value,
-			m.race_blk/m.race_tot as pct_blk,
-			m.race_ai/m.race_tot as pct_ai,
-			m.race_asn/m.race_tot as pct_asn,
-			m.race_hawi/m.race_tot as pct_hawi,
-			m.race_oth/m.race_tot as pct_oth,
-			m.race_two/m.race_tot as pct_two,
-			(m.race_blk + m.race_ai + m.race_asn + m.race_hawi + m.race_oth + m.race_two)/m.race_tot as pct_non,
-			n.ethnic_hisp/n.ethnic_tot as pct_hisp,
-			case when o.locale = '11' then 1 else 0 end as city_large,
-			case when o.locale = '12' then 1 else 0 end as city_mid,
-			case when o.locale = '13' then 1 else 0 end as city_small,
-			case when o.locale = '21' then 1 else 0 end as suburb_large,
-			case when o.locale = '22' then 1 else 0 end as suburb_mid,
-			case when o.locale = '23' then 1 else 0 end as suburb_small,
-			case when o.locale = '31' then 1 else 0 end as town_fringe,
-			case when o.locale = '32' then 1 else 0 end as town_distant,
-			case when o.locale = '33' then 1 else 0 end as town_remote,
-			case when o.locale = '41' then 1 else 0 end as rural_fringe,
-			case when o.locale = '42' then 1 else 0 end as rural_distant,
-			case when o.locale = '43' then 1 else 0 end as rural_remote,
-			p.class_count,
-			(4.0 - p.avg_difficulty) as avg_difficulty,
-			p.avg_pct_withdrawn,
-			p.avg_pct_CDFW,
-			p.avg_pct_CDF,
-			p.avg_pct_DFW,
-			p.avg_pct_DF,
-			q.lec_contact_hrs,
-			q.lab_contact_hrs,
-			r.fed_need,
-			r.total_offer,
-			s.sat_mss,
-			s.sat_erws
-		from &adm..fact_u as a
-		left join &adm..xd_person_demo as b
-			on a.sid_per_demo = b.sid_per_demo
-		left join &adm..xd_admit_type as c
-			on a.sid_admit_type = c.sid_admit_type
-		left join &adm..xd_ipeds_ethnic_group as d
-			on a.sid_ipeds_ethnic_group = d.sid_ipeds_ethnic_group
-		left join &adm..xd_school as e
-			on a.sid_ext_org_id = e.sid_ext_org_id
-		left join acs.distance as f
-			on substr(e.ext_org_postal,1,5) = f.targetid
-		left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
-			on substr(e.ext_org_postal,1,5) = g.geoid
-		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
-			on substr(e.ext_org_postal,1,5) = h.geoid
-		left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
-			on substr(e.ext_org_postal,1,5) = i.geoid
-		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
-			on substr(e.ext_org_postal,1,5) = j.geoid
-		left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k
-			on substr(e.ext_org_postal,1,5) = k.geoid
-		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l
-			on substr(e.ext_org_postal,1,5) = l.geoid
-		left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m
-			on substr(e.ext_org_postal,1,5) = m.geoid
-		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n
-			on substr(e.ext_org_postal,1,5) = n.geoid
-		left join acs.edge_locale14_zcta_table as o
-			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
- 		left join coursework_difficulty_&cohort_year. as p
- 			on a.emplid = p.emplid
- 		left join term_contact_hrs_&cohort_year. as q
- 			on a.emplid = q.emplid
- 		left join (select distinct emplid, 
- 								fed_need, 
- 								total_offer 
- 						from acs.finaid_data
- 						where aid_year = "&cohort_year." group by emplid) as r
- 			on a.emplid = r.emplid
- 		left join exams_&cohort_year. as s
- 			on a.emplid = s.emplid
-		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
-								from &adm..fact_u)
-			and a.acad_career = 'UGRD' 
-			and a.campus = 'PULLM' 
-			and a.enrolled = 1
-			and c.admit_type in ('FRS','IFR','IPF')
-	;quit;
-	
 %mend loop;
 """)
 
@@ -1189,7 +916,7 @@ print('Prepare data...')
 
 sas.submit("""
 data full_set;
-	set dataset_&start_cohort.-dataset_%eval(&end_cohort. + &lag_year.);
+	set dataset_&start_cohort.-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -1206,8 +933,6 @@ data full_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;	
 	if remedial = . then remedial = 0;
-	if sat_mss = . then sat_mss = 0;
-	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
@@ -1225,11 +950,10 @@ data full_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
-	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data training_set;
-	set dataset_&start_cohort.-dataset_&end_cohort.;
+	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -1246,8 +970,6 @@ data training_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
-	if sat_mss = . then sat_mss = 0;
-	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
@@ -1265,24 +987,43 @@ data training_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
-	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data testing_set;
-	set dataset_%eval(&end_cohort. + &lag_year.);
-	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	set dataset_&end_cohort.;
+	if enrl_ind = . then enrl_ind = 0;
+	if ad_dta = . then ad_dta = 0;
+	if ad_ast = . then ad_ast = 0;
+	if ap = . then ap = 0;
+	if rs = . then rs = 0;
+	if chs = . then chs = 0;
+	if ib = . then ib = 0;
+	if aice = . then aice = 0;
+	if ib_aice = . then ib_aice = 0;
+	if athlete = . then athlete = 0;
+	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
+	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
+	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
-	if sat_mss = . then sat_mss = 0;
-	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
 	if lec_contact_hrs = . then lec_contact_hrs = 0;
 	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
+	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
+	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
+	if housing_family_indicator ^= 'Y' then housing_family_indicator = 'N';
+	if afl_reshall_indicator ^= 'Y' then afl_reshall_indicator = 'N';
+	if afl_ssa_indicator ^= 'Y' then afl_ssa_indicator = 'N';
+	if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
+	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
+	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+	unmet_need_disb = fed_need - total_disb;
+	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
-	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 """)
 
@@ -1293,17 +1034,17 @@ print('Done\n')
 print('Export data from SAS...')
 
 sas_log = sas.submit("""
-filename full \"Z:\\Nathan\\Models\\student_risk\\full_set.csv\" encoding="utf-8";
+filename full \"Z:\\Nathan\\Models\\student_risk\\cfull_set.csv\" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training \"Z:\\Nathan\\Models\\student_risk\\training_set.csv\" encoding="utf-8";
+filename training \"Z:\\Nathan\\Models\\student_risk\\ctraining_set.csv\" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing \"Z:\\Nathan\\Models\\student_risk\\testing_set.csv" encoding="utf-8";
+filename testing \"Z:\\Nathan\\Models\\student_risk\\ctesting_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -1314,9 +1055,9 @@ HTML(sas_log['LOG'])
 print('Done\n')
 
 #%%
-# Import pre-split data for scikit-learn
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\training_set.csv', encoding='utf-8', low_memory=False)
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\testing_set.csv', encoding='utf-8', low_memory=False)
+# Import pre-split data
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\ctraining_set.csv', encoding='utf-8')
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\ctesting_set.csv', encoding='utf-8')
 
 #%%
 # Prepare dataframes
@@ -1330,7 +1071,7 @@ logit_df = training_set[[
                         'male',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
-                        # 'count_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
                         # 'pop_dens',
@@ -1339,15 +1080,15 @@ logit_df = training_set[[
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
                         'first_gen_flag', 
-                        # 'LSAMP_STEM_Flag',
+                        'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        # 'honors_program_ind',
-                        # 'afl_greek_indicator',
+                        'honors_program_ind',
+                        'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         # 'avg_pct_CDF',
@@ -1355,12 +1096,12 @@ logit_df = training_set[[
                         # 'avg_pct_DF',
                         'lec_contact_hrs',
                         'lab_contact_hrs',
-                        # 'cum_adj_transfer_hours',
+                        'cum_adj_transfer_hours',
                         'resident',
-                        # 'father_wsu_flag',
-                        # 'mother_wsu_flag',
-                        'parent1_highest_educ_lvl',
-                        'parent2_highest_educ_lvl',
+                        'father_wsu_flag',
+                        'mother_wsu_flag',
+                        # 'parent1_highest_educ_lvl',
+                        # 'parent2_highest_educ_lvl',
                         # 'citizenship_country',
                         'gini_indx',
                         # 'pvrt_rate',
@@ -1387,16 +1128,16 @@ logit_df = training_set[[
                         # 'rural_fringe',
                         # 'rural_distant',
                         # 'rural_remote',
-                        # 'AD_DTA',
-                        # 'AD_AST',
-                        # 'AP',
-                        # 'RS',
-                        # 'CHS',
-                        # # 'IB',
-                        # # 'AICE',
-                        # 'IB_AICE', 
-                        # 'term_credit_hours',
-                        # 'athlete',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE', 
+                        'term_credit_hours',
+                        'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
@@ -1427,8 +1168,8 @@ logit_df = training_set[[
                         # 'vcea',
                         # 'vet_med',
                         # 'last_sch_proprietorship',
-                        # 'sat_erws',
-                        # 'sat_mss',
+                        'sat_erws',
+                        'sat_mss',
                         # 'sat_comp',
                         # 'attendee_alive',
                         # 'attendee_campus_visit',
@@ -1455,7 +1196,7 @@ logit_df = training_set[[
                         # 'attendee_vibes',
                         # 'attendee_welcome_center',
                         # 'attendee_any_visitation_ind',
-                        # 'attendee_total_visits',
+                        'attendee_total_visits',
                         # 'qvalue',
                         # 'fed_efc',
                         # 'fed_need',
@@ -1465,282 +1206,283 @@ logit_df = training_set[[
 training_set = training_set[[
                             'emplid',
                             'enrl_ind', 
-							# 'acad_year',
-							# 'age_group', 
-							# 'age',
-							'male',
-							# 'min_week_from_term_begin_dt',
-							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
-							# 'marital_status',
-							# 'Distance',
-							# 'pop_dens',
-							'underrep_minority', 
-							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
-							# 'pell_recipient_ind',
-							'first_gen_flag', 
-							# 'LSAMP_STEM_Flag',
-							# 'anywhere_STEM_Flag',
-							# 'honors_program_ind',
-							# 'afl_greek_indicator',
-							'high_school_gpa',
-							# 'awe_instrument',
-							# 'cdi_instrument',
-							# 'avg_difficulty',
-							'class_count',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							# 'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
-							'lec_contact_hrs',
-							'lab_contact_hrs',
-							# 'cum_adj_transfer_hours',
-							'resident',
-							# 'father_wsu_flag',
-							# 'mother_wsu_flag',
-							'parent1_highest_educ_lvl',
-							'parent2_highest_educ_lvl',
-							# 'citizenship_country',
-							'gini_indx',
-							# 'pvrt_rate',
-							'median_inc',
-							# 'median_value',
-							# 'educ_rate',
-							'pct_blk',
-							'pct_ai',
-							# 'pct_asn',
-							'pct_hawi',
-							# 'pct_oth',
-							'pct_two',
-							# 'pct_non',
-							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
-							# 'town_fringe',
-							# 'town_distant',
-							# 'town_remote',
-							# 'rural_fringe',
-							# 'rural_distant',
-							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
-							# # 'IB',
-							# # 'AICE',
-							# 'IB_AICE', 
-							# 'term_credit_hours',
-							# 'athlete',
-							'remedial',
-							# 'ACAD_PLAN',
-							# 'plan_owner_org',
-							# 'business',
-							# 'cahnrs_anml',
-							# 'cahnrs_envr',
-							# 'cahnrs_econ',
-							# 'cahnrext',
-							# 'cas_chem',
-							# 'cas_crim',
-							# 'cas_math',
-							# 'cas_psyc',
-							# 'cas_biol',
-							# 'cas_engl',
-							# 'cas_phys',
-							# 'cas',
-							# 'comm',
-							# 'education',
-							# 'medicine',
-							# 'nursing',
-							# 'pharmacy',
-							# 'provost',
-							# 'vcea_bioe',
-							# 'vcea_cive',
-							# 'vcea_desn',
-							# 'vcea_eecs',
-							# 'vcea_mech',
-							# 'vcea',
-							# 'vet_med',
-							# 'last_sch_proprietorship',
-							# 'sat_erws',
-							# 'sat_mss',
-							# 'sat_comp',
-							# 'attendee_alive',
-							# 'attendee_campus_visit',
-							# 'attendee_cashe',
-							# 'attendee_destination',
-							# 'attendee_experience',
-							# 'attendee_fcd_pullman',
-							# 'attendee_fced',
-							# 'attendee_fcoc',
-							# 'attendee_fcod',
-							# 'attendee_group_visit',
-							# 'attendee_honors_visit',
-							# 'attendee_imagine_tomorrow',
-							# 'attendee_imagine_u',
-							# 'attendee_la_bienvenida',
-							# 'attendee_lvp_camp',
-							# 'attendee_oos_destination',
-							# 'attendee_oos_experience',
-							# 'attendee_preview',
-							# 'attendee_preview_jrs',
-							# 'attendee_shaping',
-							# 'attendee_top_scholars',
-							# 'attendee_transfer_day',
-							# 'attendee_vibes',
-							# 'attendee_welcome_center',
-							# 'attendee_any_visitation_ind',
-							# 'attendee_total_visits',
-							# 'qvalue',
-							# 'fed_efc',
-							# 'fed_need',
-							'unmet_need_ofr'
+                            # 'acad_year',
+                            # 'age_group', 
+                            # 'age', 
+                            'male',
+                            # 'min_week_from_term_begin_dt',
+                            # 'max_week_from_term_begin_dt',
+                            'count_week_from_term_begin_dt',
+                            # 'marital_status',
+                            # 'Distance',
+                            # 'pop_dens',
+                            'underrep_minority', 
+                            # 'ipeds_ethnic_group_descrshort',
+                            'pell_eligibility_ind', 
+                            # 'pell_recipient_ind',
+                            'first_gen_flag',
+                            'LSAMP_STEM_Flag',
+                            # 'anywhere_STEM_Flag',
+                            'honors_program_ind',
+                            'afl_greek_indicator',
+                            'high_school_gpa',
+                            # 'awe_instrument',
+                            # 'cdi_instrument',
+                            # 'avg_difficulty',
+                            # 'class_count',
+                            'avg_pct_withdrawn',
+                            # 'avg_pct_CDFW',
+                            # 'avg_pct_CDF',
+                            # 'avg_pct_DFW',
+                            # 'avg_pct_DF',
+                            'lec_contact_hrs',
+                            'lab_contact_hrs',
+                            'cum_adj_transfer_hours',
+                            'resident',
+                            'father_wsu_flag',
+                            'mother_wsu_flag',
+                            # 'parent1_highest_educ_lvl',
+                            # 'parent2_highest_educ_lvl',
+                            # 'citizenship_country',
+                            'gini_indx',
+                            # 'pvrt_rate',
+                            'median_inc',
+                            # 'median_value',
+                            # 'educ_rate',
+                            'pct_blk',
+                            'pct_ai',
+                            # 'pct_asn',
+                            'pct_hawi',
+                            # 'pct_oth',
+                            'pct_two',
+                            # 'pct_non',
+                            'pct_hisp',
+                            'city_large',
+                            'city_mid',
+                            'city_small',
+                            'suburb_large',
+                            'suburb_mid',
+                            'suburb_small',
+                            # 'town_fringe',
+                            # 'town_distant',
+                            # 'town_remote',
+                            # 'rural_fringe',
+                            # 'rural_distant',
+                            # 'rural_remote',
+                            'AD_DTA',
+                            'AD_AST',
+                            'AP',
+                            'RS',
+                            'CHS',
+                            # 'IB',
+                            # 'AICE',
+                            'IB_AICE', 
+                            'term_credit_hours',
+                            'athlete',
+                            'remedial',
+                            # 'ACAD_PLAN',
+                            # 'plan_owner_org',
+                            # 'business',
+                            # 'cahnrs_anml',
+                            # 'cahnrs_envr',
+                            # 'cahnrs_econ',
+                            # 'cahnrext',
+                            # 'cas_chem',
+                            # 'cas_crim',
+                            # 'cas_math',
+                            # 'cas_psyc',
+                            # 'cas_biol',
+                            # 'cas_engl',
+                            # 'cas_phys',
+                            # 'cas',
+                            # 'comm',
+                            # 'education',
+                            # 'medicine',
+                            # 'nursing',
+                            # 'pharmacy',
+                            # 'provost',
+                            # 'vcea_bioe',
+                            # 'vcea_cive',
+                            # 'vcea_desn',
+                            # 'vcea_eecs',
+                            # 'vcea_mech',
+                            # 'vcea',
+                            # 'vet_med',
+                            # 'last_sch_proprietorship',
+                            'sat_erws',
+                            'sat_mss',
+                            # 'sat_comp',
+                            # 'attendee_alive',
+                            # 'attendee_campus_visit',
+                            # 'attendee_cashe',
+                            # 'attendee_destination',
+                            # 'attendee_experience',
+                            # 'attendee_fcd_pullman',
+                            # 'attendee_fced',
+                            # 'attendee_fcoc',
+                            # 'attendee_fcod',
+                            # 'attendee_group_visit',
+                            # 'attendee_honors_visit',
+                            # 'attendee_imagine_tomorrow',
+                            # 'attendee_imagine_u',
+                            # 'attendee_la_bienvenida',
+                            # 'attendee_lvp_camp',
+                            # 'attendee_oos_destination',
+                            # 'attendee_oos_experience',
+                            # 'attendee_preview',
+                            # 'attendee_preview_jrs',
+                            # 'attendee_shaping',
+                            # 'attendee_top_scholars',
+                            # 'attendee_transfer_day',
+                            # 'attendee_vibes',
+                            # 'attendee_welcome_center',
+                            # 'attendee_any_visitation_ind',
+                            'attendee_total_visits',
+                            # 'qvalue',
+                            # 'fed_efc',
+                            # 'fed_need',
+                            'unmet_need_ofr'
                             ]].dropna()
 
 testing_set = testing_set[[
                             'emplid',
+                            'enrl_ind', 
                             # 'acad_year',
-							# 'age_group', 
-							# 'age',
-							'male',
-							# 'min_week_from_term_begin_dt',
-							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
-							# 'marital_status',
-							# 'Distance',
-							# 'pop_dens',
-							'underrep_minority', 
-							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
-							# 'pell_recipient_ind',
-							'first_gen_flag', 
-							# 'LSAMP_STEM_Flag',
-							# 'anywhere_STEM_Flag',
-							# 'honors_program_ind',
-							# 'afl_greek_indicator',
-							'high_school_gpa',
-							# 'awe_instrument',
-							# 'cdi_instrument',
-							# 'avg_difficulty',
-							'class_count',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							# 'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
-							'lec_contact_hrs',
-							'lab_contact_hrs',
-							# 'cum_adj_transfer_hours',
-							'resident',
-							# 'father_wsu_flag',
-							# 'mother_wsu_flag',
-							'parent1_highest_educ_lvl',
-							'parent2_highest_educ_lvl',
-							# 'citizenship_country',
-							'gini_indx',
-							# 'pvrt_rate',
-							'median_inc',
-							# 'median_value',
-							# 'educ_rate',
-							'pct_blk',
-							'pct_ai',
-							# 'pct_asn',
-							'pct_hawi',
-							# 'pct_oth',
-							'pct_two',
-							# 'pct_non',
-							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
-							# 'town_fringe',
-							# 'town_distant',
-							# 'town_remote',
-							# 'rural_fringe',
-							# 'rural_distant',
-							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
-							# # 'IB',
-							# # 'AICE',
-							# 'IB_AICE', 
-							# 'term_credit_hours',
-							# 'athlete',
-							'remedial',
-							# 'ACAD_PLAN',
-							# 'plan_owner_org',
-							# 'business',
-							# 'cahnrs_anml',
-							# 'cahnrs_envr',
-							# 'cahnrs_econ',
-							# 'cahnrext',
-							# 'cas_chem',
-							# 'cas_crim',
-							# 'cas_math',
-							# 'cas_psyc',
-							# 'cas_biol',
-							# 'cas_engl',
-							# 'cas_phys',
-							# 'cas',
-							# 'comm',
-							# 'education',
-							# 'medicine',
-							# 'nursing',
-							# 'pharmacy',
-							# 'provost',
-							# 'vcea_bioe',
-							# 'vcea_cive',
-							# 'vcea_desn',
-							# 'vcea_eecs',
-							# 'vcea_mech',
-							# 'vcea',
-							# 'vet_med',
-							# 'last_sch_proprietorship',
-							# 'sat_erws',
-							# 'sat_mss',
-							# 'sat_comp',
-							# 'attendee_alive',
-							# 'attendee_campus_visit',
-							# 'attendee_cashe',
-							# 'attendee_destination',
-							# 'attendee_experience',
-							# 'attendee_fcd_pullman',
-							# 'attendee_fced',
-							# 'attendee_fcoc',
-							# 'attendee_fcod',
-							# 'attendee_group_visit',
-							# 'attendee_honors_visit',
-							# 'attendee_imagine_tomorrow',
-							# 'attendee_imagine_u',
-							# 'attendee_la_bienvenida',
-							# 'attendee_lvp_camp',
-							# 'attendee_oos_destination',
-							# 'attendee_oos_experience',
-							# 'attendee_preview',
-							# 'attendee_preview_jrs',
-							# 'attendee_shaping',
-							# 'attendee_top_scholars',
-							# 'attendee_transfer_day',
-							# 'attendee_vibes',
-							# 'attendee_welcome_center',
-							# 'attendee_any_visitation_ind',
-							# 'attendee_total_visits',
-							# 'qvalue',
-							# 'fed_efc',
-							# 'fed_need',
-							'unmet_need_ofr'
+                            # 'age_group', 
+                            # 'age', 
+                            'male',
+                            # 'min_week_from_term_begin_dt',
+                            # 'max_week_from_term_begin_dt',
+                            'count_week_from_term_begin_dt',
+                            # 'marital_status',
+                            # 'Distance',
+                            # 'pop_dens',
+                            'underrep_minority', 
+                            # 'ipeds_ethnic_group_descrshort',
+                            'pell_eligibility_ind', 
+                            # 'pell_recipient_ind',
+                            'first_gen_flag',
+                            'LSAMP_STEM_Flag', 
+                            # 'anywhere_STEM_Flag',
+                            'honors_program_ind',
+                            'afl_greek_indicator',
+                            'high_school_gpa',
+                            # 'awe_instrument',
+                            # 'cdi_instrument',
+                            # 'avg_difficulty',
+                            # 'class_count',
+                            'avg_pct_withdrawn',
+                            # 'avg_pct_CDFW',
+                            # 'avg_pct_CDF',
+                            # 'avg_pct_DFW',
+                            # 'avg_pct_DF',
+                            'lec_contact_hrs',
+                            'lab_contact_hrs',
+                            'cum_adj_transfer_hours',
+                            'resident',
+                            'father_wsu_flag',
+                            'mother_wsu_flag',
+                            # 'parent1_highest_educ_lvl',
+                            # 'parent2_highest_educ_lvl',
+                            # 'citizenship_country',
+                            'gini_indx',
+                            # 'pvrt_rate',
+                            'median_inc',
+                            # 'median_value',
+                            # 'educ_rate',
+                            'pct_blk',
+                            'pct_ai',
+                            # 'pct_asn',
+                            'pct_hawi',
+                            # 'pct_oth',
+                            'pct_two',
+                            # 'pct_non',
+                            'pct_hisp',
+                            'city_large',
+                            'city_mid',
+                            'city_small',
+                            'suburb_large',
+                            'suburb_mid',
+                            'suburb_small',
+                            # 'town_fringe',
+                            # 'town_distant',
+                            # 'town_remote',
+                            # 'rural_fringe',
+                            # 'rural_distant',
+                            # 'rural_remote',
+                            'AD_DTA',
+                            'AD_AST',
+                            'AP',
+                            'RS',
+                            'CHS',
+                            # 'IB',
+                            # 'AICE',
+                            'IB_AICE',
+                            'term_credit_hours',
+                            'athlete',
+                            'remedial',
+                            # 'ACAD_PLAN',
+                            # 'plan_owner_org',
+                            # 'business',
+                            # 'cahnrs_anml',
+                            # 'cahnrs_envr',
+                            # 'cahnrs_econ',
+                            # 'cahnrext',
+                            # 'cas_chem',
+                            # 'cas_crim',
+                            # 'cas_math',
+                            # 'cas_psyc',
+                            # 'cas_biol',
+                            # 'cas_engl',
+                            # 'cas_phys',
+                            # 'cas',
+                            # 'comm',
+                            # 'education',
+                            # 'medicine',
+                            # 'nursing',
+                            # 'pharmacy',
+                            # 'provost',
+                            # 'vcea_bioe',
+                            # 'vcea_cive',
+                            # 'vcea_desn',
+                            # 'vcea_eecs',
+                            # 'vcea_mech',
+                            # 'vcea',
+                            # 'vet_med',
+                            # 'last_sch_proprietorship',
+                            'sat_erws',
+                            'sat_mss',
+                            # 'sat_comp',
+                            # 'attendee_alive',
+                            # 'attendee_campus_visit',
+                            # 'attendee_cashe',
+                            # 'attendee_destination',
+                            # 'attendee_experience',
+                            # 'attendee_fcd_pullman',
+                            # 'attendee_fced',
+                            # 'attendee_fcoc',
+                            # 'attendee_fcod',
+                            # 'attendee_group_visit',
+                            # 'attendee_honors_visit',
+                            # 'attendee_imagine_tomorrow',
+                            # 'attendee_imagine_u',
+                            # 'attendee_la_bienvenida',
+                            # 'attendee_lvp_camp',
+                            # 'attendee_oos_destination',
+                            # 'attendee_oos_experience',
+                            # 'attendee_preview',
+                            # 'attendee_preview_jrs',
+                            # 'attendee_shaping',
+                            # 'attendee_top_scholars',
+                            # 'attendee_transfer_day',
+                            # 'attendee_vibes',
+                            # 'attendee_welcome_center',
+                            # 'attendee_any_visitation_ind',
+                            'attendee_total_visits',
+                            # 'qvalue',
+                            # 'fed_efc',
+                            # 'fed_need',
+                            'unmet_need_ofr'
                             ]].dropna()
 
 testing_set = testing_set.reset_index()
@@ -1761,280 +1503,280 @@ current_outcome = testing_set[[
 
 x_train = training_set[[
                         # 'acad_year',
-						# 'age_group', 
-						# 'age',
-						'male',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'marital_status',
-						# 'Distance',
-						# 'pop_dens',
-						'underrep_minority', 
-						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
-						# 'pell_recipient_ind',
-						'first_gen_flag', 
-						# 'LSAMP_STEM_Flag',
-						# 'anywhere_STEM_Flag',
-						# 'honors_program_ind',
-						# 'afl_greek_indicator',
-						'high_school_gpa',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						# 'avg_difficulty',
-						'class_count',
-						'avg_pct_withdrawn',
-						# 'avg_pct_CDFW',
-						# 'avg_pct_CDF',
-						# 'avg_pct_DFW',
-						# 'avg_pct_DF',
-						'lec_contact_hrs',
-						'lab_contact_hrs',
-						# 'cum_adj_transfer_hours',
-						'resident',
-						# 'father_wsu_flag',
-						# 'mother_wsu_flag',
-						'parent1_highest_educ_lvl',
-						'parent2_highest_educ_lvl',
-						# 'citizenship_country',
-						'gini_indx',
-						# 'pvrt_rate',
-						'median_inc',
-						# 'median_value',
-						# 'educ_rate',
-						'pct_blk',
-						'pct_ai',
-						# 'pct_asn',
-						'pct_hawi',
-						# 'pct_oth',
-						'pct_two',
-						# 'pct_non',
-						'pct_hisp',
-						'city_large',
-						'city_mid',
-						'city_small',
-						'suburb_large',
-						'suburb_mid',
-						'suburb_small',
-						# 'town_fringe',
-						# 'town_distant',
-						# 'town_remote',
-						# 'rural_fringe',
-						# 'rural_distant',
-						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
-						# # 'IB',
-						# # 'AICE',
-						# 'IB_AICE', 
-						# 'term_credit_hours',
-						# 'athlete',
-						'remedial',
-						# 'ACAD_PLAN',
-						# 'plan_owner_org',
-						# 'business',
-						# 'cahnrs_anml',
-						# 'cahnrs_envr',
-						# 'cahnrs_econ',
-						# 'cahnrext',
-						# 'cas_chem',
-						# 'cas_crim',
-						# 'cas_math',
-						# 'cas_psyc',
-						# 'cas_biol',
-						# 'cas_engl',
-						# 'cas_phys',
-						# 'cas',
-						# 'comm',
-						# 'education',
-						# 'medicine',
-						# 'nursing',
-						# 'pharmacy',
-						# 'provost',
-						# 'vcea_bioe',
-						# 'vcea_cive',
-						# 'vcea_desn',
-						# 'vcea_eecs',
-						# 'vcea_mech',
-						# 'vcea',
-						# 'vet_med',
-						# 'last_sch_proprietorship',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_alive',
-						# 'attendee_campus_visit',
-						# 'attendee_cashe',
-						# 'attendee_destination',
-						# 'attendee_experience',
-						# 'attendee_fcd_pullman',
-						# 'attendee_fced',
-						# 'attendee_fcoc',
-						# 'attendee_fcod',
-						# 'attendee_group_visit',
-						# 'attendee_honors_visit',
-						# 'attendee_imagine_tomorrow',
-						# 'attendee_imagine_u',
-						# 'attendee_la_bienvenida',
-						# 'attendee_lvp_camp',
-						# 'attendee_oos_destination',
-						# 'attendee_oos_experience',
-						# 'attendee_preview',
-						# 'attendee_preview_jrs',
-						# 'attendee_shaping',
-						# 'attendee_top_scholars',
-						# 'attendee_transfer_day',
-						# 'attendee_vibes',
-						# 'attendee_welcome_center',
-						# 'attendee_any_visitation_ind',
-						# 'attendee_total_visits',
-						# 'qvalue',
-						# 'fed_efc',
-						# 'fed_need',
-						'unmet_need_ofr'
+                        # 'age_group', 
+                        # 'age', 
+                        'male',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
+                        # 'marital_status',
+                        # 'Distance',
+                        # 'pop_dens',
+                        'underrep_minority', 
+                        # 'ipeds_ethnic_group_descrshort',
+                        'pell_eligibility_ind', 
+                        # 'pell_recipient_ind',
+                        'first_gen_flag', 
+                        'LSAMP_STEM_Flag',
+                        # 'anywhere_STEM_Flag',
+                        'honors_program_ind',
+                        'afl_greek_indicator',
+                        'high_school_gpa',
+                        # 'awe_instrument',
+                        # 'cdi_instrument',
+                        # 'avg_difficulty',
+                        # 'class_count',
+                        'avg_pct_withdrawn',
+                        # 'avg_pct_CDFW',
+                        # 'avg_pct_CDF',
+                        # 'avg_pct_DFW',
+                        # 'avg_pct_DF',
+                        'lec_contact_hrs',
+                        'lab_contact_hrs',
+                        'cum_adj_transfer_hours',
+                        'resident',
+                        'father_wsu_flag',
+                        'mother_wsu_flag',
+                        # 'parent1_highest_educ_lvl',
+                        # 'parent2_highest_educ_lvl',
+                        # 'citizenship_country',
+                        'gini_indx',
+                        # 'pvrt_rate',
+                        'median_inc',
+                        # 'median_value',
+                        # 'educ_rate',
+                        'pct_blk',
+                        'pct_ai',
+                        # 'pct_asn',
+                        'pct_hawi',
+                        # 'pct_oth',
+                        'pct_two',
+                        # 'pct_non',
+                        'pct_hisp',
+                        'city_large',
+                        'city_mid',
+                        'city_small',
+                        'suburb_large',
+                        'suburb_mid',
+                        'suburb_small',
+                        # 'town_fringe',
+                        # 'town_distant',
+                        # 'town_remote',
+                        # 'rural_fringe',
+                        # 'rural_distant',
+                        # 'rural_remote',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE',
+                        'term_credit_hours',
+                        'athlete',
+                        'remedial',
+                        # 'ACAD_PLAN',
+                        # 'plan_owner_org',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
+                        # 'provost',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
+                        # 'last_sch_proprietorship',
+                        'sat_erws',
+                        'sat_mss',
+                        # 'sat_comp',
+                        # 'attendee_alive',
+                        # 'attendee_campus_visit',
+                        # 'attendee_cashe',
+                        # 'attendee_destination',
+                        # 'attendee_experience',
+                        # 'attendee_fcd_pullman',
+                        # 'attendee_fced',
+                        # 'attendee_fcoc',
+                        # 'attendee_fcod',
+                        # 'attendee_group_visit',
+                        # 'attendee_honors_visit',
+                        # 'attendee_imagine_tomorrow',
+                        # 'attendee_imagine_u',
+                        # 'attendee_la_bienvenida',
+                        # 'attendee_lvp_camp',
+                        # 'attendee_oos_destination',
+                        # 'attendee_oos_experience',
+                        # 'attendee_preview',
+                        # 'attendee_preview_jrs',
+                        # 'attendee_shaping',
+                        # 'attendee_top_scholars',
+                        # 'attendee_transfer_day',
+                        # 'attendee_vibes',
+                        # 'attendee_welcome_center',
+                        # 'attendee_any_visitation_ind',
+                        'attendee_total_visits',
+                        # 'qvalue',
+                        # 'fed_efc',
+                        # 'fed_need',
+                        'unmet_need_ofr'
                         ]]
 
 x_test = testing_set[[
-                        # 'acad_year',
-						# 'age_group', 
-						# 'age',
-						'male',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'marital_status',
-						# 'Distance',
-						# 'pop_dens',
-						'underrep_minority', 
-						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
-						# 'pell_recipient_ind',
-						'first_gen_flag', 
-						# 'LSAMP_STEM_Flag',
-						# 'anywhere_STEM_Flag',
-						# 'honors_program_ind',
-						# 'afl_greek_indicator',
-						'high_school_gpa',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						# 'avg_difficulty',
-						'class_count',
-						'avg_pct_withdrawn',
-						# 'avg_pct_CDFW',
-						# 'avg_pct_CDF',
-						# 'avg_pct_DFW',
-						# 'avg_pct_DF',
-						'lec_contact_hrs',
-						'lab_contact_hrs',
-						# 'cum_adj_transfer_hours',
-						'resident',
-						# 'father_wsu_flag',
-						# 'mother_wsu_flag',
-						'parent1_highest_educ_lvl',
-						'parent2_highest_educ_lvl',
-						# 'citizenship_country',
-						'gini_indx',
-						# 'pvrt_rate',
-						'median_inc',
-						# 'median_value',
-						# 'educ_rate',
-						'pct_blk',
-						'pct_ai',
-						# 'pct_asn',
-						'pct_hawi',
-						# 'pct_oth',
-						'pct_two',
-						# 'pct_non',
-						'pct_hisp',
-						'city_large',
-						'city_mid',
-						'city_small',
-						'suburb_large',
-						'suburb_mid',
-						'suburb_small',
-						# 'town_fringe',
-						# 'town_distant',
-						# 'town_remote',
-						# 'rural_fringe',
-						# 'rural_distant',
-						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
-						# # 'IB',
-						# # 'AICE',
-						# 'IB_AICE', 
-						# 'term_credit_hours',
-						# 'athlete',
-						'remedial',
-						# 'ACAD_PLAN',
-						# 'plan_owner_org',
-						# 'business',
-						# 'cahnrs_anml',
-						# 'cahnrs_envr',
-						# 'cahnrs_econ',
-						# 'cahnrext',
-						# 'cas_chem',
-						# 'cas_crim',
-						# 'cas_math',
-						# 'cas_psyc',
-						# 'cas_biol',
-						# 'cas_engl',
-						# 'cas_phys',
-						# 'cas',
-						# 'comm',
-						# 'education',
-						# 'medicine',
-						# 'nursing',
-						# 'pharmacy',
-						# 'provost',
-						# 'vcea_bioe',
-						# 'vcea_cive',
-						# 'vcea_desn',
-						# 'vcea_eecs',
-						# 'vcea_mech',
-						# 'vcea',
-						# 'vet_med',
-						# 'last_sch_proprietorship',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_alive',
-						# 'attendee_campus_visit',
-						# 'attendee_cashe',
-						# 'attendee_destination',
-						# 'attendee_experience',
-						# 'attendee_fcd_pullman',
-						# 'attendee_fced',
-						# 'attendee_fcoc',
-						# 'attendee_fcod',
-						# 'attendee_group_visit',
-						# 'attendee_honors_visit',
-						# 'attendee_imagine_tomorrow',
-						# 'attendee_imagine_u',
-						# 'attendee_la_bienvenida',
-						# 'attendee_lvp_camp',
-						# 'attendee_oos_destination',
-						# 'attendee_oos_experience',
-						# 'attendee_preview',
-						# 'attendee_preview_jrs',
-						# 'attendee_shaping',
-						# 'attendee_top_scholars',
-						# 'attendee_transfer_day',
-						# 'attendee_vibes',
-						# 'attendee_welcome_center',
-						# 'attendee_any_visitation_ind',
-						# 'attendee_total_visits',
-						# 'qvalue',
-						# 'fed_efc',
-						# 'fed_need',
-						'unmet_need_ofr'
+                        # 'acad_year', 
+                        # 'age_group',
+                        # 'age', 
+                        'male',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
+                        # 'marital_status',
+                        # 'Distance',
+                        # 'pop_dens',
+                        'underrep_minority', 
+                        # 'ipeds_ethnic_group_descrshort',
+                        'pell_eligibility_ind', 
+                        # 'pell_recipient_ind',
+                        'first_gen_flag', 
+                        'LSAMP_STEM_Flag',
+                        # 'anywhere_STEM_Flag',
+                        'honors_program_ind',
+                        'afl_greek_indicator',
+                        'high_school_gpa',
+                        # 'awe_instrument',
+                        # 'cdi_instrument',
+                        # 'avg_difficulty',
+                        # 'class_count',
+                        'avg_pct_withdrawn',
+                        # 'avg_pct_CDFW',
+                        # 'avg_pct_CDF',
+                        # 'avg_pct_DFW',
+                        # 'avg_pct_DF',
+                        'lec_contact_hrs',
+                        'lab_contact_hrs',
+                        'cum_adj_transfer_hours',
+                        'resident',
+                        'father_wsu_flag',
+                        'mother_wsu_flag',
+                        # 'parent1_highest_educ_lvl',
+                        # 'parent2_highest_educ_lvl',
+                        # 'citizenship_country',
+                        'gini_indx',
+                        # 'pvrt_rate',
+                        'median_inc',
+                        # 'median_value',
+                        # 'educ_rate',
+                        'pct_blk',
+                        'pct_ai',
+                        # 'pct_asn',
+                        'pct_hawi',
+                        # 'pct_oth',
+                        'pct_two',
+                        # 'pct_non',
+                        'pct_hisp',
+                        'city_large',
+                        'city_mid',
+                        'city_small',
+                        'suburb_large',
+                        'suburb_mid',
+                        'suburb_small',
+                        # 'town_fringe',
+                        # 'town_distant',
+                        # 'town_remote',
+                        # 'rural_fringe',
+                        # 'rural_distant',
+                        # 'rural_remote',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE', 
+                        'term_credit_hours',
+                        'athlete',
+                        'remedial',
+                        # 'ACAD_PLAN',
+                        # 'plan_owner_org',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
+                        # 'provost',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
+                        # 'last_sch_proprietorship',
+                        'sat_erws',
+                        'sat_mss',
+                        # 'sat_comp',
+                        # 'attendee_alive',
+                        # 'attendee_campus_visit',
+                        # 'attendee_cashe',
+                        # 'attendee_destination',
+                        # 'attendee_experience',
+                        # 'attendee_fcd_pullman',
+                        # 'attendee_fced',
+                        # 'attendee_fcoc',
+                        # 'attendee_fcod',
+                        # 'attendee_group_visit',
+                        # 'attendee_honors_visit',
+                        # 'attendee_imagine_tomorrow',
+                        # 'attendee_imagine_u',
+                        # 'attendee_la_bienvenida',
+                        # 'attendee_lvp_camp',
+                        # 'attendee_oos_destination',
+                        # 'attendee_oos_experience',
+                        # 'attendee_preview',
+                        # 'attendee_preview_jrs',
+                        # 'attendee_shaping',
+                        # 'attendee_top_scholars',
+                        # 'attendee_transfer_day',
+                        # 'attendee_vibes',
+                        # 'attendee_welcome_center',
+                        # 'attendee_any_visitation_ind',
+                        'attendee_total_visits',
+                        # 'qvalue',
+                        # 'fed_efc',
+                        # 'fed_need',
+                        'unmet_need_ofr'
                         ]]
 
 y_train = training_set['enrl_ind']
@@ -2045,27 +1787,27 @@ y_train = training_set['enrl_ind']
 preprocess = make_column_transformer(
     (MinMaxScaler(), [
                         # 'age',
-                        # # 'min_week_from_term_begin_dt',
-                        # # 'max_week_from_term_begin_dt',
-                        # 'count_week_from_term_begin_dt',
-                        # 'sat_erws',
-                        # 'sat_mss',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
+                        'sat_erws',
+                        'sat_mss',
                         # 'sat_comp',
-                        # 'attendee_total_visits',
+                        'attendee_total_visits',
                         # 'Distance',
                         # 'pop_dens', 
                         # 'qvalue', 
                         'median_inc',
                         # 'median_value',
-                        # 'term_credit_hours',
+                        'term_credit_hours',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'lec_contact_hrs',
                         'lab_contact_hrs',
-                        # 'cum_adj_transfer_hours',
+                        'cum_adj_transfer_hours',
                         # 'fed_efc',
                         # 'fed_need', 
                         'unmet_need_ofr'
@@ -2075,15 +1817,15 @@ preprocess = make_column_transformer(
                                     # 'age_group',
                                     # 'marital_status',
                                     'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
+                                    'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
+                                    'afl_greek_indicator',
                                     # 'ACAD_PLAN',
                                     # 'plan_owner_org',
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
+                                    # 'parent1_highest_educ_lvl',
+                                    # 'parent2_highest_educ_lvl'
                                     ]),
     remainder='passthrough'
 )
@@ -2096,13 +1838,15 @@ print('Done\n')
 #%%
 # Standard logistic model
 y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-                + pell_eligibility_ind \
-                + first_gen_flag \
-                + avg_pct_withdrawn + class_count + lec_contact_hrs + lab_contact_hrs \
+                + afl_greek_indicator + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
+                + pell_eligibility_ind + LSAMP_STEM_Flag + athlete \
+                + first_gen_flag + father_wsu_flag + mother_wsu_flag \
+                + avg_pct_withdrawn + lec_contact_hrs + lab_contact_hrs + term_credit_hours \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + remedial \
-            	+ unmet_need_ofr', data=logit_df, return_type='dataframe')
+                + sat_erws + sat_mss \
+                + AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
+                + cum_adj_transfer_hours + high_school_gpa + remedial + honors_program_ind \
+                + count_week_from_term_begin_dt + attendee_total_visits + unmet_need_ofr', data=logit_df, return_type='dataframe')
 
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
@@ -2149,7 +1893,7 @@ svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=F
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025, n_jobs=-1, verbose=True).fit(x_train, y_train)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]
@@ -2162,7 +1906,7 @@ rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=F
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.0001, learning_rate_init=0.001, n_iter_no_change=15, max_iter=1000, verbose=True).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.0001, learning_rate_init=0.001, n_iter_no_change=15, max_iter=1500, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
@@ -2209,24 +1953,24 @@ print('Output model predictions and model...')
 
 aggregate_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 aggregate_outcome['risk_pred'] = vcf.predict(x_test)
-aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
+aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\caggregate_outcome.csv', encoding='utf-8', index=False)
 
-if not isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
+if not isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_outcome.csv'):
 	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 	current_outcome['risk_pred'] = vcf.predict(x_test)
 	current_outcome['date'] = date.today()
-	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_outcome.csv', encoding='utf-8', index=False)
 else:
-	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
-	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_backup.csv', encoding='utf-8', index=False)
+	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_outcome.csv', encoding='utf-8', low_memory=False)
+	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_backup.csv', encoding='utf-8', index=False)
 	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 	current_outcome['risk_pred'] = vcf.predict(x_test)
 	current_outcome['date'] = date.today()
 	concat_outcome = pd.concat([prior_outcome, current_outcome])
-	concat_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	concat_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_outcome.csv', encoding='utf-8', index=False)
+
 
 #%%
 # Output model
-joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\Models\\model_{date.today()}_v{sklearn.__version__}.pkl')
-
-print('Done\n')
+scikit_version = sklearn.__version__
+joblib.dump(vcf, f'model_cen_{date.today()}_v{scikit_version}.pkl')
