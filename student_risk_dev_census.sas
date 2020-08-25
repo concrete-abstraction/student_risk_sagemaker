@@ -4,7 +4,7 @@
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
-%let dsn = cendev;
+%let dsn = census;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
@@ -143,7 +143,7 @@ run;
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dsn..new_student_profile_ugrd
+		from &dsn..new_student_profile_ugrd_cs
 		where substr(strm, 4 , 1) = '7'
 			and adj_admit_campus = 'PULLM'
 			and adj_admit_type = 'FRS'
@@ -931,17 +931,17 @@ data testing_set;
 	unmet_need_ofr = fed_need - total_offer;
 run;
 
-filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
+filename full "Z:\Nathan\Models\student_risk\cfull_set.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\ctraining_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\ctesting_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;

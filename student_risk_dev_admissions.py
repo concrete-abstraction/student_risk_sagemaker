@@ -1526,7 +1526,7 @@ logit_df = training_set[[
                         # # 'IB',
                         # # 'AICE',
                         # 'IB_AICE', 
-                        'term_credit_hours',
+                        # 'term_credit_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -1667,7 +1667,7 @@ training_set = training_set[[
 							# # 'IB',
 							# # 'AICE',
 							# 'IB_AICE', 
-							'term_credit_hours',
+							# 'term_credit_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1807,7 +1807,7 @@ testing_set = testing_set[[
 							# # 'IB',
 							# # 'AICE',
 							# 'IB_AICE', 
-							'term_credit_hours',
+							# 'term_credit_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1957,7 +1957,7 @@ x_train = training_set[[
 						# # 'IB',
 						# # 'AICE',
 						# 'IB_AICE', 
-						'term_credit_hours',
+						# 'term_credit_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2096,7 +2096,7 @@ x_test = testing_set[[
 						# # 'IB',
 						# # 'AICE',
 						# 'IB_AICE', 
-						'term_credit_hours',
+						# 'term_credit_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2193,7 +2193,7 @@ preprocess = make_column_transformer(
                         # 'qvalue', 
                         'median_inc',
                         # 'median_value',
-                        'term_credit_hours',
+                        # 'term_credit_hours',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
@@ -2263,7 +2263,7 @@ print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # Logistic model
-lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.0, C=1.0, n_jobs=-1).fit(x_train, y_train)
+lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
 lreg_probs = lreg_probs[:, 1]
@@ -2293,7 +2293,7 @@ print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # SVC model
-svc = SVC(kernel='linear', class_weight='balanced', probability=True).fit(x_train, y_train)
+svc = SVC(kernel='linear', class_weight='balanced', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
 
 svc_probs = svc.predict_proba(x_train)
 svc_probs = svc_probs[:, 1]
@@ -2405,7 +2405,7 @@ plt.show()
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025).fit(x_train, y_train)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]
@@ -2425,7 +2425,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.00001, learning_rate_init=0.001, n_iter_no_change=500).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, n_iter_no_change=10, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
