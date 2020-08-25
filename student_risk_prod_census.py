@@ -1845,6 +1845,10 @@ y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_h
                 + resident + gini_indx + median_inc \
                 + sat_erws + sat_mss \
                 + AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
+                + cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
+                + cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
+                + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
+                + comm + education + medicine + nursing + pharmacy + provost + vet_med \
                 + cum_adj_transfer_hours + high_school_gpa + remedial + honors_program_ind \
                 + count_week_from_term_begin_dt + attendee_total_visits + unmet_need_ofr', data=logit_df, return_type='dataframe')
 
