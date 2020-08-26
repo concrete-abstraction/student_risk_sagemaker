@@ -21,6 +21,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 from sklearn.model_selection import GridSearchCV
+from statsmodels.api import OLS
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
