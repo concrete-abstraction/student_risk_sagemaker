@@ -3,9 +3,7 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import statsmodels.graphics.api as smg
-import matplotlib
+import os
 import saspy
 import sklearn
 import sys
@@ -14,19 +12,16 @@ from datetime import date
 from patsy import dmatrices
 from IPython.display import HTML
 from matplotlib.legend_handler import HandlerLine2D
-from os.path import isfile
-from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import make_column_transformer
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, PolynomialFeatures, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.svm import SVC, LinearSVC
+from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
 from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
-from statsmodels.api import OLS
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
@@ -2211,7 +2206,7 @@ aggregate_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 aggregate_outcome['risk_pred'] = vcf.predict(x_test)
 aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
 
-if not isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
 	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 	current_outcome['risk_pred'] = vcf.predict(x_test)
 	current_outcome['date'] = date.today()
