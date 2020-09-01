@@ -1,4 +1,5 @@
 #%%
+import datetime
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,21 +27,26 @@ from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
-# Create system log file
-class Logger(object):
-    def __init__(self):
-        self.terminal = sys.stdout
-        self.log = open(f'Z:\\Nathan\\Models\\student_risk\\Logs\\main\\log_cen_{date.today()}_v{sklearn.__version__}.log', 'w')
+# Census date check 
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
 
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)  
+now = datetime.datetime.now()
+now_day = now.day
+now_month = now.month
+now_year = now.year
 
-    def flush(self):
-        pass
+census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_day'].values[0]
+census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_month'].values[0]
+census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_year'].values[0]
 
+if now_year < census_year:
+	raise Exception(f'{date.today()}: Census year exception, attempting to run from admissions.')
 
-sys.stdout = Logger()
+elif (now_year == census_year) and (now_month < census_month):
+	raise Exception(f'{date.today()}: Census month exception, attempting to run from admissions.')
+
+elif (now_year == census_year) and (now_month == census_month) and (now_day < census_day):
+	raise Exception(f'{date.today()}: Census day exception, attempting to run from admissions.')
 
 #%%
 # Start SAS session
@@ -58,7 +64,7 @@ sas.submit("""
 %let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
-%let end_cohort = 2019;
+%let end_cohort = 2020;
 """)
 
 print('Done\n')
@@ -1050,13 +1056,17 @@ HTML(sas_log['LOG'])
 print('Done\n')
 
 #%%
+#End SAS session
+sas.endsas()
+
+#%%
 # Import pre-split data
 training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\ctraining_set.csv', encoding='utf-8')
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\ctesting_set.csv', encoding='utf-8')
 
 #%%
 # Prepare dataframes
-print('Prepare dataframes and preprocess data...')
+print('\nPrepare dataframes and preprocess data...')
 
 logit_df = training_set[[
                         'enrl_ind', 
