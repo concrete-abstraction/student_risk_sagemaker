@@ -53,7 +53,7 @@ elif (now_year == census_year or now_year == end_year) and (now_month == census_
 	raise Exception(f'{date.today()}: Census day exception, attempting to run from admissions.')
 
 else:
-	f'{date.today()}: No date exceptions, running from census.'
+	print(f'{date.today()}: No date exceptions, running from census.')
 
 #%%
 # Start SAS session
