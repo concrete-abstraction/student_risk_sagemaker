@@ -46,14 +46,14 @@ end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month
 if now_year < census_year or now_year > end_year:
 	raise Exception(f'{date.today()}: Census year exception, attempting to run from admissions.')
 
-elif (now_year == census_year or now_year == end_year) and (now_month < census_month or now_month > end_month):
+elif (now_year == census_year and now_month < census_month) or (now_year == end_year and now_month > end_month):
 	raise Exception(f'{date.today()}: Census month exception, attempting to run from admissions.')
 
-elif (now_year == census_year or now_year == end_year) and (now_month == census_month or now_month == end_month) and (now_day < census_day or now_day > end_day):
+elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == end_year and now_month == end_month and now_day > end_day):
 	raise Exception(f'{date.today()}: Census day exception, attempting to run from admissions.')
 
 else:
-	print(f'{date.today()}: No date exceptions, running from census.')
+	print(f'{date.today()}: No census date exceptions, running from census.')
 
 #%%
 # Start SAS session

@@ -1,3 +1,4 @@
+#%%
 import saspy
 import sys
 from datetime import date
@@ -13,9 +14,9 @@ proc sql;
     create table acad_calendar as
     select distinct
         *
-        ,intnx('dtday', term_census_dt, 10, 'same') as adj_term_census_dt format=datetime22.3
+        ,intnx(\'dtday\', term_census_dt, 10, \'same\') as adj_term_census_dt format=datetime22.3
     from &dsn..xw_term
-    where acad_career = 'UGRD'
+    where acad_career = \'UGRD\'
     order by term_code
 ;quit;
 
@@ -38,7 +39,7 @@ proc sql;
 
 filename calendar \"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv\" encoding=\"utf-8\";
 
-proc export data=acad_calendar outfile=calendar dbms=csv replace;
+proc export data=adj_acad_calendar outfile=calendar dbms=csv replace;
 run;
 """)
 
