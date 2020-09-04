@@ -27,7 +27,7 @@ from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
-# Census date check 
+# Admissions date check 
 calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
 now = datetime.datetime.now()
 
