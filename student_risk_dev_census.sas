@@ -4,12 +4,12 @@
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
-%let dsn = census;
+%let dsn = cendev;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
-%let end_cohort = 2019;
+%let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;

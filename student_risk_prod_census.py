@@ -29,8 +29,8 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 #%%
 # Census date check 
 calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
-
 now = datetime.datetime.now()
+
 now_day = now.day
 now_month = now.month
 now_year = now.year
@@ -39,14 +39,21 @@ census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_mon
 census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_month'].values[0]
 census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_year'].values[0]
 
-if now_year < census_year:
+end_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_day'].values[0]
+end_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_month'].values[0]
+end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_year'].values[0]
+
+if now_year < census_year or now_year > end_year:
 	raise Exception(f'{date.today()}: Census year exception, attempting to run from admissions.')
 
-elif (now_year == census_year) and (now_month < census_month):
+elif (now_year == census_year or now_year == end_year) and (now_month < census_month or now_month > end_month):
 	raise Exception(f'{date.today()}: Census month exception, attempting to run from admissions.')
 
-elif (now_year == census_year) and (now_month == census_month) and (now_day < census_day):
+elif (now_year == census_year or now_year == end_year) and (now_month == census_month or now_month == end_month) and (now_day < census_day or now_day > end_day):
 	raise Exception(f'{date.today()}: Census day exception, attempting to run from admissions.')
+
+else:
+	f'{date.today()}: No date exceptions, running from census.'
 
 #%%
 # Start SAS session
@@ -1035,17 +1042,17 @@ print('Done\n')
 print('Export data from SAS...')
 
 sas_log = sas.submit("""
-filename full \"Z:\\Nathan\\Models\\student_risk\\cfull_set.csv\" encoding="utf-8";
+filename full \"Z:\\Nathan\\Models\\student_risk\\full_set.csv\" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training \"Z:\\Nathan\\Models\\student_risk\\ctraining_set.csv\" encoding="utf-8";
+filename training \"Z:\\Nathan\\Models\\student_risk\\training_set.csv\" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing \"Z:\\Nathan\\Models\\student_risk\\ctesting_set.csv" encoding="utf-8";
+filename testing \"Z:\\Nathan\\Models\\student_risk\\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -1962,21 +1969,21 @@ print('Output model predictions and model...')
 
 aggregate_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 aggregate_outcome['risk_pred'] = vcf.predict(x_test)
-aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\caggregate_outcome.csv', encoding='utf-8', index=False)
+aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
 
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_outcome.csv'):
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
 	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 	current_outcome['risk_pred'] = vcf.predict(x_test)
 	current_outcome['date'] = date.today()
-	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_outcome.csv', encoding='utf-8', index=False)
+	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
 else:
-	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_outcome.csv', encoding='utf-8', low_memory=False)
-	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_backup.csv', encoding='utf-8', index=False)
+	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
+	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_backup.csv', encoding='utf-8', index=False)
 	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 	current_outcome['risk_pred'] = vcf.predict(x_test)
 	current_outcome['date'] = date.today()
 	concat_outcome = pd.concat([prior_outcome, current_outcome])
-	concat_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\cstudent_outcome.csv', encoding='utf-8', index=False)
+	concat_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
 
 
 #%%

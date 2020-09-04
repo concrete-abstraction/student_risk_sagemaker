@@ -29,8 +29,8 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 #%%
 # Census date check 
 calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
-
 now = datetime.datetime.now()
+
 now_day = now.day
 now_month = now.month
 now_year = now.year
@@ -39,14 +39,21 @@ admissions_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin
 admissions_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['begin_month'].values[0]
 admissions_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['begin_year'].values[0]
 
-if now_year < admissions_year:
+census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_day'].values[0]
+census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_month'].values[0]
+census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_year'].values[0]
+
+if now_year < admissions_year or now_year > census_year:
 	raise Exception(f'{date.today()}: Admissions year exception, outside of date range.')
 
-elif (now_year == admissions_year) and (now_month < admissions_month):
+elif (now_year == admissions_year or now_year == census_year) and (now_month < admissions_month or now_month > census_month):
 	raise Exception(f'{date.today()}: Admissions month exception, outside of date range.')
 
-elif (now_year == admissions_year) and (now_month == admissions_month) and (now_day < admissions_day):
+elif (now_year == admissions_year or now_year == census_year) and (now_month == admissions_month or now_month == census_month) and (now_day < admissions_day or now_day > census_day):
 	raise Exception(f'{date.today()}: Admissions day exception, outside of date range.')
+
+else:
+	f'{date.today()}: No date exceptions, running from admissions.'
 
 #%%
 # Start SAS session
