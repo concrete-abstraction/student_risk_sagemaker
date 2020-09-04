@@ -14,9 +14,9 @@ proc sql;
     create table acad_calendar as
     select distinct
         *
-        ,intnx(\'dtday\', term_census_dt, 10, \'same\') as adj_term_census_dt format=datetime22.3
+        ,intnx('dtday', term_census_dt, 10, 'same') as adj_term_census_dt format=datetime22.3
     from &dsn..xw_term
-    where acad_career = \'UGRD\'
+    where acad_career = 'UGRD'
     order by term_code
 ;quit;
 
