@@ -1985,8 +1985,8 @@ else:
 	concat_outcome = pd.concat([prior_outcome, current_outcome])
 	concat_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
 
-
 #%%
 # Output model
-scikit_version = sklearn.__version__
-joblib.dump(vcf, f'model_cen_{date.today()}_v{scikit_version}.pkl')
+joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\Models\\model_v{sklearn.__version__}.pkl')
+
+print('Done\n')

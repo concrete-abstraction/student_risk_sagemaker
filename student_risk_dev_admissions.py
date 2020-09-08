@@ -2488,9 +2488,9 @@ pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
 pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
-pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\pred_outcome_2207_{date.today()}.csv', encoding='utf-8', index=False)
+pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Output model
 scikit_version = sklearn.__version__
-joblib.dump(vcf, f'model_d{date.today()}_v{scikit_version}.pkl')
+joblib.dump(vcf, f'model_v{scikit_version}.pkl')

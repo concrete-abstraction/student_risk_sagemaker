@@ -37,7 +37,7 @@ sas.submit("""
 %let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
-%let end_cohort = 2019;
+%let end_cohort = 2020;
 """)
 
 #%%
@@ -980,17 +980,17 @@ run;
 #%%
 # Export data
 sas_log = sas.submit("""
-filename full "Z:\\Nathan\\Models\\student_risk\\cfull_set.csv" encoding="utf-8";
+filename full "Z:\\Nathan\\Models\\student_risk\\full_set.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\\Nathan\\Models\\student_risk\\ctraining_set.csv" encoding="utf-8";
+filename training "Z:\\Nathan\\Models\\student_risk\\training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\\Nathan\\Models\\student_risk\\ctesting_set.csv" encoding="utf-8";
+filename testing "Z:\\Nathan\\Models\\student_risk\\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -1004,8 +1004,8 @@ sas.endsas()
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\ctraining_set.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\ctesting_set.csv', encoding='utf-8')
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\training_set.csv', encoding='utf-8')
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\testing_set.csv', encoding='utf-8')
 
 #%%
 # Training AWE instrumental variable
@@ -2329,4 +2329,4 @@ pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\pred_outcome.csv', encodi
 #%%
 # Output model
 scikit_version = sklearn.__version__
-joblib.dump(vcf, f'model_d{date.today()}_v{scikit_version}.pkl')
+joblib.dump(vcf, f'model_v{scikit_version}.pkl')

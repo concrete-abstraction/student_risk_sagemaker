@@ -2239,6 +2239,6 @@ else:
 
 #%%
 # Output model
-joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\Models\\model_{date.today()}_v{sklearn.__version__}.pkl')
+joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\Models\\model_v{sklearn.__version__}.pkl')
 
 print('Done\n')
