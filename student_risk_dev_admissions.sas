@@ -825,7 +825,7 @@ run;
 	%end;
 	
 	proc sql;
-		create table class_registration_2021 as
+		create table class_registration_&cohort_year. as
 		select distinct
 			emplid,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr
@@ -833,7 +833,7 @@ run;
 	;quit;
 	
 	proc sql;
-		create table class_difficulty_2021 as
+		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
 			case when a.grading_basis in ('REM','RMS','RMP') 	then 1
@@ -886,22 +886,22 @@ run;
 		left join &dsn..class_vw as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and b.snapshot = 'eot'
-				and b.full_acad_year = put(%eval(2021 - &lag_year.), 4.)
+				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 				and b.ssr_component = 'LEC'
 		left join &dsn..class_vw as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and c.snapshot = 'eot'
-				and c.full_acad_year = put(%eval(2021 - &lag_year.), 4.)
+				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 				and c.ssr_component = 'LAB'
 		where a.snapshot = 'eot'
-			and a.full_acad_year = put(%eval(2021 - &lag_year.), 4.)
+			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and a.ssr_component in ('LEC','LAB')
 		group by a.subject_catalog_nbr
 		order by a.subject_catalog_nbr
 	;quit;
 	
 	proc sql;
-		create table coursework_difficulty_2021 as
+		create table coursework_difficulty_&cohort_year. as
 		select
 			a.emplid,
 			count(a.subject_catalog_nbr) as class_count,
@@ -914,25 +914,25 @@ run;
 			avg(b.pct_CDF) as avg_pct_CDF,
 			avg(b.pct_DFW) as avg_pct_DFW,
 			avg(b.pct_DF) as avg_pct_DF
-		from class_registration_2021 as a
-		left join class_difficulty_2021 as b
+		from class_registration_&cohort_year. as a
+		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 		group by a.emplid
 	;quit;
 	
 	proc sql;
-		create table term_contact_hrs_2021 as
+		create table term_contact_hrs_&cohort_year. as
 		select distinct
 			a.emplid,
 			sum(b.lec_contact_hrs) as lec_contact_hrs,
 			sum(c.lab_contact_hrs) as lab_contact_hrs
-		from class_registration_2021 as a
+		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(2021 - &lag_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -941,7 +941,7 @@ run;
 						max(term_contact_hrs) as lab_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(2021 - &lag_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
@@ -949,7 +949,7 @@ run;
 	;quit;
 	
 	proc sql;
-		create table exams_2021 as 
+		create table exams_&cohort_year. as 
 		select distinct
 			emplid,
 			max(case when test_component = 'MSS'	then score
@@ -967,7 +967,7 @@ run;
 	;quit;
 	
 	proc sql;
-		create table dataset_2021 as
+		create table dataset_&cohort_year. as
 		select distinct 
 			a.*,
 			case when a.sex = 'M' then 1 
@@ -991,47 +991,47 @@ run;
 			case when d.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
 				else 0
 			end as underrep_minority,
-			substr(e.ext_org_postal,1,5) as targetid
-/* 			f.distance, */
-/* 			g.median_inc, */
-/* 			g.gini_indx, */
-/* 			h.pvrt_total/h.pvrt_base as pvrt_rate, */
-/* 			i.educ_total/i.educ_base as educ_rate, */
-/* 			j.pop/(k.area*3.861E-7) as pop_dens, */
-/* 			l.median_value, */
-/* 			m.race_blk/m.race_tot as pct_blk, */
-/* 			m.race_ai/m.race_tot as pct_ai, */
-/* 			m.race_asn/m.race_tot as pct_asn, */
-/* 			m.race_hawi/m.race_tot as pct_hawi, */
-/* 			m.race_oth/m.race_tot as pct_oth, */
-/* 			m.race_two/m.race_tot as pct_two, */
-/* 			(m.race_blk + m.race_ai + m.race_asn + m.race_hawi + m.race_oth + m.race_two)/m.race_tot as pct_non, */
-/* 			n.ethnic_hisp/n.ethnic_tot as pct_hisp, */
-/* 			case when o.locale = '11' then 1 else 0 end as city_large, */
-/* 			case when o.locale = '12' then 1 else 0 end as city_mid, */
-/* 			case when o.locale = '13' then 1 else 0 end as city_small, */
-/* 			case when o.locale = '21' then 1 else 0 end as suburb_large, */
-/* 			case when o.locale = '22' then 1 else 0 end as suburb_mid, */
-/* 			case when o.locale = '23' then 1 else 0 end as suburb_small, */
-/* 			case when o.locale = '31' then 1 else 0 end as town_fringe, */
-/* 			case when o.locale = '32' then 1 else 0 end as town_distant, */
-/* 			case when o.locale = '33' then 1 else 0 end as town_remote, */
-/* 			case when o.locale = '41' then 1 else 0 end as rural_fringe, */
-/* 			case when o.locale = '42' then 1 else 0 end as rural_distant, */
-/* 			case when o.locale = '43' then 1 else 0 end as rural_remote, */
-/* 			p.class_count, */
-/* 			(4.0 - p.avg_difficulty) as avg_difficulty, */
-/* 			p.avg_pct_withdrawn, */
-/* 			p.avg_pct_CDFW, */
-/* 			p.avg_pct_CDF, */
-/* 			p.avg_pct_DFW, */
-/* 			p.avg_pct_DF, */
-/* 			q.lec_contact_hrs, */
-/* 			q.lab_contact_hrs, */
-/* 			r.fed_need, */
-/* 			r.total_offer, */
-/* 			s.sat_mss, */
-/* 			s.sat_erws */
+			substr(e.ext_org_postal,1,5) as targetid,
+			f.distance,
+			g.median_inc,
+			g.gini_indx,
+			h.pvrt_total/h.pvrt_base as pvrt_rate,
+			i.educ_total/i.educ_base as educ_rate,
+			j.pop/(k.area*3.861E-7) as pop_dens,
+			l.median_value,
+			m.race_blk/m.race_tot as pct_blk,
+			m.race_ai/m.race_tot as pct_ai,
+			m.race_asn/m.race_tot as pct_asn,
+			m.race_hawi/m.race_tot as pct_hawi,
+			m.race_oth/m.race_tot as pct_oth,
+			m.race_two/m.race_tot as pct_two,
+			(m.race_blk + m.race_ai + m.race_asn + m.race_hawi + m.race_oth + m.race_two)/m.race_tot as pct_non,
+			n.ethnic_hisp/n.ethnic_tot as pct_hisp,
+			case when o.locale = '11' then 1 else 0 end as city_large,
+			case when o.locale = '12' then 1 else 0 end as city_mid,
+			case when o.locale = '13' then 1 else 0 end as city_small,
+			case when o.locale = '21' then 1 else 0 end as suburb_large,
+			case when o.locale = '22' then 1 else 0 end as suburb_mid,
+			case when o.locale = '23' then 1 else 0 end as suburb_small,
+			case when o.locale = '31' then 1 else 0 end as town_fringe,
+			case when o.locale = '32' then 1 else 0 end as town_distant,
+			case when o.locale = '33' then 1 else 0 end as town_remote,
+			case when o.locale = '41' then 1 else 0 end as rural_fringe,
+			case when o.locale = '42' then 1 else 0 end as rural_distant,
+			case when o.locale = '43' then 1 else 0 end as rural_remote,
+			p.class_count,
+			(4.0 - p.avg_difficulty) as avg_difficulty,
+			p.avg_pct_withdrawn,
+			p.avg_pct_CDFW,
+			p.avg_pct_CDF,
+			p.avg_pct_DFW,
+			p.avg_pct_DF,
+			q.lec_contact_hrs,
+			q.lab_contact_hrs,
+			r.fed_need,
+			r.total_offer,
+			s.sat_mss,
+			s.sat_erws
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -1041,40 +1041,40 @@ run;
 			on a.sid_ipeds_ethnic_group = d.sid_ipeds_ethnic_group
 		left join &adm..xd_school as e
 			on a.sid_ext_org_id = e.sid_ext_org_id
-/* 		left join acs.distance as f */
-/* 			on substr(e.ext_org_postal,1,5) = f.targetid */
-/* 		left join acs.acs_income_%eval(2021 - &acs_lag. - &lag_year.) as g */
-/* 			on substr(e.ext_org_postal,1,5) = g.geoid */
-/* 		left join acs.acs_poverty_%eval(2021 - &acs_lag. - &lag_year.) as h */
-/* 			on substr(e.ext_org_postal,1,5) = h.geoid */
-/* 		left join acs.acs_education_%eval(2021 - &acs_lag. - &lag_year.) as i */
-/* 			on substr(e.ext_org_postal,1,5) = i.geoid */
-/* 		left join acs.acs_demo_%eval(2021 - &acs_lag. - &lag_year.) as j */
-/* 			on substr(e.ext_org_postal,1,5) = j.geoid */
-/* 		left join acs.acs_area_%eval(2021 - &acs_lag. - &lag_year.) as k */
-/* 			on substr(e.ext_org_postal,1,5) = k.geoid */
-/* 		left join acs.acs_housing_%eval(2021 - &acs_lag. - &lag_year.) as l */
-/* 			on substr(e.ext_org_postal,1,5) = l.geoid */
-/* 		left join acs.acs_race_%eval(2021 - &acs_lag. - &lag_year.) as m */
-/* 			on substr(e.ext_org_postal,1,5) = m.geoid */
-/* 		left join acs.acs_ethnicity_%eval(2021 - &acs_lag. - &lag_year.) as n */
-/* 			on substr(e.ext_org_postal,1,5) = n.geoid */
-/* 		left join acs.edge_locale14_zcta_table as o */
-/* 			on substr(e.ext_org_postal,1,5) = o.zcta5ce10 */
-/*  		left join coursework_difficulty_2021 as p */
-/*  			on a.emplid = p.emplid */
-/*  		left join term_contact_hrs_2021 as q */
-/*  			on a.emplid = q.emplid */
-/*  		left join (select distinct emplid,  */
-/*  								fed_need,  */
-/*  								total_offer  */
-/*  						from acs.finaid_data */
-/*  						where aid_year = "2021" group by emplid) as r */
-/*  			on a.emplid = r.emplid */
-/*  		left join exams_2021 as s */
-/*  			on a.emplid = s.emplid */
+		left join acs.distance as f
+			on substr(e.ext_org_postal,1,5) = f.targetid
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as g
+			on substr(e.ext_org_postal,1,5) = g.geoid
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as h
+			on substr(e.ext_org_postal,1,5) = h.geoid
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as i
+			on substr(e.ext_org_postal,1,5) = i.geoid
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as j
+			on substr(e.ext_org_postal,1,5) = j.geoid
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as k
+			on substr(e.ext_org_postal,1,5) = k.geoid
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as l
+			on substr(e.ext_org_postal,1,5) = l.geoid
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as m
+			on substr(e.ext_org_postal,1,5) = m.geoid
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as n
+			on substr(e.ext_org_postal,1,5) = n.geoid
+		left join acs.edge_locale14_zcta_table as o
+			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
+ 		left join coursework_difficulty_&cohort_year. as p
+ 			on a.emplid = p.emplid
+ 		left join term_contact_hrs_&cohort_year. as q
+ 			on a.emplid = q.emplid
+ 		left join (select distinct emplid, 
+ 								fed_need, 
+ 								total_offer 
+ 						from acs.finaid_data
+ 						where aid_year = "&cohort_year." group by emplid) as r
+ 			on a.emplid = r.emplid
+ 		left join exams_&cohort_year. as s
+ 			on a.emplid = s.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
-								from &adm..fact_u)
+								from &adm..fact_u where strm = (substr(put(&end_cohort., z4.), 1, 1) || substr(put(&end_cohort., z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
 			and a.campus = 'PULLM' 
 			and a.enrolled = 1

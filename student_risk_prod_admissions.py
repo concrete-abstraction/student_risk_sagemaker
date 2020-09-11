@@ -1134,21 +1134,21 @@ sas.submit("""
 			on a.sid_ext_org_id = e.sid_ext_org_id
 		left join acs.distance as f
 			on substr(e.ext_org_postal,1,5) = f.targetid
-		left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as g
 			on substr(e.ext_org_postal,1,5) = g.geoid
-		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as h
 			on substr(e.ext_org_postal,1,5) = h.geoid
-		left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as i
 			on substr(e.ext_org_postal,1,5) = i.geoid
-		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as j
 			on substr(e.ext_org_postal,1,5) = j.geoid
-		left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as k
 			on substr(e.ext_org_postal,1,5) = k.geoid
-		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as l
 			on substr(e.ext_org_postal,1,5) = l.geoid
-		left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as m
 			on substr(e.ext_org_postal,1,5) = m.geoid
-		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as n
 			on substr(e.ext_org_postal,1,5) = n.geoid
 		left join acs.edge_locale14_zcta_table as o
 			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
@@ -1165,7 +1165,7 @@ sas.submit("""
  		left join exams_&cohort_year. as s
  			on a.emplid = s.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
-								from &adm..fact_u)
+								from &adm..fact_u where strm = (substr(put(&end_cohort., z4.), 1, 1) || substr(put(&end_cohort., z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
 			and a.campus = 'PULLM' 
 			and a.enrolled = 1
