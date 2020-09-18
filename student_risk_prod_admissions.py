@@ -4,11 +4,14 @@ import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import pathlib
+import pyodbc
 import os
 import saspy
 import sklearn
 import sys
 import time
+from contextlib import contextmanager
 from datetime import date
 from patsy import dmatrices
 from IPython.display import HTML
@@ -25,6 +28,24 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+#%%
+cred = pathlib.Path('login.bin').read_text().split('|')
+
+#%%
+@contextmanager
+def conn(cred):
+    try:
+        conn = pyodbc.connect(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
+    except ConnectionError as conn_error:
+        raise Exception(conn_error)
+    except Exception as other_error:
+        raise Exception(other_error)
+    else:
+        yield conn
+    finally:
+        conn.close()
+
 
 #%%
 # Admissions date check 
@@ -49,7 +70,7 @@ if now_year < admissions_year or now_year > census_year:
 elif (now_year == admissions_year and now_month < admissions_month) or (now_year == census_year and now_month > census_month):
 	raise Exception(f'{date.today()}: Admissions month exception, outside of date range.')
 
-elif (now_year == admissions_year and now_month == admissions_month and now_day < admissions_day) or (now_year == census_year and now_month == census_month and now_day > census_day):
+elif (now_year == admissions_year and now_month == admissions_month and now_day < admissions_day) or (now_year == census_year and now_month == census_month and now_day >= census_day):
 	raise Exception(f'{date.today()}: Admissions day exception, outside of date range.')
 
 else:
@@ -2216,7 +2237,7 @@ vcf_pred_probs = vcf_pred_probs[:, 1]
 print('Done\n')
 
 #%%
-# Output model predictions
+# Output model predictions to file
 print('Output model predictions and model...')
 
 aggregate_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
