@@ -9,8 +9,10 @@ import pyodbc
 import os
 import saspy
 import sklearn
+import sqlalchemy
 import sys
 import time
+import urllib
 from contextlib import contextmanager
 from datetime import date
 from patsy import dmatrices
@@ -30,22 +32,10 @@ from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
+# Database connection
 cred = pathlib.Path('login.bin').read_text().split('|')
-
-#%%
-@contextmanager
-def conn(cred):
-    try:
-        conn = pyodbc.connect(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
-    except ConnectionError as conn_error:
-        raise Exception(conn_error)
-    except Exception as other_error:
-        raise Exception(other_error)
-    else:
-        yield conn
-    finally:
-        conn.close()
-
+params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
+engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 
 #%%
 # Admissions date check 
@@ -2243,20 +2233,20 @@ print('Output model predictions and model...')
 aggregate_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
 aggregate_outcome['risk_pred'] = vcf.predict(x_test)
 aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
+# aggregate_outcome.to_sql('aggregate_outcome', con=engine, if_exists='replace')
+
+current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
+current_outcome['risk_pred'] = vcf.predict(x_test)
+current_outcome['date'] = date.today()
 
 if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
-	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
-	current_outcome['risk_pred'] = vcf.predict(x_test)
-	current_outcome['date'] = date.today()
 	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
 else:
 	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
 	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_backup.csv', encoding='utf-8', index=False)
-	current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
-	current_outcome['risk_pred'] = vcf.predict(x_test)
-	current_outcome['date'] = date.today()
-	concat_outcome = pd.concat([prior_outcome, current_outcome])
-	concat_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	student_outcome = pd.concat([prior_outcome, current_outcome])
+	student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	# student_outcome.to_sql('student_outcome', con=engine, if_exists='replace')
 
 #%%
 # Output model
