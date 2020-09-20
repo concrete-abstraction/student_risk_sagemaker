@@ -2230,7 +2230,8 @@ print('Done\n')
 # Output model predictions to file
 print('Output model predictions and model...')
 
-aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs)
+aggregate_outcome['emplid'] = aggregate_outcome['emplid'].astype(str).str.zfill(9)
+aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
 
 aggregate_outcome = aggregate_outcome.rename(columns={"male": "sex_ind"})
 aggregate_outcome.loc[aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -2256,7 +2257,8 @@ aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggrega
 # aggregate_outcome.to_sql('aggregate_outcome', con=auto_engine, if_exists='replace', index=False, schema='oracle_int.dbo')
 
 #%%
-current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs)
+current_outcome['emplid'] = current_outcome['emplid'].astype(str).str.zfill(9)
+current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
 
 current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_idx'] = '3'
 current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_idx'] = '2'
