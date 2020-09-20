@@ -13,7 +13,6 @@ import sqlalchemy
 import sys
 import time
 import urllib
-from contextlib import contextmanager
 from datetime import date
 from patsy import dmatrices
 from IPython.display import HTML
@@ -36,6 +35,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 cred = pathlib.Path('login.bin').read_text().split('|')
 params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
 engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
+auto_engine = engine.execution_options(isolation_level='AUTOCOMMIT')
 
 #%%
 # Admissions date check 
@@ -2230,23 +2230,53 @@ print('Done\n')
 # Output model predictions to file
 print('Output model predictions and model...')
 
-aggregate_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
-aggregate_outcome['risk_pred'] = vcf.predict(x_test)
-aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
-# aggregate_outcome.to_sql('aggregate_outcome', con=engine, if_exists='replace')
+aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs)
 
-current_outcome['risk_prob'] = pd.DataFrame(vcf_pred_probs)
-current_outcome['risk_pred'] = vcf.predict(x_test)
+aggregate_outcome = aggregate_outcome.rename(columns={"male": "sex_ind"})
+aggregate_outcome.loc[aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
+aggregate_outcome.loc[aggregate_outcome['sex_ind'] == 0, 'sex_descr'] = 'Female'
+
+aggregate_outcome = aggregate_outcome.rename(columns={"underrep_minority": "underrep_minority_ind"})
+aggregate_outcome.loc[aggregate_outcome['underrep_minority_ind'] == 1, 'underrep_minority_descr'] = 'Minority'
+aggregate_outcome.loc[aggregate_outcome['underrep_minority_ind'] == 0, 'underrep_minority_descr'] = 'Non-minority'
+
+aggregate_outcome = aggregate_outcome.rename(columns={"resident": "resident_ind"})
+aggregate_outcome.loc[aggregate_outcome['resident_ind'] == 1, 'resident_descr'] = 'Resident'
+aggregate_outcome.loc[aggregate_outcome['resident_ind'] == 0, 'resident_descr'] = 'non-Resident'
+
+aggregate_outcome.loc[aggregate_outcome['first_gen_flag'] == 'Y', 'first_gen_flag'] = 1
+aggregate_outcome.loc[aggregate_outcome['first_gen_flag'] == 'N', 'first_gen_flag'] = 0
+aggregate_outcome = aggregate_outcome.rename(columns={"first_gen_flag": "first_gen_ind"})
+aggregate_outcome.loc[aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
+aggregate_outcome.loc[aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
+
+#%%
+aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
+# aggregate_outcome.to_sql('aggregate_outcome', con=auto_engine, if_exists='replace', index=False, schema='oracle_int.dbo')
+
+#%%
+current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs)
+
+current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_idx'] = '3'
+current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_idx'] = '2'
+current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_idx'] = '1'
+
+current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_descr'] = 'High'
+current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_descr'] = 'Mid'
+current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_descr'] = 'Low'
+
 current_outcome['date'] = date.today()
 
+#%%
 if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
 	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
 	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
 	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_backup.csv', encoding='utf-8', index=False)
 	student_outcome = pd.concat([prior_outcome, current_outcome])
 	student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
-	# student_outcome.to_sql('student_outcome', con=engine, if_exists='replace')
+	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Output model
