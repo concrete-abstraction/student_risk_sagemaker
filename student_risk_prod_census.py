@@ -946,15 +946,12 @@ sas.submit("""
 					else 'missing'
 			end as parent2_highest_educ_lvl,
 			b.distance,
-			l.cpi_2018_adj,
-			c.median_inc as median_inc_wo_cpi,
-			c.median_inc*l.cpi_2018_adj as median_inc,
+			c.median_inc,
 			c.gini_indx,
 			d.pvrt_total/d.pvrt_base as pvrt_rate,
 			e.educ_total/e.educ_base as educ_rate,
 			f.pop/(g.area*3.861E-7) as pop_dens,
-			h.median_value as median_value_wo_cpi,
-			h.median_value*l.cpi_2018_adj as median_value,
+			h.median_value,
 			i.race_blk/i.race_tot as pct_blk,
 			i.race_ai/i.race_tot as pct_ai,
 			i.race_asn/i.race_tot as pct_asn,
@@ -996,8 +993,6 @@ sas.submit("""
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
-		left join cpi as l
-			on input(a.full_acad_year, 4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'
@@ -1663,7 +1658,7 @@ sas.submit("""
 print('Done\n')
 
 #%%
-# Run SAS macro program to prepare data from admissions
+# Run SAS macro program to prepare data from census
 print('Run SAS macro program...')
 start = time.perf_counter()
 
@@ -1716,6 +1711,7 @@ data full_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data training_set;
@@ -1753,6 +1749,7 @@ data training_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data testing_set;
@@ -1790,6 +1787,7 @@ data testing_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 """)
 
@@ -2114,9 +2112,9 @@ training_set = training_set[[
                             'unmet_need_ofr'
                             ]].dropna()
 
-#%%
 testing_set = testing_set[[
                             'emplid',
+                            'enrl_ind', 
                             # 'acad_year',
                             # 'age_group', 
                             # 'age', 
@@ -2132,7 +2130,7 @@ testing_set = testing_set[[
                             'pell_eligibility_ind', 
                             # 'pell_recipient_ind',
                             'first_gen_flag',
-                            'LSAMP_STEM_Flag', 
+                            'LSAMP_STEM_Flag',
                             # 'anywhere_STEM_Flag',
                             'honors_program_ind',
                             'afl_greek_indicator',
@@ -2187,7 +2185,7 @@ testing_set = testing_set[[
                             'CHS',
                             # 'IB',
                             # 'AICE',
-                            'IB_AICE',
+                            'IB_AICE', 
                             'term_credit_hours',
                             'athlete',
                             'remedial',
@@ -2257,7 +2255,6 @@ testing_set = testing_set[[
 
 testing_set = testing_set.reset_index()
 
-#%%
 aggregate_outcome = testing_set[[ 
                             'emplid',
 							'male',
@@ -2668,7 +2665,7 @@ svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=F
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_depth=12, max_features=0.125, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]

@@ -844,15 +844,12 @@ run;
 					else 'missing'
 			end as parent2_highest_educ_lvl,
 			b.distance,
-			l.cpi_2018_adj,
-			c.median_inc as median_inc_wo_cpi,
-			c.median_inc*l.cpi_2018_adj as median_inc,
+			c.median_inc,
 			c.gini_indx,
 			d.pvrt_total/d.pvrt_base as pvrt_rate,
 			e.educ_total/e.educ_base as educ_rate,
 			f.pop/(g.area*3.861E-7) as pop_dens,
-			h.median_value as median_value_wo_cpi,
-			h.median_value*l.cpi_2018_adj as median_value,
+			h.median_value,
 			i.race_blk/i.race_tot as pct_blk,
 			i.race_ai/i.race_tot as pct_ai,
 			i.race_asn/i.race_tot as pct_asn,
@@ -894,8 +891,6 @@ run;
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
-		left join cpi as l
-			on input(a.full_acad_year, 4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'
@@ -1594,6 +1589,7 @@ data full_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 /* Note: There should be no duplicates */
@@ -1640,6 +1636,7 @@ data training_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data testing_set;
@@ -1677,19 +1674,20 @@ data testing_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
-filename full "Z:\Nathan\Models\student_risk\cfull_set.csv" encoding="utf-8";
+filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\ctraining_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\ctesting_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
