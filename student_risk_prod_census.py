@@ -332,7 +332,7 @@ sas.submit("""
 			anywhere_stem_flag
 		from &dsn..student_acad_prog_plan_vw
 		where snapshot = 'census'
-			and full_acad_year = "&cohort_year."
+			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
 			and substr(strm, 4, 1) = '7'
 			and adj_admit_campus = 'PULLM'
 			and acad_career = 'UGRD'
@@ -350,7 +350,7 @@ sas.submit("""
 			a.fed_efc,
 			a.fed_need
 		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -369,7 +369,7 @@ sas.submit("""
 			sum(a.offer_amt) as total_offer,
 			sum(a.accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -746,7 +746,7 @@ sas.submit("""
 	;quit;
 	
 	proc sql;
-		create table cdataset_&cohort_year. as
+		create table dataset_&cohort_year. as
 		select 
 			a.*,
 			b.pell_recipient_ind,
@@ -1086,7 +1086,7 @@ sas.submit("""
 			anywhere_stem_flag
 		from &dsn..student_acad_prog_plan_vw
 		where snapshot = 'census'
-			and full_acad_year = "&cohort_year."
+			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
 			and substr(strm, 4, 1) = '7'
 			and adj_admit_campus = 'PULLM'
 			and acad_career = 'UGRD'
@@ -1104,7 +1104,7 @@ sas.submit("""
 			a.fed_efc,
 			a.fed_need
 		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -1123,7 +1123,7 @@ sas.submit("""
 			sum(a.offer_amt) as total_offer,
 			sum(a.accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -1500,7 +1500,7 @@ sas.submit("""
 	;quit;
 	
 	proc sql;
-		create table cdataset_&cohort_year. as
+		create table dataset_&cohort_year. as
 		select 
 			a.*,
 			b.pell_recipient_ind,
@@ -1682,7 +1682,7 @@ print('Prepare data...')
 
 sas.submit("""
 data full_set;
-	set dataset_&start_cohort.-dataset_&end_cohort.;
+	set dataset_&start_cohort.-dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -1719,7 +1719,7 @@ data full_set;
 run;
 
 data training_set;
-	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
+	set dataset_&start_cohort.-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -1756,7 +1756,7 @@ data training_set;
 run;
 
 data testing_set;
-	set dataset_&end_cohort.;
+	set dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -2114,9 +2114,9 @@ training_set = training_set[[
                             'unmet_need_ofr'
                             ]].dropna()
 
+#%%
 testing_set = testing_set[[
                             'emplid',
-                            'enrl_ind', 
                             # 'acad_year',
                             # 'age_group', 
                             # 'age', 
@@ -2257,6 +2257,7 @@ testing_set = testing_set[[
 
 testing_set = testing_set.reset_index()
 
+#%%
 aggregate_outcome = testing_set[[ 
                             'emplid',
 							'male',

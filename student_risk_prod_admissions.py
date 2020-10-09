@@ -77,7 +77,7 @@ sas = saspy.SASsession()
 print('Set macro variables...')
 
 sas.submit("""
-%let dsn = cendev;
+%let dsn = census;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
@@ -366,7 +366,7 @@ sas.submit("""
 			a.fed_efc,
 			a.fed_need
 		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -385,7 +385,7 @@ sas.submit("""
 			sum(a.offer_amt) as total_offer,
 			sum(a.accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -1061,8 +1061,10 @@ sas.submit("""
 													else .
 													end) as sat_erws
 		from &adm..UGRD_student_test_comp
-		where (select max(snap_date) as snap_date from &adm..UGRD_student_test_comp) = snap_date
-			and strm = '2207'
+		where snap_date = (select max(snap_date) as snap_date 
+							from &adm..UGRD_student_test_comp 
+							where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7') 
+			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and test_component in ('MSS','ERWS')
 		group by emplid
 		order by emplid

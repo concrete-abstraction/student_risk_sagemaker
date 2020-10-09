@@ -4,7 +4,7 @@
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
-%let dsn = cendev;
+%let dsn = census;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
@@ -13,6 +13,7 @@
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
+
 libname acs "Z:\Nathan\Models\student_risk\Supplemental Files";
 
 proc import out=act_to_sat_engl_read
@@ -247,7 +248,7 @@ run;
 			a.fed_efc,
 			a.fed_need
 		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -266,7 +267,7 @@ run;
 			sum(a.offer_amt) as total_offer,
 			sum(a.accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -643,7 +644,7 @@ run;
 	;quit;
 	
 	proc sql;
-		create table cdataset_&cohort_year. as
+		create table dataset_&cohort_year. as
 		select 
 			a.*,
 			b.pell_recipient_ind,
@@ -1001,7 +1002,7 @@ run;
 			a.fed_efc,
 			a.fed_need
 		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -1020,7 +1021,7 @@ run;
 			sum(a.offer_amt) as total_offer,
 			sum(a.accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -1397,7 +1398,7 @@ run;
 	;quit;
 	
 	proc sql;
-		create table cdataset_&cohort_year. as
+		create table dataset_&cohort_year. as
 		select 
 			a.*,
 			b.pell_recipient_ind,
@@ -1559,7 +1560,7 @@ run;
 %loop;
 
 data full_set;
-	set dataset_&start_cohort.-dataset_&end_cohort.;
+	set dataset_&start_cohort.-dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -1605,7 +1606,7 @@ run;
 /* run; */
 
 data training_set;
-	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
+	set dataset_&start_cohort.-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -1642,7 +1643,7 @@ data training_set;
 run;
 
 data testing_set;
-	set dataset_&end_cohort.;
+	set dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
