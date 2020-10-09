@@ -2665,7 +2665,7 @@ svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=F
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_depth=12, max_features=0.125, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_depth=12, max_features=0.15, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]
