@@ -1851,7 +1851,7 @@ logit_df = training_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
-                        'afl_greek_indicator',
+                        # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
@@ -1936,8 +1936,8 @@ logit_df = training_set[[
                         'vcea',
                         'vet_med',
                         # 'last_sch_proprietorship',
-                        'sat_erws',
-                        'sat_mss',
+                        # 'sat_erws',
+                        # 'sat_mss',
                         # 'sat_comp',
                         # 'attendee_alive',
                         # 'attendee_campus_visit',
@@ -1992,7 +1992,7 @@ training_set = training_set[[
                             'LSAMP_STEM_Flag',
                             # 'anywhere_STEM_Flag',
                             'honors_program_ind',
-                            'afl_greek_indicator',
+                            # 'afl_greek_indicator',
                             'high_school_gpa',
                             # 'awe_instrument',
                             # 'cdi_instrument',
@@ -2077,8 +2077,8 @@ training_set = training_set[[
                             'provost',
                             'vet_med',
                             # 'last_sch_proprietorship',
-                            'sat_erws',
-                            'sat_mss',
+                            # 'sat_erws',
+                            # 'sat_mss',
                             # 'sat_comp',
                             # 'attendee_alive',
                             # 'attendee_campus_visit',
@@ -2133,7 +2133,7 @@ testing_set = testing_set[[
                             'LSAMP_STEM_Flag',
                             # 'anywhere_STEM_Flag',
                             'honors_program_ind',
-                            'afl_greek_indicator',
+                            # 'afl_greek_indicator',
                             'high_school_gpa',
                             # 'awe_instrument',
                             # 'cdi_instrument',
@@ -2218,8 +2218,8 @@ testing_set = testing_set[[
                             'provost',
                             'vet_med',
                             # 'last_sch_proprietorship',
-                            'sat_erws',
-                            'sat_mss',
+                            # 'sat_erws',
+                            # 'sat_mss',
                             # 'sat_comp',
                             # 'attendee_alive',
                             # 'attendee_campus_visit',
@@ -2255,6 +2255,11 @@ testing_set = testing_set[[
 
 testing_set = testing_set.reset_index()
 
+pred_outcome = testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
 aggregate_outcome = testing_set[[ 
                             'emplid',
 							'male',
@@ -2288,7 +2293,7 @@ x_train = training_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
-                        'afl_greek_indicator',
+                        # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
@@ -2373,8 +2378,8 @@ x_train = training_set[[
                         'provost',
                         'vet_med',
                         # 'last_sch_proprietorship',
-                        'sat_erws',
-                        'sat_mss',
+                        # 'sat_erws',
+                        # 'sat_mss',
                         # 'sat_comp',
                         # 'attendee_alive',
                         # 'attendee_campus_visit',
@@ -2409,8 +2414,8 @@ x_train = training_set[[
                         ]]
 
 x_test = testing_set[[
-                        # 'acad_year', 
-                        # 'age_group',
+                        # 'acad_year',
+                        # 'age_group', 
                         # 'age', 
                         'male',
                         # 'min_week_from_term_begin_dt',
@@ -2427,7 +2432,7 @@ x_test = testing_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
-                        'afl_greek_indicator',
+                        # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
@@ -2479,7 +2484,7 @@ x_test = testing_set[[
                         'CHS',
                         # 'IB',
                         # 'AICE',
-                        'IB_AICE', 
+                        'IB_AICE',
                         'term_credit_hours',
                         'athlete',
                         'remedial',
@@ -2512,8 +2517,8 @@ x_test = testing_set[[
                         'provost',
                         'vet_med',
                         # 'last_sch_proprietorship',
-                        'sat_erws',
-                        'sat_mss',
+                        # 'sat_erws',
+                        # 'sat_mss',
                         # 'sat_comp',
                         # 'attendee_alive',
                         # 'attendee_campus_visit',
@@ -2558,8 +2563,8 @@ preprocess = make_column_transformer(
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
-                        'sat_erws',
-                        'sat_mss',
+                        # 'sat_erws',
+                        # 'sat_mss',
                         # 'sat_comp',
                         'attendee_total_visits',
                         # 'Distance',
@@ -2587,7 +2592,7 @@ preprocess = make_column_transformer(
                                     'first_gen_flag',
                                     'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
-                                    'afl_greek_indicator',
+                                    # 'afl_greek_indicator',
                                     # 'ACAD_PLAN',
                                     # 'plan_owner_org',
                                     # 'ipeds_ethnic_group_descrshort',
@@ -2606,12 +2611,11 @@ print('Done\n')
 #%%
 # Standard logistic model
 y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + afl_greek_indicator + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
+                + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
                 + pell_eligibility_ind + LSAMP_STEM_Flag + athlete \
                 + first_gen_flag + father_wsu_flag + mother_wsu_flag \
                 + avg_pct_withdrawn + lec_contact_hrs + lab_contact_hrs + term_credit_hours \
                 + resident + gini_indx + median_inc \
-                + sat_erws + sat_mss \
                 + AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
                 + cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
@@ -2723,6 +2727,18 @@ print('Done\n')
 # Output model predictions to file
 print('Output model predictions and model...')
 
+pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
+pred_outcome['lr_pred'] = lreg.predict(x_test)
+pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
+pred_outcome['svc_pred'] = svc.predict(x_test)
+pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
+pred_outcome['rfc_pred'] = rfc.predict(x_test)
+pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
+pred_outcome['mlp_pred'] = mlp.predict(x_test)
+pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
+pred_outcome['vcf_pred'] = vcf.predict(x_test)
+pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome.csv', encoding='utf-8', index=False)
+
 aggregate_outcome['emplid'] = aggregate_outcome['emplid'].astype(str).str.zfill(9)
 aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
 
@@ -2766,13 +2782,13 @@ current_outcome['date'] = date.today()
 #%%
 if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
 	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
-	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+	# current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
 	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
 	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_backup.csv', encoding='utf-8', index=False)
 	student_outcome = pd.concat([prior_outcome, current_outcome])
 	student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
-	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+	# current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Output model

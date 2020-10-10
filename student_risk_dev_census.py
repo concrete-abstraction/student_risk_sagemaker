@@ -1954,7 +1954,7 @@ logit_df = training_set[[
                         'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
-                        'afl_greek_indicator',
+                        # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
@@ -2039,8 +2039,8 @@ logit_df = training_set[[
                         'vcea',
                         'vet_med',
                         # 'last_sch_proprietorship',
-                        'sat_erws',
-                        'sat_mss',
+                        # 'sat_erws',
+                        # 'sat_mss',
                         # 'sat_comp',
                         # 'attendee_alive',
                         # 'attendee_campus_visit',
@@ -2095,7 +2095,7 @@ training_set = training_set[[
                             'LSAMP_STEM_Flag',
                             # 'anywhere_STEM_Flag',
                             'honors_program_ind',
-                            'afl_greek_indicator',
+                            # 'afl_greek_indicator',
                             'high_school_gpa',
                             # 'awe_instrument',
                             # 'cdi_instrument',
@@ -2180,8 +2180,8 @@ training_set = training_set[[
                             'provost',
                             'vet_med',
                             # 'last_sch_proprietorship',
-                            'sat_erws',
-                            'sat_mss',
+                            # 'sat_erws',
+                            # 'sat_mss',
                             # 'sat_comp',
                             # 'attendee_alive',
                             # 'attendee_campus_visit',
@@ -2236,7 +2236,7 @@ testing_set = testing_set[[
                             'LSAMP_STEM_Flag', 
                             # 'anywhere_STEM_Flag',
                             'honors_program_ind',
-                            'afl_greek_indicator',
+                            # 'afl_greek_indicator',
                             'high_school_gpa',
                             # 'awe_instrument',
                             # 'cdi_instrument',
@@ -2321,8 +2321,8 @@ testing_set = testing_set[[
                             'provost',
                             'vet_med',
                             # 'last_sch_proprietorship',
-                            'sat_erws',
-                            'sat_mss',
+                            # 'sat_erws',
+                            # 'sat_mss',
                             # 'sat_comp',
                             # 'attendee_alive',
                             # 'attendee_campus_visit',
@@ -2467,8 +2467,8 @@ x_train = training_set[[
                         'provost',
                         'vet_med',
                         # 'last_sch_proprietorship',
-                        'sat_erws',
-                        'sat_mss',
+                        # 'sat_erws',
+                        # 'sat_mss',
                         # 'sat_comp',
                         # 'attendee_alive',
                         # 'attendee_campus_visit',
@@ -2606,8 +2606,8 @@ x_test = testing_set[[
                         'provost',
                         'vet_med',
                         # 'last_sch_proprietorship',
-                        'sat_erws',
-                        'sat_mss',
+                        # 'sat_erws',
+                        # 'sat_mss',
                         # 'sat_comp',
                         # 'attendee_alive',
                         # 'attendee_campus_visit',
@@ -2662,8 +2662,8 @@ preprocess = make_column_transformer(
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
-                        'sat_erws',
-                        'sat_mss',
+                        # 'sat_erws',
+                        # 'sat_mss',
                         # 'sat_comp',
                         'attendee_total_visits',
                         # 'Distance',
@@ -2713,7 +2713,6 @@ y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_h
                 + first_gen_flag + father_wsu_flag + mother_wsu_flag \
                 + avg_pct_withdrawn + lec_contact_hrs + lab_contact_hrs + term_credit_hours \
                 + resident + gini_indx + median_inc \
-                + sat_erws + sat_mss \
                 + AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
                 + cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
@@ -2950,7 +2949,7 @@ plt.show()
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_depth=12, max_features=0.125, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
+rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_depth=12, max_features=0.15, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
 
 rfc_cprobs = CalibratedClassifierCV(rfc, method='sigmoid', cv='prefit')
 rfc_cprobs.fit(x_test, y_test)
@@ -2984,7 +2983,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, max_iter=1000, n_iter_no_change=10, verbose=True).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=10, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
@@ -3069,7 +3068,7 @@ pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
 pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
-pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\pred_outcome.csv', encoding='utf-8', index=False)
+pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Output model

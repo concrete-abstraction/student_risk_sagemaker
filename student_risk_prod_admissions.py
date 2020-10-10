@@ -1770,6 +1770,11 @@ testing_set = testing_set[[
 
 testing_set = testing_set.reset_index()
 
+pred_outcome = testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
 aggregate_outcome = testing_set[[ 
                             'emplid',
 							'male',
@@ -2231,6 +2236,18 @@ print('Done\n')
 #%%
 # Output model predictions to file
 print('Output model predictions and model...')
+
+pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
+pred_outcome['lr_pred'] = lreg.predict(x_test)
+pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
+pred_outcome['svc_pred'] = svc.predict(x_test)
+pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
+pred_outcome['rfc_pred'] = rfc.predict(x_test)
+pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
+pred_outcome['mlp_pred'] = mlp.predict(x_test)
+pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
+pred_outcome['vcf_pred'] = vcf.predict(x_test)
+pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome.csv', encoding='utf-8', index=False)
 
 aggregate_outcome['emplid'] = aggregate_outcome['emplid'].astype(str).str.zfill(9)
 aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
