@@ -4,11 +4,12 @@
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
-%let dsn = census;
+%let dsn = cendev;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
-%let start_cohort = 2015;
+/* Note: This is a test date. Revert to 2015 in production. */
+%let start_cohort = 2020;
 %let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -825,6 +826,20 @@ run;
 	%end;
 	
 	proc sql;
+		create table remedial_&cohort_year. as
+		select distinct
+			emplid,
+			case when grading_basis_enrl in ('REM','RMS','RMP') 	then 1
+																	else 0
+																	end as remedial
+		from &dsn..class_registration_vw
+		where snapshot = 'census'
+			and aid_year = "&cohort_year."
+			and grading_basis_enrl in ('REM','RMS','RMP')
+		order by emplid
+	;quit;
+	
+	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
 			emplid,
@@ -836,9 +851,6 @@ run;
 		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
-			case when a.grading_basis in ('REM','RMS','RMP') 	then 1
-																else 0
-																end as remedial,
 			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
 			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
@@ -905,9 +917,6 @@ run;
 		select
 			a.emplid,
 			count(a.subject_catalog_nbr) as class_count,
-			case when count(b.remedial) > 0 	then 1 
-												else 0 
-												end as remedial,
 			avg(b.class_average) as avg_difficulty,
 			avg(b.pct_withdrawn) as avg_pct_withdrawn,
 			avg(b.pct_CDFW) as avg_pct_CDFW,
@@ -932,7 +941,7 @@ run;
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -941,7 +950,7 @@ run;
 						max(term_contact_hrs) as lab_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
@@ -1021,19 +1030,20 @@ run;
 			case when o.locale = '41' then 1 else 0 end as rural_fringe,
 			case when o.locale = '42' then 1 else 0 end as rural_distant,
 			case when o.locale = '43' then 1 else 0 end as rural_remote,
-			p.class_count,
-			(4.0 - p.avg_difficulty) as avg_difficulty,
-			p.avg_pct_withdrawn,
-			p.avg_pct_CDFW,
-			p.avg_pct_CDF,
-			p.avg_pct_DFW,
-			p.avg_pct_DF,
-			q.lec_contact_hrs,
-			q.lab_contact_hrs,
-			r.fed_need,
-			r.total_offer,
-			s.sat_mss,
-			s.sat_erws
+			p.remedial,
+			q.class_count,
+			(4.0 - q.avg_difficulty) as avg_difficulty,
+			q.avg_pct_withdrawn,
+			q.avg_pct_CDFW,
+			q.avg_pct_CDF,
+			q.avg_pct_DFW,
+			q.avg_pct_DF,
+			r.lec_contact_hrs,
+			r.lab_contact_hrs,
+			s.fed_need,
+			s.total_offer,
+			t.sat_mss,
+			t.sat_erws
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -1063,20 +1073,22 @@ run;
 			on substr(e.ext_org_postal,1,5) = n.geoid
 		left join acs.edge_locale14_zcta_table as o
 			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
- 		left join coursework_difficulty_&cohort_year. as p
- 			on a.emplid = p.emplid
- 		left join term_contact_hrs_&cohort_year. as q
+		left join remedial_&cohort_year. as p
+			on a.emplid = p.emplid
+ 		left join coursework_difficulty_&cohort_year. as q
  			on a.emplid = q.emplid
+ 		left join term_contact_hrs_&cohort_year. as r
+ 			on a.emplid = r.emplid
  		left join (select distinct emplid, 
  								fed_need, 
  								total_offer 
  						from acs.finaid_data
- 						where aid_year = "&cohort_year." group by emplid) as r
- 			on a.emplid = r.emplid
- 		left join exams_&cohort_year. as s
+ 						where aid_year = "&cohort_year." group by emplid) as s
  			on a.emplid = s.emplid
+ 		left join exams_&cohort_year. as t
+ 			on a.emplid = t.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
-								from &adm..fact_u where strm = (substr(put(&end_cohort., z4.), 1, 1) || substr(put(&end_cohort., z4.), 3, 2) || '7'))
+								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
 			and a.campus = 'PULLM' 
 			and a.enrolled = 1

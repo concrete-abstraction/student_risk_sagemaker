@@ -8,6 +8,7 @@
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
+/* Note: This is a test date. Revert to 2015 in production. */
 %let start_cohort = 2020;
 %let end_cohort = 2020;
 
@@ -988,43 +989,43 @@ run;
 			and calculated split_plan = 0
 	;quit;
 	
-	proc sql;
-		create table need_&cohort_year. as
-		select distinct
-			a.emplid,
-			b.snapshot as need_snap,
-			a.aid_year,
-			a.fed_efc,
-			a.fed_need
-		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
-			on a.emplid = b.emplid
-				and a.aid_year = b.aid_year
-				and a.snapshot = b.snapshot
-		where a.aid_year = "&cohort_year."	
-			and a.award_period in ('A','B')
-			and a.efc_status = 'O'
-	;quit;
+/* 	proc sql; */
+/* 		create table need_&cohort_year. as */
+/* 		select distinct */
+/* 			a.emplid, */
+/* 			b.snapshot as need_snap, */
+/* 			a.aid_year, */
+/* 			a.fed_efc, */
+/* 			a.fed_need */
+/* 		from &dsn..fa_award_period as a */
+/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b */
+/* 			on a.emplid = b.emplid */
+/* 				and a.aid_year = b.aid_year */
+/* 				and a.snapshot = b.snapshot */
+/* 		where a.aid_year = "&cohort_year."	 */
+/* 			and a.award_period in ('A','B') */
+/* 			and a.efc_status = 'O' */
+/* 	;quit; */
 	
-	proc sql;
-		create table aid_&cohort_year. as
-		select distinct
-			a.emplid,
-			b.snapshot as aid_snap,
-			a.aid_year,
-			sum(a.disbursed_amt) as total_disb,
-			sum(a.offer_amt) as total_offer,
-			sum(a.accept_amt) as total_accept
-		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
-			on a.emplid = b.emplid
-				and a.aid_year = b.aid_year
-				and a.snapshot = b.snapshot
-		where a.aid_year = "&cohort_year."
-			and a.award_period in ('A','B')
-			and a.award_status = 'A'
-		group by a.emplid;
-	;quit;
+/* 	proc sql; */
+/* 		create table aid_&cohort_year. as */
+/* 		select distinct */
+/* 			a.emplid, */
+/* 			b.snapshot as aid_snap, */
+/* 			a.aid_year, */
+/* 			sum(a.disbursed_amt) as total_disb, */
+/* 			sum(a.offer_amt) as total_offer, */
+/* 			sum(a.accept_amt) as total_accept */
+/* 		from &dsn..fa_award_aid_year_vw as a */
+/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b */
+/* 			on a.emplid = b.emplid */
+/* 				and a.aid_year = b.aid_year */
+/* 				and a.snapshot = b.snapshot */
+/* 		where a.aid_year = "&cohort_year." */
+/* 			and a.award_period in ('A','B') */
+/* 			and a.award_status = 'A' */
+/* 		group by a.emplid; */
+/* 	;quit; */
 	
 	proc sql;
 		create table exams_&cohort_year. as 
@@ -1229,10 +1230,8 @@ run;
 		create table class_registration_&cohort_year. as
 		select distinct
 			emplid,
-			subject_catalog_nbr
-		from &dsn..class_registration_vw
-		where snapshot = 'census'
-			and full_acad_year = "&cohort_year."
+			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr
+		from acs.subcatnbr_data
 	;quit;
 	
 	proc sql;
@@ -1432,13 +1431,15 @@ run;
 			d.vet_med,
 			d.lsamp_stem_flag,
 			d.anywhere_stem_flag,
-			e.need_snap,
-			e.fed_efc,
-			e.fed_need,
-			f.aid_snap,
-			f.total_disb,
-			f.total_offer,
-			f.total_accept,
+			s.fed_need,
+			s.total_offer,
+/* 			e.need_snap, */
+/* 			e.fed_efc, */
+/* 			e.fed_need, */
+/* 			f.aid_snap, */
+/* 			f.total_disb, */
+/* 			f.total_offer, */
+/* 			f.total_accept, */
 			g.best,
 			g.bestr,
 			g.qvalue,
@@ -1518,12 +1519,18 @@ run;
 			on a.emplid = b.emplid
  		left join plan_&cohort_year. as d
  			on a.emplid = d.emplid
- 		left join need_&cohort_year. as e
- 			on a.emplid = e.emplid
- 				and a.aid_year = e.aid_year
- 		left join aid_&cohort_year. as f
- 			on a.emplid = f.emplid
- 				and a.aid_year = f.aid_year
+ 		left join (select distinct emplid, 
+							fed_need, 
+	 						total_offer 
+	 					from acs.finaid_data
+	 					where aid_year = "&cohort_year." group by emplid) as s
+ 			on a.emplid = s.emplid
+/*  		left join need_&cohort_year. as e */
+/*  			on a.emplid = e.emplid */
+/*  				and a.aid_year = e.aid_year */
+/*  		left join aid_&cohort_year. as f */
+/*  			on a.emplid = f.emplid */
+/*  				and a.aid_year = f.aid_year */
  		left join exams_&cohort_year. as g
  			on a.emplid = g.emplid
  		left join degrees_&cohort_year. as h

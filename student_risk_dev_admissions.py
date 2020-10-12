@@ -224,11 +224,9 @@ sas.submit("""
 				emplid, 
 				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
 				enrl_ind
-			from sdw_data
-			where full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-				and substr(strm, 4, 1) = '7'
+			from acs.enrl_data
+			where substr(strm, 4, 1) = '7'
 				and acad_career = 'UGRD'
-				and term_credit_hours > 0
 			order by emplid
 		;quit;
 	%end;
@@ -314,7 +312,7 @@ sas.submit("""
 			a.fed_efc,
 			a.fed_need
 		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -333,7 +331,7 @@ sas.submit("""
 			sum(a.offer_amt) as total_offer,
 			sum(a.accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw) as b
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
 			on a.emplid = b.emplid
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
@@ -875,21 +873,31 @@ sas.submit("""
 	%end;
 	
 	proc sql;
+		create table remedial_&cohort_year. as
+		select distinct
+			emplid,
+			case when grading_basis_enrl in ('REM','RMS','RMP') 	then 1
+																	else 0
+																	end as remedial
+		from &dsn..class_registration_vw
+		where snapshot = 'census'
+			and aid_year = "&cohort_year."
+			and grading_basis_enrl in ('REM','RMS','RMP')
+		order by emplid
+	;quit;
+	
+	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
 			emplid,
-			subject_catalog_nbr
-		from finaid_subcatnbr_data
-		where full_acad_year = "&cohort_year."
+			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr
+		from acs.subcatnbr_data
 	;quit;
 	
 	proc sql;
 		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
-			case when a.grading_basis in ('REM','RMS','RMP') 	then 1
-																else 0
-																end as remedial,
 			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
 			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
@@ -956,9 +964,6 @@ sas.submit("""
 		select
 			a.emplid,
 			count(a.subject_catalog_nbr) as class_count,
-			case when count(b.remedial) > 0 	then 1 
-												else 0 
-												end as remedial,
 			avg(b.class_average) as avg_difficulty,
 			avg(b.pct_withdrawn) as avg_pct_withdrawn,
 			avg(b.pct_CDFW) as avg_pct_CDFW,
@@ -983,7 +988,7 @@ sas.submit("""
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -992,7 +997,7 @@ sas.submit("""
 						max(term_contact_hrs) as lab_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
@@ -1010,8 +1015,10 @@ sas.submit("""
 													else .
 													end) as sat_erws
 		from &adm..UGRD_student_test_comp
-		where (select max(snap_date) as snap_date from &adm..UGRD_student_test_comp) = snap_date
-			and strm = '2207'
+		where snap_date = (select max(snap_date) as snap_date 
+							from &adm..UGRD_student_test_comp 
+							where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7') 
+			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and test_component in ('MSS','ERWS')
 		group by emplid
 		order by emplid
@@ -1070,18 +1077,18 @@ sas.submit("""
 			case when o.locale = '41' then 1 else 0 end as rural_fringe,
 			case when o.locale = '42' then 1 else 0 end as rural_distant,
 			case when o.locale = '43' then 1 else 0 end as rural_remote,
-			p.class_count,
-			(4.0 - p.avg_difficulty) as avg_difficulty,
-			p.avg_pct_withdrawn,
-			p.avg_pct_CDFW,
-			p.avg_pct_CDF,
-			p.avg_pct_DFW,
-			p.avg_pct_DF,
-			q.lec_contact_hrs,
-			q.lab_contact_hrs,
-			r.fed_need,
-			r.total_offer,
-			s.term_credit_hours,
+			p.remedial,
+			q.class_count,
+			(4.0 - q.avg_difficulty) as avg_difficulty,
+			q.avg_pct_withdrawn,
+			q.avg_pct_CDFW,
+			q.avg_pct_CDF,
+			q.avg_pct_DFW,
+			q.avg_pct_DF,
+			r.lec_contact_hrs,
+			r.lab_contact_hrs,
+			s.fed_need,
+			s.total_offer,
 			t.sat_mss,
 			t.sat_erws
 		from &adm..fact_u as a
@@ -1095,40 +1102,40 @@ sas.submit("""
 			on a.sid_ext_org_id = e.sid_ext_org_id
 		left join acs.distance as f
 			on substr(e.ext_org_postal,1,5) = f.targetid
-		left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as g
 			on substr(e.ext_org_postal,1,5) = g.geoid
-		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as h
 			on substr(e.ext_org_postal,1,5) = h.geoid
-		left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as i
 			on substr(e.ext_org_postal,1,5) = i.geoid
-		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as j
 			on substr(e.ext_org_postal,1,5) = j.geoid
-		left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as k
 			on substr(e.ext_org_postal,1,5) = k.geoid
-		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as l
 			on substr(e.ext_org_postal,1,5) = l.geoid
-		left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as m
 			on substr(e.ext_org_postal,1,5) = m.geoid
-		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as n
 			on substr(e.ext_org_postal,1,5) = n.geoid
 		left join acs.edge_locale14_zcta_table as o
 			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
- 		left join coursework_difficulty_&cohort_year. as p
- 			on a.emplid = p.emplid
- 		left join term_contact_hrs_&cohort_year. as q
+		left join remedial_&cohort_year. as p
+			on a.emplid = p.emplid
+ 		left join coursework_difficulty_&cohort_year. as q
  			on a.emplid = q.emplid
- 		left join (select distinct emplid, 
- 								max(fed_need) as fed_need, 
- 								max(total_offer) as total_offer 
- 						from finaid_subcatnbr_data
- 						where full_acad_year = "&cohort_year." group by emplid) as r
+ 		left join term_contact_hrs_&cohort_year. as r
  			on a.emplid = r.emplid
- 		left join finaid_subcatnbr_data as s
+ 		left join (select distinct emplid, 
+ 								fed_need, 
+ 								total_offer 
+ 						from acs.finaid_data
+ 						where aid_year = "&cohort_year." group by emplid) as s
  			on a.emplid = s.emplid
  		left join exams_&cohort_year. as t
  			on a.emplid = t.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
-								from &adm..fact_u)
+								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
 			and a.campus = 'PULLM' 
 			and a.enrolled = 1
