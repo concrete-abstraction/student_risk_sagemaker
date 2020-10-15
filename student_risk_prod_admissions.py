@@ -1042,7 +1042,7 @@ sas.submit("""
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -1051,7 +1051,7 @@ sas.submit("""
 						max(term_contact_hrs) as lab_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
@@ -1346,7 +1346,7 @@ HTML(sas_log['LOG'])
 print('Done\n')
 
 #%%
-#End SAS session
+# End SAS session
 sas.endsas()
 
 #%%
@@ -2261,6 +2261,7 @@ pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
 pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome.csv', encoding='utf-8', index=False)
 
+#%%
 aggregate_outcome['emplid'] = aggregate_outcome['emplid'].astype(str).str.zfill(9)
 aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
 

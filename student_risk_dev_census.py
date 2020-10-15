@@ -615,8 +615,64 @@ sas.submit("""
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
 			a.emplid,
-			sum(b.lec_contact_hrs) as lec_contact_hrs,
-			sum(c.lab_contact_hrs) as lab_contact_hrs
+			sum(b.lec_contact_hrs) as fall_lec_contact_hrs,
+			sum(c.lab_contact_hrs) as fall_lab_contact_hrs,
+			sum(d.lec_contact_hrs) as spring_lec_contact_hrs,
+			sum(e.lab_contact_hrs) as spring_lab_contact_hrs
+		from class_registration_&cohort_year. as a
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '7' 
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '7' 
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as d
+			on a.subject_catalog_nbr = d.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as e
+			on a.subject_catalog_nbr = e.subject_catalog_nbr
+		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table term_contact_hrs_tot_&cohort_year. as
+		select distinct
+			a.emplid,
+			sum(b.lec_contact_hrs) as fall_lec_contact_hrs,
+			sum(c.lab_contact_hrs) as fall_lab_contact_hrs,
+			sum(d.lec_contact_hrs) as spring_lec_contact_hrs,
+			sum(e.lab_contact_hrs) as spring_lab_contact_hrs,
+			coalesce(calculated fall_lec_contact_hrs, 0) + coalesce(calculated fall_lab_contact_hrs, 0) as total_fall_contact_hrs,
+			coalesce(calculated spring_lec_contact_hrs, 0) + coalesce(calculated spring_lab_contact_hrs, 0) as total_spring_contact_hrs
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
@@ -636,6 +692,26 @@ sas.submit("""
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr ) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as d
+			on a.subject_catalog_nbr = d.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as e
+			on a.subject_catalog_nbr = e.subject_catalog_nbr
 		group by a.emplid
 	;quit;
 	
@@ -790,8 +866,12 @@ sas.submit("""
 			n.avg_pct_CDF,
 			n.avg_pct_DFW,
 			n.avg_pct_DF,
-			o.lec_contact_hrs,
-			o.lab_contact_hrs,
+			o.fall_lec_contact_hrs,
+ 			o.fall_lab_contact_hrs,
+ 			o.spring_lec_contact_hrs,
+ 			o.spring_lab_contact_hrs,
+			s.total_fall_contact_hrs,
+			s.total_spring_contact_hrs,
 			p.sat_sup_rwc,
 			p.sat_sup_ce,
 			p.sat_sup_ha,
@@ -841,11 +921,13 @@ sas.submit("""
  			on a.emplid = n.emplid
  		left join term_contact_hrs_&cohort_year. as o
  			on a.emplid = o.emplid
+ 		left join term_contact_hrs_tot_&cohort_year. as s
+ 			on a.emplid = s.emplid
  		left join exams_detail_&cohort_year. as p
  			on a.emplid = p.emplid
  		left join housing_&cohort_year. as q
  			on a.emplid = q.emplid
- 		 left join housing_detail_&cohort_year. as r
+ 		left join housing_detail_&cohort_year. as r
  			on a.emplid = r.emplid
 	;quit;
 		
@@ -1321,13 +1403,69 @@ sas.submit("""
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 		group by a.emplid
 	;quit;
-	
+
 	proc sql;
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
 			a.emplid,
-			sum(b.lec_contact_hrs) as lec_contact_hrs,
-			sum(c.lab_contact_hrs) as lab_contact_hrs
+			sum(b.lec_contact_hrs) as fall_lec_contact_hrs,
+			sum(c.lab_contact_hrs) as fall_lab_contact_hrs,
+			sum(d.lec_contact_hrs) as spring_lec_contact_hrs,
+			sum(e.lab_contact_hrs) as spring_lab_contact_hrs
+		from class_registration_&cohort_year. as a
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '7' 
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
+			on a.subject_catalog_nbr = b.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '7' 
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as d
+			on a.subject_catalog_nbr = d.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as e
+			on a.subject_catalog_nbr = e.subject_catalog_nbr
+		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table term_contact_hrs_tot_&cohort_year. as
+		select distinct
+			a.emplid,
+			sum(b.lec_contact_hrs) as fall_lec_contact_hrs,
+			sum(c.lab_contact_hrs) as fall_lab_contact_hrs,
+			sum(d.lec_contact_hrs) as spring_lec_contact_hrs,
+			sum(e.lab_contact_hrs) as spring_lab_contact_hrs,
+			coalesce(calculated fall_lec_contact_hrs, 0) + coalesce(calculated fall_lab_contact_hrs, 0) as total_fall_contact_hrs,
+			coalesce(calculated spring_lec_contact_hrs, 0) + coalesce(calculated spring_lab_contact_hrs, 0) as total_spring_contact_hrs
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
@@ -1347,6 +1485,26 @@ sas.submit("""
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr ) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as d
+			on a.subject_catalog_nbr = d.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as e
+			on a.subject_catalog_nbr = e.subject_catalog_nbr
 		group by a.emplid
 	;quit;
 	
@@ -1494,8 +1652,12 @@ sas.submit("""
 			n.avg_pct_CDF,
 			n.avg_pct_DFW,
 			n.avg_pct_DF,
-			o.lec_contact_hrs,
-			o.lab_contact_hrs,
+ 			o.fall_lec_contact_hrs,
+ 			o.fall_lab_contact_hrs,
+ 			o.spring_lec_contact_hrs,
+ 			o.spring_lab_contact_hrs,
+			t.total_fall_contact_hrs,
+			t.total_spring_contact_hrs,
 			p.sat_sup_rwc,
 			p.sat_sup_ce,
 			p.sat_sup_ha,
@@ -1542,6 +1704,8 @@ sas.submit("""
  			on a.emplid = n.emplid
  		left join term_contact_hrs_&cohort_year. as o
  			on a.emplid = o.emplid
+ 		left join term_contact_hrs_tot_&cohort_year. as t
+ 			on a.emplid = t.emplid
  		left join exams_detail_&cohort_year. as p
  			on a.emplid = p.emplid
  		left join housing_&cohort_year. as q
@@ -1582,11 +1746,17 @@ data full_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;	
 	if remedial = . then remedial = 0;
+	if sat_mss = . then sat_mss = 0;
+	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
-	if lec_contact_hrs = . then lec_contact_hrs = 0;
-	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+ 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+ 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+ 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -1599,7 +1769,7 @@ data full_set;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
-    if unmet_need_ofr < 0 then unmet_need_ofr = 0;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
 data training_set;
@@ -1620,11 +1790,17 @@ data training_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
+	if sat_mss = . then sat_mss = 0;
+	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
-	if lec_contact_hrs = . then lec_contact_hrs = 0;
-	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+ 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+ 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+ 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -1658,11 +1834,17 @@ data testing_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
+	if sat_mss = . then sat_mss = 0;
+	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if avg_difficulty = . then avg_difficulty = 0;
-	if lec_contact_hrs = . then lec_contact_hrs = 0;
-	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+ 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+ 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+ 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -1701,7 +1883,7 @@ run;
 HTML(sas_log['LOG'])
 
 #%%
-#End SAS session
+# End SAS session
 sas.endsas()
 
 #%%
@@ -1910,13 +2092,13 @@ logit_df = training_set[[
                         'first_gen_flag', 
                         # 'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        # 'honors_program_ind',
+                        'honors_program_ind',
                         # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         # 'avg_pct_CDF',
@@ -2051,13 +2233,13 @@ training_set = training_set[[
 							'first_gen_flag', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
-							# 'honors_program_ind',
+							'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'avg_difficulty',
-							'class_count',
+							# 'class_count',
 							'avg_pct_withdrawn',
 							# 'avg_pct_CDFW',
 							# 'avg_pct_CDF',
@@ -2192,13 +2374,13 @@ testing_set = testing_set[[
 							'first_gen_flag', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
-							# 'honors_program_ind',
+							'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'avg_difficulty',
-							'class_count',
+							# 'class_count',
 							'avg_pct_withdrawn',
 							# 'avg_pct_CDFW',
 							# 'avg_pct_CDF',
@@ -2338,13 +2520,13 @@ x_train = training_set[[
                         'first_gen_flag', 
                         # 'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        # 'honors_program_ind',
+                        'honors_program_ind',
                         # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         # 'avg_pct_CDF',
@@ -2477,13 +2659,13 @@ x_test = testing_set[[
                         'first_gen_flag', 
                         # 'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        # 'honors_program_ind',
+                        'honors_program_ind',
                         # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'avg_difficulty',
-                        'class_count',
+                        # 'class_count',
                         'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         # 'avg_pct_CDF',
@@ -2666,12 +2848,16 @@ x_test = preprocess.fit_transform(x_test)
 # Standard logistic model
 y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-                + pell_eligibility_ind \
+                + pell_eligibility_ind + honors_program_ind \
                 + first_gen_flag \
                 + avg_pct_withdrawn + class_count + lec_contact_hrs + lab_contact_hrs \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa + remedial \
             	+ unmet_need_ofr', data=logit_df, return_type='dataframe')
+
+logit_mod = Logit(y, x)
+logit_res = logit_mod.fit(maxiter=500)
+print(logit_res.summary())
 				
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)

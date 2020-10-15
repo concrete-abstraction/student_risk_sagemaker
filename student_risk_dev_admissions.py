@@ -644,7 +644,7 @@ sas.submit("""
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -653,7 +653,7 @@ sas.submit("""
 						max(term_contact_hrs) as lab_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
@@ -988,7 +988,7 @@ sas.submit("""
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -997,7 +997,7 @@ sas.submit("""
 						max(term_contact_hrs) as lab_contact_hrs
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
@@ -1270,7 +1270,7 @@ run;
 HTML(sas_log['LOG'])
 
 #%%
-#End SAS session
+# End SAS session
 sas.endsas()
 
 #%%
