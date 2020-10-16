@@ -2103,15 +2103,15 @@ run;
 /* 	set training_set_anon; */
 /* run; */
 
-proc means data=training_set;
-	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count;
-	title 'AY2020 Data';
-run;
+/* proc means data=training_set; */
+/* 	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count; */
+/* 	title 'AY2020 Data'; */
+/* run; */
 
-proc means data=testing_set;
-	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count;
-	title 'AY2021 Data';
-run;
+/* proc means data=testing_set; */
+/* 	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count; */
+/* 	title 'AY2021 Data'; */
+/* run; */
 
 filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
 

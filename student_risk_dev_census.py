@@ -33,17 +33,19 @@ sas = saspy.SASsession()
 # Set macro variables
 sas.submit("""
 %let dsn = census;
+%let dev = cendev;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
-%let end_cohort = 2020;
+%let end_cohort = 2020;;
 """)
 
 #%%
 # Set libname statements
 sas.submit("""
 libname &dsn. odbc dsn=&dsn. schema=dbo;
+libname &dev. odbc dsn=&dev. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
 libname acs \"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\\";
 """)
@@ -1750,7 +1752,16 @@ data full_set;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
+	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
+	if avg_pct_CDF = . then avg_pct_CDF = 0;
+	if avg_pct_DFW = . then avg_pct_DFW = 0;
+	if avg_pct_DF = . then avg_pct_DF = 0;
 	if avg_difficulty = . then avg_difficulty = 0;
+	if fall_lec_count = . then fall_lec_count = 0;
+	if fall_lab_count = . then fall_lab_count = 0;
+	if spring_lec_count = . then spring_lec_count = 0;
+	if spring_lab_count = . then spring_lab_count = 0;
 	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
  	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
  	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
@@ -1782,19 +1793,28 @@ data training_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
-	if ib_aice = . then ib_aice = 0;	
+	if ib_aice = . then ib_aice = 0;
 	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
-	if total_accept = . then total_accept = 0;
+	if total_accept = . then total_accept = 0;	
 	if remedial = . then remedial = 0;
 	if sat_mss = . then sat_mss = 0;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
+	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
+	if avg_pct_CDF = . then avg_pct_CDF = 0;
+	if avg_pct_DFW = . then avg_pct_DFW = 0;
+	if avg_pct_DF = . then avg_pct_DF = 0;
 	if avg_difficulty = . then avg_difficulty = 0;
+	if fall_lec_count = . then fall_lec_count = 0;
+	if fall_lab_count = . then fall_lab_count = 0;
+	if spring_lec_count = . then spring_lec_count = 0;
+	if spring_lab_count = . then spring_lab_count = 0;
 	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
  	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
  	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
@@ -1832,13 +1852,22 @@ data testing_set;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
-	if total_accept = . then total_accept = 0;
+	if total_accept = . then total_accept = 0;	
 	if remedial = . then remedial = 0;
 	if sat_mss = . then sat_mss = 0;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
+	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
+	if avg_pct_CDF = . then avg_pct_CDF = 0;
+	if avg_pct_DFW = . then avg_pct_DFW = 0;
+	if avg_pct_DF = . then avg_pct_DF = 0;
 	if avg_difficulty = . then avg_difficulty = 0;
+	if fall_lec_count = . then fall_lec_count = 0;
+	if fall_lab_count = . then fall_lab_count = 0;
+	if spring_lec_count = . then spring_lec_count = 0;
+	if spring_lab_count = . then spring_lab_count = 0;
 	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
  	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
  	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;

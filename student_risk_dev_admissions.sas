@@ -4,15 +4,17 @@
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
-%let dsn = cendev;
+%let dsn = census;
+%let dev = cendev;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
 /* Note: This is a test date. Revert to 2015 in production. */
-%let start_cohort = 2020;
+%let start_cohort = 2015;
 %let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
+libname &dev. odbc dsn=&dev. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
 
 libname acs "Z:\Nathan\Models\student_risk\Supplemental Files";
@@ -145,7 +147,7 @@ run;
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dsn..new_student_profile_ugrd
+		from &dev..new_student_profile_ugrd
 		where substr(strm, 4 , 1) = '7'
 			and adj_admit_campus = 'PULLM'
 			and adj_admit_type = 'FRS'
@@ -184,6 +186,79 @@ run;
 		;quit;
 	%end;
 
+	proc sql;
+		create table race_detail_&cohort_year. as
+		select 
+			a.emplid,
+			case when amind.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_american_indian,
+			case when alask.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_alaska,
+			case when asian.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_asian,
+			case when black.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_black,
+			case when hawai.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_native_hawaiian,
+			case when white.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_white
+		from cohort_&cohort_year. as a
+		left join (select distinct e4.emplid from &dsn..student_ethnic_detail as e4
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe4
+						on e4.ethnic_cd = xe4.ethnic_cd
+					where e4.snapshot = 'census'
+						and e4.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe4.ethnic_group = '4') as asian
+			on a.emplid = asian.emplid
+		left join (select distinct e2.emplid from &dsn..student_ethnic_detail as e2
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe2
+						on e2.ethnic_cd = xe2.ethnic_cd
+					where e2.snapshot = 'census'
+						and e2.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe2.ethnic_group = '2') as black
+			on a.emplid = black.emplid
+		left join (select distinct e7.emplid from &dsn..student_ethnic_detail as e7
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe7
+						on e7.ethnic_cd = xe7.ethnic_cd
+					where e7.snapshot = 'census'
+						and e7.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe7.ethnic_group = '7') as hawai
+			on a.emplid = hawai.emplid
+		left join (select distinct e1.emplid from &dsn..student_ethnic_detail as e1
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe1
+						on e1.ethnic_cd = xe1.ethnic_cd
+					where e1.snapshot = 'census'
+						and e1.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe1.ethnic_group = '1') as white
+			on a.emplid = white.emplid
+		left join (select distinct e5a.emplid from &dsn..student_ethnic_detail as e5a
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe5a
+						on e5a.ethnic_cd = xe5a.ethnic_cd
+					where e5a.snapshot = 'census' 
+						and e5a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe5a.ethnic_group = '5'
+						and e5a.ethnic_cd in ('014','016','017','018',
+												'935','941','942','943',
+												'950','R10','R14')) as alask
+			on a.emplid = alask.emplid
+		left join (select distinct e5b.emplid from &dsn..student_ethnic_detail as e5b
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe5b
+						on e5b.ethnic_cd = xe5b.ethnic_cd
+					where e5b.snapshot = 'census'
+						and e5b.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe5b.ethnic_group = '5'
+						and e5b.ethnic_cd not in ('014','016','017','018',
+													'935','941','942','943',
+													'950','R14')) as amind
+			on a.emplid = amind.emplid
+	;quit;
+	
 	proc sql;
 		create table plan_&cohort_year. as 
 		select distinct 
@@ -533,23 +608,27 @@ run;
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
 				+ calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as total_grades,
+			(calculated total_grade_A + calculated total_grade_A_minus 
+				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
+				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
+				+ calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F + calculated total_withdrawn) as total_students,
 			(calculated total_grade_A_GPA + calculated total_grade_A_minus_GPA 
 				+ calculated total_grade_B_plus_GPA + calculated total_grade_B_GPA + calculated total_grade_B_minus_GPA
 				+ calculated total_grade_C_plus_GPA + calculated total_grade_C_GPA + calculated total_grade_C_minus_GPA
 				+ calculated total_grade_D_plus_GPA + calculated total_grade_D_GPA) as total_grades_GPA,
 			(calculated total_grades_GPA / calculated total_grades) as class_average,
-			(calculated total_withdrawn / calculated total_grades) as pct_withdrawn,
+			(calculated total_withdrawn / calculated total_students) as pct_withdrawn,
 			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
 				+ calculated total_grade_F + calculated total_withdrawn) as CDFW,
-			(calculated CDFW / calculated total_grades) as pct_CDFW,
+			(calculated CDFW / calculated total_students) as pct_CDFW,
 			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
 				+ calculated total_grade_F) as CDF,
-			(calculated CDF / calculated total_grades) as pct_CDF,
+			(calculated CDF / calculated total_students) as pct_CDF,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F 
 				+ calculated total_withdrawn) as DFW,
-			(calculated DFW / calculated total_grades) as pct_DFW,
+			(calculated DFW / calculated total_students) as pct_DFW,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
-			(calculated DF / calculated total_grades) as pct_DF
+			(calculated DF / calculated total_students) as pct_DF
 		from &dsn..class_vw as a
 		left join &dsn..class_vw as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -562,10 +641,73 @@ run;
 				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 				and c.ssr_component = 'LAB'
 		where a.snapshot = 'eot'
-			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
 		group by a.subject_catalog_nbr
 		order by a.subject_catalog_nbr
+	;quit;
+	
+	proc sql;
+		create table class_count_&cohort_year. as
+		select distinct
+			a.emplid,
+			count(b.subject_catalog_nbr) as fall_lec_count,
+			count(c.subject_catalog_nbr) as fall_lab_count,
+			count(d.subject_catalog_nbr) as spring_lec_count,
+			count(e.subject_catalog_nbr) as spring_lab_count
+		from &dsn..class_registration_vw as a
+		left join (select distinct emplid, 
+						subject_catalog_nbr,
+						class_nbr
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '7'
+						and ssr_component = 'LEC') as b
+			on a.emplid = b.emplid
+				and a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.class_nbr = b.class_nbr
+		left join (select distinct emplid, 
+						subject_catalog_nbr,
+						class_nbr
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '7'
+						and ssr_component = 'LAB') as c
+			on a.emplid = c.emplid
+				and a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.class_nbr = c.class_nbr
+		left join (select distinct emplid, 
+						subject_catalog_nbr,
+						class_nbr
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '3'
+						and ssr_component = 'LEC') as d
+			on a.emplid = d.emplid
+				and a.subject_catalog_nbr = d.subject_catalog_nbr
+				and a.class_nbr = d.class_nbr
+		left join (select distinct emplid, 
+						subject_catalog_nbr,
+						class_nbr
+					from &dsn..class_registration_vw
+					where snapshot = 'census'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '3'
+						and ssr_component = 'LAB') as e
+			on a.emplid = e.emplid
+				and a.subject_catalog_nbr = e.subject_catalog_nbr
+				and a.class_nbr = d.class_nbr
+		where a.snapshot = 'census'
+			and a.full_acad_year = "&cohort_year."
+			and a.enrl_ind = 1
+		group by a.emplid
 	;quit;
 	
 	proc sql;
@@ -589,15 +731,20 @@ run;
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
 			a.emplid,
-			sum(b.lec_contact_hrs) as lec_contact_hrs,
-			sum(c.lab_contact_hrs) as lab_contact_hrs
+			sum(b.lec_contact_hrs) as fall_lec_contact_hrs,
+			sum(c.lab_contact_hrs) as fall_lab_contact_hrs,
+			sum(d.lec_contact_hrs) as spring_lec_contact_hrs,
+			sum(e.lab_contact_hrs) as spring_lab_contact_hrs,
+			coalesce(calculated fall_lec_contact_hrs, 0) + coalesce(calculated fall_lab_contact_hrs, 0) as total_fall_contact_hrs,
+			coalesce(calculated spring_lec_contact_hrs, 0) + coalesce(calculated spring_lab_contact_hrs, 0) as total_spring_contact_hrs
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
 						max(term_contact_hrs) as lec_contact_hrs
 					from &dsn..class_vw
-					where snapshot = 'census'
+					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -605,11 +752,32 @@ run;
 						subject_catalog_nbr,
 						max(term_contact_hrs) as lab_contact_hrs
 					from &dsn..class_vw
-					where snapshot = 'census'
+					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr) as c
+					group by subject_catalog_nbr ) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as d
+			on a.subject_catalog_nbr = d.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as e
+			on a.subject_catalog_nbr = e.subject_catalog_nbr
 		group by a.emplid
 	;quit;
 	
@@ -764,8 +932,16 @@ run;
 			n.avg_pct_CDF,
 			n.avg_pct_DFW,
 			n.avg_pct_DF,
-			o.lec_contact_hrs,
-			o.lab_contact_hrs,
+			s.fall_lec_count,
+			s.fall_lab_count,
+			s.spring_lec_count,
+			s.spring_lab_count,
+			o.fall_lec_contact_hrs,
+ 			o.fall_lab_contact_hrs,
+ 			o.spring_lec_contact_hrs,
+ 			o.spring_lab_contact_hrs,
+			o.total_fall_contact_hrs,
+			o.total_spring_contact_hrs,
 			p.sat_sup_rwc,
 			p.sat_sup_ce,
 			p.sat_sup_ha,
@@ -782,7 +958,13 @@ run;
 			q.afl_family_indicator,
 			q.afl_greek_indicator,
 			q.afl_greek_life_indicator,
-			r.building_id
+			r.building_id,
+			t.race_american_indian,
+			t.race_alaska,
+			t.race_asian,
+			t.race_black,
+			t.race_native_hawaiian,
+			t.race_white
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -819,11 +1001,96 @@ run;
  			on a.emplid = p.emplid
  		left join housing_&cohort_year. as q
  			on a.emplid = q.emplid
- 		 left join housing_detail_&cohort_year. as r
+ 		left join housing_detail_&cohort_year. as r
  			on a.emplid = r.emplid
+ 		left join class_count_&cohort_year. as s
+ 			on a.emplid = s.emplid
+ 		left join race_detail_&cohort_year. as t
+ 			on a.emplid = t.emplid
 	;quit;
 	
 	%end;
+	
+	proc sql;
+		create table race_detail_&cohort_year. as
+		select 
+			a.emplid,
+			case when amind.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_american_indian,
+			case when alask.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_alaska,
+			case when asian.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_asian,
+			case when black.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_black,
+			case when hawai.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_native_hawaiian,
+			case when white.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_white
+		from &adm..fact_u as a
+		left join &adm..xd_admit_type as b
+			on a.sid_admit_type = b.sid_admit_type
+		left join (select distinct e4.emplid from &dsn..student_ethnic_detail as e4
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe4
+						on e4.ethnic_cd = xe4.ethnic_cd
+					where e4.snapshot = 'census'
+						and e4.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe4.ethnic_group = '4') as asian
+			on a.emplid = asian.emplid
+		left join (select distinct e2.emplid from &dsn..student_ethnic_detail as e2
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe2
+						on e2.ethnic_cd = xe2.ethnic_cd
+					where e2.snapshot = 'census'
+						and e2.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe2.ethnic_group = '2') as black
+			on a.emplid = black.emplid
+		left join (select distinct e7.emplid from &dsn..student_ethnic_detail as e7
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe7
+						on e7.ethnic_cd = xe7.ethnic_cd
+					where e7.snapshot = 'census'
+						and e7.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe7.ethnic_group = '7') as hawai
+			on a.emplid = hawai.emplid
+		left join (select distinct e1.emplid from &dsn..student_ethnic_detail as e1
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe1
+						on e1.ethnic_cd = xe1.ethnic_cd
+					where e1.snapshot = 'census'
+						and e1.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe1.ethnic_group = '1') as white
+			on a.emplid = white.emplid
+		left join (select distinct e5a.emplid from &dsn..student_ethnic_detail as e5a
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe5a
+						on e5a.ethnic_cd = xe5a.ethnic_cd
+					where e5a.snapshot = 'census' 
+						and e5a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe5a.ethnic_group = '5'
+						and e5a.ethnic_cd in ('014','016','017','018',
+												'935','941','942','943',
+												'950','R10','R14')) as alask
+			on a.emplid = alask.emplid
+		left join (select distinct e5b.emplid from &dsn..student_ethnic_detail as e5b
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe5b
+						on e5b.ethnic_cd = xe5b.ethnic_cd
+					where e5b.snapshot = 'census'
+						and e5b.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe5b.ethnic_group = '5'
+						and e5b.ethnic_cd not in ('014','016','017','018',
+													'935','941','942','943',
+													'950','R14')) as amind
+			on a.emplid = amind.emplid
+		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
+								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
+			and a.acad_career = 'UGRD' 
+			and a.campus = 'PULLM' 
+			and a.enrolled = 1
+			and b.admit_type in ('FRS','IFR','IPF')
+	;quit;
 	
 	proc sql;
 		create table remedial_&cohort_year. as
@@ -842,8 +1109,10 @@ run;
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
+			strm,
 			emplid,
-			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr
+			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
+			ssr_component
 		from acs.subcatnbr_data
 	;quit;
 	
@@ -877,23 +1146,27 @@ run;
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
 				+ calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as total_grades,
+			(calculated total_grade_A + calculated total_grade_A_minus 
+				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
+				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
+				+ calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F + calculated total_withdrawn) as total_students,
 			(calculated total_grade_A_GPA + calculated total_grade_A_minus_GPA 
 				+ calculated total_grade_B_plus_GPA + calculated total_grade_B_GPA + calculated total_grade_B_minus_GPA
 				+ calculated total_grade_C_plus_GPA + calculated total_grade_C_GPA + calculated total_grade_C_minus_GPA
 				+ calculated total_grade_D_plus_GPA + calculated total_grade_D_GPA) as total_grades_GPA,
 			(calculated total_grades_GPA / calculated total_grades) as class_average,
-			(calculated total_withdrawn / calculated total_grades) as pct_withdrawn,
+			(calculated total_withdrawn / calculated total_students) as pct_withdrawn,
 			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
 				+ calculated total_grade_F + calculated total_withdrawn) as CDFW,
-			(calculated CDFW / calculated total_grades) as pct_CDFW,
+			(calculated CDFW / calculated total_students) as pct_CDFW,
 			(calculated total_grade_C_minus + calculated total_grade_D_plus + calculated total_grade_D 
 				+ calculated total_grade_F) as CDF,
-			(calculated CDF / calculated total_grades) as pct_CDF,
+			(calculated CDF / calculated total_students) as pct_CDF,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F 
 				+ calculated total_withdrawn) as DFW,
-			(calculated DFW / calculated total_grades) as pct_DFW,
+			(calculated DFW / calculated total_students) as pct_DFW,
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
-			(calculated DF / calculated total_grades) as pct_DF
+			(calculated DF / calculated total_students) as pct_DF
 		from &dsn..class_vw as a
 		left join &dsn..class_vw as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -913,10 +1186,57 @@ run;
 	;quit;
 	
 	proc sql;
-		create table coursework_difficulty_&cohort_year. as
-		select
+		create table class_count_&cohort_year. as
+		select distinct
 			a.emplid,
-			count(a.subject_catalog_nbr) as class_count,
+			count(b.subject_catalog_nbr) as fall_lec_count,
+			count(c.subject_catalog_nbr) as fall_lab_count,
+			count(d.subject_catalog_nbr) as spring_lec_count,
+			count(e.subject_catalog_nbr) as spring_lab_count
+		from class_registration_&cohort_year. as a
+		left join (select distinct emplid, 
+						subject_catalog_nbr,
+						ssr_component
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '7'
+						and ssr_component = 'LEC') as b
+			on a.emplid = b.emplid
+				and a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+		left join (select distinct emplid, 
+						subject_catalog_nbr,
+						ssr_component
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '7'
+						and ssr_component = 'LAB') as c
+			on a.emplid = c.emplid
+				and a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+		left join (select distinct emplid, 
+						subject_catalog_nbr,
+						ssr_component
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '3'
+						and ssr_component = 'LEC') as d
+			on a.emplid = d.emplid
+				and a.subject_catalog_nbr = d.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+		left join (select distinct emplid, 
+						subject_catalog_nbr,
+						ssr_component
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '3'
+						and ssr_component = 'LAB') as e
+			on a.emplid = e.emplid
+				and a.subject_catalog_nbr = e.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table coursework_difficulty_&cohort_year. as
+		select distinct
+			a.emplid,
 			avg(b.class_average) as avg_difficulty,
 			avg(b.pct_withdrawn) as avg_pct_withdrawn,
 			avg(b.pct_CDFW) as avg_pct_CDFW,
@@ -933,8 +1253,12 @@ run;
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
 			a.emplid,
-			sum(b.lec_contact_hrs) as lec_contact_hrs,
-			sum(c.lab_contact_hrs) as lab_contact_hrs
+			sum(b.lec_contact_hrs) as fall_lec_contact_hrs,
+			sum(c.lab_contact_hrs) as fall_lab_contact_hrs,
+			sum(d.lec_contact_hrs) as spring_lec_contact_hrs,
+			sum(e.lab_contact_hrs) as spring_lab_contact_hrs,
+			coalesce(calculated fall_lec_contact_hrs, 0) + coalesce(calculated fall_lab_contact_hrs, 0) as total_fall_contact_hrs,
+			coalesce(calculated spring_lec_contact_hrs, 0) + coalesce(calculated spring_lab_contact_hrs, 0) as total_spring_contact_hrs
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
@@ -942,6 +1266,7 @@ run;
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
@@ -951,9 +1276,30 @@ run;
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr) as c
+					group by subject_catalog_nbr ) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lec_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as d
+			on a.subject_catalog_nbr = d.subject_catalog_nbr
+		left join (select distinct
+						subject_catalog_nbr,
+						max(term_contact_hrs) as lab_contact_hrs
+					from &dsn..class_vw
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and substr(strm,4,1) = '3' 
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr ) as e
+			on a.subject_catalog_nbr = e.subject_catalog_nbr
 		group by a.emplid
 	;quit;
 	
@@ -1031,19 +1377,32 @@ run;
 			case when o.locale = '42' then 1 else 0 end as rural_distant,
 			case when o.locale = '43' then 1 else 0 end as rural_remote,
 			p.remedial,
-			q.class_count,
 			(4.0 - q.avg_difficulty) as avg_difficulty,
 			q.avg_pct_withdrawn,
 			q.avg_pct_CDFW,
 			q.avg_pct_CDF,
 			q.avg_pct_DFW,
 			q.avg_pct_DF,
-			r.lec_contact_hrs,
-			r.lab_contact_hrs,
+			u.fall_lec_count,
+			u.fall_lab_count,
+			u.spring_lec_count,
+			u.spring_lab_count,
+ 			r.fall_lec_contact_hrs,
+ 			r.fall_lab_contact_hrs,
+ 			r.spring_lec_contact_hrs,
+ 			r.spring_lab_contact_hrs,
+			r.total_fall_contact_hrs,
+			r.total_spring_contact_hrs,
 			s.fed_need,
 			s.total_offer,
 			t.sat_mss,
-			t.sat_erws
+			t.sat_erws,
+			v.race_american_indian,
+			v.race_alaska,
+			v.race_asian,
+			v.race_black,
+			v.race_native_hawaiian,
+			v.race_white
 		from &adm..fact_u as a
 		left join &adm..xd_person_demo as b
 			on a.sid_per_demo = b.sid_per_demo
@@ -1087,6 +1446,10 @@ run;
  			on a.emplid = s.emplid
  		left join exams_&cohort_year. as t
  			on a.emplid = t.emplid
+ 		left join class_count_&cohort_year. as u
+ 			on a.emplid = u.emplid
+ 		left join race_detail_&cohort_year. as v
+ 			on a.emplid = v.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
@@ -1121,9 +1484,22 @@ data full_set;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
+	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
+	if avg_pct_CDF = . then avg_pct_CDF = 0;
+	if avg_pct_DFW = . then avg_pct_DFW = 0;
+	if avg_pct_DF = . then avg_pct_DF = 0;
 	if avg_difficulty = . then avg_difficulty = 0;
-	if lec_contact_hrs = . then lec_contact_hrs = 0;
-	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if fall_lec_count = . then fall_lec_count = 0;
+	if fall_lab_count = . then fall_lab_count = 0;
+	if spring_lec_count = . then spring_lec_count = 0;
+	if spring_lab_count = . then spring_lab_count = 0;
+	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+ 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+ 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+ 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -1170,9 +1546,22 @@ data training_set;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
+	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
+	if avg_pct_CDF = . then avg_pct_CDF = 0;
+	if avg_pct_DFW = . then avg_pct_DFW = 0;
+	if avg_pct_DF = . then avg_pct_DF = 0;
 	if avg_difficulty = . then avg_difficulty = 0;
-	if lec_contact_hrs = . then lec_contact_hrs = 0;
-	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if fall_lec_count = . then fall_lec_count = 0;
+	if fall_lab_count = . then fall_lab_count = 0;
+	if spring_lec_count = . then spring_lec_count = 0;
+	if spring_lab_count = . then spring_lab_count = 0;
+	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+ 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+ 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+ 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -1190,17 +1579,53 @@ run;
 
 data testing_set;
 	set dataset_%eval(&end_cohort. + &lag_year.);
-	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if enrl_ind = . then enrl_ind = 0;
+	if ad_dta = . then ad_dta = 0;
+	if ad_ast = . then ad_ast = 0;
+	if ap = . then ap = 0;
+	if rs = . then rs = 0;
+	if chs = . then chs = 0;
+	if ib = . then ib = 0;
+	if aice = . then aice = 0;
+	if ib_aice = . then ib_aice = 0;
+	if athlete = . then athlete = 0;
+	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
+	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
+	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
 	if sat_mss = . then sat_mss = 0;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
+	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
+	if avg_pct_CDF = . then avg_pct_CDF = 0;
+	if avg_pct_DFW = . then avg_pct_DFW = 0;
+	if avg_pct_DF = . then avg_pct_DF = 0;
 	if avg_difficulty = . then avg_difficulty = 0;
-	if lec_contact_hrs = . then lec_contact_hrs = 0;
-	if lab_contact_hrs = . then lab_contact_hrs = 0;
+	if fall_lec_count = . then fall_lec_count = 0;
+	if fall_lab_count = . then fall_lab_count = 0;
+	if spring_lec_count = . then spring_lec_count = 0;
+	if spring_lab_count = . then spring_lab_count = 0;
+	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+ 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+ 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+ 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
+	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
+	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
+	if housing_family_indicator ^= 'Y' then housing_family_indicator = 'N';
+	if afl_reshall_indicator ^= 'Y' then afl_reshall_indicator = 'N';
+	if afl_ssa_indicator ^= 'Y' then afl_ssa_indicator = 'N';
+	if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
+	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
+	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+	unmet_need_disb = fed_need - total_disb;
+	unmet_need_acpt = fed_need - total_accept;
 	unmet_need_ofr = fed_need - total_offer;
 	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
