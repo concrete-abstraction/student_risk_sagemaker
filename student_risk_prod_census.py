@@ -19,7 +19,7 @@ from IPython.display import HTML
 from matplotlib.legend_handler import HandlerLine2D
 from sklearn.compose import make_column_transformer
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
@@ -229,9 +229,9 @@ sas.submit("""
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		left join cpi as l
-			on input(a.full_acad_year, 4.) = l.acs_lag
+			on input(a.full_acad_year,4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
-			and substr(a.strm, 4 , 1) = '7'
+			and substr(a.strm,4,1) = '7'
 			and a.adj_admit_campus = 'PULLM'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'FRSH'
@@ -248,10 +248,10 @@ sas.submit("""
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dsn..new_student_profile_ugrd_cs
-		where substr(strm, 4 , 1) = '7'
+		from &dev..new_student_profile_ugrd_cs
+		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus = 'PULLM'
-			and adj_admit_type = 'FRS'
+			and adj_admit_type_cat = 'FRSH'
 			and ipeds_full_part_time = 'F'
 	;quit;
 	
@@ -264,11 +264,94 @@ sas.submit("""
 		from &dsn..student_enrolled_vw
 		where snapshot = 'census'
 			and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-			and substr(strm, 4, 1) = '7'
+			and substr(strm,4,1) = '7'
 			and acad_career = 'UGRD'
 			and new_continue_status = 'CTU'
 			and term_credit_hours > 0
 		order by emplid
+	;quit;
+	
+	proc sql;
+		create table race_detail_&cohort_year. as
+		select 
+			a.emplid,
+			case when hispc.emplid is not null 	then 'Y'
+												else 'N'
+												end as race_hispanic,
+			case when amind.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_american_indian,
+			case when alask.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_alaska,
+			case when asian.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_asian,
+			case when black.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_black,
+			case when hawai.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_native_hawaiian,
+			case when white.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_white
+		from cohort_&cohort_year. as a
+		left join (select distinct e4.emplid from &dsn..student_ethnic_detail as e4
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe4
+						on e4.ethnic_cd = xe4.ethnic_cd
+					where e4.snapshot = 'census'
+						and e4.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe4.ethnic_group = '4') as asian
+			on a.emplid = asian.emplid
+		left join (select distinct e2.emplid from &dsn..student_ethnic_detail as e2
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe2
+						on e2.ethnic_cd = xe2.ethnic_cd
+					where e2.snapshot = 'census'
+						and e2.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe2.ethnic_group = '2') as black
+			on a.emplid = black.emplid
+		left join (select distinct e7.emplid from &dsn..student_ethnic_detail as e7
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe7
+						on e7.ethnic_cd = xe7.ethnic_cd
+					where e7.snapshot = 'census'
+						and e7.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe7.ethnic_group = '7') as hawai
+			on a.emplid = hawai.emplid
+		left join (select distinct e1.emplid from &dsn..student_ethnic_detail as e1
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe1
+						on e1.ethnic_cd = xe1.ethnic_cd
+					where e1.snapshot = 'census'
+						and e1.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe1.ethnic_group = '1') as white
+			on a.emplid = white.emplid
+		left join (select distinct e5a.emplid from &dsn..student_ethnic_detail as e5a
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe5a
+						on e5a.ethnic_cd = xe5a.ethnic_cd
+					where e5a.snapshot = 'census' 
+						and e5a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe5a.ethnic_group = '5'
+						and e5a.ethnic_cd in ('014','016','017','018',
+												'935','941','942','943',
+												'950','R10','R14')) as alask
+			on a.emplid = alask.emplid
+		left join (select distinct e5b.emplid from &dsn..student_ethnic_detail as e5b
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe5b
+						on e5b.ethnic_cd = xe5b.ethnic_cd
+					where e5b.snapshot = 'census'
+						and e5b.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe5b.ethnic_group = '5'
+						and e5b.ethnic_cd not in ('014','016','017','018',
+													'935','941','942','943',
+													'950','R14')) as amind
+			on a.emplid = amind.emplid
+		left join (select distinct e6.emplid from &dsn..student_ethnic_detail as e6
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe6
+						on e6.ethnic_cd = xe6.ethnic_cd
+					where e6.snapshot = 'census'
+						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe6.ethnic_group = '3') as hispc
+			on a.emplid = hispc.emplid
 	;quit;
 	
 	proc sql;
@@ -583,8 +666,12 @@ sas.submit("""
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
+			strm,
 			emplid,
-			subject_catalog_nbr
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			ssr_component
 		from &dsn..class_registration_vw
 		where snapshot = 'eot'
 			and full_acad_year = "&cohort_year."
@@ -595,28 +682,29 @@ sas.submit("""
 		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
-			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
+			a.ssr_component,
+			coalesce(b.total_grade_A, 0) + coalesce(c.total_grade_A, 0) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
+			coalesce(b.total_grade_A_minus, 0) + coalesce(c.total_grade_A_minus, 0) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
+			coalesce(b.total_grade_B_plus, 0) + coalesce(c.total_grade_B_plus, 0) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
+			coalesce(b.total_grade_B, 0) + coalesce(c.total_grade_B, 0) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
+			coalesce(b.total_grade_B_minus, 0) + coalesce(c.total_grade_B_minus, 0) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
+			coalesce(b.total_grade_C_plus, 0) + coalesce(c.total_grade_C_plus, 0) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
+			coalesce(b.total_grade_C, 0) + coalesce(c.total_grade_C, 0) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
+			coalesce(b.total_grade_C_minus, 0) + coalesce(c.total_grade_C_minus, 0) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
+			coalesce(b.total_grade_D_plus, 0) + coalesce(c.total_grade_D_plus, 0) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
+			coalesce(b.total_grade_D, 0) + coalesce(c.total_grade_D, 0) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
-			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
+			coalesce(b.total_grade_F, 0) + coalesce(c.total_grade_F, 0) as total_grade_F,
+			coalesce(b.total_withdrawn, 0) + coalesce(c.total_withdrawn, 0) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -643,16 +731,50 @@ sas.submit("""
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_students) as pct_DF
 		from &dsn..class_vw as a
-		left join &dsn..class_vw as b
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
-				and b.snapshot = 'eot'
-				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and b.ssr_component = 'LEC'
-		left join &dsn..class_vw as c
+				and a.ssr_component = b.ssr_component
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
-				and c.snapshot = 'eot'
-				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and c.ssr_component = 'LAB'
+				and a.ssr_component = c.ssr_component
 		where a.snapshot = 'eot'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
@@ -664,13 +786,14 @@ sas.submit("""
 		create table class_count_&cohort_year. as
 		select distinct
 			a.emplid,
-			count(b.subject_catalog_nbr) as fall_lec_count,
-			count(c.subject_catalog_nbr) as fall_lab_count,
-			count(d.subject_catalog_nbr) as spring_lec_count,
-			count(e.subject_catalog_nbr) as spring_lab_count
+			count(b.class_nbr) as fall_lec_count,
+			count(c.class_nbr) as fall_lab_count,
+			count(d.class_nbr) as spring_lec_count,
+			count(e.class_nbr) as spring_lab_count,
+			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
 		from &dsn..class_registration_vw as a
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -679,10 +802,8 @@ sas.submit("""
 						and substr(strm,4,1) = '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
-				and a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -691,10 +812,8 @@ sas.submit("""
 						and substr(strm,4,1) = '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
-				and a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -703,10 +822,8 @@ sas.submit("""
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
-				and a.subject_catalog_nbr = d.subject_catalog_nbr
 				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'census'
@@ -715,8 +832,7 @@ sas.submit("""
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
-				and a.subject_catalog_nbr = e.subject_catalog_nbr
-				and a.class_nbr = d.class_nbr
+				and a.class_nbr = e.class_nbr
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.enrl_ind = 1
@@ -752,7 +868,8 @@ sas.submit("""
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -760,19 +877,25 @@ sas.submit("""
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as c
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -780,17 +903,59 @@ sas.submit("""
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
 			on a.subject_catalog_nbr = d.subject_catalog_nbr
+				and a.ssr_component = d.ssr_component
+				and substr(a.strm,4,1) = '3'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as e
+					group by subject_catalog_nbr) as e
 			on a.subject_catalog_nbr = e.subject_catalog_nbr
+				and a.ssr_component = e.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table midterm_&cohort_year. as
+		select distinct
+			strm,
+			emplid,
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			case when crse_grade_input = 'A' 	then 4.0
+				when crse_grade_input = 'A-'	then 3.7
+				when crse_grade_input = 'B+'	then 3.3
+				when crse_grade_input = 'B'		then 3.0
+				when crse_grade_input = 'B-'	then 2.7
+				when crse_grade_input = 'C+'	then 2.3
+				when crse_grade_input = 'C'		then 2.0
+				when crse_grade_input = 'C-'	then 1.7
+				when crse_grade_input = 'D+'	then 1.3
+				when crse_grade_input = 'D'		then 1.0
+				when crse_grade_input = 'F'		then 0.0
+												else .
+												end as midterm_grade
+		from &dsn..class_registration_vw
+		where snapshot = 'midterm'
+			and substr(strm,4,1) = '7'
+			and full_acad_year = "&cohort_year."
+			and enrl_ind = 1
+	;quit;
+
+	proc sql;
+		create table midterm_grades_&cohort_year. as
+		select distinct
+			emplid,
+			avg(midterm_grade) as midterm_gpa_avg
+		from midterm_&cohort_year. 
+		group by emplid
 	;quit;
 	
 	proc sql;
@@ -947,6 +1112,8 @@ sas.submit("""
 			s.fall_lab_count,
 			s.spring_lec_count,
 			s.spring_lab_count,
+			s.total_lec_count,
+			s.total_lab_count,
 			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,
@@ -969,7 +1136,15 @@ sas.submit("""
 			q.afl_family_indicator,
 			q.afl_greek_indicator,
 			q.afl_greek_life_indicator,
-			r.building_id
+			r.building_id,
+			t.race_hispanic,
+			t.race_american_indian,
+			t.race_alaska,
+			t.race_asian,
+			t.race_black,
+			t.race_native_hawaiian,
+			t.race_white,
+			u.midterm_gpa_avg
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -1010,6 +1185,10 @@ sas.submit("""
  			on a.emplid = r.emplid
  		left join class_count_&cohort_year. as s
  			on a.emplid = s.emplid
+ 		left join race_detail_&cohort_year. as t
+ 			on a.emplid = t.emplid
+ 		left join midterm_grades_&cohort_year. as u
+ 			on a.emplid = u.emplid
 	;quit;
 		
 	%end;
@@ -1115,10 +1294,10 @@ sas.submit("""
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dsn..new_student_profile_ugrd_cs
-		where substr(strm, 4 , 1) = '7'
+		from &dev..new_student_profile_ugrd_cs
+		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus = 'PULLM'
-			and adj_admit_type = 'FRS'
+			and adj_admit_type_cat = 'FRSH'
 			and ipeds_full_part_time = 'F'
 	;quit;
 	
@@ -1192,6 +1371,89 @@ sas.submit("""
 			and adj_admit_type_cat = 'FRSH'
 			and primary_plan_flag = 'Y'
 			and calculated split_plan = 0
+	;quit;
+
+	proc sql;
+		create table race_detail_&cohort_year. as
+		select 
+			a.emplid,
+			case when hispc.emplid is not null 	then 'Y'
+												else 'N'
+												end as race_hispanic,
+			case when amind.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_american_indian,
+			case when alask.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_alaska,
+			case when asian.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_asian,
+			case when black.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_black,
+			case when hawai.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_native_hawaiian,
+			case when white.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_white
+		from cohort_&cohort_year. as a
+		left join (select distinct e4.emplid from &dsn..student_ethnic_detail as e4
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe4
+						on e4.ethnic_cd = xe4.ethnic_cd
+					where e4.snapshot = 'census'
+						and e4.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe4.ethnic_group = '4') as asian
+			on a.emplid = asian.emplid
+		left join (select distinct e2.emplid from &dsn..student_ethnic_detail as e2
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe2
+						on e2.ethnic_cd = xe2.ethnic_cd
+					where e2.snapshot = 'census'
+						and e2.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe2.ethnic_group = '2') as black
+			on a.emplid = black.emplid
+		left join (select distinct e7.emplid from &dsn..student_ethnic_detail as e7
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe7
+						on e7.ethnic_cd = xe7.ethnic_cd
+					where e7.snapshot = 'census'
+						and e7.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe7.ethnic_group = '7') as hawai
+			on a.emplid = hawai.emplid
+		left join (select distinct e1.emplid from &dsn..student_ethnic_detail as e1
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe1
+						on e1.ethnic_cd = xe1.ethnic_cd
+					where e1.snapshot = 'census'
+						and e1.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe1.ethnic_group = '1') as white
+			on a.emplid = white.emplid
+		left join (select distinct e5a.emplid from &dsn..student_ethnic_detail as e5a
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe5a
+						on e5a.ethnic_cd = xe5a.ethnic_cd
+					where e5a.snapshot = 'census' 
+						and e5a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe5a.ethnic_group = '5'
+						and e5a.ethnic_cd in ('014','016','017','018',
+												'935','941','942','943',
+												'950','R10','R14')) as alask
+			on a.emplid = alask.emplid
+		left join (select distinct e5b.emplid from &dsn..student_ethnic_detail as e5b
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe5b
+						on e5b.ethnic_cd = xe5b.ethnic_cd
+					where e5b.snapshot = 'census'
+						and e5b.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe5b.ethnic_group = '5'
+						and e5b.ethnic_cd not in ('014','016','017','018',
+													'935','941','942','943',
+													'950','R14')) as amind
+			on a.emplid = amind.emplid
+		left join (select distinct e6.emplid from &dsn..student_ethnic_detail as e6
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe6
+						on e6.ethnic_cd = xe6.ethnic_cd
+					where e6.snapshot = 'census'
+						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe6.ethnic_group = '3') as hispc
+			on a.emplid = hispc.emplid
 	;quit;
 	
 	proc sql;
@@ -1398,6 +1660,8 @@ sas.submit("""
 		select distinct
 			strm,
 			emplid,
+			class_nbr,
+			crse_id,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 			ssr_component
 		from acs.subcatnbr_data
@@ -1407,28 +1671,29 @@ sas.submit("""
 		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
-			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
+			a.ssr_component,
+			coalesce(b.total_grade_A, 0) + coalesce(c.total_grade_A, 0) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
+			coalesce(b.total_grade_A_minus, 0) + coalesce(c.total_grade_A_minus, 0) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
+			coalesce(b.total_grade_B_plus, 0) + coalesce(c.total_grade_B_plus, 0) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
+			coalesce(b.total_grade_B, 0) + coalesce(c.total_grade_B, 0) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
+			coalesce(b.total_grade_B_minus, 0) + coalesce(c.total_grade_B_minus, 0) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
+			coalesce(b.total_grade_C_plus, 0) + coalesce(c.total_grade_C_plus, 0) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
+			coalesce(b.total_grade_C, 0) + coalesce(c.total_grade_C, 0) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
+			coalesce(b.total_grade_C_minus, 0) + coalesce(c.total_grade_C_minus, 0) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
+			coalesce(b.total_grade_D_plus, 0) + coalesce(c.total_grade_D_plus, 0) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
+			coalesce(b.total_grade_D, 0) + coalesce(c.total_grade_D, 0) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
-			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
+			coalesce(b.total_grade_F, 0) + coalesce(c.total_grade_F, 0) as total_grade_F,
+			coalesce(b.total_withdrawn, 0) + coalesce(c.total_withdrawn, 0) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -1455,18 +1720,52 @@ sas.submit("""
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_students) as pct_DF
 		from &dsn..class_vw as a
-		left join &dsn..class_vw as b
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
-				and b.snapshot = 'eot'
-				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and b.ssr_component = 'LEC'
-		left join &dsn..class_vw as c
+				and a.ssr_component = b.ssr_component
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
-				and c.snapshot = 'eot'
-				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and c.ssr_component = 'LAB'
+				and a.ssr_component = c.ssr_component
 		where a.snapshot = 'eot'
-			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
 		group by a.subject_catalog_nbr
 		order by a.subject_catalog_nbr
@@ -1476,47 +1775,41 @@ sas.submit("""
 		create table class_count_&cohort_year. as
 		select distinct
 			a.emplid,
-			count(b.subject_catalog_nbr) as fall_lec_count,
-			count(c.subject_catalog_nbr) as fall_lab_count,
-			count(d.subject_catalog_nbr) as spring_lec_count,
-			count(e.subject_catalog_nbr) as spring_lab_count
+			count(b.class_nbr) as fall_lec_count,
+			count(c.class_nbr) as fall_lab_count,
+			count(d.class_nbr) as spring_lec_count,
+			count(e.class_nbr) as spring_lab_count,
+			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
 		from class_registration_&cohort_year. as a
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
-				and a.subject_catalog_nbr = b.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
-				and a.subject_catalog_nbr = c.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
-				and a.subject_catalog_nbr = d.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
-				and a.subject_catalog_nbr = e.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = e.class_nbr
 		group by a.emplid
 	;quit;
 	
@@ -1549,7 +1842,8 @@ sas.submit("""
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -1557,19 +1851,25 @@ sas.submit("""
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as c
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -1577,17 +1877,59 @@ sas.submit("""
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
 			on a.subject_catalog_nbr = d.subject_catalog_nbr
+				and a.ssr_component = d.ssr_component
+				and substr(a.strm,4,1) = '3'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as e
+					group by subject_catalog_nbr) as e
 			on a.subject_catalog_nbr = e.subject_catalog_nbr
+				and a.ssr_component = e.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table midterm_&cohort_year. as
+		select distinct
+			strm,
+			emplid,
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			case when crse_grade_input = 'A' 	then 4.0
+				when crse_grade_input = 'A-'	then 3.7
+				when crse_grade_input = 'B+'	then 3.3
+				when crse_grade_input = 'B'		then 3.0
+				when crse_grade_input = 'B-'	then 2.7
+				when crse_grade_input = 'C+'	then 2.3
+				when crse_grade_input = 'C'		then 2.0
+				when crse_grade_input = 'C-'	then 1.7
+				when crse_grade_input = 'D+'	then 1.3
+				when crse_grade_input = 'D'		then 1.0
+				when crse_grade_input = 'F'		then 0.0
+												else .
+												end as midterm_grade
+		from &dsn..class_registration_vw
+		where snapshot = 'midterm'
+			and substr(strm,4,1) = '7'
+			and full_acad_year = "&cohort_year."
+			and enrl_ind = 1
+	;quit;
+
+	proc sql;
+		create table midterm_grades_&cohort_year. as
+		select distinct
+			emplid,
+			avg(midterm_grade) as midterm_gpa_avg
+		from midterm_&cohort_year. 
+		group by emplid
 	;quit;
 	
 	proc sql;
@@ -1737,6 +2079,8 @@ sas.submit("""
 			t.fall_lab_count,
 			t.spring_lec_count,
 			t.spring_lab_count,
+			t.total_lec_count,
+			t.total_lab_count,
  			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,
@@ -1759,7 +2103,15 @@ sas.submit("""
 			q.afl_family_indicator,
 			q.afl_greek_indicator,
 			q.afl_greek_life_indicator,
-			r.building_id
+			r.building_id,
+			u.race_hispanic,
+			u.race_american_indian,
+			u.race_alaska,
+			u.race_asian,
+			u.race_black,
+			u.race_native_hawaiian,
+			u.race_white,
+			v.midterm_gpa_avg
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -1797,6 +2149,10 @@ sas.submit("""
  			on a.emplid = r.emplid
  		left join class_count_&cohort_year. as t
  			on a.emplid = t.emplid
+ 		left join race_detail_&cohort_year. as u
+ 			on a.emplid = u.emplid
+ 		left join midterm_grades_&cohort_year. as v
+ 			on a.emplid = v.emplid
 	;quit;
 	
 %mend loop;
@@ -2029,12 +2385,19 @@ logit_df = training_set[[
                         # 'age_group', 
                         # 'age',
                         'male',
+						'race_hispanic',
+						'race_american_indian',
+						'race_alaska',
+						'race_asian',
+						'race_black',
+						'race_native_hawaiian',
+						'race_white',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
-                        # 'count_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
-                        # 'pop_dens',
+                        'pop_dens',
                         'underrep_minority', 
                         # 'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
@@ -2057,7 +2420,14 @@ logit_df = training_set[[
 						'fall_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
-                        # 'cum_adj_transfer_hours',
+						'spring_lec_count',
+						'spring_lab_count',
+                        'spring_lec_contact_hrs',
+                        'spring_lab_contact_hrs',
+						# 'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
+                        'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
                         # 'mother_wsu_flag',
@@ -2068,7 +2438,7 @@ logit_df = training_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        # 'educ_rate',
+                        'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -2077,26 +2447,26 @@ logit_df = training_set[[
                         'pct_two',
                         # 'pct_non',
                         'pct_hisp',
-                        'city_large',
-                        'city_mid',
-                        'city_small',
-                        'suburb_large',
-                        'suburb_mid',
-                        'suburb_small',
+                        # 'city_large',
+                        # 'city_mid',
+                        # 'city_small',
+                        # 'suburb_large',
+                        # 'suburb_mid',
+                        # 'suburb_small',
                         # 'town_fringe',
                         # 'town_distant',
                         # 'town_remote',
                         # 'rural_fringe',
                         # 'rural_distant',
                         # 'rural_remote',
-                        # 'AD_DTA',
-                        # 'AD_AST',
-                        # 'AP',
-                        # 'RS',
-                        # 'CHS',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
                         # 'IB',
                         # 'AICE',
-                        # 'IB_AICE', 
+                        'IB_AICE', 
                         'term_credit_hours',
                         # 'athlete',
                         'remedial',
@@ -2157,7 +2527,7 @@ logit_df = training_set[[
                         # 'attendee_vibes',
                         # 'attendee_welcome_center',
                         # 'attendee_any_visitation_ind',
-                        'attendee_total_visits',
+                        # 'attendee_total_visits',
                         # 'qvalue',
                         # 'fed_efc',
                         # 'fed_need',
@@ -2167,17 +2537,24 @@ logit_df = training_set[[
 training_set = training_set[[
                             'emplid',
                             'enrl_ind', 
-                        	# 'acad_year',
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
+							'race_hispanic',
+							'race_american_indian',
+							'race_alaska',
+							'race_asian',
+							'race_black',
+							'race_native_hawaiian',
+							'race_white',
 							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
 							# 'Distance',
-							# 'pop_dens',
-							'underrep_minority', 
+							'pop_dens',
+							# 'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind', 
 							# 'pell_recipient_ind',
@@ -2189,8 +2566,8 @@ training_set = training_set[[
 							'high_school_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							# 'avg_difficulty',
-							# 'avg_pct_withdrawn',
+							'avg_difficulty',
+							'avg_pct_withdrawn',
 							# 'avg_pct_CDFW',
 							'avg_pct_CDF',
 							# 'avg_pct_DFW',
@@ -2198,8 +2575,15 @@ training_set = training_set[[
 							'fall_lec_count',
 							'fall_lab_count',
 							'fall_lec_contact_hrs',
-                        	'fall_lab_contact_hrs',
-							# 'cum_adj_transfer_hours',
+							'fall_lab_contact_hrs',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
+							# 'spring_lec_contact_hrs',
+							# 'spring_lab_contact_hrs',
+							# 'total_fall_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'midterm_gpa_avg',
+							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
 							# 'mother_wsu_flag',
@@ -2210,7 +2594,7 @@ training_set = training_set[[
 							# 'pvrt_rate',
 							'median_inc',
 							# 'median_value',
-							# 'educ_rate',
+							'educ_rate',
 							'pct_blk',
 							'pct_ai',
 							# 'pct_asn',
@@ -2219,26 +2603,26 @@ training_set = training_set[[
 							'pct_two',
 							# 'pct_non',
 							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
 							# 'town_fringe',
 							# 'town_distant',
 							# 'town_remote',
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
-							# 'IB_AICE', 
+							'IB_AICE', 
 							'term_credit_hours',
 							# 'athlete',
 							'remedial',
@@ -2308,18 +2692,25 @@ training_set = training_set[[
 
 testing_set = testing_set[[
                             'emplid',
-							# 'enrl_ind',
-                            # 'acad_year',
+							# 'enrl_ind', 
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
+							'race_hispanic',
+							'race_american_indian',
+							'race_alaska',
+							'race_asian',
+							'race_black',
+							'race_native_hawaiian',
+							'race_white',
 							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
 							# 'Distance',
-							# 'pop_dens',
-							'underrep_minority', 
+							'pop_dens',
+							# 'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind', 
 							# 'pell_recipient_ind',
@@ -2331,8 +2722,8 @@ testing_set = testing_set[[
 							'high_school_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							# 'avg_difficulty',
-							# 'avg_pct_withdrawn',
+							'avg_difficulty',
+							'avg_pct_withdrawn',
 							# 'avg_pct_CDFW',
 							'avg_pct_CDF',
 							# 'avg_pct_DFW',
@@ -2340,8 +2731,15 @@ testing_set = testing_set[[
 							'fall_lec_count',
 							'fall_lab_count',
 							'fall_lec_contact_hrs',
-                        	'fall_lab_contact_hrs',
-							# 'cum_adj_transfer_hours',
+							'fall_lab_contact_hrs',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
+							# 'spring_lec_contact_hrs',
+							# 'spring_lab_contact_hrs',
+							# 'total_fall_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'midterm_gpa_avg',
+							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
 							# 'mother_wsu_flag',
@@ -2352,7 +2750,7 @@ testing_set = testing_set[[
 							# 'pvrt_rate',
 							'median_inc',
 							# 'median_value',
-							# 'educ_rate',
+							'educ_rate',
 							'pct_blk',
 							'pct_ai',
 							# 'pct_asn',
@@ -2361,26 +2759,26 @@ testing_set = testing_set[[
 							'pct_two',
 							# 'pct_non',
 							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
 							# 'town_fringe',
 							# 'town_distant',
 							# 'town_remote',
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
-							# 'IB_AICE', 
+							'IB_AICE', 
 							'term_credit_hours',
 							# 'athlete',
 							'remedial',
@@ -2458,7 +2856,7 @@ pred_outcome = testing_set[[
 aggregate_outcome = testing_set[[ 
                             'emplid',
 							'male',
-							'underrep_minority',
+							# 'underrep_minority',
 							'first_gen_flag',
 							'resident'
                             # 'enrl_ind'
@@ -2474,13 +2872,20 @@ x_train = training_set[[
                         # 'age_group', 
                         # 'age',
                         'male',
+						'race_hispanic',
+						'race_american_indian',
+						'race_alaska',
+						'race_asian',
+						'race_black',
+						'race_native_hawaiian',
+						'race_white',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
-                        # 'count_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
-                        # 'pop_dens',
-                        'underrep_minority', 
+                        'pop_dens',
+                        # 'underrep_minority', 
                         # 'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
@@ -2492,8 +2897,8 @@ x_train = training_set[[
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        # 'avg_difficulty',
-                        # 'avg_pct_withdrawn',
+                        'avg_difficulty',
+                        'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         'avg_pct_CDF',
                         # 'avg_pct_DFW',
@@ -2502,7 +2907,14 @@ x_train = training_set[[
 						'fall_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
-                        # 'cum_adj_transfer_hours',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        # 'spring_lec_contact_hrs',
+                        # 'spring_lab_contact_hrs',
+						# 'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
+                        'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
                         # 'mother_wsu_flag',
@@ -2513,7 +2925,7 @@ x_train = training_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        # 'educ_rate',
+                        'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -2522,26 +2934,26 @@ x_train = training_set[[
                         'pct_two',
                         # 'pct_non',
                         'pct_hisp',
-                        'city_large',
-                        'city_mid',
-                        'city_small',
-                        'suburb_large',
-                        'suburb_mid',
-                        'suburb_small',
+                        # 'city_large',
+                        # 'city_mid',
+                        # 'city_small',
+                        # 'suburb_large',
+                        # 'suburb_mid',
+                        # 'suburb_small',
                         # 'town_fringe',
                         # 'town_distant',
                         # 'town_remote',
                         # 'rural_fringe',
                         # 'rural_distant',
                         # 'rural_remote',
-                        # 'AD_DTA',
-                        # 'AD_AST',
-                        # 'AP',
-                        # 'RS',
-                        # 'CHS',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
                         # 'IB',
                         # 'AICE',
-                        # 'IB_AICE', 
+                        'IB_AICE', 
                         'term_credit_hours',
                         # 'athlete',
                         'remedial',
@@ -2614,13 +3026,20 @@ x_test = testing_set[[
                         # 'age_group', 
                         # 'age',
                         'male',
+						'race_hispanic',
+						'race_american_indian',
+						'race_alaska',
+						'race_asian',
+						'race_black',
+						'race_native_hawaiian',
+						'race_white',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
-                        # 'count_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
-                        # 'pop_dens',
-                        'underrep_minority', 
+                        'pop_dens',
+                        # 'underrep_minority', 
                         # 'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
                         # 'pell_recipient_ind',
@@ -2632,8 +3051,8 @@ x_test = testing_set[[
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        # 'avg_difficulty',
-                        # 'avg_pct_withdrawn',
+                        'avg_difficulty',
+                        'avg_pct_withdrawn',
                         # 'avg_pct_CDFW',
                         'avg_pct_CDF',
                         # 'avg_pct_DFW',
@@ -2642,7 +3061,14 @@ x_test = testing_set[[
 						'fall_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
-                        # 'cum_adj_transfer_hours',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        # 'spring_lec_contact_hrs',
+                        # 'spring_lab_contact_hrs',
+						# 'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
+                        'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
                         # 'mother_wsu_flag',
@@ -2653,7 +3079,7 @@ x_test = testing_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        # 'educ_rate',
+                        'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -2662,26 +3088,26 @@ x_test = testing_set[[
                         'pct_two',
                         # 'pct_non',
                         'pct_hisp',
-                        'city_large',
-                        'city_mid',
-                        'city_small',
-                        'suburb_large',
-                        'suburb_mid',
-                        'suburb_small',
+                        # 'city_large',
+                        # 'city_mid',
+                        # 'city_small',
+                        # 'suburb_large',
+                        # 'suburb_mid',
+                        # 'suburb_small',
                         # 'town_fringe',
                         # 'town_distant',
                         # 'town_remote',
                         # 'rural_fringe',
                         # 'rural_distant',
                         # 'rural_remote',
-                        # 'AD_DTA',
-                        # 'AD_AST',
-                        # 'AP',
-                        # 'RS',
-                        # 'CHS',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
                         # 'IB',
                         # 'AICE',
-                        # 'IB_AICE', 
+                        'IB_AICE', 
                         'term_credit_hours',
                         # 'athlete',
                         'remedial',
@@ -2759,31 +3185,43 @@ preprocess = make_column_transformer(
                         # 'age',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
-                        # 'count_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
                         # 'sat_erws',
                         # 'sat_mss',
                         # 'sat_comp',
                         # 'attendee_total_visits',
                         # 'Distance',
-                        # 'pop_dens', 
+                        'pop_dens', 
                         # 'qvalue', 
                         'median_inc',
                         # 'median_value',
-                        'term_credit_hours',
+                        # 'term_credit_hours',
                         'high_school_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        # 'avg_difficulty',
+                        'avg_difficulty',
                         'fall_lec_count',
 						'fall_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
-                        # 'cum_adj_transfer_hours',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+						# 'spring_lec_contact_hrs',
+						# 'spring_lab_contact_hrs',
+						'midterm_gpa_avg',
+                        'cum_adj_transfer_hours',
                         # 'fed_efc',
                         # 'fed_need', 
                         'unmet_need_ofr'
                         ]),
     (OneHotEncoder(drop='first'), [
+									'race_hispanic',
+									'race_american_indian',
+									'race_alaska',
+									'race_asian',
+									'race_black',
+									'race_native_hawaiian',
+									'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
                                     # 'marital_status',
@@ -2808,18 +3246,25 @@ print('Done\n')
 
 #%%
 # Standard logistic model
-y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
+y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
+				+ male + race_hispanic + race_american_indian + race_alaska + race_asian + race_black + race_native_hawaiian + race_white \
+				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + pell_eligibility_ind + honors_program_ind \
-                + first_gen_flag \
-                + avg_pct_CDF + fall_lec_count + fall_lab_count  + term_credit_hours + fall_lec_contact_hrs + fall_lab_contact_hrs \
-                + resident + gini_indx + median_inc \
-            	+ high_school_gpa + remedial \
+				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
 				+ business + comm + education + medicine + nursing + pharmacy + vet_med \
 				+ cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
 				+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
-				+ vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
-            	+ unmet_need_ofr', data=logit_df, return_type='dataframe')
+                + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
+                + first_gen_flag \
+                + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
+				+ fall_lec_count + fall_lab_count \
+				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
+				+ midterm_gpa_avg \
+                + resident + gini_indx + median_inc \
+            	+ high_school_gpa + remedial + cum_adj_transfer_hours \
+				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
+            	+ unmet_need_ofr \
+				+ count_week_from_term_begin_dt', data=logit_df, return_type='dataframe')
 
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
@@ -2852,47 +3297,60 @@ print(f'ROC AUC for logistic model (training): {lreg_auc:.4f}\n')
 lreg_fpr, lreg_tpr, thresholds = roc_curve(y_train, lreg_probs, drop_intermediate=False)
 
 #%%
+# SGD model
+sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(x_train, y_train)
+
+sgd_probs = sgd.predict_proba(x_train)
+sgd_probs = sgd_probs[:, 1]
+sgd_auc = roc_auc_score(y_train, sgd_probs)
+
+print(f'\nOverall accuracy for SGD model (training): {sgd.score(x_train, y_train):.4f}')
+print(f'ROC AUC for SGD model (training): {sgd_auc:.4f}\n')
+
+sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=False)
+
+#%%
 # SVC model
-svc = SVC(kernel='linear', class_weight='balanced', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
+# svc = SVC(kernel='linear', class_weight='balanced', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
 
-svc_probs = svc.predict_proba(x_train)
-svc_probs = svc_probs[:, 1]
-svc_auc = roc_auc_score(y_train, svc_probs)
+# svc_probs = svc.predict_proba(x_train)
+# svc_probs = svc_probs[:, 1]
+# svc_auc = roc_auc_score(y_train, svc_probs)
 
-print(f'\n\nOverall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}\n')
+# print(f'\n\nOverall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}\n')
 
-svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
+# svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_depth=12, max_features=0.15, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
+# rfc = RandomForestClassifier(class_weight='balanced', n_estimators=500, max_depth=8, max_features='sqrt', min_samples_split=2, min_samples_leaf=1, verbose=True).fit(x_train, y_train)
 
-rfc_probs = rfc.predict_proba(x_train)
-rfc_probs = rfc_probs[:, 1]
-rfc_auc = roc_auc_score(y_train, rfc_probs)
+# rfc_probs = rfc.predict_proba(x_train)
+# rfc_probs = rfc_probs[:, 1]
+# rfc_auc = roc_auc_score(y_train, rfc_probs)
 
-print(f'\nOverall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}\n')
+# print(f'\nOverall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}\n')
 
-rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
+# rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, n_iter_no_change=10, max_iter=2000, verbose=True).fit(x_train, y_train)
+# mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, n_iter_no_change=10, max_iter=2000, verbose=True).fit(x_train, y_train)
 
-mlp_probs = mlp.predict_proba(x_train)
-mlp_probs = mlp_probs[:, 1]
-mlp_auc = roc_auc_score(y_train, mlp_probs)
+# mlp_probs = mlp.predict_proba(x_train)
+# mlp_probs = mlp_probs[:, 1]
+# mlp_auc = roc_auc_score(y_train, mlp_probs)
 
-print(f'\nOverall accuracy for multi-layer perceptron model (training): {mlp.score(x_train, y_train):.4f}')
-print(f'ROC AUC for multi-layer perceptron model (training): {mlp_auc:.4f}\n')
+# print(f'\nOverall accuracy for multi-layer perceptron model (training): {mlp.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for multi-layer perceptron model (training): {mlp_auc:.4f}\n')
 
-mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=False)
+# mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=False)
 
 #%%
 # Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('svc', svc), ('rfc', rfc), ('mlp', mlp)], voting='soft', weights=[1, 0.45, 0.025, 0.05]).fit(x_train, y_train)
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd)], voting='soft', weights=[0.50, 0.50]).fit(x_train, y_train)
 
 vcf_probs = vcf.predict_proba(x_train)
 vcf_probs = vcf_probs[:, 1]
@@ -2909,12 +3367,14 @@ print('Prepare model predictions...')
 
 lreg_pred_probs = lreg.predict_proba(x_test)
 lreg_pred_probs = lreg_pred_probs[:, 1]
-svc_pred_probs = svc.predict_proba(x_test)
-svc_pred_probs = svc_pred_probs[:, 1]
-rfc_pred_probs = rfc.predict_proba(x_test)
-rfc_pred_probs = rfc_pred_probs[:, 1]
-mlp_pred_probs = mlp.predict_proba(x_test)
-mlp_pred_probs = mlp_pred_probs[:, 1]
+sgd_pred_probs = sgd.predict_proba(x_test)
+sgd_pred_probs = sgd_pred_probs[:, 1]
+# svc_pred_probs = svc.predict_proba(x_test)
+# svc_pred_probs = svc_pred_probs[:, 1]
+# rfc_pred_probs = rfc.predict_proba(x_test)
+# rfc_pred_probs = rfc_pred_probs[:, 1]
+# mlp_pred_probs = mlp.predict_proba(x_test)
+# mlp_pred_probs = mlp_pred_probs[:, 1]
 vcf_pred_probs = vcf.predict_proba(x_test)
 vcf_pred_probs = vcf_pred_probs[:, 1]
 
@@ -2926,12 +3386,14 @@ print('Output model predictions and model...')
 
 pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
 pred_outcome['lr_pred'] = lreg.predict(x_test)
-pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
-pred_outcome['svc_pred'] = svc.predict(x_test)
-pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
-pred_outcome['rfc_pred'] = rfc.predict(x_test)
-pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
-pred_outcome['mlp_pred'] = mlp.predict(x_test)
+pred_outcome['sgd_prob'] = pd.DataFrame(sgd_pred_probs)
+pred_outcome['sgd_pred'] = sgd.predict(x_test)
+# pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
+# pred_outcome['svc_pred'] = svc.predict(x_test)
+# pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
+# pred_outcome['rfc_pred'] = rfc.predict(x_test)
+# pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
+# pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
 pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome.csv', encoding='utf-8', index=False)
@@ -2967,15 +3429,16 @@ aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggrega
 current_outcome['emplid'] = current_outcome['emplid'].astype(str).str.zfill(9)
 current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
 
-current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_idx'] = '3'
-current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_idx'] = '2'
-current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_idx'] = '1'
+# current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_idx'] = '3'
+# current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_idx'] = '2'
+# current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_idx'] = '1'
 
-current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_descr'] = 'High'
-current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_descr'] = 'Mid'
-current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_descr'] = 'Low'
+# current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_descr'] = 'High'
+# current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_descr'] = 'Mid'
+# current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_descr'] = 'Low'
 
 current_outcome['date'] = date.today()
+current_outcome['model_id'] = 1
 
 #%%
 if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):

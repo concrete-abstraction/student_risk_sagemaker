@@ -804,7 +804,7 @@ sas.submit("""
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.subject_catalog_nbr = e.subject_catalog_nbr
-				and a.class_nbr = d.class_nbr
+				and a.class_nbr = e.class_nbr
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.enrl_ind = 1
@@ -1816,6 +1816,10 @@ logit_df = training_set[[
 						'fall_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        'spring_lec_contact_hrs',
+                        'spring_lab_contact_hrs',
                         # 'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -1879,7 +1883,7 @@ logit_df = training_set[[
                         # 'medicine',
                         # 'nursing',
                         # 'pharmacy',
-                        # # 'provost',
+                        # 'provost',
                         # 'vcea_bioe',
                         # 'vcea_cive',
                         # 'vcea_desn',
@@ -1957,6 +1961,10 @@ training_set = training_set[[
 							'fall_lab_count',
 							'fall_lec_contact_hrs',
                         	'fall_lab_contact_hrs',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
+							'spring_lec_contact_hrs',
+							'spring_lab_contact_hrs',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2020,7 +2028,7 @@ training_set = training_set[[
 							# 'medicine',
 							# 'nursing',
 							# 'pharmacy',
-							# # 'provost',
+							# 'provost',
 							# 'vcea_bioe',
 							# 'vcea_cive',
 							# 'vcea_desn',
@@ -2098,6 +2106,10 @@ testing_set = testing_set[[
 							'fall_lab_count',
 							'fall_lec_contact_hrs',
                         	'fall_lab_contact_hrs',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
+							'spring_lec_contact_hrs',
+							'spring_lab_contact_hrs',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2161,7 +2173,7 @@ testing_set = testing_set[[
 							# 'medicine',
 							# 'nursing',
 							# 'pharmacy',
-							# # 'provost',
+							# 'provost',
 							# 'vcea_bioe',
 							# 'vcea_cive',
 							# 'vcea_desn',
@@ -2258,6 +2270,10 @@ x_train = training_set[[
 						'fall_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        'spring_lec_contact_hrs',
+                        'spring_lab_contact_hrs',
                         # 'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2321,7 +2337,7 @@ x_train = training_set[[
                         # 'medicine',
                         # 'nursing',
                         # 'pharmacy',
-                        # # 'provost',
+                        # 'provost',
                         # 'vcea_bioe',
                         # 'vcea_cive',
                         # 'vcea_desn',
@@ -2397,6 +2413,10 @@ x_test = testing_set[[
 						'fall_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        'spring_lec_contact_hrs',
+                        'spring_lab_contact_hrs',
                         # 'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2531,8 +2551,12 @@ preprocess = make_column_transformer(
                         # 'avg_difficulty',
                         'fall_lec_count',
 						'fall_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
+                        'spring_lec_contact_hrs',
+                        'spring_lab_contact_hrs',
                         # 'cum_adj_transfer_hours',
                         # 'fed_efc',
                         # 'fed_need', 
@@ -2567,7 +2591,10 @@ y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_h
                 + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
                 + pell_eligibility_ind \
                 + first_gen_flag \
-                + avg_pct_CDF + fall_lec_count + fall_lab_count + fall_lec_contact_hrs + fall_lab_contact_hrs \
+                + avg_pct_CDF \
+				+ fall_lec_count + fall_lab_count \
+				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
+				+ spring_lec_contact_hrs + spring_lab_contact_hrs \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa + remedial \
             	+ unmet_need_ofr', data=logit_df, return_type='dataframe')
