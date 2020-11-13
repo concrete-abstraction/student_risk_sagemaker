@@ -13,6 +13,7 @@ from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import make_column_transformer
+from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
 from sklearn.svm import SVC
@@ -1085,7 +1086,10 @@ sas.submit("""
 			t.race_black,
 			t.race_native_hawaiian,
 			t.race_white,
-			u.midterm_gpa_avg
+			u.midterm_gpa_avg,
+			case when u.midterm_gpa_avg is not null 	then 1
+														else 0
+														end as midterm_gpa_ind
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2052,7 +2056,10 @@ sas.submit("""
 			u.race_black,
 			u.race_native_hawaiian,
 			u.race_white,
-			v.midterm_gpa_avg
+			v.midterm_gpa_avg,
+			case when v.midterm_gpa_avg is not null 	then 1
+														else 0
+														end as midterm_gpa_ind
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2148,6 +2155,7 @@ data full_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2201,6 +2209,7 @@ data training_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2254,6 +2263,7 @@ data testing_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2273,17 +2283,17 @@ run;
 #%%
 # Export data
 sas_log = sas.submit("""
-filename full "Z:\\Nathan\\Models\\student_risk\\Datasets\\full_set.csv" encoding="utf-8";
+filename full "Z:\\Nathan\\Models\\student_risk\\Datasets\\full_set_dev.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv" encoding="utf-8";
+filename training "Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set_dev.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv" encoding="utf-8";
+filename testing "Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set_dev.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -2297,8 +2307,8 @@ sas.endsas()
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv', encoding='utf-8')
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set_dev.csv', encoding='utf-8')
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set_dev.csv', encoding='utf-8')
 
 #%%
 # Training AWE instrumental variable
@@ -2481,13 +2491,20 @@ testing_cdi_pred['cdi_instrument'] = testing_cdi_pred['cdi_actual'] - testing_cd
 testing_set = testing_set.join(testing_cdi_pred.set_index('emplid'), on='emplid')
 
 #%%
-# Prepare dataframes
+# Prepare base dataframes
 logit_df = training_set[[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
                         # 'age',
                         'male',
+						# 'race_hispanic',
+						# 'race_american_indian',
+						# 'race_alaska',
+						# 'race_asian',
+						# 'race_black',
+						# 'race_native_hawaiian',
+						# 'race_white',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
@@ -2514,15 +2531,16 @@ logit_df = training_set[[
                         # 'avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
-                        'fall_lec_contact_hrs',
-                        'fall_lab_contact_hrs',
+                        # 'fall_lec_contact_hrs',
+                        # 'fall_lab_contact_hrs',
 						# 'spring_lec_count',
 						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
-						# 'total_fall_contact_hrs',
+						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
 						'midterm_gpa_avg',
+						'midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2637,6 +2655,13 @@ training_set = training_set[[
 							# 'age_group', 
 							# 'age',
 							'male',
+							# 'race_hispanic',
+							# 'race_american_indian',
+							# 'race_alaska',
+							# 'race_asian',
+							# 'race_black',
+							# 'race_native_hawaiian',
+							# 'race_white',
 							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
@@ -2663,15 +2688,16 @@ training_set = training_set[[
 							# 'avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'spring_lec_count',
 							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
-							# 'total_fall_contact_hrs',
+							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
 							'midterm_gpa_avg',
+							'midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2781,11 +2807,18 @@ training_set = training_set[[
 
 testing_set = testing_set[[
                             'emplid',
-                            'enrl_ind', 
-                            # 'acad_year',
+							'enrl_ind', 
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
+							# 'race_hispanic',
+							# 'race_american_indian',
+							# 'race_alaska',
+							# 'race_asian',
+							# 'race_black',
+							# 'race_native_hawaiian',
+							# 'race_white',
 							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
@@ -2812,15 +2845,16 @@ testing_set = testing_set[[
 							# 'avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'spring_lec_count',
 							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
-							# 'total_fall_contact_hrs',
+							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
 							'midterm_gpa_avg',
+							'midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2932,14 +2966,82 @@ testing_set = testing_set.reset_index()
 
 pred_outcome = testing_set[[ 
                             'emplid',
-                            'enrl_ind'
+                            # 'enrl_ind'
                             ]].copy(deep=True)
 
+aggregate_outcome = testing_set[[ 
+                            'emplid',
+							'male',
+							'underrep_minority',
+							'first_gen_flag',
+							'resident'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+current_outcome = testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+#%%
+# Detect and remove outliers
+x_outlier = training_set.drop(columns='enrl_ind')
+
+outlier_prep = make_column_transformer(
+    (OneHotEncoder(drop='first'), [
+									# 'race_hispanic',
+									# 'race_american_indian',
+									# 'race_alaska',
+									# 'race_asian',
+									# 'race_black',
+									# 'race_native_hawaiian',
+									# 'race_white',
+                                    # 'acad_year', 
+                                    # 'age_group',
+                                    # 'marital_status',
+                                    'first_gen_flag',
+                                    # 'LSAMP_STEM_Flag',
+                                    # 'anywhere_STEM_Flag',
+                                    # 'afl_greek_indicator',
+                                    # 'ACAD_PLAN',
+                                    # 'plan_owner_org',
+                                    # 'ipeds_ethnic_group_descrshort',
+                                    # 'last_sch_proprietorship', 
+                                    'parent1_highest_educ_lvl',
+                                    'parent2_highest_educ_lvl'
+                                    ]),
+    remainder='passthrough'
+)
+
+x_outlier = outlier_prep.fit_transform(x_outlier)
+
+training_set['mask'] = LocalOutlierFactor().fit_predict(x_outlier)
+training_set = training_set.drop(training_set[training_set['mask'] == -1].index)
+
+#%%
+# Create random oversampled training set
+count_class_1, count_class_0 = training_set.enrl_ind.value_counts()
+
+class_0 = training_set[training_set['enrl_ind'] == 0]
+class_1 = training_set[training_set['enrl_ind'] == 1]
+
+class_0_over = class_0.sample(count_class_1, replace=True)
+training_set = pd.concat([class_0_over, class_1], axis=0)
+
+#%%
+# Prepare final dataframes
 x_train = training_set[[
                         # 'acad_year',
                         # 'age_group', 
                         # 'age',
                         'male',
+						# 'race_hispanic',
+						# 'race_american_indian',
+						# 'race_alaska',
+						# 'race_asian',
+						# 'race_black',
+						# 'race_native_hawaiian',
+						# 'race_white',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
@@ -2966,15 +3068,16 @@ x_train = training_set[[
                         # 'avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
-                        'fall_lec_contact_hrs',
-                        'fall_lab_contact_hrs',
+                        # 'fall_lec_contact_hrs',
+                        # 'fall_lab_contact_hrs',
 						# 'spring_lec_count',
 						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
-						# 'total_fall_contact_hrs',
+						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
 						'midterm_gpa_avg',
+						'midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -3087,6 +3190,13 @@ x_test = testing_set[[
                         # 'age_group', 
                         # 'age',
                         'male',
+						# 'race_hispanic',
+						# 'race_american_indian',
+						# 'race_alaska',
+						# 'race_asian',
+						# 'race_black',
+						# 'race_native_hawaiian',
+						# 'race_white',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
@@ -3113,15 +3223,16 @@ x_test = testing_set[[
                         # 'avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
-                        'fall_lec_contact_hrs',
-                        'fall_lab_contact_hrs',
+                        # 'fall_lec_contact_hrs',
+                        # 'fall_lab_contact_hrs',
 						# 'spring_lec_count',
 						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
-						# 'total_fall_contact_hrs',
+						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
 						'midterm_gpa_avg',
+						'midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -3266,12 +3377,13 @@ preprocess = make_column_transformer(
                         'avg_difficulty',
                         'fall_lec_count',
 						'fall_lab_count',
-                        'fall_lec_contact_hrs',
-                        'fall_lab_contact_hrs',
+                        # 'fall_lec_contact_hrs',
+                        # 'fall_lab_contact_hrs',
 						# 'spring_lec_count',
 						# 'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
+						'total_fall_contact_hrs',
 						'midterm_gpa_avg',
                         'cum_adj_transfer_hours',
                         # 'fed_efc',
@@ -3313,8 +3425,8 @@ y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + first_gen_flag \
                 + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
-				+ midterm_gpa_avg \
+				+ total_fall_contact_hrs \
+				+ midterm_gpa_avg + midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa + remedial + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3339,14 +3451,14 @@ hyperparameters = [{'penalty': ['elasticnet'],
                     'l1_ratio': np.linspace(0, 1, 11, endpoint=True),
                     'C': np.logspace(0, 4, 20, endpoint=True)}]
 
-gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
+gridsearch = GridSearchCV(LogisticRegression(solver='saga'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
 best_model = gridsearch.fit(x_train, y_train)
 
 print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # Logistic model
-lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
+lreg = LogisticRegression(penalty='elasticnet', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
 lreg_probs = lreg_probs[:, 1]
@@ -3377,7 +3489,7 @@ plt.show()
 
 #%%
 # SGD model
-sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(x_train, y_train)
+sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 sgd_probs = sgd.predict_proba(x_train)
 sgd_probs = sgd_probs[:, 1]
@@ -3418,7 +3530,7 @@ print(f'Best parameters: {gridsearch.best_params_}')
 
 #%%
 # SVC model
-svc = SVC(kernel='linear', class_weight='balanced', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
+svc = SVC(kernel='linear', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
 
 svc_cprobs = CalibratedClassifierCV(svc, method='sigmoid', cv='prefit')
 svc_cprobs.fit(x_test, y_test)
@@ -3458,7 +3570,7 @@ train_results = []
 test_results = []
 
 for max_depth in max_depths:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features='sqrt', max_depth=max_depth, n_jobs=-1)
+    rfc = RandomForestClassifier(n_estimators=1000, max_features='sqrt', max_depth=max_depth, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -3490,7 +3602,7 @@ train_results = []
 test_results = []
 
 for max_feature in max_features:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_depth=8, max_features=max_feature, n_jobs=-1)
+    rfc = RandomForestClassifier(n_estimators=1000, max_depth=8, max_features=max_feature, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -3522,7 +3634,7 @@ train_results = []
 test_results = []
 
 for min_samples_split in min_samples_splits:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_depth=8, max_features='sqrt', min_samples_split=min_samples_split, n_jobs=-1)
+    rfc = RandomForestClassifier(n_estimators=1000, max_depth=8, max_features='sqrt', min_samples_split=min_samples_split, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -3554,7 +3666,7 @@ train_results = []
 test_results = []
 
 for min_samples_leaf in min_samples_leafs:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features='sqrt', max_depth=8, min_samples_split=2, min_samples_leaf=min_samples_leaf, n_jobs=-1)
+    rfc = RandomForestClassifier(n_estimators=1000, max_features='sqrt', max_depth=8, min_samples_split=2, min_samples_leaf=min_samples_leaf, n_jobs=-1)
     rfc.fit(x_train, y_train)
     
     rfc_train = rfc.predict_proba(x_train)
@@ -3580,7 +3692,7 @@ plt.show()
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_depth=8, max_features='sqrt', min_samples_split=2, min_samples_leaf=1, verbose=True).fit(x_train, y_train)
+rfc = RandomForestClassifier(n_estimators=5000, max_depth=8, max_features='sqrt', min_samples_split=2, min_samples_leaf=1, verbose=True).fit(x_train, y_train)
 
 rfc_cprobs = CalibratedClassifierCV(rfc, method='sigmoid', cv='prefit')
 rfc_cprobs.fit(x_test, y_test)
@@ -3614,7 +3726,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=15, verbose=True).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.25, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=15, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
@@ -3645,7 +3757,7 @@ plt.show()
 
 #%%
 # Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd)], voting='soft', weights=[0.50, 0.50]).fit(x_train, y_train)
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd), ('mlp', mlp)], voting='soft', weights=[0.34, 0.33, 0.33]).fit(x_train, y_train)
 
 vcf_probs = vcf.predict_proba(x_train)
 vcf_probs = vcf_probs[:, 1]
@@ -3684,8 +3796,8 @@ sgd_pred_probs = sgd_pred_probs[:, 1]
 # svc_pred_probs = svc_pred_probs[:, 1]
 # rfc_pred_probs = rfc_cprobs.predict_proba(x_test)
 # rfc_pred_probs = rfc_pred_probs[:, 1]
-# mlp_pred_probs = mlp.predict_proba(x_test)
-# mlp_pred_probs = mlp_pred_probs[:, 1]
+mlp_pred_probs = mlp.predict_proba(x_test)
+mlp_pred_probs = mlp_pred_probs[:, 1]
 vcf_pred_probs = vcf.predict_proba(x_test)
 vcf_pred_probs = vcf_pred_probs[:, 1]
 
@@ -3699,8 +3811,8 @@ pred_outcome['sgd_pred'] = sgd.predict(x_test)
 # pred_outcome['svc_pred'] = svc.predict(x_test)
 # pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
 # pred_outcome['rfc_pred'] = rfc.predict(x_test)
-# pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
-# pred_outcome['mlp_pred'] = mlp.predict(x_test)
+pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
+pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
 pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome_dev.csv', encoding='utf-8', index=False)

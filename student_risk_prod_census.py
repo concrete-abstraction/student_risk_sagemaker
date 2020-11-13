@@ -1145,7 +1145,10 @@ sas.submit("""
 			t.race_black,
 			t.race_native_hawaiian,
 			t.race_white,
-			u.midterm_gpa_avg
+			u.midterm_gpa_avg,
+			case when u.midterm_gpa_avg is not null 	then 1
+														else 0
+														end as midterm_gpa_ind
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2112,7 +2115,10 @@ sas.submit("""
 			u.race_black,
 			u.race_native_hawaiian,
 			u.race_white,
-			v.midterm_gpa_avg
+			v.midterm_gpa_avg,
+			case when v.midterm_gpa_avg is not null 	then 1
+														else 0
+														end as midterm_gpa_ind
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2218,6 +2224,7 @@ data full_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2271,6 +2278,7 @@ data training_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2324,6 +2332,7 @@ data testing_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2377,7 +2386,7 @@ training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv', encoding='utf-8')
 
 #%%
-# Prepare dataframes
+# Prepare base dataframes
 print('\nPrepare dataframes and preprocess data...')
 
 logit_df = training_set[[
@@ -2428,6 +2437,7 @@ logit_df = training_set[[
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
 						'midterm_gpa_avg',
+						'midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2584,6 +2594,7 @@ training_set = training_set[[
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
 							'midterm_gpa_avg',
+							'midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2740,6 +2751,7 @@ testing_set = testing_set[[
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
 							'midterm_gpa_avg',
+							'midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2873,41 +2885,6 @@ current_outcome = testing_set[[
 x_outlier = training_set.drop(columns='enrl_ind')
 
 outlier_prep = make_column_transformer(
-    (StandardScaler(), [
-                        # 'age',
-                        # 'min_week_from_term_begin_dt',
-                        # 'max_week_from_term_begin_dt',
-                        'count_week_from_term_begin_dt',
-                        # 'sat_erws',
-                        # 'sat_mss',
-                        # 'sat_comp',
-                        # 'attendee_total_visits',
-                        # 'Distance',
-                        'pop_dens', 
-                        # 'qvalue', 
-                        'median_inc',
-                        # 'median_value',
-                        # 'term_credit_hours',
-                        'high_school_gpa',
-                        # 'awe_instrument',
-                        # 'cdi_instrument',
-                        'avg_difficulty',
-                        'fall_lec_count',
-						'fall_lab_count',
-                        # 'fall_lec_contact_hrs',
-                        # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
-						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'midterm_gpa_avg',
-                        'cum_adj_transfer_hours',
-                        # 'fed_efc',
-                        # 'fed_need', 
-                        'unmet_need_ofr'
-                        ]),
     (OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -2949,7 +2926,7 @@ class_0_over = class_0.sample(count_class_1, replace=True)
 training_set = pd.concat([class_0_over, class_1], axis=0)
 
 #%%
-# Prepare dataframes
+# Prepare final dataframes
 x_train = training_set[[
                         # 'acad_year',
                         # 'age_group', 
@@ -2997,6 +2974,7 @@ x_train = training_set[[
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
 						'midterm_gpa_avg',
+						'midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -3151,6 +3129,7 @@ x_test = testing_set[[
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
 						'midterm_gpa_avg',
+						'midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -3344,7 +3323,7 @@ y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ total_fall_contact_hrs \
-				+ midterm_gpa_avg \
+				+ midterm_gpa_avg + midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa + remedial + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3370,7 +3349,7 @@ print('\n')
 print('Run machine learning models...\n')
 
 # Logistic model
-lreg = LogisticRegression(penalty='elasticnet', solver='saga', max_iter=500, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
+lreg = LogisticRegression(penalty='elasticnet', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
 lreg_probs = lreg_probs[:, 1]
@@ -3396,16 +3375,16 @@ sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=F
 
 #%%
 # SVC model
-svc = SVC(kernel='linear', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
+# svc = SVC(kernel='linear', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
 
-svc_probs = svc.predict_proba(x_train)
-svc_probs = svc_probs[:, 1]
-svc_auc = roc_auc_score(y_train, svc_probs)
+# svc_probs = svc.predict_proba(x_train)
+# svc_probs = svc_probs[:, 1]
+# svc_auc = roc_auc_score(y_train, svc_probs)
 
-print(f'\n\nOverall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}\n')
+# print(f'\n\nOverall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}\n')
 
-svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
+# svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
 
 #%%
 # Random forest model
@@ -3422,7 +3401,7 @@ svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=F
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, n_iter_no_change=15, max_iter=2000, verbose=True).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.25, learning_rate_init=0.001, n_iter_no_change=15, max_iter=2000, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
@@ -3435,7 +3414,7 @@ mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=F
 
 #%%
 # Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd), ('svc', svc), ('mlp', mlp)], voting='soft', weights=[0.25, 0.25, 0.25, 0.25]).fit(x_train, y_train)
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd), ('mlp', mlp)], voting='soft', weights=[0.34, 0.33, 0.33]).fit(x_train, y_train)
 
 vcf_probs = vcf.predict_proba(x_train)
 vcf_probs = vcf_probs[:, 1]
@@ -3454,8 +3433,8 @@ lreg_pred_probs = lreg.predict_proba(x_test)
 lreg_pred_probs = lreg_pred_probs[:, 1]
 sgd_pred_probs = sgd.predict_proba(x_test)
 sgd_pred_probs = sgd_pred_probs[:, 1]
-svc_pred_probs = svc.predict_proba(x_test)
-svc_pred_probs = svc_pred_probs[:, 1]
+# svc_pred_probs = svc.predict_proba(x_test)
+# svc_pred_probs = svc_pred_probs[:, 1]
 # rfc_pred_probs = rfc.predict_proba(x_test)
 # rfc_pred_probs = rfc_pred_probs[:, 1]
 mlp_pred_probs = mlp.predict_proba(x_test)
@@ -3473,8 +3452,8 @@ pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
 pred_outcome['lr_pred'] = lreg.predict(x_test)
 pred_outcome['sgd_prob'] = pd.DataFrame(sgd_pred_probs)
 pred_outcome['sgd_pred'] = sgd.predict(x_test)
-pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
-pred_outcome['svc_pred'] = svc.predict(x_test)
+# pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
+# pred_outcome['svc_pred'] = svc.predict(x_test)
 # pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
 # pred_outcome['rfc_pred'] = rfc.predict(x_test)
 pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)

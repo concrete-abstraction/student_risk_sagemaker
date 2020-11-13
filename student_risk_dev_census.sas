@@ -1043,7 +1043,10 @@ run;
 			t.race_black,
 			t.race_native_hawaiian,
 			t.race_white,
-			u.midterm_gpa_avg
+			u.midterm_gpa_avg,
+			case when u.midterm_gpa_avg is not null 	then 1
+														else 0
+														end as midterm_gpa_ind
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2055,7 +2058,10 @@ run;
 			u.race_black,
 			u.race_native_hawaiian,
 			u.race_white,
-			v.midterm_gpa_avg
+			v.midterm_gpa_avg,
+			case when v.midterm_gpa_avg is not null 	then 1
+														else 0
+														end as midterm_gpa_ind
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2147,6 +2153,7 @@ data full_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2209,6 +2216,7 @@ data training_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2262,6 +2270,7 @@ data testing_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
