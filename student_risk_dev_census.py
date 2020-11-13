@@ -2966,7 +2966,7 @@ testing_set = testing_set.reset_index()
 
 pred_outcome = testing_set[[ 
                             'emplid',
-                            # 'enrl_ind'
+                            'enrl_ind'
                             ]].copy(deep=True)
 
 aggregate_outcome = testing_set[[ 
@@ -3726,7 +3726,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.25, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=15, verbose=True).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=1.0, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=20, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
