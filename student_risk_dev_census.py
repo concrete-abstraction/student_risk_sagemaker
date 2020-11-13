@@ -38,7 +38,7 @@ sas.submit("""
 %let acs_lag = 2;
 %let lag_year = 1;
 %let start_cohort = 2015;
-%let end_cohort = 2020;;
+%let end_cohort = 2020;
 """)
 
 #%%
@@ -216,24 +216,27 @@ sas.submit("""
 		create table race_detail_&cohort_year. as
 		select 
 			a.emplid,
-			case when amind.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_american_indian,
-			case when alask.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_alaska,
-			case when asian.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_asian,
-			case when black.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_black,
-			case when hawai.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_native_hawaiian,
-			case when white.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_white
+			case when hispc.emplid is not null 	then 'Y'
+												else 'N'
+												end as race_hispanic,
+			case when amind.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_american_indian,
+			case when alask.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_alaska,
+			case when asian.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_asian,
+			case when black.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_black,
+			case when hawai.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_native_hawaiian,
+			case when white.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_white
 		from cohort_&cohort_year. as a
 		left join (select distinct e4.emplid from &dsn..student_ethnic_detail as e4
 					left join &dsn..xw_ethnic_detail_to_group_vw as xe4
@@ -283,6 +286,13 @@ sas.submit("""
 													'935','941','942','943',
 													'950','R14')) as amind
 			on a.emplid = amind.emplid
+		left join (select distinct e6.emplid from &dsn..student_ethnic_detail as e6
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe6
+						on e6.ethnic_cd = xe6.ethnic_cd
+					where e6.snapshot = 'census'
+						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe6.ethnic_group = '3') as hispc
+			on a.emplid = hispc.emplid
 	;quit;
 	
 	proc sql;
@@ -853,6 +863,43 @@ sas.submit("""
 	;quit;
 	
 	proc sql;
+		create table midterm_&cohort_year. as
+		select distinct
+			strm,
+			emplid,
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			case when crse_grade_input = 'A' 	then 4.0
+				when crse_grade_input = 'A-'	then 3.7
+				when crse_grade_input = 'B+'	then 3.3
+				when crse_grade_input = 'B'		then 3.0
+				when crse_grade_input = 'B-'	then 2.7
+				when crse_grade_input = 'C+'	then 2.3
+				when crse_grade_input = 'C'		then 2.0
+				when crse_grade_input = 'C-'	then 1.7
+				when crse_grade_input = 'D+'	then 1.3
+				when crse_grade_input = 'D'		then 1.0
+				when crse_grade_input = 'F'		then 0.0
+												else .
+												end as midterm_grade
+		from &dsn..class_registration_vw
+		where snapshot = 'midterm'
+			and substr(strm,4,1) = '7'
+			and full_acad_year = "&cohort_year."
+			and enrl_ind = 1
+	;quit;
+
+	proc sql;
+		create table midterm_grades_&cohort_year. as
+		select distinct
+			emplid,
+			avg(midterm_grade) as midterm_gpa_avg
+		from midterm_&cohort_year. 
+		group by emplid
+	;quit;
+	
+	proc sql;
 		create table exams_detail_&cohort_year. as
 		select distinct
 			emplid,
@@ -1031,12 +1078,14 @@ sas.submit("""
 			q.afl_greek_indicator,
 			q.afl_greek_life_indicator,
 			r.building_id,
+			t.race_hispanic,
 			t.race_american_indian,
 			t.race_alaska,
 			t.race_asian,
 			t.race_black,
 			t.race_native_hawaiian,
-			t.race_white
+			t.race_white,
+			u.midterm_gpa_avg
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -1079,6 +1128,8 @@ sas.submit("""
  			on a.emplid = s.emplid
  		left join race_detail_&cohort_year. as t
  			on a.emplid = t.emplid
+ 		left join midterm_grades_&cohort_year. as u
+ 			on a.emplid = u.emplid
 	;quit;
 		
 	%end;
@@ -1267,24 +1318,27 @@ sas.submit("""
 		create table race_detail_&cohort_year. as
 		select 
 			a.emplid,
-			case when amind.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_american_indian,
-			case when alask.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_alaska,
-			case when asian.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_asian,
-			case when black.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_black,
-			case when hawai.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_native_hawaiian,
-			case when white.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_white
+			case when hispc.emplid is not null 	then 'Y'
+												else 'N'
+												end as race_hispanic,
+			case when amind.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_american_indian,
+			case when alask.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_alaska,
+			case when asian.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_asian,
+			case when black.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_black,
+			case when hawai.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_native_hawaiian,
+			case when white.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_white
 		from cohort_&cohort_year. as a
 		left join (select distinct e4.emplid from &dsn..student_ethnic_detail as e4
 					left join &dsn..xw_ethnic_detail_to_group_vw as xe4
@@ -1334,6 +1388,13 @@ sas.submit("""
 													'935','941','942','943',
 													'950','R14')) as amind
 			on a.emplid = amind.emplid
+		left join (select distinct e6.emplid from &dsn..student_ethnic_detail as e6
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe6
+						on e6.ethnic_cd = xe6.ethnic_cd
+					where e6.snapshot = 'census'
+						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe6.ethnic_group = '3') as hispc
+			on a.emplid = hispc.emplid
 	;quit;
 	
 	proc sql;
@@ -1644,7 +1705,7 @@ sas.submit("""
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.ssr_component = c.ssr_component
-		where a.snapshot = 'eot'
+		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
 		group by a.subject_catalog_nbr
@@ -1773,6 +1834,43 @@ sas.submit("""
 				and a.ssr_component = e.ssr_component
 				and substr(a.strm,4,1) = '3'
 		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table midterm_&cohort_year. as
+		select distinct
+			strm,
+			emplid,
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			case when crse_grade_input = 'A' 	then 4.0
+				when crse_grade_input = 'A-'	then 3.7
+				when crse_grade_input = 'B+'	then 3.3
+				when crse_grade_input = 'B'		then 3.0
+				when crse_grade_input = 'B-'	then 2.7
+				when crse_grade_input = 'C+'	then 2.3
+				when crse_grade_input = 'C'		then 2.0
+				when crse_grade_input = 'C-'	then 1.7
+				when crse_grade_input = 'D+'	then 1.3
+				when crse_grade_input = 'D'		then 1.0
+				when crse_grade_input = 'F'		then 0.0
+												else .
+												end as midterm_grade
+		from &dsn..class_registration_vw
+		where snapshot = 'midterm'
+			and substr(strm,4,1) = '7'
+			and full_acad_year = "&cohort_year."
+			and enrl_ind = 1
+	;quit;
+
+	proc sql;
+		create table midterm_grades_&cohort_year. as
+		select distinct
+			emplid,
+			avg(midterm_grade) as midterm_gpa_avg
+		from midterm_&cohort_year. 
+		group by emplid
 	;quit;
 	
 	proc sql;
@@ -1947,12 +2045,14 @@ sas.submit("""
 			q.afl_greek_indicator,
 			q.afl_greek_life_indicator,
 			r.building_id,
+			u.race_hispanic,
 			u.race_american_indian,
 			u.race_alaska,
 			u.race_asian,
 			u.race_black,
 			u.race_native_hawaiian,
-			u.race_white
+			u.race_white,
+			v.midterm_gpa_avg
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -1992,6 +2092,8 @@ sas.submit("""
  			on a.emplid = t.emplid
  		left join race_detail_&cohort_year. as u
  			on a.emplid = u.emplid
+ 		left join midterm_grades_&cohort_year. as v
+ 			on a.emplid = v.emplid
 	;quit;
 	
 %mend loop;
@@ -2171,17 +2273,17 @@ run;
 #%%
 # Export data
 sas_log = sas.submit("""
-filename full "Z:\\Nathan\\Models\\student_risk\\full_set.csv" encoding="utf-8";
+filename full "Z:\\Nathan\\Models\\student_risk\\Datasets\\full_set.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\\Nathan\\Models\\student_risk\\training_set.csv" encoding="utf-8";
+filename training "Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\\Nathan\\Models\\student_risk\\testing_set.csv" encoding="utf-8";
+filename testing "Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -2195,8 +2297,8 @@ sas.endsas()
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\training_set.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\testing_set.csv', encoding='utf-8')
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv', encoding='utf-8')
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv', encoding='utf-8')
 
 #%%
 # Training AWE instrumental variable
@@ -2414,12 +2516,13 @@ logit_df = training_set[[
 						'fall_lab_count',
                         'fall_lec_contact_hrs',
                         'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
-                        'spring_lec_contact_hrs',
-                        'spring_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        # 'spring_lec_contact_hrs',
+                        # 'spring_lab_contact_hrs',
 						# 'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2568,6 +2671,7 @@ training_set = training_set[[
 							# 'spring_lab_contact_hrs',
 							# 'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
+							'midterm_gpa_avg',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2716,6 +2820,7 @@ testing_set = testing_set[[
 							# 'spring_lab_contact_hrs',
 							# 'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
+							'midterm_gpa_avg',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2869,6 +2974,7 @@ x_train = training_set[[
                         # 'spring_lab_contact_hrs',
 						# 'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -3015,6 +3121,7 @@ x_test = testing_set[[
                         # 'spring_lab_contact_hrs',
 						# 'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -3165,6 +3272,7 @@ preprocess = make_column_transformer(
 						# 'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
+						'midterm_gpa_avg',
                         'cum_adj_transfer_hours',
                         # 'fed_efc',
                         # 'fed_need', 
@@ -3194,7 +3302,8 @@ x_test = preprocess.fit_transform(x_test)
 #%%
 # Standard logistic model
 y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
-				+ male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
+				+ male + underrep_minority \
+				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + pell_eligibility_ind + honors_program_ind \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
 				+ business + comm + education + medicine + nursing + pharmacy + vet_med \
@@ -3205,6 +3314,7 @@ y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
+				+ midterm_gpa_avg \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa + remedial + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3504,7 +3614,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=10, verbose=True).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=15, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
@@ -3568,12 +3678,14 @@ plt.show()
 # Prepare model predictions
 lreg_pred_probs = lreg.predict_proba(x_test)
 lreg_pred_probs = lreg_pred_probs[:, 1]
-svc_pred_probs = svc_cprobs.predict_proba(x_test)
-svc_pred_probs = svc_pred_probs[:, 1]
-rfc_pred_probs = rfc_cprobs.predict_proba(x_test)
-rfc_pred_probs = rfc_pred_probs[:, 1]
-mlp_pred_probs = mlp.predict_proba(x_test)
-mlp_pred_probs = mlp_pred_probs[:, 1]
+sgd_pred_probs = sgd.predict_proba(x_test)
+sgd_pred_probs = sgd_pred_probs[:, 1]
+# svc_pred_probs = svc_cprobs.predict_proba(x_test)
+# svc_pred_probs = svc_pred_probs[:, 1]
+# rfc_pred_probs = rfc_cprobs.predict_proba(x_test)
+# rfc_pred_probs = rfc_pred_probs[:, 1]
+# mlp_pred_probs = mlp.predict_proba(x_test)
+# mlp_pred_probs = mlp_pred_probs[:, 1]
 vcf_pred_probs = vcf.predict_proba(x_test)
 vcf_pred_probs = vcf_pred_probs[:, 1]
 
@@ -3581,15 +3693,17 @@ vcf_pred_probs = vcf_pred_probs[:, 1]
 # Output model predictions
 pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
 pred_outcome['lr_pred'] = lreg.predict(x_test)
-pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
-pred_outcome['svc_pred'] = svc.predict(x_test)
-pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
-pred_outcome['rfc_pred'] = rfc.predict(x_test)
-pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
-pred_outcome['mlp_pred'] = mlp.predict(x_test)
+pred_outcome['sgd_prob'] = pd.DataFrame(sgd_pred_probs)
+pred_outcome['sgd_pred'] = sgd.predict(x_test)
+# pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
+# pred_outcome['svc_pred'] = svc.predict(x_test)
+# pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
+# pred_outcome['rfc_pred'] = rfc.predict(x_test)
+# pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
+# pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
-pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome.csv', encoding='utf-8', index=False)
+pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome_dev.csv', encoding='utf-8', index=False)
 
 #%%
 # Output model

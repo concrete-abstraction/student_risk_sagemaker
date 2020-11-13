@@ -1750,17 +1750,17 @@ print('Done\n')
 print('Export data from SAS...')
 
 sas_log = sas.submit("""
-filename full \"Z:\\Nathan\\Models\\student_risk\\full_set.csv\" encoding="utf-8";
+filename full \"Z:\\Nathan\\Models\\student_risk\\Datasets\\full_set.csv\" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training \"Z:\\Nathan\\Models\\student_risk\\training_set.csv\" encoding="utf-8";
+filename training \"Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv\" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing \"Z:\\Nathan\\Models\\student_risk\\testing_set.csv" encoding="utf-8";
+filename testing \"Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -1776,8 +1776,8 @@ sas.endsas()
 
 #%%
 # Import pre-split data for scikit-learn
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\training_set.csv', encoding='utf-8', low_memory=False)
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\testing_set.csv', encoding='utf-8', low_memory=False)
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv', encoding='utf-8', low_memory=False)
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
 
 #%%
 # Prepare dataframes

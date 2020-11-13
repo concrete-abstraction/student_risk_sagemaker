@@ -10,7 +10,7 @@
 %let acs_lag = 2;
 %let lag_year = 1;
 /* Note: This is a test date. Revert to 2015 in production. */
-%let start_cohort = 2020;
+%let start_cohort = 2015;
 %let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -339,7 +339,7 @@ run;
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."	
-			and a.award_period in ('A','B')
+			and a.award_period in ('A')
 			and a.efc_status = 'O'
 	;quit;
 	
@@ -1701,7 +1701,7 @@ run;
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.ssr_component = c.ssr_component
-		where a.snapshot = 'eot'
+		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
 		group by a.subject_catalog_nbr
