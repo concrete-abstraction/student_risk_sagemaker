@@ -2914,6 +2914,7 @@ x_outlier = outlier_prep.fit_transform(x_outlier)
 
 training_set['mask'] = LocalOutlierFactor().fit_predict(x_outlier)
 training_set = training_set.drop(training_set[training_set['mask'] == -1].index)
+training_set = training_set.drop(columns='mask')
 
 #%%
 # Create random oversampled training set
@@ -3272,7 +3273,8 @@ preprocess = make_column_transformer(
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
-						# 'midterm_gpa_avg',
+						'midterm_gpa_avg',
+						'term_credit_hours',
                         'cum_adj_transfer_hours',
                         # 'fed_efc',
                         # 'fed_need', 
@@ -3325,7 +3327,7 @@ y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_fall_contact_hrs \
 				+ midterm_gpa_avg + midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + remedial + cum_adj_transfer_hours \
+            	+ high_school_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=logit_df, return_type='dataframe')

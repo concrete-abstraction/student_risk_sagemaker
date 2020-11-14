@@ -9,12 +9,13 @@ import saspy
 import sklearn
 from datetime import date
 from IPython.display import HTML
+from imblearn.over_sampling import SMOTENC
 from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import make_column_transformer
 from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
 from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
@@ -3017,6 +3018,7 @@ x_outlier = outlier_prep.fit_transform(x_outlier)
 
 training_set['mask'] = LocalOutlierFactor().fit_predict(x_outlier)
 training_set = training_set.drop(training_set[training_set['mask'] == -1].index)
+training_set = training_set.drop(columns='mask')
 
 #%%
 # Create random oversampled training set
@@ -3027,6 +3029,235 @@ class_1 = training_set[training_set['enrl_ind'] == 1]
 
 class_0_over = class_0.sample(count_class_1, replace=True)
 training_set = pd.concat([class_0_over, class_1], axis=0)
+
+#%%
+# Create SMOTENC oversampled training set
+x_smotenc = training_set.drop(columns=['enrl_ind','emplid'])
+y_smotenc = training_set['enrl_ind']
+
+smotenc_prep = make_column_transformer(
+	(StandardScaler(), [
+						# 'age',
+						# 'min_week_from_term_begin_dt',
+						# 'max_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
+						# 'sat_erws',
+						# 'sat_mss',
+						# 'sat_comp',
+						# 'attendee_total_visits',
+						# 'Distance',
+						'pop_dens', 
+						# 'qvalue', 
+						'median_inc',
+						# 'median_value',
+						# 'term_credit_hours',
+						'high_school_gpa',
+						# 'awe_instrument',
+						# 'cdi_instrument',
+						'avg_difficulty',
+						'fall_lec_count',
+						'fall_lab_count',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+						# 'spring_lec_contact_hrs',
+						# 'spring_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
+						'cum_adj_transfer_hours',
+						'term_credit_hours',
+						# 'fed_efc',
+						# 'fed_need', 
+						'unmet_need_ofr'
+						]),
+	(OneHotEncoder(drop='first'), [
+									# 'race_hispanic',
+									# 'race_american_indian',
+									# 'race_alaska',
+									# 'race_asian',
+									# 'race_black',
+									# 'race_native_hawaiian',
+									# 'race_white',
+                                    # 'acad_year', 
+                                    # 'age_group',
+                                    # 'marital_status',
+                                    'first_gen_flag',
+                                    # 'LSAMP_STEM_Flag',
+                                    # 'anywhere_STEM_Flag',
+                                    # 'afl_greek_indicator',
+                                    # 'ACAD_PLAN',
+                                    # 'plan_owner_org',
+                                    # 'ipeds_ethnic_group_descrshort',
+                                    # 'last_sch_proprietorship', 
+                                    'parent1_highest_educ_lvl',
+                                    'parent2_highest_educ_lvl'
+                                    ]),
+    remainder='passthrough'
+)
+
+x_smotenc_trans = smotenc_prep.fit_transform(x_smotenc)
+
+smotenc = SMOTENC(categorical_features=[12,13,14,15,16,17,18,19,20,21,22,25,26,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
+x_train, y_train = smotenc.fit_sample(x_smotenc_trans, y_smotenc)
+
+x_test = testing_set[[
+                        # 'acad_year',
+                        # 'age_group', 
+                        # 'age',
+                        'male',
+						# 'race_hispanic',
+						# 'race_american_indian',
+						# 'race_alaska',
+						# 'race_asian',
+						# 'race_black',
+						# 'race_native_hawaiian',
+						# 'race_white',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
+                        # 'marital_status',
+                        # 'Distance',
+                        'pop_dens',
+                        'underrep_minority', 
+                        # 'ipeds_ethnic_group_descrshort',
+                        'pell_eligibility_ind', 
+                        # 'pell_recipient_ind',
+                        'first_gen_flag', 
+                        # 'LSAMP_STEM_Flag',
+                        # 'anywhere_STEM_Flag',
+                        'honors_program_ind',
+                        # 'afl_greek_indicator',
+                        'high_school_gpa',
+                        # 'awe_instrument',
+                        # 'cdi_instrument',
+                        'avg_difficulty',
+                        'avg_pct_withdrawn',
+                        # 'avg_pct_CDFW',
+                        'avg_pct_CDF',
+                        # 'avg_pct_DFW',
+                        # 'avg_pct_DF',
+						'fall_lec_count',
+						'fall_lab_count',
+                        # 'fall_lec_contact_hrs',
+                        # 'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        # 'spring_lec_contact_hrs',
+                        # 'spring_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
+						'midterm_gpa_ind',
+                        'cum_adj_transfer_hours',
+                        'resident',
+                        # 'father_wsu_flag',
+                        # 'mother_wsu_flag',
+                        'parent1_highest_educ_lvl',
+                        'parent2_highest_educ_lvl',
+                        # 'citizenship_country',
+                        'gini_indx',
+                        # 'pvrt_rate',
+                        'median_inc',
+                        # 'median_value',
+                        'educ_rate',
+                        'pct_blk',
+                        'pct_ai',
+                        # 'pct_asn',
+                        'pct_hawi',
+                        # 'pct_oth',
+                        'pct_two',
+                        # 'pct_non',
+                        'pct_hisp',
+                        # 'city_large',
+                        # 'city_mid',
+                        # 'city_small',
+                        # 'suburb_large',
+                        # 'suburb_mid',
+                        # 'suburb_small',
+                        # 'town_fringe',
+                        # 'town_distant',
+                        # 'town_remote',
+                        # 'rural_fringe',
+                        # 'rural_distant',
+                        # 'rural_remote',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE', 
+                        'term_credit_hours',
+                        # 'athlete',
+                        'remedial',
+                        # 'ACAD_PLAN',
+                        # 'plan_owner_org',
+                        'business',
+                        'cahnrs_anml',
+                        'cahnrs_envr',
+                        'cahnrs_econ',
+                        'cahnrext',
+                        'cas_chem',
+                        'cas_crim',
+                        'cas_math',
+                        'cas_psyc',
+                        'cas_biol',
+                        'cas_engl',
+                        'cas_phys',
+                        'cas',
+                        'comm',
+                        'education',
+                        'medicine',
+                        'nursing',
+                        'pharmacy',
+                        # 'provost',
+                        'vcea_bioe',
+                        'vcea_cive',
+                        'vcea_desn',
+                        'vcea_eecs',
+                        'vcea_mech',
+                        'vcea',
+                        'vet_med',
+                        # 'last_sch_proprietorship',
+                        # 'sat_erws',
+                        # 'sat_mss',
+                        # 'sat_comp',
+                        # 'attendee_alive',
+                        # 'attendee_campus_visit',
+                        # 'attendee_cashe',
+                        # 'attendee_destination',
+                        # 'attendee_experience',
+                        # 'attendee_fcd_pullman',
+                        # 'attendee_fced',
+                        # 'attendee_fcoc',
+                        # 'attendee_fcod',
+                        # 'attendee_group_visit',
+                        # 'attendee_honors_visit',
+                        # 'attendee_imagine_tomorrow',
+                        # 'attendee_imagine_u',
+                        # 'attendee_la_bienvenida',
+                        # 'attendee_lvp_camp',
+                        # 'attendee_oos_destination',
+                        # 'attendee_oos_experience',
+                        # 'attendee_preview',
+                        # 'attendee_preview_jrs',
+                        # 'attendee_shaping',
+                        # 'attendee_top_scholars',
+                        # 'attendee_transfer_day',
+                        # 'attendee_vibes',
+                        # 'attendee_welcome_center',
+                        # 'attendee_any_visitation_ind',
+                        # 'attendee_total_visits',
+                        # 'qvalue',
+                        # 'fed_efc',
+                        # 'fed_need',
+                        'unmet_need_ofr'
+                        ]]
+
+y_test = testing_set['enrl_ind']
 
 #%%
 # Prepare final dataframes
@@ -3356,7 +3587,7 @@ plt.show()
 #%%
 # Preprocess data
 preprocess = make_column_transformer(
-    (MinMaxScaler(), [
+    (StandardScaler(), [
                         # 'age',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
@@ -3384,8 +3615,10 @@ preprocess = make_column_transformer(
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
 						'midterm_gpa_avg',
                         'cum_adj_transfer_hours',
+						'term_credit_hours',
                         # 'fed_efc',
                         # 'fed_need', 
                         'unmet_need_ofr'
@@ -3408,7 +3641,6 @@ preprocess = make_column_transformer(
     remainder='passthrough'
 )
 
-x_train = preprocess.fit_transform(x_train)
 x_test = preprocess.fit_transform(x_test)
 
 #%%
@@ -3428,7 +3660,7 @@ y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_fall_contact_hrs \
 				+ midterm_gpa_avg + midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + remedial + cum_adj_transfer_hours \
+            	+ high_school_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=logit_df, return_type='dataframe')
@@ -3496,7 +3728,7 @@ sgd_probs = sgd_probs[:, 1]
 sgd_auc = roc_auc_score(y_train, sgd_probs)
 
 print(f'\nOverall accuracy for SGD model (training): {sgd.score(x_train, y_train):.4f}')
-print(f'ROC AUC for SDG model (training): {sgd_auc:.4f}\n')
+print(f'ROC AUC for SDG model (training): {sgd_auc:.4f}')
 print(f'Overall accuracy for SGD model (testing): {sgd.score(x_test, y_test):.4f}')
 
 sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=False)
@@ -3726,7 +3958,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=1.0, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=20, verbose=True).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=5.0, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=20, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
