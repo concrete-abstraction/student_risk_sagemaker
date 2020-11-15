@@ -10,6 +10,7 @@ import sklearn
 from datetime import date
 from IPython.display import HTML
 from imblearn.over_sampling import SMOTENC
+from imblearn.under_sampling import RandomUnderSampler, TomekLinks
 from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
 from sklearn.calibration import CalibratedClassifierCV
@@ -3016,7 +3017,7 @@ outlier_prep = make_column_transformer(
 
 x_outlier = outlier_prep.fit_transform(x_outlier)
 
-training_set['mask'] = LocalOutlierFactor().fit_predict(x_outlier)
+training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(x_outlier)
 training_set = training_set.drop(training_set[training_set['mask'] == -1].index)
 training_set = training_set.drop(columns='mask')
 
@@ -3031,76 +3032,8 @@ class_0_over = class_0.sample(count_class_1, replace=True)
 training_set = pd.concat([class_0_over, class_1], axis=0)
 
 #%%
-# Create SMOTENC oversampled training set
-x_smotenc = training_set.drop(columns=['enrl_ind','emplid'])
-y_smotenc = training_set['enrl_ind']
-
-smotenc_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'Distance',
-						'pop_dens', 
-						# 'qvalue', 
-						'median_inc',
-						# 'median_value',
-						# 'term_credit_hours',
-						'high_school_gpa',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'avg_difficulty',
-						'fall_lec_count',
-						'fall_lab_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
-						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						'midterm_gpa_avg',
-						'cum_adj_transfer_hours',
-						'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
-)
-
-x_smotenc_trans = smotenc_prep.fit_transform(x_smotenc)
-
-smotenc = SMOTENC(categorical_features=[12,13,14,15,16,17,18,19,20,21,22,25,26,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
-x_train, y_train = smotenc.fit_sample(x_smotenc_trans, y_smotenc)
+# Create SMOTENC oversampled and Tomek Link undersampled training set
+x_train = training_set.drop(columns=['enrl_ind','emplid'])
 
 x_test = testing_set[[
                         # 'acad_year',
@@ -3257,7 +3190,79 @@ x_test = testing_set[[
                         'unmet_need_ofr'
                         ]]
 
+y_train = training_set['enrl_ind']
 y_test = testing_set['enrl_ind']
+
+smotenc_prep = make_column_transformer(
+	(StandardScaler(), [
+						# 'age',
+						# 'min_week_from_term_begin_dt',
+						# 'max_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
+						# 'sat_erws',
+						# 'sat_mss',
+						# 'sat_comp',
+						# 'attendee_total_visits',
+						# 'Distance',
+						'pop_dens', 
+						# 'qvalue', 
+						'median_inc',
+						# 'median_value',
+						# 'term_credit_hours',
+						'high_school_gpa',
+						# 'awe_instrument',
+						# 'cdi_instrument',
+						'avg_difficulty',
+						'fall_lec_count',
+						'fall_lab_count',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+						# 'spring_lec_contact_hrs',
+						# 'spring_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'midterm_gpa_avg',
+						'cum_adj_transfer_hours',
+						'term_credit_hours',
+						# 'fed_efc',
+						# 'fed_need', 
+						'unmet_need_ofr'
+						]),
+	(OneHotEncoder(drop='first'), [
+									# 'race_hispanic',
+									# 'race_american_indian',
+									# 'race_alaska',
+									# 'race_asian',
+									# 'race_black',
+									# 'race_native_hawaiian',
+									# 'race_white',
+                                    # 'acad_year', 
+                                    # 'age_group',
+                                    # 'marital_status',
+                                    'first_gen_flag',
+                                    # 'LSAMP_STEM_Flag',
+                                    # 'anywhere_STEM_Flag',
+                                    # 'afl_greek_indicator',
+                                    # 'ACAD_PLAN',
+                                    # 'plan_owner_org',
+                                    # 'ipeds_ethnic_group_descrshort',
+                                    # 'last_sch_proprietorship', 
+                                    'parent1_highest_educ_lvl',
+                                    'parent2_highest_educ_lvl'
+                                    ]),
+    remainder='passthrough'
+)
+
+x_train = smotenc_prep.fit_transform(x_train)
+x_test = smotenc_prep.fit_transform(x_test)
+
+over = SMOTENC(categorical_features=[12,13,14,15,16,17,18,19,20,21,22,25,26,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
+x_train, y_train = over.fit_resample(x_train, y_train)
+
+under = TomekLinks(sampling_strategy=[1], n_jobs=-1)
+x_train, y_train = under.fit_resample(x_train, y_train)
 
 #%%
 # Prepare final dataframes
@@ -3641,6 +3646,7 @@ preprocess = make_column_transformer(
     remainder='passthrough'
 )
 
+x_train = preprocess.fit_transform(x_train)
 x_test = preprocess.fit_transform(x_test)
 
 #%%
@@ -3958,7 +3964,7 @@ plt.show()
 
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=5.0, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=20, verbose=True).fit(x_train, y_train)
+mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.0, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=25, verbose=True).fit(x_train, y_train)
 
 mlp_probs = mlp.predict_proba(x_train)
 mlp_probs = mlp_probs[:, 1]
@@ -3989,7 +3995,7 @@ plt.show()
 
 #%%
 # Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd), ('mlp', mlp)], voting='soft', weights=[0.34, 0.33, 0.33]).fit(x_train, y_train)
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd), ('mlp', mlp)], voting='soft', weights=[1, 1, 1]).fit(x_train, y_train)
 
 vcf_probs = vcf.predict_proba(x_train)
 vcf_probs = vcf_probs[:, 1]
