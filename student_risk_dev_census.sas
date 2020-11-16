@@ -10,7 +10,7 @@
 %let acs_lag = 2;
 %let lag_year = 1;
 /* Note: This is a test date. Revert to 2015 in production. */
-%let start_cohort = 2015;
+%let start_cohort = 2020;
 %let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;

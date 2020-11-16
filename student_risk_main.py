@@ -15,6 +15,7 @@ proc sql;
     select distinct
         *
         ,intnx('dtday', term_census_dt, 31, 'same') as adj_term_census_dt format=datetime22.3
+        ,intnx('dtday', term_midterm_dt, 15, 'same') as adj_term_midterm_dt format=datetime22.3
     from &dsn..xw_term
     where acad_career = 'UGRD'
     order by term_code
@@ -30,6 +31,9 @@ proc sql;
         ,day(datepart(adj_term_census_dt)) as census_day
         ,month(datepart(adj_term_census_dt)) as census_month
         ,year(datepart(adj_term_census_dt)) as census_year
+        ,day(datepart(adj_term_midterm_dt)) as midterm_day
+        ,month(datepart(adj_term_midterm_dt)) as midterm_month
+        ,year(datepart(adj_term_midterm_dt)) as midterm_year
         ,day(datepart(term_end_dt)) as end_day
         ,month(datepart(term_end_dt)) as end_month
         ,year(datepart(term_end_dt)) as end_year
@@ -67,6 +71,11 @@ if __name__ == '__main__':
         exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_census.py').read())
     except Exception as cen_error:
         print(cen_error)
+
+    try:
+        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_midterm.py').read())
+    except Exception as mid_error:
+        print(mid_error)
 
     try:
         exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_admissions.py').read())

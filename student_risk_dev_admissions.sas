@@ -10,7 +10,7 @@
 %let acs_lag = 2;
 %let lag_year = 1;
 /* Note: This is a test date. Revert to 2015 in production. */
-%let start_cohort = 2015;
+%let start_cohort = 2020;
 %let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -190,6 +190,9 @@ run;
 		create table race_detail_&cohort_year. as
 		select 
 			a.emplid,
+			case when hispc.emplid is not null 	then 'Y'
+												else 'N'
+												end as race_hispanic,
 			case when amind.emplid is not null then 'Y'
 											   else 'N'
 											   end as race_american_indian,
@@ -257,6 +260,13 @@ run;
 													'935','941','942','943',
 													'950','R14')) as amind
 			on a.emplid = amind.emplid
+		left join (select distinct e6.emplid from &dsn..student_ethnic_detail as e6
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe6
+						on e6.ethnic_cd = xe6.ethnic_cd
+					where e6.snapshot = 'census'
+						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe6.ethnic_group = '3') as hispc
+			on a.emplid = hispc.emplid
 	;quit;
 	
 	proc sql;
@@ -571,39 +581,45 @@ run;
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
+			strm,
 			emplid,
-			subject_catalog_nbr
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			ssr_component
 		from &dsn..class_registration_vw
-		where snapshot = 'census'
+		where snapshot = 'eot'
 			and full_acad_year = "&cohort_year."
+			and enrl_ind = 1
 	;quit;
 	
 	proc sql;
 		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
-			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
+			a.ssr_component,
+			coalesce(b.total_grade_A, 0) + coalesce(c.total_grade_A, 0) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
+			coalesce(b.total_grade_A_minus, 0) + coalesce(c.total_grade_A_minus, 0) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
+			coalesce(b.total_grade_B_plus, 0) + coalesce(c.total_grade_B_plus, 0) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
+			coalesce(b.total_grade_B, 0) + coalesce(c.total_grade_B, 0) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
+			coalesce(b.total_grade_B_minus, 0) + coalesce(c.total_grade_B_minus, 0) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
+			coalesce(b.total_grade_C_plus, 0) + coalesce(c.total_grade_C_plus, 0) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
+			coalesce(b.total_grade_C, 0) + coalesce(c.total_grade_C, 0) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
+			coalesce(b.total_grade_C_minus, 0) + coalesce(c.total_grade_C_minus, 0) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
+			coalesce(b.total_grade_D_plus, 0) + coalesce(c.total_grade_D_plus, 0) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
+			coalesce(b.total_grade_D, 0) + coalesce(c.total_grade_D, 0) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
-			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
+			coalesce(b.total_grade_F, 0) + coalesce(c.total_grade_F, 0) as total_grade_F,
+			coalesce(b.total_withdrawn, 0) + coalesce(c.total_withdrawn, 0) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -630,16 +646,50 @@ run;
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_students) as pct_DF
 		from &dsn..class_vw as a
-		left join &dsn..class_vw as b
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
-				and b.snapshot = 'eot'
-				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and b.ssr_component = 'LEC'
-		left join &dsn..class_vw as c
+				and a.ssr_component = b.ssr_component
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
-				and c.snapshot = 'eot'
-				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and c.ssr_component = 'LAB'
+				and a.ssr_component = c.ssr_component
 		where a.snapshot = 'eot'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
@@ -651,13 +701,14 @@ run;
 		create table class_count_&cohort_year. as
 		select distinct
 			a.emplid,
-			count(b.subject_catalog_nbr) as fall_lec_count,
-			count(c.subject_catalog_nbr) as fall_lab_count,
-			count(d.subject_catalog_nbr) as spring_lec_count,
-			count(e.subject_catalog_nbr) as spring_lab_count
+			count(b.class_nbr) as fall_lec_count,
+			count(c.class_nbr) as fall_lab_count,
+			count(d.class_nbr) as spring_lec_count,
+			count(e.class_nbr) as spring_lab_count,
+			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
 		from &dsn..class_registration_vw as a
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -666,10 +717,8 @@ run;
 						and substr(strm,4,1) = '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
-				and a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -678,10 +727,8 @@ run;
 						and substr(strm,4,1) = '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
-				and a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -690,10 +737,8 @@ run;
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
-				and a.subject_catalog_nbr = d.subject_catalog_nbr
 				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'census'
@@ -702,8 +747,7 @@ run;
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
-				and a.subject_catalog_nbr = e.subject_catalog_nbr
-				and a.class_nbr = d.class_nbr
+				and a.class_nbr = e.class_nbr
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.enrl_ind = 1
@@ -712,9 +756,8 @@ run;
 	
 	proc sql;
 		create table coursework_difficulty_&cohort_year. as
-		select
+		select distinct
 			a.emplid,
-			count(a.subject_catalog_nbr) as class_count,
 			avg(b.class_average) as avg_difficulty,
 			avg(b.pct_withdrawn) as avg_pct_withdrawn,
 			avg(b.pct_CDFW) as avg_pct_CDFW,
@@ -740,7 +783,8 @@ run;
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -748,19 +792,25 @@ run;
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as c
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -768,16 +818,21 @@ run;
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
 			on a.subject_catalog_nbr = d.subject_catalog_nbr
+				and a.ssr_component = d.ssr_component
+				and substr(a.strm,4,1) = '3'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as e
+					group by subject_catalog_nbr) as e
 			on a.subject_catalog_nbr = e.subject_catalog_nbr
+				and a.ssr_component = e.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
 	;quit;
 	
@@ -925,7 +980,6 @@ run;
 			m.min_week_from_term_begin_dt,
 			m.max_week_from_term_begin_dt,
 			m.count_week_from_term_begin_dt,
-			n.class_count,
 			(4.0 - n.avg_difficulty) as avg_difficulty,
 			n.avg_pct_withdrawn,
 			n.avg_pct_CDFW,
@@ -1015,24 +1069,27 @@ run;
 		create table race_detail_&cohort_year. as
 		select 
 			a.emplid,
-			case when amind.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_american_indian,
-			case when alask.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_alaska,
-			case when asian.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_asian,
-			case when black.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_black,
-			case when hawai.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_native_hawaiian,
-			case when white.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_white
+			case when hispc.emplid is not null 	then 'Y'
+												else 'N'
+												end as race_hispanic,
+			case when amind.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_american_indian,
+			case when alask.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_alaska,
+			case when asian.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_asian,
+			case when black.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_black,
+			case when hawai.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_native_hawaiian,
+			case when white.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_white
 		from &adm..fact_u as a
 		left join &adm..xd_admit_type as b
 			on a.sid_admit_type = b.sid_admit_type
@@ -1084,6 +1141,13 @@ run;
 													'935','941','942','943',
 													'950','R14')) as amind
 			on a.emplid = amind.emplid
+		left join (select distinct e6.emplid from &dsn..student_ethnic_detail as e6
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe6
+						on e6.ethnic_cd = xe6.ethnic_cd
+					where e6.snapshot = 'census'
+						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe6.ethnic_group = '3') as hispc
+			on a.emplid = hispc.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
@@ -1111,6 +1175,8 @@ run;
 		select distinct
 			strm,
 			emplid,
+			class_nbr,
+			crse_id,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 			ssr_component
 		from acs.subcatnbr_data
@@ -1120,28 +1186,29 @@ run;
 		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
-			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
+			a.ssr_component,
+			coalesce(b.total_grade_A, 0) + coalesce(c.total_grade_A, 0) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
+			coalesce(b.total_grade_A_minus, 0) + coalesce(c.total_grade_A_minus, 0) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
+			coalesce(b.total_grade_B_plus, 0) + coalesce(c.total_grade_B_plus, 0) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
+			coalesce(b.total_grade_B, 0) + coalesce(c.total_grade_B, 0) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
+			coalesce(b.total_grade_B_minus, 0) + coalesce(c.total_grade_B_minus, 0) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
+			coalesce(b.total_grade_C_plus, 0) + coalesce(c.total_grade_C_plus, 0) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
+			coalesce(b.total_grade_C, 0) + coalesce(c.total_grade_C, 0) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
+			coalesce(b.total_grade_C_minus, 0) + coalesce(c.total_grade_C_minus, 0) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
+			coalesce(b.total_grade_D_plus, 0) + coalesce(c.total_grade_D_plus, 0) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
+			coalesce(b.total_grade_D, 0) + coalesce(c.total_grade_D, 0) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
-			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
+			coalesce(b.total_grade_F, 0) + coalesce(c.total_grade_F, 0) as total_grade_F,
+			coalesce(b.total_withdrawn, 0) + coalesce(c.total_withdrawn, 0) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -1168,18 +1235,52 @@ run;
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_students) as pct_DF
 		from &dsn..class_vw as a
-		left join &dsn..class_vw as b
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
-				and b.snapshot = 'eot'
-				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and b.ssr_component = 'LEC'
-		left join &dsn..class_vw as c
+				and a.ssr_component = b.ssr_component
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
-				and c.snapshot = 'eot'
-				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and c.ssr_component = 'LAB'
-		where a.snapshot = 'eot'
-			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and a.ssr_component = c.ssr_component
+		where a.snapshot = 'census'
+			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
 		group by a.subject_catalog_nbr
 		order by a.subject_catalog_nbr
@@ -1189,47 +1290,41 @@ run;
 		create table class_count_&cohort_year. as
 		select distinct
 			a.emplid,
-			count(b.subject_catalog_nbr) as fall_lec_count,
-			count(c.subject_catalog_nbr) as fall_lab_count,
-			count(d.subject_catalog_nbr) as spring_lec_count,
-			count(e.subject_catalog_nbr) as spring_lab_count
+			count(b.class_nbr) as fall_lec_count,
+			count(c.class_nbr) as fall_lab_count,
+			count(d.class_nbr) as spring_lec_count,
+			count(e.class_nbr) as spring_lab_count,
+			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
 		from class_registration_&cohort_year. as a
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
-				and a.subject_catalog_nbr = b.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
-				and a.subject_catalog_nbr = c.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
-				and a.subject_catalog_nbr = d.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
-				and a.subject_catalog_nbr = e.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = e.class_nbr
 		group by a.emplid
 	;quit;
 	
@@ -1248,7 +1343,7 @@ run;
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 		group by a.emplid
 	;quit;
-	
+
 	proc sql;
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
@@ -1262,7 +1357,8 @@ run;
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -1270,19 +1366,25 @@ run;
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as c
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -1290,16 +1392,21 @@ run;
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
 			on a.subject_catalog_nbr = d.subject_catalog_nbr
+				and a.ssr_component = d.ssr_component
+				and substr(a.strm,4,1) = '3'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as e
+					group by subject_catalog_nbr) as e
 			on a.subject_catalog_nbr = e.subject_catalog_nbr
+				and a.ssr_component = e.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
 	;quit;
 	
