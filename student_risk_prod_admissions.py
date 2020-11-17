@@ -1,4 +1,5 @@
 #%%
+import config
 import datetime
 import joblib
 import matplotlib.pyplot as plt
@@ -41,7 +42,7 @@ engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
-# Admissions date check 
+# Admissions date check
 calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
 now = datetime.datetime.now()
 
@@ -2492,6 +2493,7 @@ smotenc_prep = make_column_transformer(
 x_train = smotenc_prep.fit_transform(x_train)
 x_test = smotenc_prep.fit_transform(x_test)
 
+# THIS NEEDS TO BE REWRITTEN FOR THE CORRECT CATEGORICAL FEATURES IF IT'S GOING TO BE USED
 # over = SMOTENC(categorical_features=[12,13,14,15,16,17,18,19,20,21,22,25,26,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
 # x_train, y_train = over.fit_resample(x_train, y_train)
 

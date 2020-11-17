@@ -1,4 +1,5 @@
 #%%
+import config
 import datetime
 import joblib
 import matplotlib.pyplot as plt
@@ -41,33 +42,76 @@ engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
-# Census date check 
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
-now = datetime.datetime.now()
+# Midterm date check
+if config.mid_flag == False:
 
-now_day = now.day
-now_month = now.month
-now_year = now.year
+	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
+	now = datetime.datetime.now()
 
-midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_day'].values[0]
-midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_month'].values[0]
-midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_year'].values[0]
+	now_day = now.day
+	now_month = now.month
+	now_year = now.year
 
-end_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_day'].values[0]
-end_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_month'].values[0]
-end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_year'].values[0]
+	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_day'].values[0]
+	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_month'].values[0]
+	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_year'].values[0]
 
-if now_year < midterm_year or now_year > end_year:
-	raise Exception(f'{date.today()}: Midterm year exception, attempting to run from census.')
+	end_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_day'].values[0]
+	end_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_month'].values[0]
+	end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_year'].values[0]
 
-elif (now_year == midterm_year and now_month < midterm_month) or (now_year == end_year and now_month > end_month):
-	raise Exception(f'{date.today()}: Midterm month exception, attempting to run from census.')
+	if now_year < midterm_year or now_year > end_year:
+		raise config.DateError(f'{date.today()}: Midterm year exception, attempting to run from census.')
 
-elif (now_year == midterm_year and now_month == midterm_month and now_day < midterm_day) or (now_year == end_year and now_month == end_month and now_day > end_day):
-	raise Exception(f'{date.today()}: Midterm day exception, attempting to run from census.')
+	elif (now_year == midterm_year and now_month < midterm_month) or (now_year == end_year and now_month > end_month):
+		raise config.DateError(f'{date.today()}: Midterm month exception, attempting to run from census.')
 
-else:
-	print(f'{date.today()}: No midterm date exceptions, running from midterm.')
+	elif (now_year == midterm_year and now_month == midterm_month and now_day < midterm_day) or (now_year == end_year and now_month == end_month and now_day > end_day):
+		raise config.DateError(f'{date.today()}: Midterm day exception, attempting to run from census.')
+
+	else:
+		print(f'{date.today()}: No midterm date exceptions, running from midterm.')
+
+#%%
+# Midterm snapshot check
+if config.mid_flag == True:
+
+	sas = saspy.SASsession()
+
+	sas.submit("""
+	%let dsn = census;
+
+	libname &dsn. odbc dsn=&dsn. schema=dbo;
+
+	proc sql;
+		select distinct
+			max(case when snapshot = 'census' 	then 1
+				when snapshot = 'midterm' 		then 2
+				when snapshot = 'eot'			then 3
+												else .
+												end) as snap_order
+			into: snap_check
+			separated by ''
+		from &dsn..class_registration
+		where strm = (select distinct
+							max(strm)
+						from &dsn..class_registration)
+	;quit;
+	""")
+
+	snap_check = sas.symget('snap_check')
+
+	sas.endsas()
+
+	if snap_check != 2:
+		raise config.DataError(f'{date.today()}: Midterm snapshot exception, attempting to run from census.')
+
+	else:
+		print(f'{date.today()}: No midterm snapshot exceptions, running from midterm.')
+
+#%%
+# Midterm data check
+
 
 #%%
 # Start SAS session

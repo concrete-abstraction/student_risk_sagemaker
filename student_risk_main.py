@@ -1,4 +1,5 @@
 #%%
+import config
 import saspy
 import sys
 from datetime import date
@@ -67,17 +68,30 @@ sys.stdout = Logger()
 
 # %%
 if __name__ == '__main__':
-    try:
-        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_census.py').read())
-    except Exception as cen_error:
-        print(cen_error)
 
     try:
         exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_midterm.py').read())
-    except Exception as mid_error:
+    except config.DateError as mid_error:
         print(mid_error)
+        config.mid_flag = True
+
+        try: 
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_midterm.py').read())
+        except config.DataError as mid_snap_error:
+            print(mid_snap_error)
+
+    try:
+        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_census.py').read())
+    except config.DateError as cen_error:
+        print(cen_error)
+        config.cen_flag = True
+        
+        try: 
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_census.py').read())
+        except config.DataError as cen_snap_error:
+            print(cen_snap_error)
 
     try:
         exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_admissions.py').read())
-    except Exception as adm_error:
+    except config.DateError as adm_error:
         print(adm_error)

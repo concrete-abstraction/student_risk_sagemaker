@@ -1,4 +1,5 @@
 #%%
+import config
 import datetime
 import joblib
 import matplotlib.pyplot as plt
@@ -42,32 +43,71 @@ auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOM
 
 #%%
 # Census date check 
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
-now = datetime.datetime.now()
+if config.cen_flag == False:
 
-now_day = now.day
-now_month = now.month
-now_year = now.year
+	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
+	now = datetime.datetime.now()
 
-census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_day'].values[0]
-census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_month'].values[0]
-census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_year'].values[0]
+	now_day = now.day
+	now_month = now.month
+	now_year = now.year
 
-midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_day'].values[0]
-midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_month'].values[0]
-midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_year'].values[0]
+	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_day'].values[0]
+	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_month'].values[0]
+	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_year'].values[0]
 
-if now_year < census_year or now_year > midterm_year:
-	raise Exception(f'{date.today()}: Census year exception, attempting to run from admissions.')
+	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_day'].values[0]
+	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_month'].values[0]
+	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_year'].values[0]
 
-elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
-	raise Exception(f'{date.today()}: Census month exception, attempting to run from admissions.')
+	if now_year < census_year or now_year > midterm_year:
+		raise config.DateError(f'{date.today()}: Census year exception, attempting to run from admissions.')
 
-elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
-	raise Exception(f'{date.today()}: Census day exception, attempting to run from admissions.')
+	elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
+		raise config.DateError(f'{date.today()}: Census month exception, attempting to run from admissions.')
 
-else:
-	print(f'{date.today()}: No census date exceptions, running from census.')
+	elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
+		raise config.DateError(f'{date.today()}: Census day exception, attempting to run from admissions.')
+
+	else:
+		print(f'{date.today()}: No census date exceptions, running from census.')
+
+#%%
+# Census snapshot check
+if config.cen_flag == True:
+
+	sas = saspy.SASsession()
+
+	sas.submit("""
+	%let dsn = census;
+
+	libname &dsn. odbc dsn=&dsn. schema=dbo;
+
+	proc sql;
+		select distinct
+			max(case when snapshot = 'census' 	then 1
+				when snapshot = 'midterm' 		then 2
+				when snapshot = 'eot'			then 3
+												else .
+												end) as snap_order
+			into: snap_check
+			separated by ''
+		from &dsn..class_registration
+		where strm = (select distinct
+							max(strm)
+						from &dsn..class_registration)
+	;quit;
+	""")
+
+	snap_check = sas.symget('snap_check')
+
+	sas.endsas()
+
+	if snap_check != 1:
+		raise config.DataError(f'{date.today()}: Census snapshot exception, attempting to run from admissions.')
+
+	else:
+		print(f'{date.today()}: No census snapshot exceptions, running from census.')
 
 #%%
 # Start SAS session
@@ -3050,6 +3090,7 @@ smotenc_prep = make_column_transformer(
 x_train = smotenc_prep.fit_transform(x_train)
 x_test = smotenc_prep.fit_transform(x_test)
 
+# THIS NEEDS TO BE REWRITTEN FOR THE CORRECT CATEGORICAL FEATURES IF IT'S GOING TO BE USED
 # over = SMOTENC(categorical_features=[12,13,14,15,16,17,18,19,20,21,22,25,26,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
 # x_train, y_train = over.fit_resample(x_train, y_train)
 
