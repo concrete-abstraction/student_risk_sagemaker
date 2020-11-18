@@ -1,19 +1,25 @@
 #%%
+import config
+import datetime
 import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import statsmodels.graphics.api as smg
+import pathlib
+import pyodbc
+import os
 import saspy
 import sklearn
+import sqlalchemy
+import sys
+import time
+import urllib
 from datetime import date
+from patsy import dmatrices
 from IPython.display import HTML
 from imblearn.over_sampling import SMOTENC
 from imblearn.under_sampling import RandomUnderSampler, TomekLinks
 from matplotlib.legend_handler import HandlerLine2D
-from patsy import dmatrices
-from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import make_column_transformer
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
@@ -23,17 +29,95 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
+from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import GridSearchCV
-from statsmodels.api import OLS
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
+# Database connection
+cred = pathlib.Path('login.bin').read_text().split('|')
+params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
+engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
+auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
+
+#%%
+# Census date check 
+if config.cen_flag == False:
+
+	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
+	now = datetime.datetime.now()
+
+	now_day = now.day
+	now_month = now.month
+	now_year = now.year
+
+	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_day'].values[0]
+	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_month'].values[0]
+	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_year'].values[0]
+
+	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_day'].values[0]
+	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_month'].values[0]
+	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_year'].values[0]
+
+	if now_year < census_year or now_year > midterm_year:
+		raise config.DateError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
+
+	elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
+		raise config.DateError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
+
+	elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
+		raise config.DateError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
+
+	else:
+		print(f'{date.today()}: No census date exceptions, running from census.')
+
+# Census snapshot check
+if config.cen_flag == True:
+
+	sas = saspy.SASsession()
+
+	sas.submit("""
+	%let dsn = census;
+
+	libname &dsn. odbc dsn=&dsn. schema=dbo;
+
+	proc sql;
+		select distinct
+			max(case when snapshot = 'census' 	then 1
+				when snapshot = 'midterm' 		then 2
+				when snapshot = 'eot'			then 3
+												else .
+												end) as snap_order
+			into: snap_check
+			separated by ''
+		from &dsn..class_registration
+		where strm = (select distinct
+							max(strm)
+						from &dsn..class_registration)
+	;quit;
+	""")
+
+	snap_check = sas.symget('snap_check')
+
+	sas.endsas()
+
+	if snap_check != 1:
+		raise config.DataError(f'{date.today()}: Census snapshot exception, attempting to run from admissions.')
+
+	else:
+		print(f'{date.today()}: No census snapshot exceptions, running from census.')
+
+#%%
 # Start SAS session
+print('\nStart SAS session...')
+
 sas = saspy.SASsession()
 
 #%%
 # Set macro variables
+print('Set macro variables...')
+
 sas.submit("""
 %let dsn = census;
 %let dev = cendev;
@@ -44,8 +128,12 @@ sas.submit("""
 %let end_cohort = 2020;
 """)
 
+print('Done\n')
+
 #%%
 # Set libname statements
+print('Set libname statements...')
+
 sas.submit("""
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &dev. odbc dsn=&dev. schema=dbo;
@@ -53,8 +141,13 @@ libname &adm. odbc dsn=&adm. schema=dbo;
 libname acs \"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\\";
 """)
 
+print('Done\n')
+
 #%%
 # Import supplemental files
+print('Import supplemental files...')
+start = time.perf_counter()
+
 sas.submit("""
 proc import out=act_to_sat_engl_read
     datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\act_to_sat_engl_read.xlsx\"
@@ -79,8 +172,13 @@ proc import out=cpi
 run;
 """)
 
+stop = time.perf_counter()
+print(f'Done in {stop - start:.2f} seconds\n')
+
 #%%
 # Create SAS macro
+print('Create SAS macro...')
+
 sas.submit("""
 %macro loop;
 	
@@ -866,43 +964,6 @@ sas.submit("""
 	;quit;
 	
 	proc sql;
-		create table midterm_&cohort_year. as
-		select distinct
-			strm,
-			emplid,
-			class_nbr,
-			crse_id,
-			subject_catalog_nbr,
-			case when crse_grade_input = 'A' 	then 4.0
-				when crse_grade_input = 'A-'	then 3.7
-				when crse_grade_input = 'B+'	then 3.3
-				when crse_grade_input = 'B'		then 3.0
-				when crse_grade_input = 'B-'	then 2.7
-				when crse_grade_input = 'C+'	then 2.3
-				when crse_grade_input = 'C'		then 2.0
-				when crse_grade_input = 'C-'	then 1.7
-				when crse_grade_input = 'D+'	then 1.3
-				when crse_grade_input = 'D'		then 1.0
-				when crse_grade_input = 'F'		then 0.0
-												else .
-												end as midterm_grade
-		from &dsn..class_registration_vw
-		where snapshot = 'midterm'
-			and substr(strm,4,1) = '7'
-			and full_acad_year = "&cohort_year."
-			and enrl_ind = 1
-	;quit;
-
-	proc sql;
-		create table midterm_grades_&cohort_year. as
-		select distinct
-			emplid,
-			avg(midterm_grade) as midterm_gpa_avg
-		from midterm_&cohort_year. 
-		group by emplid
-	;quit;
-	
-	proc sql;
 		create table exams_detail_&cohort_year. as
 		select distinct
 			emplid,
@@ -1087,11 +1148,7 @@ sas.submit("""
 			t.race_asian,
 			t.race_black,
 			t.race_native_hawaiian,
-			t.race_white,
-			u.midterm_gpa_avg,
-			case when u.midterm_gpa_avg is not null 	then 1
-														else 0
-														end as midterm_gpa_ind
+			t.race_white
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -1134,8 +1191,6 @@ sas.submit("""
  			on a.emplid = s.emplid
  		left join race_detail_&cohort_year. as t
  			on a.emplid = t.emplid
- 		left join midterm_grades_&cohort_year. as u
- 			on a.emplid = u.emplid
 	;quit;
 		
 	%end;
@@ -1843,43 +1898,6 @@ sas.submit("""
 	;quit;
 	
 	proc sql;
-		create table midterm_&cohort_year. as
-		select distinct
-			strm,
-			emplid,
-			class_nbr,
-			crse_id,
-			subject_catalog_nbr,
-			case when crse_grade_input = 'A' 	then 4.0
-				when crse_grade_input = 'A-'	then 3.7
-				when crse_grade_input = 'B+'	then 3.3
-				when crse_grade_input = 'B'		then 3.0
-				when crse_grade_input = 'B-'	then 2.7
-				when crse_grade_input = 'C+'	then 2.3
-				when crse_grade_input = 'C'		then 2.0
-				when crse_grade_input = 'C-'	then 1.7
-				when crse_grade_input = 'D+'	then 1.3
-				when crse_grade_input = 'D'		then 1.0
-				when crse_grade_input = 'F'		then 0.0
-												else .
-												end as midterm_grade
-		from &dsn..class_registration_vw
-		where snapshot = 'midterm'
-			and substr(strm,4,1) = '7'
-			and full_acad_year = "&cohort_year."
-			and enrl_ind = 1
-	;quit;
-
-	proc sql;
-		create table midterm_grades_&cohort_year. as
-		select distinct
-			emplid,
-			avg(midterm_grade) as midterm_gpa_avg
-		from midterm_&cohort_year. 
-		group by emplid
-	;quit;
-	
-	proc sql;
 		create table exams_detail_&cohort_year. as
 		select distinct
 			emplid,
@@ -2057,11 +2075,7 @@ sas.submit("""
 			u.race_asian,
 			u.race_black,
 			u.race_native_hawaiian,
-			u.race_white,
-			v.midterm_gpa_avg,
-			case when v.midterm_gpa_avg is not null 	then 1
-														else 0
-														end as midterm_gpa_ind
+			u.race_white
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2101,26 +2115,34 @@ sas.submit("""
  			on a.emplid = t.emplid
  		left join race_detail_&cohort_year. as u
  			on a.emplid = u.emplid
- 		left join midterm_grades_&cohort_year. as v
- 			on a.emplid = v.emplid
 	;quit;
 	
 %mend loop;
 """)
 
+print('Done\n')
+
 #%%
-# Run SAS macro
+# Run SAS macro program to prepare data from census
+print('Run SAS macro program...')
+start = time.perf_counter()
+
 sas_log = sas.submit("""
 %loop;
 """)
 
 HTML(sas_log['LOG'])
 
+stop = time.perf_counter()
+print(f'Done in {stop - start:.2f} seconds\n')
+
 #%%
 # Prepare data
+print('Prepare data...')
+
 sas.submit("""
 data full_set;
-	set dataset_&start_cohort.-dataset_&end_cohort.;
+	set dataset_&start_cohort.-dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -2157,7 +2179,6 @@ data full_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2174,7 +2195,7 @@ data full_set;
 run;
 
 data training_set;
-	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
+	set dataset_&start_cohort.-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -2183,13 +2204,13 @@ data training_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
-	if ib_aice = . then ib_aice = 0;
+	if ib_aice = . then ib_aice = 0;	
 	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
-	if total_accept = . then total_accept = 0;	
+	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
 	if sat_mss = . then sat_mss = 0;
 	if sat_erws = . then sat_erws = 0;
@@ -2211,7 +2232,6 @@ data training_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2228,7 +2248,7 @@ data training_set;
 run;
 
 data testing_set;
-	set dataset_&end_cohort.;
+	set dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -2243,7 +2263,7 @@ data testing_set;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
-	if total_accept = . then total_accept = 0;	
+	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
 	if sat_mss = . then sat_mss = 0;
 	if sat_erws = . then sat_erws = 0;
@@ -2265,7 +2285,6 @@ data testing_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2282,20 +2301,24 @@ data testing_set;
 run;
 """)
 
+print('Done\n')
+
 #%%
-# Export data
+# Export data from SAS
+print('Export data from SAS...')
+
 sas_log = sas.submit("""
-filename full "Z:\\Nathan\\Models\\student_risk\\Datasets\\full_set_dev.csv" encoding="utf-8";
+filename full \"Z:\\Nathan\\Models\\student_risk\\Datasets\\full_set.csv\" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set_dev.csv" encoding="utf-8";
+filename training \"Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv\" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set_dev.csv" encoding="utf-8";
+filename testing \"Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -2303,197 +2326,21 @@ run;
 
 HTML(sas_log['LOG'])
 
+print('Done\n')
+
 #%%
 # End SAS session
 sas.endsas()
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set_dev.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set_dev.csv', encoding='utf-8')
-
-#%%
-# Training AWE instrumental variable
-training_awe = training_set[[
-                            'emplid',
-                            'high_school_gpa',
-                            'underrep_minority',
-                            'male',
-                            'sat_erws',
-                            'sat_mss',
-                            'educ_rate',
-                            'gini_indx',
-                            'median_inc'                
-                            ]].dropna()
-
-awe_x_train = training_awe[[
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'educ_rate',
-                            'gini_indx',
-                            'median_inc'
-                            ]]
-
-awe_y_train = training_awe[[
-                            'high_school_gpa'
-                            ]]
-
-y, x = dmatrices('high_school_gpa ~ sat_erws + sat_mss + underrep_minority + male + educ_rate + gini_indx + median_inc', data=training_awe, return_type='dataframe')
-reg_mod = OLS(y, x)
-reg_res = reg_mod.fit()
-print(reg_res.summary())
-
-reg = LinearRegression()
-reg.fit(awe_x_train, awe_y_train)
-
-training_awe_pred = pd.DataFrame()
-training_awe_pred['emplid'] = training_awe['emplid']
-training_awe_pred['actual'] = training_awe['high_school_gpa']
-training_awe_pred['predicted'] = reg.predict(awe_x_train)
-training_awe_pred['awe_instrument'] = training_awe_pred['actual'] - training_awe_pred['predicted']
-
-training_set = training_set.join(training_awe_pred.set_index('emplid'), on='emplid')
-
-#%%
-# Testing AWE instrumental variable
-testing_awe = testing_set[[
-                            'emplid',
-                            'high_school_gpa',
-                            'underrep_minority',
-                            'male',
-                            'sat_erws',
-                            'sat_mss',
-                            'educ_rate',
-                            'gini_indx',
-                            'median_inc'
-                            ]].dropna()
-
-awe_x_test = testing_awe[[
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'educ_rate',
-                            'gini_indx',
-                            'median_inc'                        
-                            ]]
-
-awe_y_test = testing_awe[[
-                            'high_school_gpa'
-                            ]]
-
-y, x = dmatrices('high_school_gpa ~ sat_erws + sat_mss + underrep_minority + male + educ_rate + gini_indx + median_inc', data=testing_awe, return_type='dataframe')
-reg_mod = OLS(y, x)
-reg_res = reg_mod.fit()
-print(reg_res.summary())
-
-reg = LinearRegression()
-reg.fit(awe_x_test, awe_y_test)
-
-testing_awe_pred = pd.DataFrame()
-testing_awe_pred['emplid'] = testing_awe['emplid']
-testing_awe_pred['awe_actual'] = testing_awe['high_school_gpa']
-testing_awe_pred['awe_predicted'] = reg.predict(awe_x_test)
-testing_awe_pred['awe_instrument'] = testing_awe_pred['awe_actual'] - testing_awe_pred['awe_predicted']
-
-testing_set = testing_set.join(testing_awe_pred.set_index('emplid'), on='emplid')
-
-#%%
-# Training CDI instrumental variable
-training_cdi = training_set[[
-                            'emplid',
-                            'high_school_gpa',
-                            'class_count',
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'median_inc',
-                            'avg_pct_withdrawn',
-                            'avg_difficulty'                
-                            ]].dropna()
-
-cdi_x_train = training_cdi[[
-                            'high_school_gpa',
-                            'class_count',
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'median_inc',
-                            'avg_pct_withdrawn'
-                            ]]
-
-cdi_y_train = training_cdi[[
-                            'avg_difficulty'
-                            ]]
-
-y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=training_cdi, return_type='dataframe')
-reg_mod = OLS(y, x)
-reg_res = reg_mod.fit()
-print(reg_res.summary())
-
-reg = LinearRegression()
-reg.fit(cdi_x_train, cdi_y_train)
-
-training_cdi_pred = pd.DataFrame()
-training_cdi_pred['emplid'] = training_cdi['emplid']
-training_cdi_pred['cdi_actual'] = training_cdi['avg_difficulty']
-training_cdi_pred['cdi_predicted'] = reg.predict(cdi_x_train)
-training_cdi_pred['cdi_instrument'] = training_cdi_pred['cdi_actual'] - training_cdi_pred['cdi_predicted']
-
-training_set = training_set.join(training_cdi_pred.set_index('emplid'), on='emplid')
-
-#%%
-# Testing CDI instrumental variable
-testing_cdi = testing_set[[
-                            'emplid',
-                            'high_school_gpa',
-                            'class_count',
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'median_inc',
-                            'avg_pct_withdrawn',
-                            'avg_difficulty'                
-                            ]].dropna()
-
-cdi_x_test = testing_cdi[[
-                            'high_school_gpa',
-                            'class_count',
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'median_inc',
-                            'avg_pct_withdrawn' 
-                            ]]
-
-cdi_y_test = testing_cdi[[
-                            'avg_difficulty'
-                            ]]
-
-y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=testing_cdi, return_type='dataframe')
-reg_mod = OLS(y, x)
-reg_res = reg_mod.fit()
-print(reg_res.summary())
-
-reg = LinearRegression()
-reg.fit(cdi_x_test, cdi_y_test)
-
-testing_cdi_pred = pd.DataFrame()
-testing_cdi_pred['emplid'] = testing_cdi['emplid']
-testing_cdi_pred['cdi_actual'] = testing_cdi['avg_difficulty']
-testing_cdi_pred['cdi_predicted'] = reg.predict(cdi_x_test)
-testing_cdi_pred['cdi_instrument'] = testing_cdi_pred['cdi_actual'] - testing_cdi_pred['cdi_predicted']
-
-testing_set = testing_set.join(testing_cdi_pred.set_index('emplid'), on='emplid')
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv', encoding='utf-8')
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv', encoding='utf-8')
 
 #%%
 # Prepare base dataframes
+print('\nPrepare dataframes and preprocess data...')
+
 logit_df = training_set[[
                         'enrl_ind', 
                         # 'acad_year',
@@ -2541,8 +2388,6 @@ logit_df = training_set[[
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
-						'midterm_gpa_avg',
-						'midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2698,8 +2543,6 @@ training_set = training_set[[
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
-							'midterm_gpa_avg',
-							'midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2809,7 +2652,7 @@ training_set = training_set[[
 
 testing_set = testing_set[[
                             'emplid',
-							'enrl_ind', 
+							# 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -2855,8 +2698,6 @@ testing_set = testing_set[[
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
-							'midterm_gpa_avg',
-							'midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2968,7 +2809,7 @@ testing_set = testing_set.reset_index()
 
 pred_outcome = testing_set[[ 
                             'emplid',
-                            'enrl_ind'
+                            # 'enrl_ind'
                             ]].copy(deep=True)
 
 aggregate_outcome = testing_set[[ 
@@ -3022,16 +2863,6 @@ training_set = training_set.drop(training_set[training_set['mask'] == -1].index)
 training_set = training_set.drop(columns='mask')
 
 #%%
-# Create random oversampled training set
-count_class_1, count_class_0 = training_set.enrl_ind.value_counts()
-
-class_0 = training_set[training_set['enrl_ind'] == 0]
-class_1 = training_set[training_set['enrl_ind'] == 1]
-
-class_0_over = class_0.sample(count_class_1, replace=True)
-training_set = pd.concat([class_0_over, class_1], axis=0)
-
-#%%
 # Create SMOTENC oversampled and Tomek Link undersampled training set
 x_train = training_set.drop(columns=['enrl_ind','emplid'])
 
@@ -3081,8 +2912,6 @@ x_test = testing_set[[
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
-						'midterm_gpa_avg',
-						'midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -3191,7 +3020,7 @@ x_test = testing_set[[
                         ]]
 
 y_train = training_set['enrl_ind']
-y_test = testing_set['enrl_ind']
+# y_test = testing_set['enrl_ind']
 
 smotenc_prep = make_column_transformer(
 	(StandardScaler(), [
@@ -3223,7 +3052,6 @@ smotenc_prep = make_column_transformer(
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
-						'midterm_gpa_avg',
 						'cum_adj_transfer_hours',
 						'term_credit_hours',
 						# 'fed_efc',
@@ -3258,396 +3086,12 @@ smotenc_prep = make_column_transformer(
 x_train = smotenc_prep.fit_transform(x_train)
 x_test = smotenc_prep.fit_transform(x_test)
 
-# over = SMOTENC(categorical_features=[12,13,14,15,16,17,18,19,20,21,22,25,26,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
+# THIS NEEDS TO BE REWRITTEN FOR THE CORRECT CATEGORICAL FEATURES IF IT'S GOING TO BE USED
+# over = SMOTENC(categorical_features=[11,12,13,14,15,16,17,18,19,20,21,24,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
 # x_train, y_train = over.fit_resample(x_train, y_train)
 
 under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 x_train, y_train = under.fit_resample(x_train, y_train)
-
-#%%
-# Prepare final dataframes
-x_train = training_set[[
-                        # 'acad_year',
-                        # 'age_group', 
-                        # 'age',
-                        'male',
-						# 'race_hispanic',
-						# 'race_american_indian',
-						# 'race_alaska',
-						# 'race_asian',
-						# 'race_black',
-						# 'race_native_hawaiian',
-						# 'race_white',
-                        # 'min_week_from_term_begin_dt',
-                        # 'max_week_from_term_begin_dt',
-                        'count_week_from_term_begin_dt',
-                        # 'marital_status',
-                        # 'Distance',
-                        'pop_dens',
-                        'underrep_minority', 
-                        # 'ipeds_ethnic_group_descrshort',
-                        'pell_eligibility_ind', 
-                        # 'pell_recipient_ind',
-                        'first_gen_flag', 
-                        # 'LSAMP_STEM_Flag',
-                        # 'anywhere_STEM_Flag',
-                        'honors_program_ind',
-                        # 'afl_greek_indicator',
-                        'high_school_gpa',
-                        # 'awe_instrument',
-                        # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
-						'fall_lec_count',
-						'fall_lab_count',
-                        # 'fall_lec_contact_hrs',
-                        # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-                        # 'spring_lec_contact_hrs',
-                        # 'spring_lab_contact_hrs',
-						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						'midterm_gpa_avg',
-						'midterm_gpa_ind',
-                        'cum_adj_transfer_hours',
-                        'resident',
-                        # 'father_wsu_flag',
-                        # 'mother_wsu_flag',
-                        'parent1_highest_educ_lvl',
-                        'parent2_highest_educ_lvl',
-                        # 'citizenship_country',
-                        'gini_indx',
-                        # 'pvrt_rate',
-                        'median_inc',
-                        # 'median_value',
-                        'educ_rate',
-                        'pct_blk',
-                        'pct_ai',
-                        # 'pct_asn',
-                        'pct_hawi',
-                        # 'pct_oth',
-                        'pct_two',
-                        # 'pct_non',
-                        'pct_hisp',
-                        # 'city_large',
-                        # 'city_mid',
-                        # 'city_small',
-                        # 'suburb_large',
-                        # 'suburb_mid',
-                        # 'suburb_small',
-                        # 'town_fringe',
-                        # 'town_distant',
-                        # 'town_remote',
-                        # 'rural_fringe',
-                        # 'rural_distant',
-                        # 'rural_remote',
-                        'AD_DTA',
-                        'AD_AST',
-                        'AP',
-                        'RS',
-                        'CHS',
-                        # 'IB',
-                        # 'AICE',
-                        'IB_AICE', 
-                        'term_credit_hours',
-                        # 'athlete',
-                        'remedial',
-                        # 'ACAD_PLAN',
-                        # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
-                        # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
-                        # 'last_sch_proprietorship',
-                        # 'sat_erws',
-                        # 'sat_mss',
-                        # 'sat_comp',
-                        # 'attendee_alive',
-                        # 'attendee_campus_visit',
-                        # 'attendee_cashe',
-                        # 'attendee_destination',
-                        # 'attendee_experience',
-                        # 'attendee_fcd_pullman',
-                        # 'attendee_fced',
-                        # 'attendee_fcoc',
-                        # 'attendee_fcod',
-                        # 'attendee_group_visit',
-                        # 'attendee_honors_visit',
-                        # 'attendee_imagine_tomorrow',
-                        # 'attendee_imagine_u',
-                        # 'attendee_la_bienvenida',
-                        # 'attendee_lvp_camp',
-                        # 'attendee_oos_destination',
-                        # 'attendee_oos_experience',
-                        # 'attendee_preview',
-                        # 'attendee_preview_jrs',
-                        # 'attendee_shaping',
-                        # 'attendee_top_scholars',
-                        # 'attendee_transfer_day',
-                        # 'attendee_vibes',
-                        # 'attendee_welcome_center',
-                        # 'attendee_any_visitation_ind',
-                        # 'attendee_total_visits',
-                        # 'qvalue',
-                        # 'fed_efc',
-                        # 'fed_need',
-                        'unmet_need_ofr'
-                        ]]
-
-x_test = testing_set[[
-                        # 'acad_year',
-                        # 'age_group', 
-                        # 'age',
-                        'male',
-						# 'race_hispanic',
-						# 'race_american_indian',
-						# 'race_alaska',
-						# 'race_asian',
-						# 'race_black',
-						# 'race_native_hawaiian',
-						# 'race_white',
-                        # 'min_week_from_term_begin_dt',
-                        # 'max_week_from_term_begin_dt',
-                        'count_week_from_term_begin_dt',
-                        # 'marital_status',
-                        # 'Distance',
-                        'pop_dens',
-                        'underrep_minority', 
-                        # 'ipeds_ethnic_group_descrshort',
-                        'pell_eligibility_ind', 
-                        # 'pell_recipient_ind',
-                        'first_gen_flag', 
-                        # 'LSAMP_STEM_Flag',
-                        # 'anywhere_STEM_Flag',
-                        'honors_program_ind',
-                        # 'afl_greek_indicator',
-                        'high_school_gpa',
-                        # 'awe_instrument',
-                        # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
-						'fall_lec_count',
-						'fall_lab_count',
-                        # 'fall_lec_contact_hrs',
-                        # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-                        # 'spring_lec_contact_hrs',
-                        # 'spring_lab_contact_hrs',
-						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						'midterm_gpa_avg',
-						'midterm_gpa_ind',
-                        'cum_adj_transfer_hours',
-                        'resident',
-                        # 'father_wsu_flag',
-                        # 'mother_wsu_flag',
-                        'parent1_highest_educ_lvl',
-                        'parent2_highest_educ_lvl',
-                        # 'citizenship_country',
-                        'gini_indx',
-                        # 'pvrt_rate',
-                        'median_inc',
-                        # 'median_value',
-                        'educ_rate',
-                        'pct_blk',
-                        'pct_ai',
-                        # 'pct_asn',
-                        'pct_hawi',
-                        # 'pct_oth',
-                        'pct_two',
-                        # 'pct_non',
-                        'pct_hisp',
-                        # 'city_large',
-                        # 'city_mid',
-                        # 'city_small',
-                        # 'suburb_large',
-                        # 'suburb_mid',
-                        # 'suburb_small',
-                        # 'town_fringe',
-                        # 'town_distant',
-                        # 'town_remote',
-                        # 'rural_fringe',
-                        # 'rural_distant',
-                        # 'rural_remote',
-                        'AD_DTA',
-                        'AD_AST',
-                        'AP',
-                        'RS',
-                        'CHS',
-                        # 'IB',
-                        # 'AICE',
-                        'IB_AICE', 
-                        'term_credit_hours',
-                        # 'athlete',
-                        'remedial',
-                        # 'ACAD_PLAN',
-                        # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
-                        # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
-                        # 'last_sch_proprietorship',
-                        # 'sat_erws',
-                        # 'sat_mss',
-                        # 'sat_comp',
-                        # 'attendee_alive',
-                        # 'attendee_campus_visit',
-                        # 'attendee_cashe',
-                        # 'attendee_destination',
-                        # 'attendee_experience',
-                        # 'attendee_fcd_pullman',
-                        # 'attendee_fced',
-                        # 'attendee_fcoc',
-                        # 'attendee_fcod',
-                        # 'attendee_group_visit',
-                        # 'attendee_honors_visit',
-                        # 'attendee_imagine_tomorrow',
-                        # 'attendee_imagine_u',
-                        # 'attendee_la_bienvenida',
-                        # 'attendee_lvp_camp',
-                        # 'attendee_oos_destination',
-                        # 'attendee_oos_experience',
-                        # 'attendee_preview',
-                        # 'attendee_preview_jrs',
-                        # 'attendee_shaping',
-                        # 'attendee_top_scholars',
-                        # 'attendee_transfer_day',
-                        # 'attendee_vibes',
-                        # 'attendee_welcome_center',
-                        # 'attendee_any_visitation_ind',
-                        # 'attendee_total_visits',
-                        # 'qvalue',
-                        # 'fed_efc',
-                        # 'fed_need',
-                        'unmet_need_ofr'
-                        ]]
-
-y_train = training_set['enrl_ind']
-y_test = testing_set['enrl_ind']
-
-#%%
-# Histograms
-x_train.hist(bins=50)
-plt.show()
-
-#%%
-corr_matrix = x_train.corr()
-smg.plot_corr(corr_matrix, xnames=x_train.columns)
-plt.show()
-
-#%%
-# Preprocess data
-preprocess = make_column_transformer(
-    (StandardScaler(), [
-                        # 'age',
-                        # 'min_week_from_term_begin_dt',
-                        # 'max_week_from_term_begin_dt',
-                        'count_week_from_term_begin_dt',
-                        # 'sat_erws',
-                        # 'sat_mss',
-                        # 'sat_comp',
-                        # 'attendee_total_visits',
-                        # 'Distance',
-                        'pop_dens', 
-                        # 'qvalue', 
-                        'median_inc',
-                        # 'median_value',
-                        # 'term_credit_hours',
-                        'high_school_gpa',
-                        # 'awe_instrument',
-                        # 'cdi_instrument',
-                        'avg_difficulty',
-                        'fall_lec_count',
-						'fall_lab_count',
-                        # 'fall_lec_contact_hrs',
-                        # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
-						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						'midterm_gpa_avg',
-                        'cum_adj_transfer_hours',
-						'term_credit_hours',
-                        # 'fed_efc',
-                        # 'fed_need', 
-                        'unmet_need_ofr'
-                        ]),
-    (OneHotEncoder(drop='first'), [
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
-)
-
-x_train = preprocess.fit_transform(x_train)
-x_test = preprocess.fit_transform(x_test)
 
 #%%
 # Standard logistic model
@@ -3664,7 +3108,6 @@ y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ total_fall_contact_hrs \
-				+ midterm_gpa_avg + midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3675,26 +3118,20 @@ logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
 print(logit_res.summary())
 
+print('\n')
+
 #%%
 # VIF diagnostic
 vif = pd.DataFrame()
 vif['vif factor'] = [variance_inflation_factor(x.values, i) for i in range(x.shape[1])]
 vif['features'] = x.columns
-
 print(vif.round(1))
 
-#%%
-# Logistic hyperparameter tuning
-hyperparameters = [{'penalty': ['elasticnet'],
-                    'l1_ratio': np.linspace(0, 1, 11, endpoint=True),
-                    'C': np.logspace(0, 4, 20, endpoint=True)}]
-
-gridsearch = GridSearchCV(LogisticRegression(solver='saga'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
-best_model = gridsearch.fit(x_train, y_train)
-
-print(f'Best parameters: {gridsearch.best_params_}')
+print('\n')
 
 #%%
+print('Run machine learning models...\n')
+
 # Logistic model
 lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
 
@@ -3702,28 +3139,10 @@ lreg_probs = lreg.predict_proba(x_train)
 lreg_probs = lreg_probs[:, 1]
 lreg_auc = roc_auc_score(y_train, lreg_probs)
 
-print(f'Overall accuracy for logistic model (training): {lreg.score(x_train, y_train):.4f}')
-print(f'ROC AUC for logistic model (training): {lreg_auc:.4f}')
-print(f'Overall accuracy for logistic model (testing): {lreg.score(x_test, y_test):.4f}')
+print(f'\nOverall accuracy for logistic model (training): {lreg.score(x_train, y_train):.4f}')
+print(f'ROC AUC for logistic model (training): {lreg_auc:.4f}\n')
 
 lreg_fpr, lreg_tpr, thresholds = roc_curve(y_train, lreg_probs, drop_intermediate=False)
-
-plt.plot(lreg_fpr, lreg_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('LOGISTIC ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Logistic confusion matrix
-lreg_matrix = confusion_matrix(y_test, lreg.predict(x_test))
-lreg_df = pd.DataFrame(lreg_matrix)
-
-sns.heatmap(lreg_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('LOGISTIC CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
-plt.show()
 
 #%%
 # SGD model
@@ -3734,264 +3153,48 @@ sgd_probs = sgd_probs[:, 1]
 sgd_auc = roc_auc_score(y_train, sgd_probs)
 
 print(f'\nOverall accuracy for SGD model (training): {sgd.score(x_train, y_train):.4f}')
-print(f'ROC AUC for SDG model (training): {sgd_auc:.4f}')
-print(f'Overall accuracy for SGD model (testing): {sgd.score(x_test, y_test):.4f}')
+print(f'ROC AUC for SGD model (training): {sgd_auc:.4f}\n')
 
 sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=False)
 
-plt.plot(sgd_fpr, sgd_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('SGD ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# SGD confusion matrix
-sgd_matrix = confusion_matrix(y_test, sgd.predict(x_test))
-sgd_df = pd.DataFrame(sgd_matrix)
-
-sns.heatmap(sgd_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('SGD CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
-plt.show()
-
-#%%
-# SVC hyperparameter tuning
-hyperparameters = [{'kernel': ['linear'],
-                    'C': np.logspace(0, 4, 20, endpoint=True)}]
-
-gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
-best_model = gridsearch.fit(x_train, y_train)
-
-print(f'Best parameters: {gridsearch.best_params_}')
-
 #%%
 # SVC model
-svc = SVC(kernel='linear', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
+# svc = SVC(kernel='linear', class_weight='balanced', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
 
-svc_cprobs = CalibratedClassifierCV(svc, method='sigmoid', cv='prefit')
-svc_cprobs.fit(x_test, y_test)
+# svc_probs = svc.predict_proba(x_train)
+# svc_probs = svc_probs[:, 1]
+# svc_auc = roc_auc_score(y_train, svc_probs)
 
-svc_probs = svc.predict_proba(x_train)
-svc_probs = svc_probs[:, 1]
-svc_auc = roc_auc_score(y_train, svc_probs)
+# print(f'\n\nOverall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}\n')
 
-print(f'Overall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}')
-print(f'Overall accuracy for linear SVC model (testing): {svc.score(x_test, y_test):.4f}')
-
-svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
-
-plt.plot(svc_fpr, svc_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('LINEAR SVC ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# SVC confusion matrix
-svc_matrix = confusion_matrix(y_test, svc.predict(x_test))
-svc_df = pd.DataFrame(svc_matrix)
-
-sns.heatmap(svc_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('SVC CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
-plt.show()
-
-#%%
-# Random forest max_depth tuning
-max_depths = np.linspace(1, 25, 25, endpoint=True)
-
-train_results = []
-test_results = []
-
-for max_depth in max_depths:
-    rfc = RandomForestClassifier(n_estimators=1000, class_weight='balanced', max_features='sqrt', max_depth=max_depth, n_jobs=-1)
-    rfc.fit(x_train, y_train)
-    
-    rfc_train = rfc.predict_proba(x_train)
-    rfc_train = rfc_train[:,1]
-    rfc_auc = roc_auc_score(y_train, rfc_train)
-    
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
-    train_results.append(rfc_auc)
-
-    rfc_test = rfc.predict_proba(x_test)
-    rfc_test = rfc_test[:,1]
-    rfc_auc = roc_auc_score(y_test, rfc_test)
-
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
-    test_results.append(rfc_auc)
-
-line1, = plt.plot(max_depths, train_results, 'b', label='AUC (TRAINING)')
-line2, = plt.plot(max_depths, test_results, 'r', label='AUC (TESTING)')
-plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-plt.ylabel('AUC SCORE')
-plt.xlabel('TREE DEPTH')
-plt.show()
-
-#%%
-# Random forest max_features tuning
-max_features = np.linspace(0.025, 1, 40, endpoint=True)
-
-train_results = []
-test_results = []
-
-for max_feature in max_features:
-    rfc = RandomForestClassifier(n_estimators=1000, class_weight='balanced', max_depth=8, max_features=max_feature, n_jobs=-1)
-    rfc.fit(x_train, y_train)
-    
-    rfc_train = rfc.predict_proba(x_train)
-    rfc_train = rfc_train[:,1]
-    rfc_auc = roc_auc_score(y_train, rfc_train)
-    
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
-    train_results.append(rfc_auc)
-
-    rfc_test = rfc.predict_proba(x_test)
-    rfc_test = rfc_test[:,1]
-    rfc_auc = roc_auc_score(y_test, rfc_test)
-
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
-    test_results.append(rfc_auc)
-
-line1, = plt.plot(max_features, train_results, 'b', label='AUC (TRAINING)')
-line2, = plt.plot(max_features, test_results, 'r', label='AUC (TESTING)')
-plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-plt.ylabel('AUC SCORE')
-plt.xlabel('MAX FEATURES')
-plt.show()
-
-#%%
-# Random forest min_samples_split tuning
-min_samples_splits = np.linspace(0.025, 1, 40, endpoint=True)
-
-train_results = []
-test_results = []
-
-for min_samples_split in min_samples_splits:
-    rfc = RandomForestClassifier(n_estimators=1000, class_weight='balanced', max_depth=8, max_features='sqrt', min_samples_split=min_samples_split, n_jobs=-1)
-    rfc.fit(x_train, y_train)
-    
-    rfc_train = rfc.predict_proba(x_train)
-    rfc_train = rfc_train[:,1]
-    rfc_auc = roc_auc_score(y_train, rfc_train)
-    
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
-    train_results.append(rfc_auc)
-
-    rfc_test = rfc.predict_proba(x_test)
-    rfc_test = rfc_test[:,1]
-    rfc_auc = roc_auc_score(y_test, rfc_test)
-
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
-    test_results.append(rfc_auc)
-
-line1, = plt.plot(min_samples_splits, train_results, 'b', label='AUC (TRAINING)')
-line2, = plt.plot(min_samples_splits, test_results, 'r', label='AUC (TESTING)')
-plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-plt.ylabel('AUC SCORE')
-plt.xlabel('MIN SAMPLES SPLIT')
-plt.show()
-
-#%%
-# Random forest min_samples_leaf tuning
-min_samples_leafs = np.linspace(0.025, 0.5, 20, endpoint=True)
-
-train_results = []
-test_results = []
-
-for min_samples_leaf in min_samples_leafs:
-    rfc = RandomForestClassifier(n_estimators=1000, class_weight='balanced', max_features='sqrt', max_depth=8, min_samples_split=2, min_samples_leaf=min_samples_leaf, n_jobs=-1)
-    rfc.fit(x_train, y_train)
-    
-    rfc_train = rfc.predict_proba(x_train)
-    rfc_train = rfc_train[:,1]
-    rfc_auc = roc_auc_score(y_train, rfc_train)
-    
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
-    train_results.append(rfc_auc)
-
-    rfc_test = rfc.predict_proba(x_test)
-    rfc_test = rfc_test[:,1]
-    rfc_auc = roc_auc_score(y_test, rfc_test)
-
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_test, rfc_test, drop_intermediate=False)
-    test_results.append(rfc_auc)
-
-line1, = plt.plot(min_samples_leafs, train_results, 'b', label='AUC (TRAINING)')
-line2, = plt.plot(min_samples_leafs, test_results, 'r', label='AUC (TESTING)')
-plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-plt.ylabel('AUC SCORE')
-plt.xlabel('MIN SAMPLES LEAF')
-plt.show()
+# svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(n_estimators=5000, class_weight='balanced', max_depth=5, max_features='sqrt', min_samples_split=2, min_samples_leaf=1, verbose=True).fit(x_train, y_train)
-
-rfc_cprobs = CalibratedClassifierCV(rfc, method='sigmoid', cv='prefit')
-rfc_cprobs.fit(x_test, y_test)
+rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=10, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]
 rfc_auc = roc_auc_score(y_train, rfc_probs)
 
-print(f'Overall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}')
-print(f'Overall accuracy for random forest model (testing): {rfc.score(x_test, y_test):.4f}')
+print(f'\nOverall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
+print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}\n')
 
 rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
 
-plt.plot(rfc_fpr, rfc_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('RANDOM FOREST ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Random forest confusion matrix
-rfc_matrix = confusion_matrix(y_test, rfc.predict(x_test))
-rfc_df = pd.DataFrame(rfc_matrix)
-
-sns.heatmap(rfc_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('RANDOM FOREST CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
-plt.show()
-
 #%%
 # Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, max_iter=2000, n_iter_no_change=25, verbose=True).fit(x_train, y_train)
+# mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(x_train, y_train)
 
-mlp_probs = mlp.predict_proba(x_train)
-mlp_probs = mlp_probs[:, 1]
-mlp_auc = roc_auc_score(y_train, mlp_probs)
+# mlp_probs = mlp.predict_proba(x_train)
+# mlp_probs = mlp_probs[:, 1]
+# mlp_auc = roc_auc_score(y_train, mlp_probs)
 
-print(f'Overall accuracy for multi-layer perceptron model (training): {mlp.score(x_train, y_train):.4f}')
-print(f'ROC AUC for multi-layer perceptron model (training): {mlp_auc:.4f}')
-print(f'Overall accuracy for multi-layer perceptron model (testing): {mlp.score(x_test, y_test):.4f}')
+# print(f'\nOverall accuracy for multi-layer perceptron model (training): {mlp.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for multi-layer perceptron model (training): {mlp_auc:.4f}\n')
 
-mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=False)
-
-plt.plot(mlp_fpr, mlp_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('NEURAL NETWORK ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Multi-layer perceptron confusion matrix
-mlp_matrix = confusion_matrix(y_test, mlp.predict(x_test))
-mlp_df = pd.DataFrame(mlp_matrix)
-
-sns.heatmap(mlp_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('NEURAL NETWORK CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
-plt.show()
+# mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=False)
 
 #%%
 # Ensemble model
@@ -4001,46 +3204,34 @@ vcf_probs = vcf.predict_proba(x_train)
 vcf_probs = vcf_probs[:, 1]
 vcf_auc = roc_auc_score(y_train, vcf_probs)
 
-print(f'Overall accuracy for ensemble model (training): {vcf.score(x_train, y_train):.4f}')
-print(f'ROC AUC for ensemble model (training): {vcf_auc:.4f}')
-print(f'Overall accuracy for ensemble model (testing): {vcf.score(x_test, y_test):.4f}')
+print(f'\nOverall accuracy for ensemble model (training): {vcf.score(x_train, y_train):.4f}')
+print(f'ROC AUC for ensemble model (training): {vcf_auc:.4f}\n')
 
 vcf_fpr, vcf_tpr, thresholds = roc_curve(y_train, vcf_probs, drop_intermediate=False)
 
-plt.plot(vcf_fpr, vcf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('ENSEMBLE ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Ensemble confusion matrix
-vcf_matrix = confusion_matrix(y_test, vcf.predict(x_test))
-vcf_df = pd.DataFrame(vcf_matrix)
-
-sns.heatmap(vcf_df, annot=True, fmt='d', cbar=None, cmap='Blues')
-plt.title('ENSEMBLE CONFUSION MATRIX'), plt.tight_layout()
-plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
-plt.show()
-
 #%%
 # Prepare model predictions
+print('Prepare model predictions...')
+
 lreg_pred_probs = lreg.predict_proba(x_test)
 lreg_pred_probs = lreg_pred_probs[:, 1]
 sgd_pred_probs = sgd.predict_proba(x_test)
 sgd_pred_probs = sgd_pred_probs[:, 1]
-# svc_pred_probs = svc_cprobs.predict_proba(x_test)
+# svc_pred_probs = svc.predict_proba(x_test)
 # svc_pred_probs = svc_pred_probs[:, 1]
-rfc_pred_probs = rfc_cprobs.predict_proba(x_test)
+rfc_pred_probs = rfc.predict_proba(x_test)
 rfc_pred_probs = rfc_pred_probs[:, 1]
 # mlp_pred_probs = mlp.predict_proba(x_test)
 # mlp_pred_probs = mlp_pred_probs[:, 1]
 vcf_pred_probs = vcf.predict_proba(x_test)
 vcf_pred_probs = vcf_pred_probs[:, 1]
 
+print('Done\n')
+
 #%%
-# Output model predictions
+# Output model predictions to file
+print('Output model predictions and model...')
+
 pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
 pred_outcome['lr_pred'] = lreg.predict(x_test)
 pred_outcome['sgd_prob'] = pd.DataFrame(sgd_pred_probs)
@@ -4053,9 +3244,63 @@ pred_outcome['rfc_pred'] = rfc.predict(x_test)
 # pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
-pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome_dev.csv', encoding='utf-8', index=False)
+pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome.csv', encoding='utf-8', index=False)
+
+#%%
+aggregate_outcome['emplid'] = aggregate_outcome['emplid'].astype(str).str.zfill(9)
+aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
+
+aggregate_outcome = aggregate_outcome.rename(columns={"male": "sex_ind"})
+aggregate_outcome.loc[aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
+aggregate_outcome.loc[aggregate_outcome['sex_ind'] == 0, 'sex_descr'] = 'Female'
+
+aggregate_outcome = aggregate_outcome.rename(columns={"underrep_minority": "underrep_minority_ind"})
+aggregate_outcome.loc[aggregate_outcome['underrep_minority_ind'] == 1, 'underrep_minority_descr'] = 'Minority'
+aggregate_outcome.loc[aggregate_outcome['underrep_minority_ind'] == 0, 'underrep_minority_descr'] = 'Non-minority'
+
+aggregate_outcome = aggregate_outcome.rename(columns={"resident": "resident_ind"})
+aggregate_outcome.loc[aggregate_outcome['resident_ind'] == 1, 'resident_descr'] = 'Resident'
+aggregate_outcome.loc[aggregate_outcome['resident_ind'] == 0, 'resident_descr'] = 'non-Resident'
+
+aggregate_outcome.loc[aggregate_outcome['first_gen_flag'] == 'Y', 'first_gen_flag'] = 1
+aggregate_outcome.loc[aggregate_outcome['first_gen_flag'] == 'N', 'first_gen_flag'] = 0
+
+aggregate_outcome = aggregate_outcome.rename(columns={"first_gen_flag": "first_gen_ind"})
+aggregate_outcome.loc[aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
+aggregate_outcome.loc[aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
+
+#%%
+aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
+# aggregate_outcome.to_sql('aggregate_outcome', con=auto_engine, if_exists='replace', index=False, schema='oracle_int.dbo')
+
+#%%
+current_outcome['emplid'] = current_outcome['emplid'].astype(str).str.zfill(9)
+current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
+
+# current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_idx'] = '3'
+# current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_idx'] = '2'
+# current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_idx'] = '1'
+
+# current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_descr'] = 'High'
+# current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_descr'] = 'Mid'
+# current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_descr'] = 'Low'
+
+current_outcome['date'] = date.today()
+current_outcome['model_id'] = 2
+
+#%%
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
+	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+else:
+	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
+	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_backup.csv', encoding='utf-8', index=False)
+	student_outcome = pd.concat([prior_outcome, current_outcome])
+	student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Output model
-scikit_version = sklearn.__version__
-joblib.dump(vcf, f'model_v{scikit_version}.pkl')
+joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\Models\\model_v{sklearn.__version__}.pkl')
+
+print('Done\n')

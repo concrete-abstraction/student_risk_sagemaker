@@ -1,90 +1,42 @@
-#%%
-import joblib
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import statsmodels.graphics.api as smg
-import saspy
-import sklearn
-from datetime import date
-from IPython.display import HTML
-from matplotlib.legend_handler import HandlerLine2D
-from patsy import dmatrices
-from sklearn.compose import make_column_transformer
-from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
-from sklearn.model_selection import GridSearchCV
-from statsmodels.api import OLS
-from statsmodels.discrete.discrete_model import Logit
-from statsmodels.stats.outliers_influence import variance_inflation_factor
+* ------------------------------------------------------------------------------- ;
+*                                                                                 ;
+*                             STUDENT RISK (1 OF 2)                               ;
+*                                                                                 ;
+* ------------------------------------------------------------------------------- ;
 
-#%%
-# Start SAS session
-sas = saspy.SASsession()
-
-#%%
-# Set macro variables
-sas.submit("""
 %let dsn = census;
 %let dev = cendev;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
+/* Note: This is a test date. Revert to 2015 in production. */
 %let start_cohort = 2015;
 %let end_cohort = 2020;
-""")
 
-#%%
-# Set libname statements
-sas.submit("""
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &dev. odbc dsn=&dev. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
-libname acs \"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\\";
-""")
 
-#%%
-# Import supplemental files
-sas.submit("""
+libname acs "Z:\Nathan\Models\student_risk\Supplemental Files";
+
 proc import out=act_to_sat_engl_read
-    datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\act_to_sat_engl_read.xlsx\"
-    dbms=XLSX REPLACE;
-    getnames=YES;
-    run;
-""")
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\act_to_sat_engl_read.xlsx"
+	dbms=XLSX REPLACE;
+	getnames=YES;
+run;
 
-sas.submit("""
 proc import out=act_to_sat_math
-    datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\act_to_sat_math.xlsx\"
-    dbms=XLSX REPLACE;
-    getnames=YES;
-    run;
-""")
-
-sas.submit("""
-proc import out=sdw_data
-	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\sdw_data.xlsx\"
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\act_to_sat_math.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
-""")
 
-sas.submit("""
-proc import out=finaid_subcatnbr_data
-	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\sdw_finaid_subcatnbr_data.xlsx\"
+proc import out=cpi
+	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\cpi.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
-""")
 
-#%%
-# Create SAS macro
-sas.submit("""
 %macro loop;
 	
 	%do cohort_year=&start_cohort. %to &end_cohort.;
@@ -238,6 +190,9 @@ sas.submit("""
 		create table race_detail_&cohort_year. as
 		select 
 			a.emplid,
+			case when hispc.emplid is not null 	then 'Y'
+												else 'N'
+												end as race_hispanic,
 			case when amind.emplid is not null then 'Y'
 											   else 'N'
 											   end as race_american_indian,
@@ -305,6 +260,13 @@ sas.submit("""
 													'935','941','942','943',
 													'950','R14')) as amind
 			on a.emplid = amind.emplid
+		left join (select distinct e6.emplid from &dsn..student_ethnic_detail as e6
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe6
+						on e6.ethnic_cd = xe6.ethnic_cd
+					where e6.snapshot = 'census'
+						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe6.ethnic_group = '3') as hispc
+			on a.emplid = hispc.emplid
 	;quit;
 	
 	proc sql;
@@ -619,39 +581,45 @@ sas.submit("""
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
+			strm,
 			emplid,
-			subject_catalog_nbr
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			ssr_component
 		from &dsn..class_registration_vw
-		where snapshot = 'census'
+		where snapshot = 'eot'
 			and full_acad_year = "&cohort_year."
+			and enrl_ind = 1
 	;quit;
 	
 	proc sql;
 		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
-			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
+			a.ssr_component,
+			coalesce(b.total_grade_A, 0) + coalesce(c.total_grade_A, 0) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
+			coalesce(b.total_grade_A_minus, 0) + coalesce(c.total_grade_A_minus, 0) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
+			coalesce(b.total_grade_B_plus, 0) + coalesce(c.total_grade_B_plus, 0) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
+			coalesce(b.total_grade_B, 0) + coalesce(c.total_grade_B, 0) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
+			coalesce(b.total_grade_B_minus, 0) + coalesce(c.total_grade_B_minus, 0) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
+			coalesce(b.total_grade_C_plus, 0) + coalesce(c.total_grade_C_plus, 0) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
+			coalesce(b.total_grade_C, 0) + coalesce(c.total_grade_C, 0) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
+			coalesce(b.total_grade_C_minus, 0) + coalesce(c.total_grade_C_minus, 0) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
+			coalesce(b.total_grade_D_plus, 0) + coalesce(c.total_grade_D_plus, 0) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
+			coalesce(b.total_grade_D, 0) + coalesce(c.total_grade_D, 0) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
-			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
+			coalesce(b.total_grade_F, 0) + coalesce(c.total_grade_F, 0) as total_grade_F,
+			coalesce(b.total_withdrawn, 0) + coalesce(c.total_withdrawn, 0) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -678,16 +646,50 @@ sas.submit("""
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_students) as pct_DF
 		from &dsn..class_vw as a
-		left join &dsn..class_vw as b
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
-				and b.snapshot = 'eot'
-				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and b.ssr_component = 'LEC'
-		left join &dsn..class_vw as c
+				and a.ssr_component = b.ssr_component
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
-				and c.snapshot = 'eot'
-				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and c.ssr_component = 'LAB'
+				and a.ssr_component = c.ssr_component
 		where a.snapshot = 'eot'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
@@ -699,13 +701,14 @@ sas.submit("""
 		create table class_count_&cohort_year. as
 		select distinct
 			a.emplid,
-			count(b.subject_catalog_nbr) as fall_lec_count,
-			count(c.subject_catalog_nbr) as fall_lab_count,
-			count(d.subject_catalog_nbr) as spring_lec_count,
-			count(e.subject_catalog_nbr) as spring_lab_count
+			count(b.class_nbr) as fall_lec_count,
+			count(c.class_nbr) as fall_lab_count,
+			count(d.class_nbr) as spring_lec_count,
+			count(e.class_nbr) as spring_lab_count,
+			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
 		from &dsn..class_registration_vw as a
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -714,10 +717,8 @@ sas.submit("""
 						and substr(strm,4,1) = '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
-				and a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -726,10 +727,8 @@ sas.submit("""
 						and substr(strm,4,1) = '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
-				and a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'eot'
@@ -738,10 +737,8 @@ sas.submit("""
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
-				and a.subject_catalog_nbr = d.subject_catalog_nbr
 				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
 						class_nbr
 					from &dsn..class_registration_vw
 					where snapshot = 'census'
@@ -750,8 +747,7 @@ sas.submit("""
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
-				and a.subject_catalog_nbr = e.subject_catalog_nbr
-				and a.class_nbr = d.class_nbr
+				and a.class_nbr = e.class_nbr
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.enrl_ind = 1
@@ -760,9 +756,8 @@ sas.submit("""
 	
 	proc sql;
 		create table coursework_difficulty_&cohort_year. as
-		select
+		select distinct
 			a.emplid,
-			count(a.subject_catalog_nbr) as class_count,
 			avg(b.class_average) as avg_difficulty,
 			avg(b.pct_withdrawn) as avg_pct_withdrawn,
 			avg(b.pct_CDFW) as avg_pct_CDFW,
@@ -788,7 +783,8 @@ sas.submit("""
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -796,19 +792,25 @@ sas.submit("""
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as c
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -816,16 +818,21 @@ sas.submit("""
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
 			on a.subject_catalog_nbr = d.subject_catalog_nbr
+				and a.ssr_component = d.ssr_component
+				and substr(a.strm,4,1) = '3'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as e
+					group by subject_catalog_nbr) as e
 			on a.subject_catalog_nbr = e.subject_catalog_nbr
+				and a.ssr_component = e.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
 	;quit;
 	
@@ -973,7 +980,6 @@ sas.submit("""
 			m.min_week_from_term_begin_dt,
 			m.max_week_from_term_begin_dt,
 			m.count_week_from_term_begin_dt,
-			n.class_count,
 			(4.0 - n.avg_difficulty) as avg_difficulty,
 			n.avg_pct_withdrawn,
 			n.avg_pct_CDFW,
@@ -1063,24 +1069,27 @@ sas.submit("""
 		create table race_detail_&cohort_year. as
 		select 
 			a.emplid,
-			case when amind.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_american_indian,
-			case when alask.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_alaska,
-			case when asian.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_asian,
-			case when black.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_black,
-			case when hawai.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_native_hawaiian,
-			case when white.emplid is not null then 'Y'
-											   else 'N'
-											   end as race_white
+			case when hispc.emplid is not null 	then 'Y'
+												else 'N'
+												end as race_hispanic,
+			case when amind.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_american_indian,
+			case when alask.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_alaska,
+			case when asian.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_asian,
+			case when black.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_black,
+			case when hawai.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_native_hawaiian,
+			case when white.emplid is not null 	then 'Y'
+											   	else 'N'
+											   	end as race_white
 		from &adm..fact_u as a
 		left join &adm..xd_admit_type as b
 			on a.sid_admit_type = b.sid_admit_type
@@ -1132,6 +1141,13 @@ sas.submit("""
 													'935','941','942','943',
 													'950','R14')) as amind
 			on a.emplid = amind.emplid
+		left join (select distinct e6.emplid from &dsn..student_ethnic_detail as e6
+					left join &dsn..xw_ethnic_detail_to_group_vw as xe6
+						on e6.ethnic_cd = xe6.ethnic_cd
+					where e6.snapshot = 'census'
+						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+						and xe6.ethnic_group = '3') as hispc
+			on a.emplid = hispc.emplid
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
@@ -1159,6 +1175,8 @@ sas.submit("""
 		select distinct
 			strm,
 			emplid,
+			class_nbr,
+			crse_id,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 			ssr_component
 		from acs.subcatnbr_data
@@ -1168,28 +1186,29 @@ sas.submit("""
 		create table class_difficulty_&cohort_year. as
 		select distinct
 			a.subject_catalog_nbr,
-			coalesce(sum(b.total_grade_A), sum(c.total_grade_A)) as total_grade_A,
+			a.ssr_component,
+			coalesce(b.total_grade_A, 0) + coalesce(c.total_grade_A, 0) as total_grade_A,
 			(calculated total_grade_A * 4.0) as total_grade_A_GPA,
-			coalesce(sum(b.total_grade_A_minus), sum(c.total_grade_A_minus)) as total_grade_A_minus,
+			coalesce(b.total_grade_A_minus, 0) + coalesce(c.total_grade_A_minus, 0) as total_grade_A_minus,
 			(calculated total_grade_A_minus * 3.7) as total_grade_A_minus_GPA,
-			coalesce(sum(b.total_grade_B_plus), sum(c.total_grade_B_plus)) as total_grade_B_plus,
+			coalesce(b.total_grade_B_plus, 0) + coalesce(c.total_grade_B_plus, 0) as total_grade_B_plus,
 			(calculated total_grade_B_plus * 3.3) as total_grade_B_plus_GPA,
-			coalesce(sum(b.total_grade_B), sum(c.total_grade_B)) as total_grade_B,
+			coalesce(b.total_grade_B, 0) + coalesce(c.total_grade_B, 0) as total_grade_B,
 			(calculated total_grade_B * 3.0) as total_grade_B_GPA,
-			coalesce(sum(b.total_grade_B_minus), sum(c.total_grade_B_minus)) as total_grade_B_minus,
+			coalesce(b.total_grade_B_minus, 0) + coalesce(c.total_grade_B_minus, 0) as total_grade_B_minus,
 			(calculated total_grade_B_minus * 2.7) as total_grade_B_minus_GPA,
-			coalesce(sum(b.total_grade_C_plus), sum(c.total_grade_C_plus)) as total_grade_C_plus,
+			coalesce(b.total_grade_C_plus, 0) + coalesce(c.total_grade_C_plus, 0) as total_grade_C_plus,
 			(calculated total_grade_C_plus * 2.3) as total_grade_C_plus_GPA,
-			coalesce(sum(b.total_grade_C), sum(c.total_grade_C)) as total_grade_C,
+			coalesce(b.total_grade_C, 0) + coalesce(c.total_grade_C, 0) as total_grade_C,
 			(calculated total_grade_C * 2.0) as total_grade_C_GPA,
-			coalesce(sum(b.total_grade_C_minus), sum(c.total_grade_C_minus)) as total_grade_C_minus,
+			coalesce(b.total_grade_C_minus, 0) + coalesce(c.total_grade_C_minus, 0) as total_grade_C_minus,
 			(calculated total_grade_C_minus * 1.7) as total_grade_C_minus_GPA,
-			coalesce(sum(b.total_grade_D_plus), sum(c.total_grade_D_plus)) as total_grade_D_plus,
+			coalesce(b.total_grade_D_plus, 0) + coalesce(c.total_grade_D_plus, 0) as total_grade_D_plus,
 			(calculated total_grade_D_plus * 1.3) as total_grade_D_plus_GPA,
-			coalesce(sum(b.total_grade_D), sum(c.total_grade_D)) as total_grade_D,
+			coalesce(b.total_grade_D, 0) + coalesce(c.total_grade_D, 0) as total_grade_D,
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
-			coalesce(sum(b.total_grade_F), sum(c.total_grade_F)) as total_grade_F,
-			coalesce(sum(b.total_withdrawn), sum(c.total_withdrawn)) as total_withdrawn,
+			coalesce(b.total_grade_F, 0) + coalesce(c.total_grade_F, 0) as total_grade_F,
+			coalesce(b.total_withdrawn, 0) + coalesce(c.total_withdrawn, 0) as total_withdrawn,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -1216,18 +1235,52 @@ sas.submit("""
 			(calculated total_grade_D_plus + calculated total_grade_D + calculated total_grade_F) as DF,
 			(calculated DF / calculated total_students) as pct_DF
 		from &dsn..class_vw as a
-		left join &dsn..class_vw as b
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LEC'
+					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
-				and b.snapshot = 'eot'
-				and b.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and b.ssr_component = 'LEC'
-		left join &dsn..class_vw as c
+				and a.ssr_component = b.ssr_component
+		left join (select distinct 
+						subject_catalog_nbr,
+						ssr_component,
+						sum(total_grade_A) as total_grade_A,
+						sum(total_grade_A_minus) as total_grade_A_minus,
+						sum(total_grade_B_plus) as total_grade_B_plus,
+						sum(total_grade_B) as total_grade_B,
+						sum(total_grade_B_minus) as total_grade_B_minus,
+						sum(total_grade_C_plus) as total_grade_C_plus,
+						sum(total_grade_C) as total_grade_C,
+						sum(total_grade_C_minus) as total_grade_C_minus,
+						sum(total_grade_D_plus) as total_grade_D_plus,
+						sum(total_grade_D) as total_grade_D,
+						sum(total_grade_F) as total_grade_F,
+						sum(total_withdrawn) as total_withdrawn
+					from &dsn..class_vw
+					where snapshot = 'eot'
+						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and ssr_component = 'LAB'
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
-				and c.snapshot = 'eot'
-				and c.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and c.ssr_component = 'LAB'
-		where a.snapshot = 'eot'
-			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and a.ssr_component = c.ssr_component
+		where a.snapshot = 'census'
+			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
 		group by a.subject_catalog_nbr
 		order by a.subject_catalog_nbr
@@ -1237,47 +1290,41 @@ sas.submit("""
 		create table class_count_&cohort_year. as
 		select distinct
 			a.emplid,
-			count(b.subject_catalog_nbr) as fall_lec_count,
-			count(c.subject_catalog_nbr) as fall_lab_count,
-			count(d.subject_catalog_nbr) as spring_lec_count,
-			count(e.subject_catalog_nbr) as spring_lab_count
+			count(b.class_nbr) as fall_lec_count,
+			count(c.class_nbr) as fall_lab_count,
+			count(d.class_nbr) as spring_lec_count,
+			count(e.class_nbr) as spring_lab_count,
+			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
 		from class_registration_&cohort_year. as a
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
-				and a.subject_catalog_nbr = b.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
-				and a.subject_catalog_nbr = c.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
-				and a.subject_catalog_nbr = d.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
-						subject_catalog_nbr,
-						ssr_component
+						class_nbr
 					from class_registration_&cohort_year.
 					where substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
-				and a.subject_catalog_nbr = e.subject_catalog_nbr
-				and a.ssr_component = b.ssr_component
+				and a.class_nbr = e.class_nbr
 		group by a.emplid
 	;quit;
 	
@@ -1296,7 +1343,7 @@ sas.submit("""
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 		group by a.emplid
 	;quit;
-	
+
 	proc sql;
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
@@ -1310,7 +1357,8 @@ sas.submit("""
 		from class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -1318,19 +1366,25 @@ sas.submit("""
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as c
+					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '7'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lec_contact_hrs
+						max(term_contact_hrs) as lec_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
@@ -1338,16 +1392,21 @@ sas.submit("""
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
 			on a.subject_catalog_nbr = d.subject_catalog_nbr
+				and a.ssr_component = d.ssr_component
+				and substr(a.strm,4,1) = '3'
 		left join (select distinct
 						subject_catalog_nbr,
-						max(term_contact_hrs) as lab_contact_hrs
+						max(term_contact_hrs) as lab_contact_hrs,
+						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year.), 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
-					group by subject_catalog_nbr ) as e
+					group by subject_catalog_nbr) as e
 			on a.subject_catalog_nbr = e.subject_catalog_nbr
+				and a.ssr_component = e.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
 	;quit;
 	
@@ -1507,21 +1566,11 @@ sas.submit("""
 	;quit;
 	
 %mend loop;
-""")
 
-#%%
-# Run SAS macro
-sas_log = sas.submit("""
 %loop;
-""")
 
-HTML(sas_log['LOG'])
-
-#%%
-# Prepare data
-sas.submit("""
 data full_set;
-	set dataset_&start_cohort.-dataset_&end_cohort.;
+	set dataset_&start_cohort.-dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -1573,8 +1622,17 @@ data full_set;
 	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
+/* Note: There should be no duplicates */
+proc sort data=full_set nodupkey dupout=dups;
+	by emplid;
+run;
+
+/* proc means data=full_set median q1 q3; */
+/* 	var age; */
+/* run; */
+
 data training_set;
-	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
+	set dataset_&start_cohort.-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
@@ -1583,13 +1641,13 @@ data training_set;
 	if chs = . then chs = 0;
 	if ib = . then ib = 0;
 	if aice = . then aice = 0;
-	if ib_aice = . then ib_aice = 0;
+	if ib_aice = . then ib_aice = 0;	
 	if athlete = . then athlete = 0;
 	if fed_efc = . then fed_efc = 0;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
-	if total_accept = . then total_accept = 0;	
+	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
 	if sat_mss = . then sat_mss = 0;
 	if sat_erws = . then sat_erws = 0;
@@ -1642,7 +1700,7 @@ data testing_set;
 	if fed_need = . then fed_need = 0;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
-	if total_accept = . then total_accept = 0;	
+	if total_accept = . then total_accept = 0;
 	if remedial = . then remedial = 0;
 	if sat_mss = . then sat_mss = 0;
 	if sat_erws = . then sat_erws = 0;
@@ -1678,1258 +1736,18 @@ data testing_set;
 	unmet_need_ofr = fed_need - total_offer;
 	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
-""")
 
-#%%
-# Export data
-sas_log = sas.submit("""
-filename full \"Z:\\Nathan\\Models\\student_risk\\full_set.csv\" encoding="utf-8";
+filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training \"Z:\\Nathan\\Models\\student_risk\\training_set.csv\" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing \"Z:\\Nathan\\Models\\student_risk\\testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
-""")
-
-HTML(sas_log['LOG'])
-
-#%%
-# End SAS session
-sas.endsas()
-
-#%%
-# Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\training_set.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\testing_set.csv', encoding='utf-8')
-
-#%%
-# Training AWE instrumental variable
-training_awe = training_set[[
-                            'emplid',
-                            'high_school_gpa',
-                            'underrep_minority',
-                            'male',
-                            'sat_erws',
-                            'sat_mss',
-                            'educ_rate',
-                            'gini_indx',
-                            'median_inc'                
-                            ]].dropna()
-
-awe_x_train = training_awe[[
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'educ_rate',
-                            'gini_indx',
-                            'median_inc'
-                            ]]
-
-awe_y_train = training_awe[[
-                            'high_school_gpa'
-                            ]]
-
-y, x = dmatrices('high_school_gpa ~ sat_erws + sat_mss + underrep_minority + male + educ_rate + gini_indx + median_inc', data=training_awe, return_type='dataframe')
-reg_mod = OLS(y, x)
-reg_res = reg_mod.fit()
-print(reg_res.summary())
-
-reg = LinearRegression()
-reg.fit(awe_x_train, awe_y_train)
-
-training_awe_pred = pd.DataFrame()
-training_awe_pred['emplid'] = training_awe['emplid']
-training_awe_pred['actual'] = training_awe['high_school_gpa']
-training_awe_pred['predicted'] = reg.predict(awe_x_train)
-training_awe_pred['awe_instrument'] = training_awe_pred['actual'] - training_awe_pred['predicted']
-
-training_set = training_set.join(training_awe_pred.set_index('emplid'), on='emplid')
-
-#%%
-# Testing AWE instrumental variable
-testing_awe = testing_set[[
-                            'emplid',
-                            'high_school_gpa',
-                            'underrep_minority',
-                            'male',
-                            'sat_erws',
-                            'sat_mss',
-                            'educ_rate',
-                            'gini_indx',
-                            'median_inc'
-                            ]].dropna()
-
-awe_x_test = testing_awe[[
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'educ_rate',
-                            'gini_indx',
-                            'median_inc'                        
-                            ]]
-
-awe_y_test = testing_awe[[
-                            'high_school_gpa'
-                            ]]
-
-y, x = dmatrices('high_school_gpa ~ sat_erws + sat_mss + underrep_minority + male + educ_rate + gini_indx + median_inc', data=testing_awe, return_type='dataframe')
-reg_mod = OLS(y, x)
-reg_res = reg_mod.fit()
-print(reg_res.summary())
-
-reg = LinearRegression()
-reg.fit(awe_x_test, awe_y_test)
-
-testing_awe_pred = pd.DataFrame()
-testing_awe_pred['emplid'] = testing_awe['emplid']
-testing_awe_pred['awe_actual'] = testing_awe['high_school_gpa']
-testing_awe_pred['awe_predicted'] = reg.predict(awe_x_test)
-testing_awe_pred['awe_instrument'] = testing_awe_pred['awe_actual'] - testing_awe_pred['awe_predicted']
-
-testing_set = testing_set.join(testing_awe_pred.set_index('emplid'), on='emplid')
-
-#%%
-# Training CDI instrumental variable
-training_cdi = training_set[[
-                            'emplid',
-                            'high_school_gpa',
-                            'class_count',
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'median_inc',
-                            'avg_pct_withdrawn',
-                            'avg_difficulty'                
-                            ]].dropna()
-
-cdi_x_train = training_cdi[[
-                            'high_school_gpa',
-                            'class_count',
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'median_inc',
-                            'avg_pct_withdrawn'
-                            ]]
-
-cdi_y_train = training_cdi[[
-                            'avg_difficulty'
-                            ]]
-
-y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=training_cdi, return_type='dataframe')
-reg_mod = OLS(y, x)
-reg_res = reg_mod.fit()
-print(reg_res.summary())
-
-reg = LinearRegression()
-reg.fit(cdi_x_train, cdi_y_train)
-
-training_cdi_pred = pd.DataFrame()
-training_cdi_pred['emplid'] = training_cdi['emplid']
-training_cdi_pred['cdi_actual'] = training_cdi['avg_difficulty']
-training_cdi_pred['cdi_predicted'] = reg.predict(cdi_x_train)
-training_cdi_pred['cdi_instrument'] = training_cdi_pred['cdi_actual'] - training_cdi_pred['cdi_predicted']
-
-training_set = training_set.join(training_cdi_pred.set_index('emplid'), on='emplid')
-
-#%%
-# Testing CDI instrumental variable
-testing_cdi = testing_set[[
-                            'emplid',
-                            'high_school_gpa',
-                            'class_count',
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'median_inc',
-                            'avg_pct_withdrawn',
-                            'avg_difficulty'                
-                            ]].dropna()
-
-cdi_x_test = testing_cdi[[
-                            'high_school_gpa',
-                            'class_count',
-                            'sat_erws',
-                            'sat_mss',
-                            'underrep_minority',
-                            'male',
-                            'median_inc',
-                            'avg_pct_withdrawn' 
-                            ]]
-
-cdi_y_test = testing_cdi[[
-                            'avg_difficulty'
-                            ]]
-
-y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=testing_cdi, return_type='dataframe')
-reg_mod = OLS(y, x)
-reg_res = reg_mod.fit()
-print(reg_res.summary())
-
-reg = LinearRegression()
-reg.fit(cdi_x_test, cdi_y_test)
-
-testing_cdi_pred = pd.DataFrame()
-testing_cdi_pred['emplid'] = testing_cdi['emplid']
-testing_cdi_pred['cdi_actual'] = testing_cdi['avg_difficulty']
-testing_cdi_pred['cdi_predicted'] = reg.predict(cdi_x_test)
-testing_cdi_pred['cdi_instrument'] = testing_cdi_pred['cdi_actual'] - testing_cdi_pred['cdi_predicted']
-
-testing_set = testing_set.join(testing_cdi_pred.set_index('emplid'), on='emplid')
-
-#%%
-# Prepare dataframes
-logit_df = training_set[[
-                        'enrl_ind', 
-                        # 'acad_year',
-                        # 'age_group', 
-                        # 'age',
-                        'male',
-                        # 'min_week_from_term_begin_dt',
-                        # 'max_week_from_term_begin_dt',
-                        # 'count_week_from_term_begin_dt',
-                        # 'marital_status',
-                        # 'Distance',
-                        # 'pop_dens',
-                        'underrep_minority', 
-                        # 'ipeds_ethnic_group_descrshort',
-                        'pell_eligibility_ind', 
-                        # 'pell_recipient_ind',
-                        'first_gen_flag', 
-                        # 'LSAMP_STEM_Flag',
-                        # 'anywhere_STEM_Flag',
-                        # 'honors_program_ind',
-                        # 'afl_greek_indicator',
-                        'high_school_gpa',
-                        # 'awe_instrument',
-                        # 'cdi_instrument',
-                        # 'avg_difficulty',
-                        'class_count',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        # 'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
-                        'lec_contact_hrs',
-                        'lab_contact_hrs',
-                        # 'cum_adj_transfer_hours',
-                        'resident',
-                        # 'father_wsu_flag',
-                        # 'mother_wsu_flag',
-                        'parent1_highest_educ_lvl',
-                        'parent2_highest_educ_lvl',
-                        # 'citizenship_country',
-                        'gini_indx',
-                        # 'pvrt_rate',
-                        'median_inc',
-                        # 'median_value',
-                        # 'educ_rate',
-                        'pct_blk',
-                        'pct_ai',
-                        # 'pct_asn',
-                        'pct_hawi',
-                        # 'pct_oth',
-                        'pct_two',
-                        # 'pct_non',
-                        'pct_hisp',
-                        'city_large',
-                        'city_mid',
-                        'city_small',
-                        'suburb_large',
-                        'suburb_mid',
-                        'suburb_small',
-                        # 'town_fringe',
-                        # 'town_distant',
-                        # 'town_remote',
-                        # 'rural_fringe',
-                        # 'rural_distant',
-                        # 'rural_remote',
-                        # 'AD_DTA',
-                        # 'AD_AST',
-                        # 'AP',
-                        # 'RS',
-                        # 'CHS',
-                        # # 'IB',
-                        # # 'AICE',
-                        # 'IB_AICE', 
-                        # 'term_credit_hours',
-                        # 'athlete',
-                        'remedial',
-                        # 'ACAD_PLAN',
-                        # 'plan_owner_org',
-                        # 'business',
-                        # 'cahnrs_anml',
-                        # 'cahnrs_envr',
-                        # 'cahnrs_econ',
-                        # 'cahnrext',
-                        # 'cas_chem',
-                        # 'cas_crim',
-                        # 'cas_math',
-                        # 'cas_psyc',
-                        # 'cas_biol',
-                        # 'cas_engl',
-                        # 'cas_phys',
-                        # 'cas',
-                        # 'comm',
-                        # 'education',
-                        # 'medicine',
-                        # 'nursing',
-                        # 'pharmacy',
-                        # 'provost',
-                        # 'vcea_bioe',
-                        # 'vcea_cive',
-                        # 'vcea_desn',
-                        # 'vcea_eecs',
-                        # 'vcea_mech',
-                        # 'vcea',
-                        # 'vet_med',
-                        # 'last_sch_proprietorship',
-                        # 'sat_erws',
-                        # 'sat_mss',
-                        # 'sat_comp',
-                        # 'attendee_alive',
-                        # 'attendee_campus_visit',
-                        # 'attendee_cashe',
-                        # 'attendee_destination',
-                        # 'attendee_experience',
-                        # 'attendee_fcd_pullman',
-                        # 'attendee_fced',
-                        # 'attendee_fcoc',
-                        # 'attendee_fcod',
-                        # 'attendee_group_visit',
-                        # 'attendee_honors_visit',
-                        # 'attendee_imagine_tomorrow',
-                        # 'attendee_imagine_u',
-                        # 'attendee_la_bienvenida',
-                        # 'attendee_lvp_camp',
-                        # 'attendee_oos_destination',
-                        # 'attendee_oos_experience',
-                        # 'attendee_preview',
-                        # 'attendee_preview_jrs',
-                        # 'attendee_shaping',
-                        # 'attendee_top_scholars',
-                        # 'attendee_transfer_day',
-                        # 'attendee_vibes',
-                        # 'attendee_welcome_center',
-                        # 'attendee_any_visitation_ind',
-                        # 'attendee_total_visits',
-                        # 'qvalue',
-                        # 'fed_efc',
-                        # 'fed_need',
-                        'unmet_need_ofr'
-                        ]].dropna()
-
-training_set = training_set[[
-                            'emplid',
-                            'enrl_ind', 
-							# 'acad_year',
-							# 'age_group', 
-							# 'age',
-							'male',
-							# 'min_week_from_term_begin_dt',
-							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
-							# 'marital_status',
-							# 'Distance',
-							# 'pop_dens',
-							'underrep_minority', 
-							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
-							# 'pell_recipient_ind',
-							'first_gen_flag', 
-							# 'LSAMP_STEM_Flag',
-							# 'anywhere_STEM_Flag',
-							# 'honors_program_ind',
-							# 'afl_greek_indicator',
-							'high_school_gpa',
-							# 'awe_instrument',
-							# 'cdi_instrument',
-							# 'avg_difficulty',
-							'class_count',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							# 'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
-							'lec_contact_hrs',
-							'lab_contact_hrs',
-							# 'cum_adj_transfer_hours',
-							'resident',
-							# 'father_wsu_flag',
-							# 'mother_wsu_flag',
-							'parent1_highest_educ_lvl',
-							'parent2_highest_educ_lvl',
-							# 'citizenship_country',
-							'gini_indx',
-							# 'pvrt_rate',
-							'median_inc',
-							# 'median_value',
-							# 'educ_rate',
-							'pct_blk',
-							'pct_ai',
-							# 'pct_asn',
-							'pct_hawi',
-							# 'pct_oth',
-							'pct_two',
-							# 'pct_non',
-							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
-							# 'town_fringe',
-							# 'town_distant',
-							# 'town_remote',
-							# 'rural_fringe',
-							# 'rural_distant',
-							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
-							# # 'IB',
-							# # 'AICE',
-							# 'IB_AICE', 
-							# 'term_credit_hours',
-							# 'athlete',
-							'remedial',
-							# 'ACAD_PLAN',
-							# 'plan_owner_org',
-							# 'business',
-							# 'cahnrs_anml',
-							# 'cahnrs_envr',
-							# 'cahnrs_econ',
-							# 'cahnrext',
-							# 'cas_chem',
-							# 'cas_crim',
-							# 'cas_math',
-							# 'cas_psyc',
-							# 'cas_biol',
-							# 'cas_engl',
-							# 'cas_phys',
-							# 'cas',
-							# 'comm',
-							# 'education',
-							# 'medicine',
-							# 'nursing',
-							# 'pharmacy',
-							# 'provost',
-							# 'vcea_bioe',
-							# 'vcea_cive',
-							# 'vcea_desn',
-							# 'vcea_eecs',
-							# 'vcea_mech',
-							# 'vcea',
-							# 'vet_med',
-							# 'last_sch_proprietorship',
-							# 'sat_erws',
-							# 'sat_mss',
-							# 'sat_comp',
-							# 'attendee_alive',
-							# 'attendee_campus_visit',
-							# 'attendee_cashe',
-							# 'attendee_destination',
-							# 'attendee_experience',
-							# 'attendee_fcd_pullman',
-							# 'attendee_fced',
-							# 'attendee_fcoc',
-							# 'attendee_fcod',
-							# 'attendee_group_visit',
-							# 'attendee_honors_visit',
-							# 'attendee_imagine_tomorrow',
-							# 'attendee_imagine_u',
-							# 'attendee_la_bienvenida',
-							# 'attendee_lvp_camp',
-							# 'attendee_oos_destination',
-							# 'attendee_oos_experience',
-							# 'attendee_preview',
-							# 'attendee_preview_jrs',
-							# 'attendee_shaping',
-							# 'attendee_top_scholars',
-							# 'attendee_transfer_day',
-							# 'attendee_vibes',
-							# 'attendee_welcome_center',
-							# 'attendee_any_visitation_ind',
-							# 'attendee_total_visits',
-							# 'qvalue',
-							# 'fed_efc',
-							# 'fed_need',
-							'unmet_need_ofr'
-                            ]].dropna()
-
-testing_set = testing_set[[
-                            'emplid',
-                            # 'acad_year',
-							# 'age_group', 
-							# 'age',
-							'male',
-							# 'min_week_from_term_begin_dt',
-							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
-							# 'marital_status',
-							# 'Distance',
-							# 'pop_dens',
-							'underrep_minority', 
-							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
-							# 'pell_recipient_ind',
-							'first_gen_flag', 
-							# 'LSAMP_STEM_Flag',
-							# 'anywhere_STEM_Flag',
-							# 'honors_program_ind',
-							# 'afl_greek_indicator',
-							'high_school_gpa',
-							# 'awe_instrument',
-							# 'cdi_instrument',
-							# 'avg_difficulty',
-							'class_count',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							# 'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
-							'lec_contact_hrs',
-							'lab_contact_hrs',
-							# 'cum_adj_transfer_hours',
-							'resident',
-							# 'father_wsu_flag',
-							# 'mother_wsu_flag',
-							'parent1_highest_educ_lvl',
-							'parent2_highest_educ_lvl',
-							# 'citizenship_country',
-							'gini_indx',
-							# 'pvrt_rate',
-							'median_inc',
-							# 'median_value',
-							# 'educ_rate',
-							'pct_blk',
-							'pct_ai',
-							# 'pct_asn',
-							'pct_hawi',
-							# 'pct_oth',
-							'pct_two',
-							# 'pct_non',
-							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
-							# 'town_fringe',
-							# 'town_distant',
-							# 'town_remote',
-							# 'rural_fringe',
-							# 'rural_distant',
-							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
-							# # 'IB',
-							# # 'AICE',
-							# 'IB_AICE', 
-							# 'term_credit_hours',
-							# 'athlete',
-							'remedial',
-							# 'ACAD_PLAN',
-							# 'plan_owner_org',
-							# 'business',
-							# 'cahnrs_anml',
-							# 'cahnrs_envr',
-							# 'cahnrs_econ',
-							# 'cahnrext',
-							# 'cas_chem',
-							# 'cas_crim',
-							# 'cas_math',
-							# 'cas_psyc',
-							# 'cas_biol',
-							# 'cas_engl',
-							# 'cas_phys',
-							# 'cas',
-							# 'comm',
-							# 'education',
-							# 'medicine',
-							# 'nursing',
-							# 'pharmacy',
-							# 'provost',
-							# 'vcea_bioe',
-							# 'vcea_cive',
-							# 'vcea_desn',
-							# 'vcea_eecs',
-							# 'vcea_mech',
-							# 'vcea',
-							# 'vet_med',
-							# 'last_sch_proprietorship',
-							# 'sat_erws',
-							# 'sat_mss',
-							# 'sat_comp',
-							# 'attendee_alive',
-							# 'attendee_campus_visit',
-							# 'attendee_cashe',
-							# 'attendee_destination',
-							# 'attendee_experience',
-							# 'attendee_fcd_pullman',
-							# 'attendee_fced',
-							# 'attendee_fcoc',
-							# 'attendee_fcod',
-							# 'attendee_group_visit',
-							# 'attendee_honors_visit',
-							# 'attendee_imagine_tomorrow',
-							# 'attendee_imagine_u',
-							# 'attendee_la_bienvenida',
-							# 'attendee_lvp_camp',
-							# 'attendee_oos_destination',
-							# 'attendee_oos_experience',
-							# 'attendee_preview',
-							# 'attendee_preview_jrs',
-							# 'attendee_shaping',
-							# 'attendee_top_scholars',
-							# 'attendee_transfer_day',
-							# 'attendee_vibes',
-							# 'attendee_welcome_center',
-							# 'attendee_any_visitation_ind',
-							# 'attendee_total_visits',
-							# 'qvalue',
-							# 'fed_efc',
-							# 'fed_need',
-							'unmet_need_ofr'
-                            ]].dropna()
-
-testing_set = testing_set.reset_index()
-
-pred_outcome = testing_set[[ 
-                            'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag',
-							'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-x_train = training_set[[
-                        # 'acad_year',
-						# 'age_group', 
-						# 'age',
-						'male',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'marital_status',
-						# 'Distance',
-						# 'pop_dens',
-						'underrep_minority', 
-						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
-						# 'pell_recipient_ind',
-						'first_gen_flag', 
-						# 'LSAMP_STEM_Flag',
-						# 'anywhere_STEM_Flag',
-						# 'honors_program_ind',
-						# 'afl_greek_indicator',
-						'high_school_gpa',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						# 'avg_difficulty',
-						'class_count',
-						'avg_pct_withdrawn',
-						# 'avg_pct_CDFW',
-						# 'avg_pct_CDF',
-						# 'avg_pct_DFW',
-						# 'avg_pct_DF',
-						'lec_contact_hrs',
-						'lab_contact_hrs',
-						# 'cum_adj_transfer_hours',
-						'resident',
-						# 'father_wsu_flag',
-						# 'mother_wsu_flag',
-						'parent1_highest_educ_lvl',
-						'parent2_highest_educ_lvl',
-						# 'citizenship_country',
-						'gini_indx',
-						# 'pvrt_rate',
-						'median_inc',
-						# 'median_value',
-						# 'educ_rate',
-						'pct_blk',
-						'pct_ai',
-						# 'pct_asn',
-						'pct_hawi',
-						# 'pct_oth',
-						'pct_two',
-						# 'pct_non',
-						'pct_hisp',
-						'city_large',
-						'city_mid',
-						'city_small',
-						'suburb_large',
-						'suburb_mid',
-						'suburb_small',
-						# 'town_fringe',
-						# 'town_distant',
-						# 'town_remote',
-						# 'rural_fringe',
-						# 'rural_distant',
-						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
-						# # 'IB',
-						# # 'AICE',
-						# 'IB_AICE', 
-						# 'term_credit_hours',
-						# 'athlete',
-						'remedial',
-						# 'ACAD_PLAN',
-						# 'plan_owner_org',
-						# 'business',
-						# 'cahnrs_anml',
-						# 'cahnrs_envr',
-						# 'cahnrs_econ',
-						# 'cahnrext',
-						# 'cas_chem',
-						# 'cas_crim',
-						# 'cas_math',
-						# 'cas_psyc',
-						# 'cas_biol',
-						# 'cas_engl',
-						# 'cas_phys',
-						# 'cas',
-						# 'comm',
-						# 'education',
-						# 'medicine',
-						# 'nursing',
-						# 'pharmacy',
-						# 'provost',
-						# 'vcea_bioe',
-						# 'vcea_cive',
-						# 'vcea_desn',
-						# 'vcea_eecs',
-						# 'vcea_mech',
-						# 'vcea',
-						# 'vet_med',
-						# 'last_sch_proprietorship',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_alive',
-						# 'attendee_campus_visit',
-						# 'attendee_cashe',
-						# 'attendee_destination',
-						# 'attendee_experience',
-						# 'attendee_fcd_pullman',
-						# 'attendee_fced',
-						# 'attendee_fcoc',
-						# 'attendee_fcod',
-						# 'attendee_group_visit',
-						# 'attendee_honors_visit',
-						# 'attendee_imagine_tomorrow',
-						# 'attendee_imagine_u',
-						# 'attendee_la_bienvenida',
-						# 'attendee_lvp_camp',
-						# 'attendee_oos_destination',
-						# 'attendee_oos_experience',
-						# 'attendee_preview',
-						# 'attendee_preview_jrs',
-						# 'attendee_shaping',
-						# 'attendee_top_scholars',
-						# 'attendee_transfer_day',
-						# 'attendee_vibes',
-						# 'attendee_welcome_center',
-						# 'attendee_any_visitation_ind',
-						# 'attendee_total_visits',
-						# 'qvalue',
-						# 'fed_efc',
-						# 'fed_need',
-						'unmet_need_ofr'
-                        ]]
-
-x_test = testing_set[[
-                        # 'acad_year',
-						# 'age_group', 
-						# 'age',
-						'male',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'marital_status',
-						# 'Distance',
-						# 'pop_dens',
-						'underrep_minority', 
-						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
-						# 'pell_recipient_ind',
-						'first_gen_flag', 
-						# 'LSAMP_STEM_Flag',
-						# 'anywhere_STEM_Flag',
-						# 'honors_program_ind',
-						# 'afl_greek_indicator',
-						'high_school_gpa',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						# 'avg_difficulty',
-						'class_count',
-						'avg_pct_withdrawn',
-						# 'avg_pct_CDFW',
-						# 'avg_pct_CDF',
-						# 'avg_pct_DFW',
-						# 'avg_pct_DF',
-						'lec_contact_hrs',
-						'lab_contact_hrs',
-						# 'cum_adj_transfer_hours',
-						'resident',
-						# 'father_wsu_flag',
-						# 'mother_wsu_flag',
-						'parent1_highest_educ_lvl',
-						'parent2_highest_educ_lvl',
-						# 'citizenship_country',
-						'gini_indx',
-						# 'pvrt_rate',
-						'median_inc',
-						# 'median_value',
-						# 'educ_rate',
-						'pct_blk',
-						'pct_ai',
-						# 'pct_asn',
-						'pct_hawi',
-						# 'pct_oth',
-						'pct_two',
-						# 'pct_non',
-						'pct_hisp',
-						'city_large',
-						'city_mid',
-						'city_small',
-						'suburb_large',
-						'suburb_mid',
-						'suburb_small',
-						# 'town_fringe',
-						# 'town_distant',
-						# 'town_remote',
-						# 'rural_fringe',
-						# 'rural_distant',
-						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
-						# # 'IB',
-						# # 'AICE',
-						# 'IB_AICE', 
-						# 'term_credit_hours',
-						# 'athlete',
-						'remedial',
-						# 'ACAD_PLAN',
-						# 'plan_owner_org',
-						# 'business',
-						# 'cahnrs_anml',
-						# 'cahnrs_envr',
-						# 'cahnrs_econ',
-						# 'cahnrext',
-						# 'cas_chem',
-						# 'cas_crim',
-						# 'cas_math',
-						# 'cas_psyc',
-						# 'cas_biol',
-						# 'cas_engl',
-						# 'cas_phys',
-						# 'cas',
-						# 'comm',
-						# 'education',
-						# 'medicine',
-						# 'nursing',
-						# 'pharmacy',
-						# 'provost',
-						# 'vcea_bioe',
-						# 'vcea_cive',
-						# 'vcea_desn',
-						# 'vcea_eecs',
-						# 'vcea_mech',
-						# 'vcea',
-						# 'vet_med',
-						# 'last_sch_proprietorship',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_alive',
-						# 'attendee_campus_visit',
-						# 'attendee_cashe',
-						# 'attendee_destination',
-						# 'attendee_experience',
-						# 'attendee_fcd_pullman',
-						# 'attendee_fced',
-						# 'attendee_fcoc',
-						# 'attendee_fcod',
-						# 'attendee_group_visit',
-						# 'attendee_honors_visit',
-						# 'attendee_imagine_tomorrow',
-						# 'attendee_imagine_u',
-						# 'attendee_la_bienvenida',
-						# 'attendee_lvp_camp',
-						# 'attendee_oos_destination',
-						# 'attendee_oos_experience',
-						# 'attendee_preview',
-						# 'attendee_preview_jrs',
-						# 'attendee_shaping',
-						# 'attendee_top_scholars',
-						# 'attendee_transfer_day',
-						# 'attendee_vibes',
-						# 'attendee_welcome_center',
-						# 'attendee_any_visitation_ind',
-						# 'attendee_total_visits',
-						# 'qvalue',
-						# 'fed_efc',
-						# 'fed_need',
-						'unmet_need_ofr'
-                        ]]
-
-y_train = training_set['enrl_ind']
-# y_test = testing_set['enrl_ind']
-
-#%%
-# Histograms
-x_train.hist(bins=50)
-plt.show()
-
-#%%
-corr_matrix = x_train.corr()
-smg.plot_corr(corr_matrix, xnames=x_train.columns)
-plt.show()
-
-#%%
-# Preprocess data
-preprocess = make_column_transformer(
-    (MinMaxScaler(), [
-                        # 'age',
-                        # # 'min_week_from_term_begin_dt',
-                        # # 'max_week_from_term_begin_dt',
-                        # 'count_week_from_term_begin_dt',
-                        # 'sat_erws',
-                        # 'sat_mss',
-                        # 'sat_comp',
-                        # 'attendee_total_visits',
-                        # 'Distance',
-                        # 'pop_dens', 
-                        # 'qvalue', 
-                        'median_inc',
-                        # 'median_value',
-                        # 'term_credit_hours',
-                        'high_school_gpa',
-                        # 'awe_instrument',
-                        # 'cdi_instrument',
-                        # 'avg_difficulty',
-                        'class_count',
-                        'lec_contact_hrs',
-                        'lab_contact_hrs',
-                        # 'cum_adj_transfer_hours',
-                        # 'fed_efc',
-                        # 'fed_need', 
-                        'unmet_need_ofr'
-                        ]),
-    (OneHotEncoder(drop='first'), [
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
-)
-
-x_train = preprocess.fit_transform(x_train)
-x_test = preprocess.fit_transform(x_test)
-
-#%%
-# Standard logistic model
-y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-                + pell_eligibility_ind \
-                + first_gen_flag \
-                + avg_pct_withdrawn + class_count + lec_contact_hrs + lab_contact_hrs \
-                + resident + gini_indx + median_inc \
-            	+ high_school_gpa + remedial \
-            	+ unmet_need_ofr', data=logit_df, return_type='dataframe')
-
-logit_mod = Logit(y, x)
-logit_res = logit_mod.fit(maxiter=500)
-print(logit_res.summary())
-
-#%%
-# VIF diagnostic
-vif = pd.DataFrame()
-vif['vif factor'] = [variance_inflation_factor(x.values, i) for i in range(x.shape[1])]
-vif['features'] = x.columns
-
-print(vif.round(1))
-
-#%%
-# Logistic hyperparameter tuning
-hyperparameters = [{'penalty': ['elasticnet'],
-                    'l1_ratio': np.linspace(0, 1, 11, endpoint=True),
-                    'C': np.logspace(0, 4, 20, endpoint=True)}]
-
-gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
-best_model = gridsearch.fit(x_train, y_train)
-
-print(f'Best parameters: {gridsearch.best_params_}')
-
-#%%
-# Logistic model
-lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=500, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
-
-lreg_probs = lreg.predict_proba(x_train)
-lreg_probs = lreg_probs[:, 1]
-lreg_auc = roc_auc_score(y_train, lreg_probs)
-
-print(f'Overall accuracy for logistic model (training): {lreg.score(x_train, y_train):.4f}')
-print(f'ROC AUC for logistic model (training): {lreg_auc:.4f}')
-
-lreg_fpr, lreg_tpr, thresholds = roc_curve(y_train, lreg_probs, drop_intermediate=False)
-
-plt.plot(lreg_fpr, lreg_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('LOGISTIC ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# SVC hyperparameter tuning
-hyperparameters = [{'kernel': ['linear'],
-                    'C': np.logspace(0, 4, 20, endpoint=True)}]
-
-gridsearch = GridSearchCV(SVC(class_weight='balanced'), hyperparameters, cv=5, verbose=0, n_jobs=-1)
-best_model = gridsearch.fit(x_train, y_train)
-
-print(f'Best parameters: {gridsearch.best_params_}')
-
-#%%
-# SVC model
-svc = SVC(kernel='linear', class_weight='balanced', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
-
-svc_probs = svc.predict_proba(x_train)
-svc_probs = svc_probs[:, 1]
-svc_auc = roc_auc_score(y_train, svc_probs)
-
-print(f'Overall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}')
-
-svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
-
-plt.plot(svc_fpr, svc_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('LINEAR SVC ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Random forest max_depth tuning
-max_depths = np.linspace(1, 25, 25, endpoint=True)
-
-train_results = []
-
-for max_depth in max_depths:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features='sqrt', max_depth=max_depth, n_jobs=-1)
-    rfc.fit(x_train, y_train)
-    
-    rfc_train = rfc.predict_proba(x_train)
-    rfc_train = rfc_train[:,1]
-    rfc_auc = roc_auc_score(y_train, rfc_train)
-    
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
-    train_results.append(rfc_auc)
-
-line1, = plt.plot(max_depths, train_results, 'b', label='AUC (TRAINING)')
-plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-plt.ylabel('AUC SCORE')
-plt.xlabel('TREE DEPTH')
-plt.show()
-
-#%%
-# Random forest max_features tuning
-max_features = np.linspace(0.025, 1, 40, endpoint=True)
-
-train_results = []
-
-for max_feature in max_features:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_depth=8, max_features=max_feature, n_jobs=-1)
-    rfc.fit(x_train, y_train)
-    
-    rfc_train = rfc.predict_proba(x_train)
-    rfc_train = rfc_train[:,1]
-    rfc_auc = roc_auc_score(y_train, rfc_train)
-    
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
-    train_results.append(rfc_auc)
-
-line1, = plt.plot(max_features, train_results, 'b', label='AUC (TRAINING)')
-plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-plt.ylabel('AUC SCORE')
-plt.xlabel('MAX FEATURES')
-plt.show()
-
-#%%
-# Random forest min_samples_split tuning
-min_samples_splits = np.linspace(0.025, 1, 40, endpoint=True)
-
-train_results = []
-
-for min_samples_split in min_samples_splits:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.075, max_depth=8, min_samples_split=min_samples_split, n_jobs=-1)
-    rfc.fit(x_train, y_train)
-    
-    rfc_train = rfc.predict_proba(x_train)
-    rfc_train = rfc_train[:,1]
-    rfc_auc = roc_auc_score(y_train, rfc_train)
-    
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
-    train_results.append(rfc_auc)
-
-line1, = plt.plot(min_samples_splits, train_results, 'b', label='AUC (TRAINING)')
-plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-plt.ylabel('AUC SCORE')
-plt.xlabel('MIN SAMPLES SPLIT')
-plt.show()
-
-#%%
-# Random forest min_samples_leaf tuning
-min_samples_leafs = np.linspace(0.025, 0.5, 20, endpoint=True)
-
-train_results = []
-
-for min_samples_leaf in min_samples_leafs:
-    rfc = RandomForestClassifier(class_weight='balanced', n_estimators=1000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=min_samples_leaf, n_jobs=-1)
-    rfc.fit(x_train, y_train)
-    
-    rfc_train = rfc.predict_proba(x_train)
-    rfc_train = rfc_train[:,1]
-    rfc_auc = roc_auc_score(y_train, rfc_train)
-    
-    rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_train, drop_intermediate=False)
-    train_results.append(rfc_auc)
-
-line1, = plt.plot(min_samples_leafs, train_results, 'b', label='AUC (TRAINING)')
-plt.legend(handler_map={line1: HandlerLine2D(numpoints=2)})
-plt.ylabel('AUC SCORE')
-plt.xlabel('MIN SAMPLES LEAF')
-plt.show()
-
-#%%
-# Random forest model
-rfc = RandomForestClassifier(class_weight='balanced', n_estimators=5000, max_features=0.075, max_depth=8, min_samples_split=0.025, min_samples_leaf=0.025, verbose=True).fit(x_train, y_train)
-
-rfc_probs = rfc.predict_proba(x_train)
-rfc_probs = rfc_probs[:, 1]
-rfc_auc = roc_auc_score(y_train, rfc_probs)
-
-print(f'Overall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}')
-
-rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
-
-plt.plot(rfc_fpr, rfc_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('RANDOM FOREST ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Multi-layer perceptron model
-mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=0.01, learning_rate_init=0.001, n_iter_no_change=10, verbose=True).fit(x_train, y_train)
-
-mlp_probs = mlp.predict_proba(x_train)
-mlp_probs = mlp_probs[:, 1]
-mlp_auc = roc_auc_score(y_train, mlp_probs)
-
-print(f'Overall accuracy for multi-layer perceptron model (training): {mlp.score(x_train, y_train):.4f}')
-print(f'ROC AUC for multi-layer perceptron model (training): {mlp_auc:.4f}')
-
-mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=False)
-
-plt.plot(mlp_fpr, mlp_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('NEURAL NETWORK ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('svc', svc), ('rfc', rfc), ('mlp', mlp)], voting='soft', weights=[1, 0.45, 0.025, 0.05]).fit(x_train, y_train)
-
-vcf_probs = vcf.predict_proba(x_train)
-vcf_probs = vcf_probs[:, 1]
-vcf_auc = roc_auc_score(y_train, vcf_probs)
-
-print(f'Overall accuracy for ensemble model (training): {vcf.score(x_train, y_train):.4f}')
-print(f'ROC AUC for ensemble model (training): {vcf_auc:.4f}')
-
-vcf_fpr, vcf_tpr, thresholds = roc_curve(y_train, vcf_probs, drop_intermediate=False)
-
-plt.plot(mlp_fpr, mlp_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
-plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
-plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
-plt.title('ENSEMBLE ROC CURVE (TRAINING)')
-plt.show()
-
-#%%
-# Prepare model predictions
-lreg_pred_probs = lreg.predict_proba(x_test)
-lreg_pred_probs = lreg_pred_probs[:, 1]
-svc_pred_probs = svc.predict_proba(x_test)
-svc_pred_probs = svc_pred_probs[:, 1]
-rfc_pred_probs = rfc.predict_proba(x_test)
-rfc_pred_probs = rfc_pred_probs[:, 1]
-mlp_pred_probs = mlp.predict_proba(x_test)
-mlp_pred_probs = mlp_pred_probs[:, 1]
-vcf_pred_probs = vcf.predict_proba(x_test)
-vcf_pred_probs = vcf_pred_probs[:, 1]
-
-#%%
-# Output model predictions
-pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
-pred_outcome['lr_pred'] = lreg.predict(x_test)
-pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
-pred_outcome['svc_pred'] = svc.predict(x_test)
-pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
-pred_outcome['rfc_pred'] = rfc.predict(x_test)
-pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
-pred_outcome['mlp_pred'] = mlp.predict(x_test)
-pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
-pred_outcome['vcf_pred'] = vcf.predict(x_test)
-pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\pred_outcome.csv', encoding='utf-8', index=False)
-
-#%%
-# Output model
-scikit_version = sklearn.__version__
-joblib.dump(vcf, f'model_v{scikit_version}.pkl')
