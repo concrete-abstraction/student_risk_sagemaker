@@ -61,18 +61,17 @@ if config.cen_flag == False:
 	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_year'].values[0]
 
 	if now_year < census_year or now_year > midterm_year:
-		raise config.DateError(f'{date.today()}: Census year exception, attempting to run from admissions.')
+		raise config.DateError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
 
 	elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
-		raise config.DateError(f'{date.today()}: Census month exception, attempting to run from admissions.')
+		raise config.DateError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
 
 	elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
-		raise config.DateError(f'{date.today()}: Census day exception, attempting to run from admissions.')
+		raise config.DateError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
 
 	else:
 		print(f'{date.today()}: No census date exceptions, running from census.')
 
-#%%
 # Census snapshot check
 if config.cen_flag == True:
 

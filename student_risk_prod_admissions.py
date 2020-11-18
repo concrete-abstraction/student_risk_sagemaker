@@ -59,13 +59,13 @@ census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_m
 census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_year'].values[0]
 
 if now_year < admissions_year or now_year > census_year:
-	raise Exception(f'{date.today()}: Admissions year exception, outside of date range.')
+	raise config.DateError(f'{date.today()}: Admissions year exception, outside of date range.')
 
 elif (now_year == admissions_year and now_month < admissions_month) or (now_year == census_year and now_month > census_month):
-	raise Exception(f'{date.today()}: Admissions month exception, outside of date range.')
+	raise config.DateError(f'{date.today()}: Admissions month exception, outside of date range.')
 
 elif (now_year == admissions_year and now_month == admissions_month and now_day < admissions_day) or (now_year == census_year and now_month == census_month and now_day >= census_day):
-	raise Exception(f'{date.today()}: Admissions day exception, outside of date range.')
+	raise config.DateError(f'{date.today()}: Admissions day exception, outside of date range.')
 
 else:
 	print(f'{date.today()}: No admissions date exceptions, running from admissions.')

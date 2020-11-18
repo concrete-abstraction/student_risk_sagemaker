@@ -10,7 +10,7 @@
 %let acs_lag = 2;
 %let lag_year = 1;
 /* Note: This is a test date. Revert to 2015 in production. */
-%let start_cohort = 2020;
+%let start_cohort = 2015;
 %let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -131,7 +131,7 @@ run;
 			on input(a.full_acad_year,4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm,4,1) = '7'
-			and a.adj_admit_campus = 'PULLM'
+			and a.adj_admit_campus = 'VANCO'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'FRSH'
 			and a.ipeds_full_part_time = 'F'
@@ -149,7 +149,7 @@ run;
 			eot_term_gpa_hours
 		from &dev..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus = 'VANCO'
 			and adj_admit_type_cat = 'FRSH'
 			and ipeds_full_part_time = 'F'
 	;quit;
@@ -318,7 +318,7 @@ run;
 		where snapshot = 'census'
 			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus = 'VANCO'
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 			and primary_plan_flag = 'Y'
@@ -889,7 +889,7 @@ run;
 		from &dsn..new_student_enrolled_housing_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus = 'VANCO'
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 	;quit;
@@ -1180,7 +1180,7 @@ run;
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
-			and a.adj_admit_campus = 'PULLM'
+			and a.adj_admit_campus = 'VANCO'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'FRSH'
 			and a.ipeds_full_part_time = 'F'
@@ -1198,7 +1198,7 @@ run;
 			eot_term_gpa_hours
 		from &dev..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus = 'VANCO'
 			and adj_admit_type_cat = 'FRSH'
 			and ipeds_full_part_time = 'F'
 	;quit;
@@ -1268,7 +1268,7 @@ run;
 		where snapshot = 'census'
 			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
 			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus = 'VANCO'
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 			and primary_plan_flag = 'Y'
@@ -1904,7 +1904,7 @@ run;
 		from &dsn..new_student_enrolled_housing_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus = 'VANCO'
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 	;quit;
@@ -2316,17 +2316,17 @@ proc means data=testing_set;
 	title 'AY2021 Data';
 run;
 
-filename full "Z:\Nathan\Models\student_risk\full_set.csv" encoding="utf-8";
+filename full "Z:\Nathan\Models\student_risk\Datasets\full_set.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\Datasets\training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\Datasets\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;

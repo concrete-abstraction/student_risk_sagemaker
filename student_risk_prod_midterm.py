@@ -61,13 +61,13 @@ if config.mid_flag == False:
 	end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_year'].values[0]
 
 	if now_year < midterm_year or now_year > end_year:
-		raise config.DateError(f'{date.today()}: Midterm year exception, attempting to run from census.')
+		raise config.DateError(f'{date.today()}: Midterm year exception, attempting to run if midterm newest snapshot.')
 
 	elif (now_year == midterm_year and now_month < midterm_month) or (now_year == end_year and now_month > end_month):
-		raise config.DateError(f'{date.today()}: Midterm month exception, attempting to run from census.')
+		raise config.DateError(f'{date.today()}: Midterm month exception, attempting to run if midterm newest snapshot.')
 
 	elif (now_year == midterm_year and now_month == midterm_month and now_day < midterm_day) or (now_year == end_year and now_month == end_month and now_day > end_day):
-		raise config.DateError(f'{date.today()}: Midterm day exception, attempting to run from census.')
+		raise config.DateError(f'{date.today()}: Midterm day exception, attempting to run if midterm newest snapshot.')
 
 	else:
 		print(f'{date.today()}: No midterm date exceptions, running from midterm.')
