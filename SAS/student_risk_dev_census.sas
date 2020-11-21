@@ -10,7 +10,7 @@
 %let acs_lag = 2;
 %let lag_year = 1;
 /* Note: This is a test date. Revert to 2015 in production. */
-%let start_cohort = 2015;
+%let start_cohort = 2020;
 %let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -131,7 +131,7 @@ run;
 			on input(a.full_acad_year,4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm,4,1) = '7'
-			and a.adj_admit_campus = 'VANCO'
+			and a.adj_admit_campus = 'PULLM'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'FRSH'
 			and a.ipeds_full_part_time = 'F'
@@ -149,7 +149,7 @@ run;
 			eot_term_gpa_hours
 		from &dev..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'VANCO'
+			and adj_admit_campus = 'PULLM'
 			and adj_admit_type_cat = 'FRSH'
 			and ipeds_full_part_time = 'F'
 	;quit;
@@ -318,7 +318,7 @@ run;
 		where snapshot = 'census'
 			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus = 'VANCO'
+			and adj_admit_campus = 'PULLM'
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 			and primary_plan_flag = 'Y'
@@ -570,7 +570,8 @@ run;
 			class_nbr,
 			crse_id,
 			subject_catalog_nbr,
-			ssr_component
+			ssr_component,
+			unt_taken
 		from &dsn..class_registration_vw
 		where snapshot = 'eot'
 			and full_acad_year = "&cohort_year."
@@ -689,8 +690,16 @@ run;
 			count(c.class_nbr) as fall_lab_count,
 			count(d.class_nbr) as spring_lec_count,
 			count(e.class_nbr) as spring_lab_count,
+			sum(f.unt_taken) as fall_lec_units,
+			sum(g.unt_taken) as fall_lab_units,
+			sum(h.unt_taken) as spring_lec_units,
+			sum(i.unt_taken) as spring_lab_units,
 			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
-			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count,
+			coalesce(calculated fall_lec_units, 0) + coalesce(calculated spring_lec_units, 0) as total_lec_units,
+			coalesce(calculated fall_lab_units, 0) + coalesce(calculated spring_lab_units, 0) as total_lab_units,
+			coalesce(calculated fall_lec_units, 0) + coalesce(calculated fall_lab_units, 0) as total_fall_units,
+			coalesce(calculated spring_lec_units, 0) + coalesce(calculated spring_lab_units, 0) as total_spring_units
 		from &dsn..class_registration_vw as a
 		left join (select distinct emplid, 
 						class_nbr
@@ -725,13 +734,57 @@ run;
 		left join (select distinct emplid, 
 						class_nbr
 					from &dsn..class_registration_vw
-					where snapshot = 'census'
+					where snapshot = 'eot'
 						and full_acad_year = "&cohort_year."
 						and enrl_ind = 1
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '7'
+						and ssr_component = 'LEC') as f
+			on a.emplid = f.emplid
+				and a.class_nbr = f.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '7'
+						and ssr_component = 'LAB') as g
+			on a.emplid = g.emplid
+				and a.class_nbr = g.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '3'
+						and ssr_component = 'LEC') as h
+			on a.emplid = h.emplid
+				and a.class_nbr = h.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '3'
+						and ssr_component = 'LAB') as i
+			on a.emplid = i.emplid
+				and a.class_nbr = i.class_nbr
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.enrl_ind = 1
@@ -889,7 +942,7 @@ run;
 		from &dsn..new_student_enrolled_housing_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'VANCO'
+			and adj_admit_campus = 'PULLM'
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 	;quit;
@@ -1013,6 +1066,12 @@ run;
 			s.spring_lab_count,
 			s.total_lec_count,
 			s.total_lab_count,
+			s.fall_lec_units,
+			s.fall_lab_units,
+			s.spring_lec_units,
+			s.spring_lab_units,
+			s.total_fall_units,
+			(a.term_credit_hours - s.total_fall_units) as term_withdrawn_hours,
 			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,
@@ -1180,7 +1239,7 @@ run;
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
-			and a.adj_admit_campus = 'VANCO'
+			and a.adj_admit_campus = 'PULLM'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'FRSH'
 			and a.ipeds_full_part_time = 'F'
@@ -1198,7 +1257,7 @@ run;
 			eot_term_gpa_hours
 		from &dev..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'VANCO'
+			and adj_admit_campus = 'PULLM'
 			and adj_admit_type_cat = 'FRSH'
 			and ipeds_full_part_time = 'F'
 	;quit;
@@ -1268,7 +1327,7 @@ run;
 		where snapshot = 'census'
 			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
 			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus = 'VANCO'
+			and adj_admit_campus = 'PULLM'
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 			and primary_plan_flag = 'Y'
@@ -1602,6 +1661,7 @@ run;
 			emplid,
 			class_nbr,
 			crse_id,
+			unt_taken,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 			ssr_component
 		from acs.subcatnbr_data
@@ -1719,8 +1779,16 @@ run;
 			count(c.class_nbr) as fall_lab_count,
 			count(d.class_nbr) as spring_lec_count,
 			count(e.class_nbr) as spring_lab_count,
+			sum(f.unt_taken) as fall_lec_units,
+			sum(g.unt_taken) as fall_lab_units,
+			sum(h.unt_taken) as spring_lec_units,
+			sum(i.unt_taken) as spring_lab_units,
 			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
-			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count,
+			coalesce(calculated fall_lec_units, 0) + coalesce(calculated spring_lec_units, 0) as total_lec_units,
+			coalesce(calculated fall_lab_units, 0) + coalesce(calculated spring_lab_units, 0) as total_lab_units,
+			coalesce(calculated fall_lec_units, 0) + coalesce(calculated fall_lab_units, 0) as total_fall_units,
+			coalesce(calculated spring_lec_units, 0) + coalesce(calculated spring_lab_units, 0) as total_spring_units
 		from class_registration_&cohort_year. as a
 		left join (select distinct emplid, 
 						class_nbr
@@ -1750,6 +1818,38 @@ run;
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '7'
+						and ssr_component = 'LEC') as f
+			on a.emplid = f.emplid
+				and a.class_nbr = f.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '7'
+						and ssr_component = 'LAB') as g
+			on a.emplid = g.emplid
+				and a.class_nbr = g.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '3'
+						and ssr_component = 'LEC') as h
+			on a.emplid = h.emplid
+				and a.class_nbr = h.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '3'
+						and ssr_component = 'LAB') as i
+			on a.emplid = i.emplid
+				and a.class_nbr = i.class_nbr
 		group by a.emplid
 	;quit;
 	
@@ -1904,7 +2004,7 @@ run;
 		from &dsn..new_student_enrolled_housing_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'VANCO'
+			and adj_admit_campus = 'PULLM'
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 	;quit;
@@ -2028,6 +2128,12 @@ run;
 			t.spring_lab_count,
 			t.total_lec_count,
 			t.total_lab_count,
+			t.fall_lec_units,
+			t.fall_lab_units,
+			t.spring_lec_units,
+			t.spring_lab_units,
+			t.total_fall_units,
+			(a.term_credit_hours - t.total_fall_units) as term_withdrawn_hours,
  			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,

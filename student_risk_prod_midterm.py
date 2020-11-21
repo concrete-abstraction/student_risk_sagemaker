@@ -112,7 +112,6 @@ if config.mid_flag == True:
 #%%
 # Midterm data check
 
-
 #%%
 # Start SAS session
 print('\nStart SAS session...')
@@ -487,7 +486,7 @@ sas.submit("""
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."	
-			and a.award_period in ('A','B')
+			and a.award_period in ('A')
 			and a.efc_status = 'O'
 	;quit;
 	
@@ -718,7 +717,8 @@ sas.submit("""
 			class_nbr,
 			crse_id,
 			subject_catalog_nbr,
-			ssr_component
+			ssr_component,
+			unt_taken
 		from &dsn..class_registration_vw
 		where snapshot = 'eot'
 			and full_acad_year = "&cohort_year."
@@ -837,8 +837,16 @@ sas.submit("""
 			count(c.class_nbr) as fall_lab_count,
 			count(d.class_nbr) as spring_lec_count,
 			count(e.class_nbr) as spring_lab_count,
+			sum(f.unt_taken) as fall_lec_units,
+			sum(g.unt_taken) as fall_lab_units,
+			sum(h.unt_taken) as spring_lec_units,
+			sum(i.unt_taken) as spring_lab_units,
 			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
-			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count,
+			coalesce(calculated fall_lec_units, 0) + coalesce(calculated spring_lec_units, 0) as total_lec_units,
+			coalesce(calculated fall_lab_units, 0) + coalesce(calculated spring_lab_units, 0) as total_lab_units,
+			coalesce(calculated fall_lec_units, 0) + coalesce(calculated fall_lab_units, 0) as total_fall_units,
+			coalesce(calculated spring_lec_units, 0) + coalesce(calculated spring_lab_units, 0) as total_spring_units
 		from &dsn..class_registration_vw as a
 		left join (select distinct emplid, 
 						class_nbr
@@ -873,13 +881,57 @@ sas.submit("""
 		left join (select distinct emplid, 
 						class_nbr
 					from &dsn..class_registration_vw
-					where snapshot = 'census'
+					where snapshot = 'eot'
 						and full_acad_year = "&cohort_year."
 						and enrl_ind = 1
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '7'
+						and ssr_component = 'LEC') as f
+			on a.emplid = f.emplid
+				and a.class_nbr = f.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '7'
+						and ssr_component = 'LAB') as g
+			on a.emplid = g.emplid
+				and a.class_nbr = g.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '3'
+						and ssr_component = 'LEC') as h
+			on a.emplid = h.emplid
+				and a.class_nbr = h.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from &dsn..class_registration_vw
+					where snapshot = 'eot'
+						and full_acad_year = "&cohort_year."
+						and enrl_ind = 1
+						and substr(strm,4,1) = '3'
+						and ssr_component = 'LAB') as i
+			on a.emplid = i.emplid
+				and a.class_nbr = i.class_nbr
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.enrl_ind = 1
@@ -1161,6 +1213,12 @@ sas.submit("""
 			s.spring_lab_count,
 			s.total_lec_count,
 			s.total_lab_count,
+			s.fall_lec_units,
+			s.fall_lab_units,
+			s.spring_lec_units,
+			s.spring_lab_units,
+			s.total_fall_units,
+			(a.term_credit_hours - s.total_fall_units) as term_withdrawn_hours,
 			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,
@@ -1712,6 +1770,7 @@ sas.submit("""
 			emplid,
 			class_nbr,
 			crse_id,
+			unt_taken,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 			ssr_component
 		from acs.subcatnbr_data
@@ -1829,8 +1888,16 @@ sas.submit("""
 			count(c.class_nbr) as fall_lab_count,
 			count(d.class_nbr) as spring_lec_count,
 			count(e.class_nbr) as spring_lab_count,
+			sum(f.unt_taken) as fall_lec_units,
+			sum(g.unt_taken) as fall_lab_units,
+			sum(h.unt_taken) as spring_lec_units,
+			sum(i.unt_taken) as spring_lab_units,
 			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
-			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count,
+			coalesce(calculated fall_lec_units, 0) + coalesce(calculated spring_lec_units, 0) as total_lec_units,
+			coalesce(calculated fall_lab_units, 0) + coalesce(calculated spring_lab_units, 0) as total_lab_units,
+			coalesce(calculated fall_lec_units, 0) + coalesce(calculated fall_lab_units, 0) as total_fall_units,
+			coalesce(calculated spring_lec_units, 0) + coalesce(calculated spring_lab_units, 0) as total_spring_units
 		from class_registration_&cohort_year. as a
 		left join (select distinct emplid, 
 						class_nbr
@@ -1860,6 +1927,38 @@ sas.submit("""
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '7'
+						and ssr_component = 'LEC') as f
+			on a.emplid = f.emplid
+				and a.class_nbr = f.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '7'
+						and ssr_component = 'LAB') as g
+			on a.emplid = g.emplid
+				and a.class_nbr = g.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '3'
+						and ssr_component = 'LEC') as h
+			on a.emplid = h.emplid
+				and a.class_nbr = h.class_nbr
+		left join (select distinct emplid, 
+						class_nbr,
+						unt_taken
+					from class_registration_&cohort_year.
+					where substr(strm,4,1) = '3'
+						and ssr_component = 'LAB') as i
+			on a.emplid = i.emplid
+				and a.class_nbr = i.class_nbr
 		group by a.emplid
 	;quit;
 	
@@ -2131,6 +2230,12 @@ sas.submit("""
 			t.spring_lab_count,
 			t.total_lec_count,
 			t.total_lab_count,
+			t.fall_lec_units,
+			t.fall_lab_units,
+			t.spring_lec_units,
+			t.spring_lab_units,
+			t.total_fall_units,
+			(a.term_credit_hours - t.total_fall_units) as term_withdrawn_hours,
  			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,
@@ -2525,6 +2630,8 @@ logit_df = training_set[[
                         # 'AICE',
                         'IB_AICE', 
                         'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -2682,6 +2789,8 @@ training_set = training_set[[
 							# 'AICE',
 							'IB_AICE', 
 							'term_credit_hours',
+							# 'total_fall_units',
+							'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -2839,6 +2948,8 @@ testing_set = testing_set[[
 							# 'AICE',
 							'IB_AICE', 
 							'term_credit_hours',
+							# 'total_fall_units',
+							'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -2905,7 +3016,7 @@ testing_set = testing_set[[
 							'unmet_need_ofr'
                             ]].dropna()
 
-testing_set = testing_set.reset_index()
+testing_set = testing_set.reset_index(drop=True)
 
 pred_outcome = testing_set[[ 
                             'emplid',
@@ -2959,6 +3070,10 @@ outlier_prep = make_column_transformer(
 x_outlier = outlier_prep.fit_transform(x_outlier)
 
 training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(x_outlier)
+
+outlier_set = training_set.drop(training_set[training_set['mask'] == 1].index)
+outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\Outliers\\outlier_set.csv', encoding='utf-8', index=False)
+
 training_set = training_set.drop(training_set[training_set['mask'] == -1].index)
 training_set = training_set.drop(columns='mask')
 
@@ -3055,6 +3170,8 @@ x_test = testing_set[[
                         # 'AICE',
                         'IB_AICE', 
                         'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -3124,7 +3241,7 @@ x_test = testing_set[[
 y_train = training_set['enrl_ind']
 # y_test = testing_set['enrl_ind']
 
-smotenc_prep = make_column_transformer(
+tomek_prep = make_column_transformer(
 	(StandardScaler(), [
 						# 'age',
 						# 'min_week_from_term_begin_dt',
@@ -3157,6 +3274,8 @@ smotenc_prep = make_column_transformer(
 						'midterm_gpa_avg',
 						'cum_adj_transfer_hours',
 						'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -3186,14 +3305,20 @@ smotenc_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-x_train = smotenc_prep.fit_transform(x_train)
-x_test = smotenc_prep.fit_transform(x_test)
+x_train = tomek_prep.fit_transform(x_train)
+x_test = tomek_prep.fit_transform(x_test)
 
 # over = SMOTENC(categorical_features=[12,13,14,15,16,17,18,19,20,21,22,25,26,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
 # x_train, y_train = over.fit_resample(x_train, y_train)
 
 under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 x_train, y_train = under.fit_resample(x_train, y_train)
+
+tomek_index = under.sample_indices_
+training_set = training_set.reset_index(drop=True)
+
+tomek_set = training_set.drop(tomek_index)
+tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\Outliers\\tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model
@@ -3212,7 +3337,8 @@ y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_fall_contact_hrs \
 				+ midterm_gpa_avg + midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
+            	+ high_school_gpa + remedial \
+				+ cum_adj_transfer_hours + term_withdrawn_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=logit_df, return_type='dataframe')
@@ -3249,7 +3375,7 @@ lreg_fpr, lreg_tpr, thresholds = roc_curve(y_train, lreg_probs, drop_intermediat
 
 #%%
 # SGD model
-sgd = SGDClassifier(loss='modified_huber', class_weight='balanced', penalty='elasticnet', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(x_train, y_train)
+sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 sgd_probs = sgd.predict_proba(x_train)
 sgd_probs = sgd_probs[:, 1]
@@ -3275,7 +3401,7 @@ sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=F
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=10, max_features='sqrt', verbose=True).fit(x_train, y_train)
+rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=4, max_features='sqrt', verbose=True).fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]

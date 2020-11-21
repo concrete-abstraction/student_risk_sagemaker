@@ -1,5 +1,5 @@
 #%%
-import config
+import ...config
 import datetime
 import joblib
 import matplotlib.pyplot as plt
@@ -3146,7 +3146,7 @@ lreg_fpr, lreg_tpr, thresholds = roc_curve(y_train, lreg_probs, drop_intermediat
 
 #%%
 # SGD model
-sgd = SGDClassifier(loss='modified_huber', class_weight='balanced', penalty='elasticnet', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(x_train, y_train)
+sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 sgd_probs = sgd.predict_proba(x_train)
 sgd_probs = sgd_probs[:, 1]

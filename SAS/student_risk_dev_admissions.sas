@@ -741,7 +741,7 @@ run;
 		left join (select distinct emplid, 
 						class_nbr
 					from &dsn..class_registration_vw
-					where snapshot = 'census'
+					where snapshot = 'eot'
 						and full_acad_year = "&cohort_year."
 						and enrl_ind = 1
 						and substr(strm,4,1) = '3'

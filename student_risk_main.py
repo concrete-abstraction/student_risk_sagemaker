@@ -70,28 +70,28 @@ sys.stdout = Logger()
 if __name__ == '__main__':
 
     try:
-        exec(open('Z:\\Nathan\\Models\\student_risk\\Scripts\\prod\\student_risk_prod_midterm.py').read())
+        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_midterm.py').read())
     except config.DateError as mid_error:
         print(mid_error)
         config.mid_flag = True
 
         try: 
-            exec(open('Z:\\Nathan\\Models\\student_risk\\Scripts\\prod\\student_risk_prod_midterm.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_midterm.py').read())
         except config.DataError as mid_snap_error:
             print(mid_snap_error)
 
     try:
-        exec(open('Z:\\Nathan\\Models\\student_risk\\Scripts\\prod\\student_risk_prod_census.py').read())
+        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_census.py').read())
     except config.DateError as cen_error:
         print(cen_error)
         config.cen_flag = True
         
         try: 
-            exec(open('Z:\\Nathan\\Models\\student_risk\\Scripts\\prod\\student_risk_prod_census.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_census.py').read())
         except config.DataError as cen_snap_error:
             print(cen_snap_error)
 
     try:
-        exec(open('Z:\\Nathan\\Models\\student_risk\\Scripts\\prod\\student_risk_prod_admissions.py').read())
+        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk_prod_admissions.py').read())
     except config.DateError as adm_error:
         print(adm_error)

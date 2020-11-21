@@ -44,7 +44,7 @@ create table dir.subcatnbr_data as
 select * from connection to oracle 
 (
 
-SELECT DISTINCT A.STRM, A.EMPLID, B.SUBJECT, B.CATALOG_NBR, B.SSR_COMPONENT, B.CRSE_ID, B.CLASS_NBR, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate
+SELECT DISTINCT A.STRM, A.EMPLID, B.SUBJECT, B.CATALOG_NBR, B.SSR_COMPONENT, B.CRSE_ID, B.CLASS_NBR, B.UNT_TAKEN, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate
 FROM PS_STDNT_ENRL_VW A, PS_CLASS_TBL B
 WHERE (A.STRM = %bquote('&strm.')
 AND A.STDNT_ENRL_STATUS = 'E'
