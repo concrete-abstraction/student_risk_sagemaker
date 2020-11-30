@@ -1,6 +1,6 @@
 options nosytaxcheck;
 
-libname acs "Z:\Nathan\Models\student_risk\Supplemental Files";
+libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 
 %let start_year = 2013;
 %let end_year = 2018;

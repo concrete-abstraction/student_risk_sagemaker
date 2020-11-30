@@ -9,7 +9,7 @@
 options mlogic mprint merror symbolgen ;
 
 libname census odbc dsn=census schema=dbo;
-libname dir "\\po-fs1.ad.wsu.edu\IR\Nathan\Models\student_risk\Supplemental Files";
+libname dir "\\po-fs1.ad.wsu.edu\IR\Nathan\Models\student_risk\supplemental_files";
 
 %INCLUDE "\\po-fs1.ad.wsu.edu\IR\SAS\SAS-process\control\user\jon\determine_WSUNCT1T.sas";
 %INCLUDE "\\po-fs1.ad.wsu.edu\IR\SAS\SAS-process\control\erp\determine_WSUNCPRD.sas";
@@ -44,8 +44,8 @@ create table dir.subcatnbr_data as
 select * from connection to oracle 
 (
 
-SELECT DISTINCT A.STRM, A.EMPLID, B.SUBJECT, B.CATALOG_NBR, B.SSR_COMPONENT, B.CRSE_ID, B.CLASS_NBR, B.UNT_TAKEN, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate
-FROM PS_STDNT_ENRL_VW A, PS_CLASS_TBL B
+SELECT DISTINCT A.STRM, A.EMPLID, B.SUBJECT, B.CATALOG_NBR, B.SSR_COMPONENT, B.CRSE_ID, B.CLASS_NBR, A.UNT_TAKEN, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate
+FROM PS_STDNT_ENRL A, PS_CLASS_TBL B
 WHERE (A.STRM = %bquote('&strm.')
 AND A.STDNT_ENRL_STATUS = 'E'
 AND A.ACAD_CAREER = 'UGRD'

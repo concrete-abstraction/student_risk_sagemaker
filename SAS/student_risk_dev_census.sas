@@ -17,22 +17,22 @@ libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &dev. odbc dsn=&dev. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
 
-libname acs "Z:\Nathan\Models\student_risk\Supplemental Files";
+libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 
 proc import out=act_to_sat_engl_read
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\act_to_sat_engl_read.xlsx"
+	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
 
 proc import out=act_to_sat_math
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\act_to_sat_math.xlsx"
+	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_math.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
 
 proc import out=cpi
-	datafile="Z:\Nathan\Models\student_risk\Supplemental Files\cpi.xlsx"
+	datafile="Z:\Nathan\Models\student_risk\supplemental_files\cpi.xlsx"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
@@ -2422,17 +2422,17 @@ proc means data=testing_set;
 	title 'AY2021 Data';
 run;
 
-filename full "Z:\Nathan\Models\student_risk\Datasets\full_set.csv" encoding="utf-8";
+filename full "Z:\Nathan\Models\student_risk\datasets\full_set.csv" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\Datasets\training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\datasets\training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\Datasets\testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\datasets\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;

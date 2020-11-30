@@ -1,5 +1,5 @@
 #%%
-import ...config
+from student_risk import config
 import datetime
 import joblib
 import matplotlib.pyplot as plt
@@ -45,7 +45,7 @@ auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOM
 # Census date check 
 if config.cen_flag == False:
 
-	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
+	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
 	now = datetime.datetime.now()
 
 	now_day = now.day
@@ -138,7 +138,7 @@ sas.submit("""
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &dev. odbc dsn=&dev. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
-libname acs \"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\\";
+libname acs \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\\";
 """)
 
 print('Done\n')
@@ -150,7 +150,7 @@ start = time.perf_counter()
 
 sas.submit("""
 proc import out=act_to_sat_engl_read
-    datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\act_to_sat_engl_read.xlsx\"
+    datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_engl_read.xlsx\"
     dbms=XLSX REPLACE;
     getnames=YES;
     run;
@@ -158,7 +158,7 @@ proc import out=act_to_sat_engl_read
 
 sas.submit("""
 proc import out=act_to_sat_math
-    datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\act_to_sat_math.xlsx\"
+    datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_math.xlsx\"
     dbms=XLSX REPLACE;
     getnames=YES;
     run;
@@ -166,7 +166,7 @@ proc import out=act_to_sat_math
 
 sas.submit("""
 proc import out=cpi
-	datafile=\"Z:\\Nathan\\Models\\student_risk\\Supplemental Files\\cpi.xlsx\"
+	datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\cpi.xlsx\"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
@@ -2308,17 +2308,17 @@ print('Done\n')
 print('Export data from SAS...')
 
 sas_log = sas.submit("""
-filename full \"Z:\\Nathan\\Models\\student_risk\\Datasets\\full_set.csv\" encoding="utf-8";
+filename full \"Z:\\Nathan\\Models\\student_risk\\datasets\\full_set.csv\" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training \"Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv\" encoding="utf-8";
+filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv\" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing \"Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv" encoding="utf-8";
+filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
@@ -2334,8 +2334,8 @@ sas.endsas()
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set.csv', encoding='utf-8')
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8')
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8')
 
 #%%
 # Prepare base dataframes
@@ -2859,6 +2859,10 @@ outlier_prep = make_column_transformer(
 x_outlier = outlier_prep.fit_transform(x_outlier)
 
 training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(x_outlier)
+
+outlier_set = training_set.drop(training_set[training_set['mask'] == 1].index)
+outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\outlier_set.csv', encoding='utf-8', index=False)
+
 training_set = training_set.drop(training_set[training_set['mask'] == -1].index)
 training_set = training_set.drop(columns='mask')
 
@@ -3093,6 +3097,12 @@ x_test = smotenc_prep.fit_transform(x_test)
 under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 x_train, y_train = under.fit_resample(x_train, y_train)
 
+tomek_index = under.sample_indices_
+training_set = training_set.reset_index(drop=True)
+
+tomek_set = training_set.drop(tomek_index)
+tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\tomek_set.csv', encoding='utf-8', index=False)
+
 #%%
 # Standard logistic model
 y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
@@ -3244,7 +3254,7 @@ pred_outcome['rfc_pred'] = rfc.predict(x_test)
 # pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
 pred_outcome['vcf_pred'] = vcf.predict(x_test)
-pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\pred_outcome.csv', encoding='utf-8', index=False)
+pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 aggregate_outcome['emplid'] = aggregate_outcome['emplid'].astype(str).str.zfill(9)
@@ -3270,7 +3280,7 @@ aggregate_outcome.loc[aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'
 aggregate_outcome.loc[aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
 #%%
-aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
+aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
 # aggregate_outcome.to_sql('aggregate_outcome', con=auto_engine, if_exists='replace', index=False, schema='oracle_int.dbo')
 
 #%%
@@ -3289,18 +3299,18 @@ current_outcome['date'] = date.today()
 current_outcome['model_id'] = 2
 
 #%%
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv'):
-	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv'):
+	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv', encoding='utf-8', index=False)
 	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
-	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_backup.csv', encoding='utf-8', index=False)
+	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
+	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\student_backup.csv', encoding='utf-8', index=False)
 	student_outcome = pd.concat([prior_outcome, current_outcome])
-	student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\Predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv', encoding='utf-8', index=False)
 	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Output model
-joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\Models\\model_v{sklearn.__version__}.pkl')
+joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\model_v{sklearn.__version__}.pkl')
 
 print('Done\n')

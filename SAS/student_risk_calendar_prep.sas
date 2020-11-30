@@ -29,7 +29,7 @@ proc sql;
     order by term_code
 ;quit;
 
-filename calendar "Z:\Nathan\Models\student_risk\Supplemental Files\acad_calendar.csv" encoding="utf-8";
+filename calendar "Z:\Nathan\Models\student_risk\supplemental_files\acad_calendar.csv" encoding="utf-8";
 
 proc export data=adj_acad_calendar outfile=calendar dbms=csv replace;
 run;
