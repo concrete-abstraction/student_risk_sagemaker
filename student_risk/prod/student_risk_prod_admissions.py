@@ -1,5 +1,5 @@
 #%%
-import config
+from student_risk import config
 import datetime
 import joblib
 import matplotlib.pyplot as plt
@@ -36,7 +36,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
 # Database connection
-cred = pathlib.Path('login.bin').read_text().split('|')
+cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
 params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
 engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
@@ -50,13 +50,13 @@ now_day = now.day
 now_month = now.month
 now_year = now.year
 
-admissions_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['begin_day'].values[0]
-admissions_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['begin_month'].values[0]
-admissions_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['begin_year'].values[0]
+admissions_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
+admissions_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
+admissions_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
 
-census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_day'].values[0]
-census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_month'].values[0]
-census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['census_year'].values[0]
+census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
+census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
+census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
 
 if now_year < admissions_year or now_year > census_year:
 	raise config.DateError(f'{date.today()}: Admissions year exception, outside of date range.')

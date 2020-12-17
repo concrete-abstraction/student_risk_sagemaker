@@ -36,7 +36,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
 # Database connection
-cred = pathlib.Path('login.bin').read_text().split('|')
+cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
 params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
 engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
@@ -52,13 +52,13 @@ if config.mid_flag == False:
 	now_month = now.month
 	now_year = now.year
 
-	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_day'].values[0]
-	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_month'].values[0]
-	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['midterm_year'].values[0]
+	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
+	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
+	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
 
-	end_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_day'].values[0]
-	end_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_month'].values[0]
-	end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] > now_month)]['end_year'].values[0]
+	end_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_day'].values[0]
+	end_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_month'].values[0]
+	end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_year'].values[0]
 
 	if now_year < midterm_year or now_year > end_year:
 		raise config.DateError(f'{date.today()}: Midterm year exception, attempting to run if midterm newest snapshot.')
