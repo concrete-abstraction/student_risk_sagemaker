@@ -1,5 +1,5 @@
-Reference Files/*.pdf
-Reference Files/*.sas
+reference_files/*.pdf
+reference_files/*.sas
 *.csv
 *.R
 *.json
