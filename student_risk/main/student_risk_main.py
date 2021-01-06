@@ -1,5 +1,7 @@
 #%%
 from student_risk import config
+import datetime
+import pandas as pd
 import saspy
 import sys
 from datetime import date
@@ -51,6 +53,16 @@ run;
 sas.endsas()
 
 #%%
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
+now = datetime.datetime.now()
+
+now_day = now.day
+now_month = now.month
+now_year = now.year
+
+now_term = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['term_type'].values[0]
+
+#%%
 class Logger(object):
     def __init__(self):
         self.terminal = sys.stdout
@@ -66,32 +78,69 @@ class Logger(object):
 
 sys.stdout = Logger()
 
-# %%
+#%%
 if __name__ == '__main__':
 
-    try:
-        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_midterm.py').read())
-    except config.DateError as mid_error:
-        print(mid_error)
-        config.mid_flag = True
+    if now_term == 'SPR':
 
-        try: 
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_midterm.py').read())
-        except config.DataError as mid_snap_error:
-            print(mid_snap_error)
+        try:
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_midterm.py').read())
+        except config.DateError as mid_error:
+            print(mid_error)
+            config.mid_flag = True
 
-    try:
-        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_census.py').read())
-    except config.DateError as cen_error:
-        print(cen_error)
-        config.cen_flag = True
-        
-        try: 
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_census.py').read())
-        except config.DataError as cen_snap_error:
-            print(cen_snap_error)
+            try: 
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_midterm.py').read())
+            except config.DataError as mid_snap_error:
+                print(mid_snap_error)
 
-    try:
-        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_admissions.py').read())
-    except config.DateError as adm_error:
-        print(adm_error)
+        try:
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_census.py').read())
+        except config.DateError as cen_error:
+            print(cen_error)
+            config.cen_flag = True
+            
+            try: 
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_census.py').read())
+            except config.DataError as cen_snap_error:
+                print(cen_snap_error)
+
+        try:
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_precensus.py').read())
+        except config.DateError as pre_error:
+            print(pre_error)
+            config.pre_flag = True
+
+            try: 
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_precensus.py').read())
+            except config.DataError as pre_snap_error:
+                print(pre_snap_error)
+
+    if now_term == 'FAL':
+
+        try:
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_midterm.py').read())
+        except config.DateError as mid_error:
+            print(mid_error)
+            config.mid_flag = True
+
+            try: 
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_midterm.py').read())
+            except config.DataError as mid_snap_error:
+                print(mid_snap_error)
+
+        try:
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_census.py').read())
+        except config.DateError as cen_error:
+            print(cen_error)
+            config.cen_flag = True
+            
+            try: 
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_census.py').read())
+            except config.DataError as cen_snap_error:
+                print(cen_snap_error)
+
+        try:
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_precensus.py').read())
+        except config.DateError as adm_error:
+            print(adm_error)

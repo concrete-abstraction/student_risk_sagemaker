@@ -42,39 +42,39 @@ engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
-# Midterm date check
-if config.mid_flag == False:
+# Precensus date check 
+if config.pre_flag == False:
 
-	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
+	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
 	now = datetime.datetime.now()
 
 	now_day = now.day
 	now_month = now.month
 	now_year = now.year
 
-	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
-	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
-	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
+	precensus_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
+	precensus_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
+	precensus_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
 
-	end_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_day'].values[0]
-	end_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_month'].values[0]
-	end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_year'].values[0]
+	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
+	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
+	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
 
-	if now_year < midterm_year or now_year > end_year:
-		raise config.DateError(f'{date.today()}: Midterm year exception, attempting to run if midterm newest snapshot.')
+	if now_year < precensus_year or now_year > census_year:
+		raise config.DateError(f'{date.today()}: Precensus year exception, outside of date range.')
 
-	elif (now_year == midterm_year and now_month < midterm_month) or (now_year == end_year and now_month > end_month):
-		raise config.DateError(f'{date.today()}: Midterm month exception, attempting to run if midterm newest snapshot.')
+	elif (now_year == precensus_year and now_month < precensus_month) or (now_year == census_year and now_month > census_month):
+		raise config.DateError(f'{date.today()}: Precensus month exception, outside of date range.')
 
-	elif (now_year == midterm_year and now_month == midterm_month and now_day < midterm_day) or (now_year == end_year and now_month == end_month and now_day > end_day):
-		raise config.DateError(f'{date.today()}: Midterm day exception, attempting to run if midterm newest snapshot.')
+	elif (now_year == precensus_year and now_month == precensus_month and now_day < precensus_day) or (now_year == census_year and now_month == census_month and now_day >= census_day):
+		raise config.DateError(f'{date.today()}: Precensus day exception, outside of date range.')
 
 	else:
-		print(f'{date.today()}: No midterm date exceptions, running from midterm.')
+		print(f'{date.today()}: No census date exceptions, running from precensus.')
 
 #%%
-# Midterm snapshot check
-if config.mid_flag == True:
+# Precensus snapshot check
+if config.pre_flag == True:
 
 	sas = saspy.SASsession()
 
@@ -88,14 +88,15 @@ if config.mid_flag == True:
 			max(case when snapshot = 'census' 	then 1
 				when snapshot = 'midterm' 		then 2
 				when snapshot = 'eot'			then 3
-												else .
+												else 0
 												end) as snap_order
 			into: snap_check
 			separated by ''
 		from &dsn..class_registration
-		where strm = (select distinct
+		where acad_career = 'UGRD'
+			and strm = (select distinct
 							max(strm)
-						from &dsn..class_registration)
+						from &dsn..class_registration where acad_career = 'UGRD')
 	;quit;
 	""")
 
@@ -103,14 +104,11 @@ if config.mid_flag == True:
 
 	sas.endsas()
 
-	if snap_check != 2:
-		raise config.DataError(f'{date.today()}: Midterm snapshot exception, attempting to run from census.')
+	if snap_check == 0:
+		raise config.DataError(f'{date.today()}: Precensus snapshot exception, data not available.')
 
 	else:
-		print(f'{date.today()}: No midterm snapshot exceptions, running from midterm.')
-
-#%%
-# Midterm data check
+		print(f'{date.today()}: No precensus snapshot exceptions, running from precensus.')
 
 #%%
 # Start SAS session
@@ -511,6 +509,24 @@ sas.submit("""
 	;quit;
 	
 	proc sql;
+		create table dependent_&cohort_year. as
+		select distinct
+			a.emplid,
+			b.snapshot as dependent_snap,
+			a.num_in_family,
+			a.stdnt_have_dependents,
+      		a.stdnt_have_children_to_support,
+      		a.stdnt_agi,
+      		a.stdnt_agi_blank
+		from &dsn..fa_isir as a
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
+			on a.emplid = b.emplid
+				and a.aid_year = b.aid_year
+				and a.snapshot = b.snapshot
+		where a.aid_year = "&cohort_year."
+	;quit;
+	
+	proc sql;
 		create table exams_&cohort_year. as 
 		select distinct
 			a.emplid,
@@ -539,11 +555,15 @@ sas.submit("""
 		create table degrees_&cohort_year. as
 		select distinct
 			emplid,
-			case when degree = 'AD_AS-T' then 'AD_AST' else degree end as degree,
+			case when degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B','AD_AST2C','AD_AST2M') 	then 'AD_AST' 
+				when substr(degree,1,6) = 'AD_DTA' 																then 'AD_DTA' 																						
+																												else degree end as degree,
 			1 as ind
 		from &dsn..student_ext_degree
 		where floor(degree_term_code / 10) <= &cohort_year.
-			and degree in ('AD_AS-T','AD_DTA')
+			and degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B',
+							'AD_AST2C','AD_AST2M','AD_DTA','AD_GED','AD_GENS','AD_GER',
+							'AD_HSDIP')
 		order by emplid
 	;quit;
 	
@@ -1153,6 +1173,12 @@ sas.submit("""
 			f.total_disb,
 			f.total_offer,
 			f.total_accept,
+			v.dependent_snap,
+			v.num_in_family,
+			v.stdnt_have_dependents,
+      		v.stdnt_have_children_to_support,
+      		v.stdnt_agi,
+      		v.stdnt_agi_blank,
 			g.best,
 			g.bestr,
 			g.qvalue,
@@ -1164,6 +1190,10 @@ sas.submit("""
 			g.sat_comp,
 			h.ad_dta,
 			h.ad_ast,
+			h.ad_hsdip,
+			h.ad_ged,
+			h.ad_ger,
+			h.ad_gens,
 			i.ap,
 			i.rs,
 			i.chs,
@@ -1297,6 +1327,8 @@ sas.submit("""
  			on a.emplid = t.emplid
  		left join midterm_grades_&cohort_year. as u
  			on a.emplid = u.emplid
+ 		left join dependent_&cohort_year. as v
+ 			on a.emplid = v.emplid
 	;quit;
 		
 	%end;
@@ -1565,6 +1597,24 @@ sas.submit("""
 	;quit;
 	
 	proc sql;
+		create table dependent_&cohort_year. as
+		select distinct
+			a.emplid,
+			b.snapshot as dependent_snap,
+			a.num_in_family,
+			a.stdnt_have_dependents,
+      		a.stdnt_have_children_to_support,
+      		a.stdnt_agi,
+      		a.stdnt_agi_blank
+		from &dsn..fa_isir as a
+		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
+			on a.emplid = b.emplid
+				and a.aid_year = b.aid_year
+				and a.snapshot = b.snapshot
+		where a.aid_year = "&cohort_year."
+	;quit;
+	
+	proc sql;
 		create table exams_&cohort_year. as 
 		select distinct
 			a.emplid,
@@ -1593,11 +1643,15 @@ sas.submit("""
 		create table degrees_&cohort_year. as
 		select distinct
 			emplid,
-			case when degree = 'AD_AS-T' then 'AD_AST' else degree end as degree,
+			case when degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B','AD_AST2C','AD_AST2M') 	then 'AD_AST' 
+				when substr(degree,1,6) = 'AD_DTA' 																then 'AD_DTA' 																						
+																												else degree end as degree,
 			1 as ind
 		from &dsn..student_ext_degree
 		where floor(degree_term_code / 10) <= &cohort_year.
-			and degree in ('AD_AS-T','AD_DTA')
+			and degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B',
+							'AD_AST2C','AD_AST2M','AD_DTA','AD_GED','AD_GENS','AD_GER',
+							'AD_HSDIP')
 		order by emplid
 	;quit;
 	
@@ -2170,6 +2224,12 @@ sas.submit("""
 			d.anywhere_stem_flag,
 			s.fed_need,
 			s.total_offer,
+			w.dependent_snap,
+			w.num_in_family,
+			w.stdnt_have_dependents,
+      		w.stdnt_have_children_to_support,
+      		w.stdnt_agi,
+      		w.stdnt_agi_blank,
 			g.best,
 			g.bestr,
 			g.qvalue,
@@ -2181,6 +2241,10 @@ sas.submit("""
 			g.sat_comp,
 			h.ad_dta,
 			h.ad_ast,
+			h.ad_hsdip,
+			h.ad_ged,
+			h.ad_ger,
+			h.ad_gens,
 			i.ap,
 			i.rs,
 			i.chs,
@@ -2311,6 +2375,8 @@ sas.submit("""
  			on a.emplid = u.emplid
  		left join midterm_grades_&cohort_year. as v
  			on a.emplid = v.emplid
+ 		left join dependent_&cohort_year. as w
+ 			on a.emplid = w.emplid
 	;quit;
 	
 %mend loop;
@@ -3401,7 +3467,7 @@ sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=F
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=4, max_features='sqrt', verbose=True).fit(x_train, y_train)
+rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=4, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]
@@ -3515,7 +3581,7 @@ current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
 # current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_descr'] = 'Low'
 
 current_outcome['date'] = date.today()
-current_outcome['model_id'] = 3
+current_outcome['model_id'] = 4
 
 #%%
 if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv'):

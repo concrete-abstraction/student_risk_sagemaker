@@ -42,71 +42,33 @@ engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
-# Census date check 
-if config.cen_flag == False:
+# Precensus date check
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
+now = datetime.datetime.now()
 
-	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
-	now = datetime.datetime.now()
+now_day = now.day
+now_month = now.month
+now_year = now.year
 
-	now_day = now.day
-	now_month = now.month
-	now_year = now.year
+precensus_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
+precensus_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
+precensus_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
 
-	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
-	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
-	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
+census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
+census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
+census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
 
-	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
-	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
-	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
+if now_year < precensus_year or now_year > census_year:
+	raise config.DateError(f'{date.today()}: Precensus year exception, outside of date range.')
 
-	if now_year < census_year or now_year > midterm_year:
-		raise config.DateError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
+elif (now_year == precensus_year and now_month < precensus_month) or (now_year == census_year and now_month > census_month):
+	raise config.DateError(f'{date.today()}: Precensus month exception, outside of date range.')
 
-	elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
-		raise config.DateError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
+elif (now_year == precensus_year and now_month == precensus_month and now_day < precensus_day) or (now_year == census_year and now_month == census_month and now_day >= census_day):
+	raise config.DateError(f'{date.today()}: Precensus day exception, outside of date range.')
 
-	elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
-		raise config.DateError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
-
-	else:
-		print(f'{date.today()}: No census date exceptions, running from census.')
-
-# Census snapshot check
-if config.cen_flag == True:
-
-	sas = saspy.SASsession()
-
-	sas.submit("""
-	%let dsn = census;
-
-	libname &dsn. odbc dsn=&dsn. schema=dbo;
-
-	proc sql;
-		select distinct
-			max(case when snapshot = 'census' 	then 1
-				when snapshot = 'midterm' 		then 2
-				when snapshot = 'eot'			then 3
-												else .
-												end) as snap_order
-			into: snap_check
-			separated by ''
-		from &dsn..class_registration
-		where strm = (select distinct
-							max(strm)
-						from &dsn..class_registration)
-	;quit;
-	""")
-
-	snap_check = sas.symget('snap_check')
-
-	sas.endsas()
-
-	if snap_check != 1:
-		raise config.DataError(f'{date.today()}: Census snapshot exception, attempting to run from admissions.')
-
-	else:
-		print(f'{date.today()}: No census snapshot exceptions, running from census.')
+else:
+	print(f'{date.today()}: No precensus date exceptions, running from precensus.')
 
 #%%
 # Start SAS session
@@ -271,9 +233,9 @@ sas.submit("""
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		left join cpi as l
-			on input(a.full_acad_year,4.) = l.acs_lag
+			on input(a.full_acad_year, 4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
-			and substr(a.strm,4,1) = '7'
+			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus = 'PULLM'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'FRSH'
@@ -290,29 +252,45 @@ sas.submit("""
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dev..new_student_profile_ugrd_cs
-		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+		from &dev..new_student_profile_ugrd
+		where substr(strm, 4 , 1) = '7'
 			and adj_admit_campus = 'PULLM'
-			and adj_admit_type_cat = 'FRSH'
+			and adj_admit_type = 'FRS'
 			and ipeds_full_part_time = 'F'
 	;quit;
 	
-	proc sql;
-		create table enrolled_&cohort_year. as
-		select distinct 
-			emplid, 
-			term_code as cont_term,
-			enrl_ind
-		from &dsn..student_enrolled_vw
-		where snapshot = 'census'
-			and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-			and substr(strm,4,1) = '7'
-			and acad_career = 'UGRD'
-			and new_continue_status = 'CTU'
-			and term_credit_hours > 0
-		order by emplid
-	;quit;
-	
+	%if &cohort_year. < &end_cohort. %then %do;
+		proc sql;
+			create table enrolled_&cohort_year. as
+			select distinct 
+				emplid, 
+				term_code as cont_term,
+				enrl_ind
+			from &dsn..student_enrolled_vw
+			where snapshot = 'census'
+				and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+				and substr(strm, 4, 1) = '7'
+				and acad_career = 'UGRD'
+				and new_continue_status = 'CTU'
+				and term_credit_hours > 0
+			order by emplid
+		;quit;
+	%end;
+
+	%if &cohort_year. = &end_cohort. %then %do;
+		proc sql;
+			create table enrolled_&cohort_year. as
+			select distinct 
+				emplid, 
+				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
+				enrl_ind
+			from acs.enrl_data
+			where substr(strm, 4, 1) = '7'
+				and acad_career = 'UGRD'
+			order by emplid
+		;quit;
+	%end;
+
 	proc sql;
 		create table race_detail_&cohort_year. as
 		select 
@@ -320,24 +298,24 @@ sas.submit("""
 			case when hispc.emplid is not null 	then 'Y'
 												else 'N'
 												end as race_hispanic,
-			case when amind.emplid is not null 	then 'Y'
-											   	else 'N'
-											   	end as race_american_indian,
-			case when alask.emplid is not null 	then 'Y'
-											   	else 'N'
-											   	end as race_alaska,
-			case when asian.emplid is not null 	then 'Y'
-											   	else 'N'
-											   	end as race_asian,
-			case when black.emplid is not null 	then 'Y'
-											   	else 'N'
-											   	end as race_black,
-			case when hawai.emplid is not null 	then 'Y'
-											   	else 'N'
-											   	end as race_native_hawaiian,
-			case when white.emplid is not null 	then 'Y'
-											   	else 'N'
-											   	end as race_white
+			case when amind.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_american_indian,
+			case when alask.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_alaska,
+			case when asian.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_asian,
+			case when black.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_black,
+			case when hawai.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_native_hawaiian,
+			case when white.emplid is not null then 'Y'
+											   else 'N'
+											   end as race_white
 		from cohort_&cohort_year. as a
 		left join (select distinct e4.emplid from &dsn..student_ethnic_detail as e4
 					left join &dsn..xw_ethnic_detail_to_group_vw as xe4
@@ -459,7 +437,7 @@ sas.submit("""
 			anywhere_stem_flag
 		from &dsn..student_acad_prog_plan_vw
 		where snapshot = 'census'
-			and full_acad_year = "&cohort_year."
+			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
 			and substr(strm, 4, 1) = '7'
 			and adj_admit_campus = 'PULLM'
 			and acad_career = 'UGRD'
@@ -672,7 +650,7 @@ sas.submit("""
 				or wxcountry = 'Y') then 1 else 0
 			end as athlete
 		from &dsn..student_athlete_vw
-		where snapshot = 'eot'
+		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and ugrd_adj_admit_type = 'FRS'
 	;quit;
@@ -1117,8 +1095,6 @@ sas.submit("""
 			s.fall_lab_count,
 			s.spring_lec_count,
 			s.spring_lab_count,
-			s.total_lec_count,
-			s.total_lab_count,
 			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,
@@ -1142,7 +1118,6 @@ sas.submit("""
 			q.afl_greek_indicator,
 			q.afl_greek_life_indicator,
 			r.building_id,
-			t.race_hispanic,
 			t.race_american_indian,
 			t.race_alaska,
 			t.race_asian,
@@ -1192,189 +1167,9 @@ sas.submit("""
  		left join race_detail_&cohort_year. as t
  			on a.emplid = t.emplid
 	;quit;
-		
+	
 	%end;
-
-	proc sql;
-		create table cohort_&cohort_year. as
-		select distinct a.*,
-			substr(a.last_sch_postal,1,5) as targetid,
-			case when a.sex = 'M' then 1 
-				else 0
-			end as male,
-			case when a.age < 18.25 then 'Q1'
-				when 18.25 <= a.age < 18.5 then 'Q2'
-				when 18.5 <= a.age < 18.75 then 'Q3'
-				when 18.75 <= a.age then 'Q4'
-				else 'missing'
-			end as age_group,
-			case when a.father_attended_wsu_flag = 'Y' then 1 
-				else 0
-			end as father_wsu_flag,
-			case when a.mother_attended_wsu_flag = 'Y' then 1 
-				else 0
-			end as mother_wsu_flag,
-			case when a.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
-				else 0
-			end as underrep_minority,
-			case when a.WA_residency = 'RES' then 1
-				else 0
-			end as resident,
-			case when a.adm_parent1_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
-				when a.adm_parent1_highest_educ_lvl = 'G' then 'bach'
-				when a.adm_parent1_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
-					else 'missing'
-			end as parent1_highest_educ_lvl,
-			case when a.adm_parent2_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
-				when a.adm_parent2_highest_educ_lvl = 'G' then 'bach'
-				when a.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
-					else 'missing'
-			end as parent2_highest_educ_lvl,
-			b.distance,
-			c.median_inc,
-			c.gini_indx,
-			d.pvrt_total/d.pvrt_base as pvrt_rate,
-			e.educ_total/e.educ_base as educ_rate,
-			f.pop/(g.area*3.861E-7) as pop_dens,
-			h.median_value,
-			i.race_blk/i.race_tot as pct_blk,
-			i.race_ai/i.race_tot as pct_ai,
-			i.race_asn/i.race_tot as pct_asn,
-			i.race_hawi/i.race_tot as pct_hawi,
-			i.race_oth/i.race_tot as pct_oth,
-			i.race_two/i.race_tot as pct_two,
-			(i.race_blk + i.race_ai + i.race_asn + i.race_hawi + i.race_oth + i.race_two)/i.race_tot as pct_non,
-			j.ethnic_hisp/j.ethnic_tot as pct_hisp,
-			case when k.locale = '11' then 1 else 0 end as city_large,
-			case when k.locale = '12' then 1 else 0 end as city_mid,
-			case when k.locale = '13' then 1 else 0 end as city_small,
-			case when k.locale = '21' then 1 else 0 end as suburb_large,
-			case when k.locale = '22' then 1 else 0 end as suburb_mid,
-			case when k.locale = '23' then 1 else 0 end as suburb_small,
-			case when k.locale = '31' then 1 else 0 end as town_fringe,
-			case when k.locale = '32' then 1 else 0 end as town_distant,
-			case when k.locale = '33' then 1 else 0 end as town_remote,
-			case when k.locale = '41' then 1 else 0 end as rural_fringe,
-			case when k.locale = '42' then 1 else 0 end as rural_distant,
-			case when k.locale = '43' then 1 else 0 end as rural_remote
-		from &dsn..new_student_enrolled_vw as a
-		left join acs.distance as b
-			on substr(a.last_sch_postal,1,5) = b.targetid
-		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
-			on substr(a.last_sch_postal,1,5) = c.geoid
-		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
-			on substr(a.last_sch_postal,1,5) = d.geoid
-		left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
-			on substr(a.last_sch_postal,1,5) = e.geoid
-		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
-			on substr(a.last_sch_postal,1,5) = f.geoid
-		left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
-			on substr(a.last_sch_postal,1,5) = g.geoid
-		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
-			on substr(a.last_sch_postal,1,5) = h.geoid
-		left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
-			on substr(a.last_sch_postal,1,5) = i.geoid
-		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
-			on substr(a.last_sch_postal,1,5) = j.geoid
-		left join acs.edge_locale14_zcta_table as k
-			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
-		where a.full_acad_year = "&cohort_year"
-			and substr(a.strm, 4 , 1) = '7'
-			and a.adj_admit_campus = 'PULLM'
-			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat = 'FRSH'
-			and a.ipeds_full_part_time = 'F'
-			and a.ipeds_ind = 1
-			and a.term_credit_hours > 0
-		order by a.emplid
-	;quit;
 	
-	proc sql;
-		create table new_student_&cohort_year. as
-		select distinct
-			emplid,
-			pell_recipient_ind,
-			eot_term_gpa,
-			eot_term_gpa_hours
-		from &dev..new_student_profile_ugrd_cs
-		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
-			and adj_admit_type_cat = 'FRSH'
-			and ipeds_full_part_time = 'F'
-	;quit;
-	
-	proc sql;
-		create table plan_&cohort_year. as 
-		select distinct 
-			emplid,
-			acad_plan,
-			acad_plan_descr,
-			plan_owner_org,
-			plan_owner_org_descr,
-			plan_owner_group_descrshort,
-			case when plan_owner_group_descrshort = 'Business' then 1 else 0 end as business,
-			case when plan_owner_group_descrshort = 'CAHNREXT' 
-				and plan_owner_org = '03_1240' then 1 else 0 end as cahnrs_anml,
-			case when plan_owner_group_descrshort = 'CAHNREXT' 
-				and plan_owner_org = '03_1990' then 1 else 0 end as cahnrs_envr,
-			case when plan_owner_group_descrshort = 'CAHNREXT' 
-				and plan_owner_org = '03_1150' then 1 else 0 end as cahnrs_econ,	
-			case when plan_owner_group_descrshort = 'CAHNREXT'
-				and plan_owner_org not in ('03_1240','03_1990','03_1150') then 1 else 0 end as cahnrext,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_1540' then 1 else 0 end as cas_chem,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_1710' then 1 else 0 end as cas_crim,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_2530' then 1 else 0 end as cas_math,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_2900' then 1 else 0 end as cas_psyc,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_8434' then 1 else 0 end as cas_biol,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_1830' then 1 else 0 end as cas_engl,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_2790' then 1 else 0 end as cas_phys,	
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org not in ('31_1540','31_1710','31_2530','31_2900','31_8434','31_1830','31_2790') then 1 else 0 end as cas,
-			case when plan_owner_group_descrshort = 'Comm' then 1 else 0 end as comm,
-			case when plan_owner_group_descrshort = 'Education' then 1 else 0 end as education,
-			case when plan_owner_group_descrshort in ('Med Sci','Medicine') then 1 else 0 end as medicine,
-			case when plan_owner_group_descrshort = 'Nursing' then 1 else 0 end as nursing,
-			case when plan_owner_group_descrshort = 'Pharmacy' then 1 else 0 end as pharmacy,
-			case when plan_owner_group_descrshort = 'Provost' then 1 else 0 end as provost,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_1520' then 1 else 0 end as vcea_bioe,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_1590' then 1 else 0 end as vcea_cive,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_1260' then 1 else 0 end as vcea_desn,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_1770' then 1 else 0 end as vcea_eecs,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_2540' then 1 else 0 end as vcea_mech,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org not in ('05_1520','05_1590','05_1260','05_1770','05_2540') then 1 else 0 end as vcea,				
-			case when plan_owner_group_descrshort = 'Vet Med' then 1 else 0 end as vet_med,
-			case when plan_owner_group_descrshort not in ('Business','CAHNREXT','CAS','Comm',
-														'Education','Med Sci','Medicine','Nursing',
-														'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
-			end as groupless,
-			case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595') then 1 else 0
-			end as split_plan,
-			lsamp_stem_flag,
-			anywhere_stem_flag
-		from &dsn..student_acad_prog_plan_vw
-		where snapshot = 'census'
-			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
-			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus = 'PULLM'
-			and acad_career = 'UGRD'
-			and adj_admit_type_cat = 'FRSH'
-			and primary_plan_flag = 'Y'
-			and calculated split_plan = 0
-	;quit;
-
 	proc sql;
 		create table race_detail_&cohort_year. as
 		select 
@@ -1400,7 +1195,9 @@ sas.submit("""
 			case when white.emplid is not null 	then 'Y'
 											   	else 'N'
 											   	end as race_white
-		from cohort_&cohort_year. as a
+		from &adm..fact_u as a
+		left join &adm..xd_admit_type as b
+			on a.sid_admit_type = b.sid_admit_type
 		left join (select distinct e4.emplid from &dsn..student_ethnic_detail as e4
 					left join &dsn..xw_ethnic_detail_to_group_vw as xe4
 						on e4.ethnic_cd = xe4.ethnic_cd
@@ -1456,177 +1253,12 @@ sas.submit("""
 						and e6.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and xe6.ethnic_group = '3') as hispc
 			on a.emplid = hispc.emplid
-	;quit;
-	
-	proc sql;
-		create table exams_&cohort_year. as 
-		select distinct
-			a.emplid,
-			a.best,
-			a.bestr,
-			a.qvalue,
-			a.act_engl,
-			a.act_read,
-			a.act_math,
-			largest(1, a.sat_erws, xw_one.sat_erws, xw_three.sat_erws) as sat_erws,
-			largest(1, a.sat_mss, xw_two.sat_mss, xw_four.sat_mss) as sat_mss,
-			largest(1, (a.sat_erws + a.sat_mss), (xw_one.sat_erws + xw_two.sat_mss), (xw_three.sat_erws + xw_four.sat_mss)) as sat_comp
-		from &dsn..new_freshmen_test_score_vw as a
-		left join &dsn..xw_sat_i_to_sat_erws as xw_one
-			on (a.sat_i_verb + a.sat_i_wr) = xw_one.sat_i_verb_plus_wr
-		left join &dsn..xw_sat_i_to_sat_mss as xw_two
- 			on a.sat_i_math = xw_two.sat_i_math
- 		left join act_to_sat_engl_read as xw_three
- 			on (a.act_engl + a.act_read) = xw_three.act_engl_read
-		left join act_to_sat_math as xw_four
- 			on a.act_math = xw_four.act_math
-		where snapshot = 'census'
-	;quit;
-
-	proc sql;
-		create table degrees_&cohort_year. as
-		select distinct
-			emplid,
-			case when degree = 'AD_AS-T' then 'AD_AST' else degree end as degree,
-			1 as ind
-		from &dsn..student_ext_degree
-		where floor(degree_term_code / 10) <= &cohort_year.
-			and degree in ('AD_AS-T','AD_DTA')
-		order by emplid
-	;quit;
-	
-	proc transpose data=degrees_&cohort_year. let out=degrees_&cohort_year. (drop=_name_);
-		by emplid;
-		id degree;
-	run;
-	
-	proc sql;
-		create table preparatory_&cohort_year. as
-		select distinct
-			emplid,
-			ext_subject_area,
-			1 as ind
-		from &dsn..student_ext_acad_subj
-		where snapshot = 'census'
-			and ext_subject_area in ('CHS','RS', 'AP','IB','AICE')
-		order by emplid
-	;quit;
-	
-	proc transpose data=preparatory_&cohort_year. let out=preparatory_&cohort_year. (drop=_name_);
-		by emplid;
-		id ext_subject_area;
-	run;
-	
-	proc sql;
-		create table visitation_&cohort_year. as
-		select distinct a.emplid,
-			b.snap_date,
-			a.attendee_afr_am_scholars_visit,
-			a.attendee_alive,
-			a.attendee_campus_visit,
-			a.attendee_cashe,
-			a.attendee_destination,
-			a.attendee_experience,
-			a.attendee_fcd_pullman,
-			a.attendee_fced,
-			a.attendee_fcoc,
-			a.attendee_fcod,
-			a.attendee_group_visit,
-			a.attendee_honors_visit,
-			a.attendee_imagine_tomorrow,
-			a.attendee_imagine_u,
-			a.attendee_la_bienvenida,
-			a.attendee_lvp_camp,
-			a.attendee_oos_destination,
-			a.attendee_oos_experience,
-			a.attendee_preview,
-			a.attendee_preview_jrs,
-			a.attendee_shaping,
-			a.attendee_top_scholars,
-			a.attendee_transfer_day,
-			a.attendee_vibes,
-			a.attendee_welcome_center,
-			a.attendee_any_visitation_ind,
-			a.attendee_total_visits
-		from &adm..UGRD_visitation_attendee as a
-		inner join (select distinct emplid, max(snap_date) as snap_date 
-					from &adm..UGRD_visitation_attendee 
-					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-					group by emplid) as b
-			on a.emplid = b.emplid
-				and a.snap_date = b.snap_date
-		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-	;quit;
-	
-	proc sql;
-		create table visitation_detail_&cohort_year. as
-		select distinct a.emplid,
-			a.snap_date,
-			a.go2,
-			a.ocv_dt,
-			a.ocv_fcd,
-			a.ocv_fprv,
-			a.ocv_gdt,
-			a.ocv_jprv,
-			a.ri_col,
-			a.ri_fair,
-			a.ri_hsv,
-			a.ri_nac,
-			a.ri_wac,
-			a.ri_other,
-			a.tap,
-			a.tst,
-			a.vi_chegg,
-			a.vi_crn,
-			a.vi_cxc,
-			a.vi_mco,
-			a.np_group,
-			a.out_group,
-			a.ref_group,
-			a.ocv_da,
-			a.ocv_ea,
-			a.ocv_fced,
-			a.ocv_fcoc,
-			a.ocv_fcod,
-			a.ocv_oosd,
-			a.ocv_oose,
-			a.ocv_ve
-		from &adm..UGRD_visitation as a
-		inner join (select distinct emplid, max(snap_date) as snap_date 
-					from &adm..UGRD_visitation 
-					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-					group by emplid) as b
-			on a.emplid = b.emplid
-				and a.snap_date = b.snap_date
-		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-	;quit;
-			
-	proc sql;
-		create table athlete_&cohort_year. as
-		select distinct 
-			emplid,
-			case when (mbaseball = 'Y' 
-				or mbasketball = 'Y'
-				or mfootball = 'Y'
-				or mgolf = 'Y'
-				or mitrack = 'Y'
-				or motrack = 'Y'
-				or mxcountry = 'Y'
-				or wbasketball = 'Y'
-				or wgolf = 'Y'
-				or witrack = 'Y'
-				or wotrack = 'Y'
-				or wsoccer = 'Y'
-				or wswimming = 'Y'
-				or wtennis = 'Y'
-				or wvolleyball = 'Y'
-				or wvrowing = 'Y'
-				or wxcountry = 'Y') then 1 else 0
-			end as athlete
-		from &dsn..student_athlete_vw
-		where snapshot = 'census'
-			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and ugrd_adj_admit_type = 'FRS'
+		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
+								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
+			and a.acad_career = 'UGRD' 
+			and a.campus = 'PULLM' 
+			and a.enrolled = 1
+			and b.admit_type in ('FRS','IFR','IPF')
 	;quit;
 	
 	proc sql;
@@ -1643,20 +1275,6 @@ sas.submit("""
 		order by emplid
 	;quit;
 	
-	proc sql;
-		create table date_&cohort_year. as
-		select distinct
-			min(emplid) as emplid,
-			min(week_from_term_begin_dt) as min_week_from_term_begin_dt,
-			max(week_from_term_begin_dt) as max_week_from_term_begin_dt,
-			count(week_from_term_begin_dt) as count_week_from_term_begin_dt
-		from &adm..UGRD_shortened_vw
-		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and ugrd_applicant_counting_ind = 1
-		group by emplid
-		order by emplid;
-	;quit;
-
 	proc sql;
 		create table class_registration_&cohort_year. as
 		select distinct
@@ -1898,223 +1516,158 @@ sas.submit("""
 	;quit;
 	
 	proc sql;
-		create table exams_detail_&cohort_year. as
+		create table exams_&cohort_year. as 
 		select distinct
 			emplid,
-			max(sat_sup_rwc) as sat_sup_rwc,
-			max(sat_sup_ce) as sat_sup_ce,
-			max(sat_sup_ha) as sat_sup_ha,
-			max(sat_sup_psda) as sat_sup_psda,
-			max(sat_sup_ei) as sat_sup_ei,
-			max(sat_sup_pam) as sat_sup_pam,
-			max(sat_sup_sec) as sat_sup_sec
-		from &dsn..student_test_comp_sat_w
-		where snapshot = 'census'
+			max(case when test_component = 'MSS'	then score
+													else .
+													end) as sat_mss,
+			max(case when test_component = 'ERWS'		then score
+													else .
+													end) as sat_erws
+		from &adm..UGRD_student_test_comp
+		where snap_date = (select max(snap_date) as snap_date 
+							from &adm..UGRD_student_test_comp 
+							where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7') 
+			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+			and test_component in ('MSS','ERWS')
 		group by emplid
-	;quit;
-	
-	proc sql;
-		create table housing_&cohort_year. as
-		select distinct
-			emplid,
-			camp_addr_indicator,
-			housing_reshall_indicator,
-			housing_ssa_indicator,
-			housing_family_indicator,
-			afl_reshall_indicator,
-			afl_ssa_indicator,
-			afl_family_indicator,
-			afl_greek_indicator,
-			afl_greek_life_indicator
-		from &dsn..new_student_enrolled_housing_vw
-		where snapshot = 'census'
-			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
-			and acad_career = 'UGRD'
-			and adj_admit_type_cat = 'FRSH'
-	;quit;
-	
-	proc sql;
-		create table housing_detail_&cohort_year. as
-		select distinct
-			emplid,
-			'#' || put(building_id, z2.) as building_id
-		from &dsn..student_housing
-		where snapshot = 'census'
-			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+		order by emplid
 	;quit;
 	
 	proc sql;
 		create table dataset_&cohort_year. as
-		select 
+		select distinct 
 			a.*,
-			b.pell_recipient_ind,
-			b.eot_term_gpa,
-			b.eot_term_gpa_hours,
-			d.acad_plan,
-			d.acad_plan_descr,
-			d.plan_owner_org,
-			d.plan_owner_org_descr,
-			d.plan_owner_group_descrshort,
-			d.business,
-			d.cahnrs_anml,
-			d.cahnrs_envr,
-			d.cahnrs_econ,
-			d.cahnrext,
-			d.cas_chem,
-			d.cas_crim,
-			d.cas_math,
-			d.cas_psyc,
-			d.cas_biol,
-			d.cas_engl,
-			d.cas_phys,
-			d.cas,
-			d.comm,
-			d.education,
-			d.medicine,
-			d.nursing,
-			d.pharmacy,
-			d.provost,
-			d.vcea_bioe,
-			d.vcea_cive,
-			d.vcea_desn,
-			d.vcea_eecs,
-			d.vcea_mech,
-			d.vcea,
-			d.vet_med,
-			d.lsamp_stem_flag,
-			d.anywhere_stem_flag,
+			case when a.sex = 'M' then 1 
+					else 0
+			end as male,
+			b.*,
+			case when b.WA_residency = 'RES' then 1
+				else 0
+			end as resident,
+			case when b.adm_parent1_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
+				when b.adm_parent1_highest_educ_lvl = 'G' then 'bach'
+				when b.adm_parent1_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
+					else 'missing'
+			end as parent1_highest_educ_lvl,
+			case when b.adm_parent2_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
+				when b.adm_parent2_highest_educ_lvl = 'G' then 'bach'
+				when b.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
+					else 'missing'
+			end as parent2_highest_educ_lvl,
+			d.*,
+			case when d.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
+				else 0
+			end as underrep_minority,
+			substr(e.ext_org_postal,1,5) as targetid,
+			f.distance,
+			g.median_inc,
+			g.gini_indx,
+			h.pvrt_total/h.pvrt_base as pvrt_rate,
+			i.educ_total/i.educ_base as educ_rate,
+			j.pop/(k.area*3.861E-7) as pop_dens,
+			l.median_value,
+			m.race_blk/m.race_tot as pct_blk,
+			m.race_ai/m.race_tot as pct_ai,
+			m.race_asn/m.race_tot as pct_asn,
+			m.race_hawi/m.race_tot as pct_hawi,
+			m.race_oth/m.race_tot as pct_oth,
+			m.race_two/m.race_tot as pct_two,
+			(m.race_blk + m.race_ai + m.race_asn + m.race_hawi + m.race_oth + m.race_two)/m.race_tot as pct_non,
+			n.ethnic_hisp/n.ethnic_tot as pct_hisp,
+			case when o.locale = '11' then 1 else 0 end as city_large,
+			case when o.locale = '12' then 1 else 0 end as city_mid,
+			case when o.locale = '13' then 1 else 0 end as city_small,
+			case when o.locale = '21' then 1 else 0 end as suburb_large,
+			case when o.locale = '22' then 1 else 0 end as suburb_mid,
+			case when o.locale = '23' then 1 else 0 end as suburb_small,
+			case when o.locale = '31' then 1 else 0 end as town_fringe,
+			case when o.locale = '32' then 1 else 0 end as town_distant,
+			case when o.locale = '33' then 1 else 0 end as town_remote,
+			case when o.locale = '41' then 1 else 0 end as rural_fringe,
+			case when o.locale = '42' then 1 else 0 end as rural_distant,
+			case when o.locale = '43' then 1 else 0 end as rural_remote,
+			p.remedial,
+			(4.0 - q.avg_difficulty) as avg_difficulty,
+			q.avg_pct_withdrawn,
+			q.avg_pct_CDFW,
+			q.avg_pct_CDF,
+			q.avg_pct_DFW,
+			q.avg_pct_DF,
+			u.fall_lec_count,
+			u.fall_lab_count,
+			u.spring_lec_count,
+			u.spring_lab_count,
+ 			r.fall_lec_contact_hrs,
+ 			r.fall_lab_contact_hrs,
+ 			r.spring_lec_contact_hrs,
+ 			r.spring_lab_contact_hrs,
+			r.total_fall_contact_hrs,
+			r.total_spring_contact_hrs,
 			s.fed_need,
 			s.total_offer,
-			g.best,
-			g.bestr,
-			g.qvalue,
-			g.act_engl,
-			g.act_read,
-			g.act_math,
-			g.sat_erws,
-			g.sat_mss,
-			g.sat_comp,
-			h.ad_dta,
-			h.ad_ast,
-			i.ap,
-			i.rs,
-			i.chs,
-			i.ib,
-			i.aice,
-			largest(1, i.ib, i.aice) as IB_AICE,
-			j.attendee_alive,
-			j.attendee_campus_visit,
-			j.attendee_cashe,
-			j.attendee_destination,
-			j.attendee_experience,
-			j.attendee_fcd_pullman,
-			j.attendee_fced,
-			j.attendee_fcoc,
-			j.attendee_fcod,
-			j.attendee_group_visit,
-			j.attendee_honors_visit,
-			j.attendee_imagine_tomorrow,
-			j.attendee_imagine_u,
-			j.attendee_la_bienvenida,
-			j.attendee_lvp_camp,
-			j.attendee_oos_destination,
-			j.attendee_oos_experience,
-			j.attendee_preview,
-			j.attendee_preview_jrs,
-			j.attendee_shaping,
-			j.attendee_top_scholars,
-			j.attendee_transfer_day,
-			j.attendee_vibes,
-			j.attendee_welcome_center,
-			j.attendee_any_visitation_ind,
-			j.attendee_total_visits,
-			k.athlete,
-			l.remedial,
-			m.min_week_from_term_begin_dt,
-			m.max_week_from_term_begin_dt,
-			m.count_week_from_term_begin_dt,
-			(4.0 - n.avg_difficulty) as avg_difficulty,
-			n.avg_pct_withdrawn,
-			n.avg_pct_CDFW,
-			n.avg_pct_CDF,
-			n.avg_pct_DFW,
-			n.avg_pct_DF,
-			t.fall_lec_count,
-			t.fall_lab_count,
-			t.spring_lec_count,
-			t.spring_lab_count,
-			t.total_lec_count,
-			t.total_lab_count,
- 			o.fall_lec_contact_hrs,
- 			o.fall_lab_contact_hrs,
- 			o.spring_lec_contact_hrs,
- 			o.spring_lab_contact_hrs,
-			o.total_fall_contact_hrs,
-			o.total_spring_contact_hrs,
-			p.sat_sup_rwc,
-			p.sat_sup_ce,
-			p.sat_sup_ha,
-			p.sat_sup_psda,
-			p.sat_sup_ei,
-			p.sat_sup_pam,
-			p.sat_sup_sec,
-			q.camp_addr_indicator,
-			q.housing_reshall_indicator,
-			q.housing_ssa_indicator,
-			q.housing_family_indicator,
-			q.afl_reshall_indicator,
-			q.afl_ssa_indicator,
-			q.afl_family_indicator,
-			q.afl_greek_indicator,
-			q.afl_greek_life_indicator,
-			r.building_id,
-			u.race_hispanic,
-			u.race_american_indian,
-			u.race_alaska,
-			u.race_asian,
-			u.race_black,
-			u.race_native_hawaiian,
-			u.race_white
-		from cohort_&cohort_year. as a
-		left join new_student_&cohort_year. as b
-			on a.emplid = b.emplid
- 		left join plan_&cohort_year. as d
- 			on a.emplid = d.emplid
- 		left join (select distinct emplid, 
-							fed_need, 
-	 						total_offer 
-	 					from acs.finaid_data
-	 					where aid_year = "&cohort_year." group by emplid) as s
- 			on a.emplid = s.emplid
- 		left join exams_&cohort_year. as g
- 			on a.emplid = g.emplid
- 		left join degrees_&cohort_year. as h
- 			on a.emplid = h.emplid
- 		left join preparatory_&cohort_year. as i
- 			on a.emplid = i.emplid
- 		left join visitation_&cohort_year. as j
- 			on a.emplid = j.emplid
- 		left join athlete_&cohort_year. as k
- 			on a.emplid = k.emplid
-		left join remedial_&cohort_year. as l
- 			on a.emplid = l.emplid
- 		left join date_&cohort_year. as m
- 			on a.emplid = m.emplid
- 		left join coursework_difficulty_&cohort_year. as n
- 			on a.emplid = n.emplid
- 		left join term_contact_hrs_&cohort_year. as o
- 			on a.emplid = o.emplid
- 		left join exams_detail_&cohort_year. as p
- 			on a.emplid = p.emplid
- 		left join housing_&cohort_year. as q
+			t.sat_mss,
+			t.sat_erws,
+			v.race_american_indian,
+			v.race_alaska,
+			v.race_asian,
+			v.race_black,
+			v.race_native_hawaiian,
+			v.race_white
+		from &adm..fact_u as a
+		left join &adm..xd_person_demo as b
+			on a.sid_per_demo = b.sid_per_demo
+		left join &adm..xd_admit_type as c
+			on a.sid_admit_type = c.sid_admit_type
+		left join &adm..xd_ipeds_ethnic_group as d
+			on a.sid_ipeds_ethnic_group = d.sid_ipeds_ethnic_group
+		left join &adm..xd_school as e
+			on a.sid_ext_org_id = e.sid_ext_org_id
+		left join acs.distance as f
+			on substr(e.ext_org_postal,1,5) = f.targetid
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as g
+			on substr(e.ext_org_postal,1,5) = g.geoid
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as h
+			on substr(e.ext_org_postal,1,5) = h.geoid
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as i
+			on substr(e.ext_org_postal,1,5) = i.geoid
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as j
+			on substr(e.ext_org_postal,1,5) = j.geoid
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as k
+			on substr(e.ext_org_postal,1,5) = k.geoid
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as l
+			on substr(e.ext_org_postal,1,5) = l.geoid
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as m
+			on substr(e.ext_org_postal,1,5) = m.geoid
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as n
+			on substr(e.ext_org_postal,1,5) = n.geoid
+		left join acs.edge_locale14_zcta_table as o
+			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
+		left join remedial_&cohort_year. as p
+			on a.emplid = p.emplid
+ 		left join coursework_difficulty_&cohort_year. as q
  			on a.emplid = q.emplid
- 		left join housing_detail_&cohort_year. as r
+ 		left join term_contact_hrs_&cohort_year. as r
  			on a.emplid = r.emplid
- 		left join class_count_&cohort_year. as t
+ 		left join (select distinct emplid, 
+ 								fed_need, 
+ 								total_offer 
+ 						from acs.finaid_data
+ 						where aid_year = "&cohort_year." group by emplid) as s
+ 			on a.emplid = s.emplid
+ 		left join exams_&cohort_year. as t
  			on a.emplid = t.emplid
- 		left join race_detail_&cohort_year. as u
+ 		left join class_count_&cohort_year. as u
  			on a.emplid = u.emplid
+ 		left join race_detail_&cohort_year. as v
+ 			on a.emplid = v.emplid
+		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
+								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
+			and a.acad_career = 'UGRD' 
+			and a.campus = 'PULLM' 
+			and a.enrolled = 1
+			and c.admit_type in ('FRS','IFR','IPF')
 	;quit;
 	
 %mend loop;
@@ -2123,7 +1676,7 @@ sas.submit("""
 print('Done\n')
 
 #%%
-# Run SAS macro program to prepare data from census
+# Run SAS macro program to prepare data from precensus
 print('Run SAS macro program...')
 start = time.perf_counter()
 
@@ -2333,12 +1886,12 @@ print('Done\n')
 sas.endsas()
 
 #%%
-# Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8')
+# Import pre-split data for scikit-learn
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8', low_memory=False)
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
 
 #%%
-# Prepare base dataframes
+# Prepare dataframes
 print('\nPrepare dataframes and preprocess data...')
 
 logit_df = training_set[[
@@ -2347,19 +1900,12 @@ logit_df = training_set[[
                         # 'age_group', 
                         # 'age',
                         'male',
-						# 'race_hispanic',
-						# 'race_american_indian',
-						# 'race_alaska',
-						# 'race_asian',
-						# 'race_black',
-						# 'race_native_hawaiian',
-						# 'race_white',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
-                        'pop_dens',
+                        # 'pop_dens',
                         'underrep_minority', 
                         # 'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
@@ -2367,7 +1913,6 @@ logit_df = training_set[[
                         'first_gen_flag', 
                         # 'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        'honors_program_ind',
                         # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
@@ -2387,7 +1932,6 @@ logit_df = training_set[[
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2399,7 +1943,7 @@ logit_df = training_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        'educ_rate',
+                        # 'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -2408,57 +1952,57 @@ logit_df = training_set[[
                         'pct_two',
                         # 'pct_non',
                         'pct_hisp',
-                        # 'city_large',
-                        # 'city_mid',
-                        # 'city_small',
-                        # 'suburb_large',
-                        # 'suburb_mid',
-                        # 'suburb_small',
+                        'city_large',
+                        'city_mid',
+                        'city_small',
+                        'suburb_large',
+                        'suburb_mid',
+                        'suburb_small',
                         # 'town_fringe',
                         # 'town_distant',
                         # 'town_remote',
                         # 'rural_fringe',
                         # 'rural_distant',
                         # 'rural_remote',
-                        'AD_DTA',
-                        'AD_AST',
-                        'AP',
-                        'RS',
-                        'CHS',
+                        # 'AD_DTA',
+                        # 'AD_AST',
+                        # 'AP',
+                        # 'RS',
+                        # 'CHS',
                         # 'IB',
                         # 'AICE',
-                        'IB_AICE', 
-                        'term_credit_hours',
+                        # 'IB_AICE', 
+                        # 'term_credit_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
                         # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
@@ -2498,23 +2042,16 @@ logit_df = training_set[[
 training_set = training_set[[
                             'emplid',
                             'enrl_ind', 
-							# 'acad_year',
+                        	# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
-							# 'race_hispanic',
-							# 'race_american_indian',
-							# 'race_alaska',
-							# 'race_asian',
-							# 'race_black',
-							# 'race_native_hawaiian',
-							# 'race_white',
 							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
 							# 'marital_status',
 							# 'Distance',
-							'pop_dens',
+							# 'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind', 
@@ -2522,7 +2059,6 @@ training_set = training_set[[
 							'first_gen_flag', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
-							'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							# 'awe_instrument',
@@ -2536,13 +2072,12 @@ training_set = training_set[[
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
-							# 'fall_lab_contact_hrs',
+                        	# 'fall_lab_contact_hrs',
 							# 'spring_lec_count',
 							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2554,7 +2089,7 @@ training_set = training_set[[
 							# 'pvrt_rate',
 							'median_inc',
 							# 'median_value',
-							'educ_rate',
+							# 'educ_rate',
 							'pct_blk',
 							'pct_ai',
 							# 'pct_asn',
@@ -2563,57 +2098,57 @@ training_set = training_set[[
 							'pct_two',
 							# 'pct_non',
 							'pct_hisp',
-							# 'city_large',
-							# 'city_mid',
-							# 'city_small',
-							# 'suburb_large',
-							# 'suburb_mid',
-							# 'suburb_small',
+							'city_large',
+							'city_mid',
+							'city_small',
+							'suburb_large',
+							'suburb_mid',
+							'suburb_small',
 							# 'town_fringe',
 							# 'town_distant',
 							# 'town_remote',
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							'AD_DTA',
-							'AD_AST',
-							'AP',
-							'RS',
-							'CHS',
+							# 'AD_DTA',
+							# 'AD_AST',
+							# 'AP',
+							# 'RS',
+							# 'CHS',
 							# 'IB',
 							# 'AICE',
-							'IB_AICE', 
-							'term_credit_hours',
+							# 'IB_AICE', 
+							# 'term_credit_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
-							'business',
-							'cahnrs_anml',
-							'cahnrs_envr',
-							'cahnrs_econ',
-							'cahnrext',
-							'cas_chem',
-							'cas_crim',
-							'cas_math',
-							'cas_psyc',
-							'cas_biol',
-							'cas_engl',
-							'cas_phys',
-							'cas',
-							'comm',
-							'education',
-							'medicine',
-							'nursing',
-							'pharmacy',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
 							# 'provost',
-							'vcea_bioe',
-							'vcea_cive',
-							'vcea_desn',
-							'vcea_eecs',
-							'vcea_mech',
-							'vcea',
-							'vet_med',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
 							# 'last_sch_proprietorship',
 							# 'sat_erws',
 							# 'sat_mss',
@@ -2652,24 +2187,17 @@ training_set = training_set[[
 
 testing_set = testing_set[[
                             'emplid',
-							# 'enrl_ind', 
-							# 'acad_year',
+							'ENRL_IND',
+                            # 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
-							# 'race_hispanic',
-							# 'race_american_indian',
-							# 'race_alaska',
-							# 'race_asian',
-							# 'race_black',
-							# 'race_native_hawaiian',
-							# 'race_white',
 							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
 							# 'marital_status',
 							# 'Distance',
-							'pop_dens',
+							# 'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind', 
@@ -2677,7 +2205,6 @@ testing_set = testing_set[[
 							'first_gen_flag', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
-							'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							# 'awe_instrument',
@@ -2691,13 +2218,12 @@ testing_set = testing_set[[
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
-							# 'fall_lab_contact_hrs',
+                        	# 'fall_lab_contact_hrs',
 							# 'spring_lec_count',
 							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2709,7 +2235,7 @@ testing_set = testing_set[[
 							# 'pvrt_rate',
 							'median_inc',
 							# 'median_value',
-							'educ_rate',
+							# 'educ_rate',
 							'pct_blk',
 							'pct_ai',
 							# 'pct_asn',
@@ -2718,57 +2244,57 @@ testing_set = testing_set[[
 							'pct_two',
 							# 'pct_non',
 							'pct_hisp',
-							# 'city_large',
-							# 'city_mid',
-							# 'city_small',
-							# 'suburb_large',
-							# 'suburb_mid',
-							# 'suburb_small',
+							'city_large',
+							'city_mid',
+							'city_small',
+							'suburb_large',
+							'suburb_mid',
+							'suburb_small',
 							# 'town_fringe',
 							# 'town_distant',
 							# 'town_remote',
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							'AD_DTA',
-							'AD_AST',
-							'AP',
-							'RS',
-							'CHS',
+							# 'AD_DTA',
+							# 'AD_AST',
+							# 'AP',
+							# 'RS',
+							# 'CHS',
 							# 'IB',
 							# 'AICE',
-							'IB_AICE', 
-							'term_credit_hours',
+							# 'IB_AICE', 
+							# 'term_credit_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
-							'business',
-							'cahnrs_anml',
-							'cahnrs_envr',
-							'cahnrs_econ',
-							'cahnrext',
-							'cas_chem',
-							'cas_crim',
-							'cas_math',
-							'cas_psyc',
-							'cas_biol',
-							'cas_engl',
-							'cas_phys',
-							'cas',
-							'comm',
-							'education',
-							'medicine',
-							'nursing',
-							'pharmacy',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
 							# 'provost',
-							'vcea_bioe',
-							'vcea_cive',
-							'vcea_desn',
-							'vcea_eecs',
-							'vcea_mech',
-							'vcea',
-							'vet_med',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
 							# 'last_sch_proprietorship',
 							# 'sat_erws',
 							# 'sat_mss',
@@ -2809,7 +2335,7 @@ testing_set = testing_set.reset_index()
 
 pred_outcome = testing_set[[ 
                             'emplid',
-                            # 'enrl_ind'
+                            'ENRL_IND'
                             ]].copy(deep=True)
 
 aggregate_outcome = testing_set[[ 
@@ -2817,13 +2343,13 @@ aggregate_outcome = testing_set[[
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
-							'resident'
-                            # 'enrl_ind'
+							'resident',
+                            'ENRL_IND'
                             ]].copy(deep=True)
 
 current_outcome = testing_set[[ 
                             'emplid',
-                            # 'enrl_ind'
+                            'ENRL_IND'
                             ]].copy(deep=True)
 
 #%%
@@ -2875,19 +2401,12 @@ x_test = testing_set[[
                         # 'age_group', 
                         # 'age',
                         'male',
-						# 'race_hispanic',
-						# 'race_american_indian',
-						# 'race_alaska',
-						# 'race_asian',
-						# 'race_black',
-						# 'race_native_hawaiian',
-						# 'race_white',
                         # 'min_week_from_term_begin_dt',
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
                         # 'marital_status',
                         # 'Distance',
-                        'pop_dens',
+                        # 'pop_dens',
                         'underrep_minority', 
                         # 'ipeds_ethnic_group_descrshort',
                         'pell_eligibility_ind', 
@@ -2895,7 +2414,6 @@ x_test = testing_set[[
                         'first_gen_flag', 
                         # 'LSAMP_STEM_Flag',
                         # 'anywhere_STEM_Flag',
-                        'honors_program_ind',
                         # 'afl_greek_indicator',
                         'high_school_gpa',
                         # 'awe_instrument',
@@ -2915,7 +2433,6 @@ x_test = testing_set[[
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2927,7 +2444,7 @@ x_test = testing_set[[
                         # 'pvrt_rate',
                         'median_inc',
                         # 'median_value',
-                        'educ_rate',
+                        # 'educ_rate',
                         'pct_blk',
                         'pct_ai',
                         # 'pct_asn',
@@ -2936,57 +2453,57 @@ x_test = testing_set[[
                         'pct_two',
                         # 'pct_non',
                         'pct_hisp',
-                        # 'city_large',
-                        # 'city_mid',
-                        # 'city_small',
-                        # 'suburb_large',
-                        # 'suburb_mid',
-                        # 'suburb_small',
+                        'city_large',
+                        'city_mid',
+                        'city_small',
+                        'suburb_large',
+                        'suburb_mid',
+                        'suburb_small',
                         # 'town_fringe',
                         # 'town_distant',
                         # 'town_remote',
                         # 'rural_fringe',
                         # 'rural_distant',
                         # 'rural_remote',
-                        'AD_DTA',
-                        'AD_AST',
-                        'AP',
-                        'RS',
-                        'CHS',
+                        # 'AD_DTA',
+                        # 'AD_AST',
+                        # 'AP',
+                        # 'RS',
+                        # 'CHS',
                         # 'IB',
                         # 'AICE',
-                        'IB_AICE', 
-                        'term_credit_hours',
+                        # 'IB_AICE', 
+                        # 'term_credit_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
                         # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
@@ -3024,7 +2541,7 @@ x_test = testing_set[[
                         ]]
 
 y_train = training_set['enrl_ind']
-# y_test = testing_set['enrl_ind']
+y_test = testing_set['ENRL_IND']
 
 smotenc_prep = make_column_transformer(
 	(StandardScaler(), [
@@ -3037,7 +2554,7 @@ smotenc_prep = make_column_transformer(
 						# 'sat_comp',
 						# 'attendee_total_visits',
 						# 'Distance',
-						'pop_dens', 
+						# 'pop_dens', 
 						# 'qvalue', 
 						'median_inc',
 						# 'median_value',
@@ -3046,6 +2563,8 @@ smotenc_prep = make_column_transformer(
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'avg_difficulty',
+						'avg_pct_withdrawn',
+                        'avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
@@ -3057,7 +2576,7 @@ smotenc_prep = make_column_transformer(
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
 						'cum_adj_transfer_hours',
-						'term_credit_hours',
+						# 'term_credit_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -3090,8 +2609,7 @@ smotenc_prep = make_column_transformer(
 x_train = smotenc_prep.fit_transform(x_train)
 x_test = smotenc_prep.fit_transform(x_test)
 
-# THIS NEEDS TO BE REWRITTEN FOR THE CORRECT CATEGORICAL FEATURES IF IT'S GOING TO BE USED
-# over = SMOTENC(categorical_features=[11,12,13,14,15,16,17,18,19,20,21,24,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
+# over = SMOTENC(categorical_features=[11,12,13,14,15,16,17,18,19,20,21,28,29,30,31,32,33,34], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
 # x_train, y_train = over.fit_resample(x_train, y_train)
 
 under = TomekLinks(sampling_strategy='all', n_jobs=-1)
@@ -3105,24 +2623,16 @@ tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\tomek_set.csv', en
 
 #%%
 # Standard logistic model
-y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
-				+ male + underrep_minority \
-				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + pell_eligibility_ind + honors_program_ind \
-				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
-				+ business + comm + education + medicine + nursing + pharmacy + vet_med \
-				+ cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
-				+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
-                + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
+y, x = dmatrices('enrl_ind ~ male + underrep_minority + pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
+                + city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
+                + pell_eligibility_ind \
                 + first_gen_flag \
                 + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ total_fall_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
-				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr \
-				+ count_week_from_term_begin_dt', data=logit_df, return_type='dataframe')
+            	+ high_school_gpa + remedial \
+            	+ unmet_need_ofr', data=logit_df, return_type='dataframe')
 
 logit_mod = Logit(y, x)
 logit_res = logit_mod.fit(maxiter=500)
@@ -3143,7 +2653,7 @@ print('\n')
 print('Run machine learning models...\n')
 
 # Logistic model
-lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
+lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 lreg_probs = lreg.predict_proba(x_train)
 lreg_probs = lreg_probs[:, 1]
@@ -3182,7 +2692,7 @@ sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=F
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=10, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
+rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=4, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
 
 rfc_probs = rfc.predict_proba(x_train)
 rfc_probs = rfc_probs[:, 1]
@@ -3195,7 +2705,7 @@ rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=F
 
 #%%
 # Multi-layer perceptron model
-# mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(x_train, y_train)
+# mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=10, max_iter=2000, verbose=True).fit(x_train, y_train)
 
 # mlp_probs = mlp.predict_proba(x_train)
 # mlp_probs = mlp_probs[:, 1]
@@ -3296,7 +2806,7 @@ current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
 # current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_descr'] = 'Low'
 
 current_outcome['date'] = date.today()
-current_outcome['model_id'] = 2
+current_outcome['model_id'] = 1
 
 #%%
 if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv'):

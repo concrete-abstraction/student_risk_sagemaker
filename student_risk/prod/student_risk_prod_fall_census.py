@@ -1,42 +1,193 @@
-* ------------------------------------------------------------------------------- ;
-*                                                                                 ;
-*                             STUDENT RISK (2 OF 2)                               ;
-*                                                                                 ;
-* ------------------------------------------------------------------------------- ;
+#%%
+from student_risk import config
+import datetime
+import joblib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import pathlib
+import pyodbc
+import os
+import saspy
+import sklearn
+import sqlalchemy
+import sys
+import time
+import urllib
+from datetime import date
+from patsy import dmatrices
+from IPython.display import HTML
+from imblearn.over_sampling import SMOTENC
+from imblearn.under_sampling import RandomUnderSampler, TomekLinks
+from matplotlib.legend_handler import HandlerLine2D
+from sklearn.compose import make_column_transformer
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
+from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import VotingClassifier
+from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import GridSearchCV
+from statsmodels.discrete.discrete_model import Logit
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
+#%%
+# Database connection
+cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
+params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
+engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
+auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
+
+#%%
+# Global variable intialization
+strm = None
+
+#%%
+# Census date check 
+if config.cen_flag == False:
+
+	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
+	now = datetime.datetime.now()
+
+	now_day = now.day
+	now_month = now.month
+	now_year = now.year
+
+	strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
+
+	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
+	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
+	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
+
+	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
+	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
+	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
+
+	if now_year < census_year or now_year > midterm_year:
+		raise config.DateError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
+
+	elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
+		raise config.DateError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
+
+	elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
+		raise config.DateError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
+
+	else:
+		print(f'{date.today()}: No census date exceptions, running from census.')
+
+#%%
+# Census snapshot check
+if config.cen_flag == True:
+
+	sas = saspy.SASsession()
+
+	sas.symput('strm', strm)
+
+	sas.submit("""
+	%let dsn = census;
+
+	libname &dsn. odbc dsn=&dsn. schema=dbo;
+
+	proc sql;
+		select distinct
+			max(case when snapshot = 'census' 	then 1
+				when snapshot = 'midterm' 		then 2
+				when snapshot = 'eot'			then 3
+												else 0
+												end) as snap_order
+			into: snap_check
+			separated by ''
+		from &dsn..student_enrolled
+		where acad_career = 'UGRD'
+			and strm = "&strm."
+	;quit;
+	""")
+
+	snap_check = sas.symget('snap_check')
+
+	sas.endsas()
+
+	if snap_check != 1:
+		raise config.DataError(f'{date.today()}: Census snapshot exception, attempting to run from admissions.')
+
+	else:
+		print(f'{date.today()}: No census snapshot exceptions, running from census.')
+
+#%%
+# Start SAS session
+print('\nStart SAS session...')
+
+sas = saspy.SASsession()
+
+#%%
+# Set macro variables
+print('Set macro variables...')
+
+sas.submit("""
 %let dsn = census;
 %let dev = cendev;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
-/* Note: This is a test date. Revert to 2015 in production. */
-%let start_cohort = 2020;
+%let start_cohort = 2015;
 %let end_cohort = 2020;
+""")
 
+print('Done\n')
+
+#%%
+# Set libname statements
+print('Set libname statements...')
+
+sas.submit("""
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &dev. odbc dsn=&dev. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
+libname acs \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\\";
+""")
 
-libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
+print('Done\n')
 
+#%%
+# Import supplemental files
+print('Import supplemental files...')
+start = time.perf_counter()
+
+sas.submit("""
 proc import out=act_to_sat_engl_read
-	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
-	dbms=XLSX REPLACE;
-	getnames=YES;
-run;
+    datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_engl_read.xlsx\"
+    dbms=XLSX REPLACE;
+    getnames=YES;
+    run;
+""")
 
+sas.submit("""
 proc import out=act_to_sat_math
-	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_math.xlsx"
-	dbms=XLSX REPLACE;
-	getnames=YES;
-run;
+    datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_math.xlsx\"
+    dbms=XLSX REPLACE;
+    getnames=YES;
+    run;
+""")
 
+sas.submit("""
 proc import out=cpi
-	datafile="Z:\Nathan\Models\student_risk\supplemental_files\cpi.xlsx"
+	datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\cpi.xlsx\"
 	dbms=XLSX REPLACE;
 	getnames=YES;
 run;
+""")
 
+stop = time.perf_counter()
+print(f'Done in {stop - start:.2f} seconds\n')
+
+#%%
+# Create SAS macro
+print('Create SAS macro...')
+
+sas.submit("""
 %macro loop;
 	
 	%do cohort_year=&start_cohort. %to &end_cohort.;
@@ -339,7 +490,7 @@ run;
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."	
-			and a.award_period in ('A')
+			and a.award_period in ('A','B')
 			and a.efc_status = 'O'
 	;quit;
 	
@@ -361,24 +512,6 @@ run;
 			and a.award_period in ('A','B')
 			and a.award_status = 'A'
 		group by a.emplid;
-	;quit;
-	
-	proc sql;
-		create table dependent_&cohort_year. as
-		select distinct
-			a.emplid,
-			b.snapshot as dependent_snap,
-			a.num_in_family,
-			a.stdnt_have_dependents,
-      		a.stdnt_have_children_to_support,
-      		a.stdnt_agi,
-      		a.stdnt_agi_blank
-		from &dsn..fa_isir as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
-			on a.emplid = b.emplid
-				and a.aid_year = b.aid_year
-				and a.snapshot = b.snapshot
-		where a.aid_year = "&cohort_year."
 	;quit;
 	
 	proc sql;
@@ -410,15 +543,11 @@ run;
 		create table degrees_&cohort_year. as
 		select distinct
 			emplid,
-			case when degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B','AD_AST2C','AD_AST2M') 	then 'AD_AST' 
-				when substr(degree,1,6) = 'AD_DTA' 																then 'AD_DTA' 																						
-																												else degree end as degree,
+			case when degree = 'AD_AS-T' then 'AD_AST' else degree end as degree,
 			1 as ind
 		from &dsn..student_ext_degree
 		where floor(degree_term_code / 10) <= &cohort_year.
-			and degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B',
-							'AD_AST2C','AD_AST2M','AD_DTA','AD_GED','AD_GENS','AD_GER',
-							'AD_HSDIP')
+			and degree in ('AD_AS-T','AD_DTA')
 		order by emplid
 	;quit;
 	
@@ -592,8 +721,7 @@ run;
 			class_nbr,
 			crse_id,
 			subject_catalog_nbr,
-			ssr_component,
-			unt_taken
+			ssr_component
 		from &dsn..class_registration_vw
 		where snapshot = 'eot'
 			and full_acad_year = "&cohort_year."
@@ -712,16 +840,8 @@ run;
 			count(c.class_nbr) as fall_lab_count,
 			count(d.class_nbr) as spring_lec_count,
 			count(e.class_nbr) as spring_lab_count,
-			sum(f.unt_taken) as fall_lec_units,
-			sum(g.unt_taken) as fall_lab_units,
-			sum(h.unt_taken) as spring_lec_units,
-			sum(i.unt_taken) as spring_lab_units,
 			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
-			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count,
-			coalesce(calculated fall_lec_units, 0) + coalesce(calculated spring_lec_units, 0) as total_lec_units,
-			coalesce(calculated fall_lab_units, 0) + coalesce(calculated spring_lab_units, 0) as total_lab_units,
-			coalesce(calculated fall_lec_units, 0) + coalesce(calculated fall_lab_units, 0) as total_fall_units,
-			coalesce(calculated spring_lec_units, 0) + coalesce(calculated spring_lab_units, 0) as total_spring_units
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
 		from &dsn..class_registration_vw as a
 		left join (select distinct emplid, 
 						class_nbr
@@ -756,57 +876,13 @@ run;
 		left join (select distinct emplid, 
 						class_nbr
 					from &dsn..class_registration_vw
-					where snapshot = 'eot'
+					where snapshot = 'census'
 						and full_acad_year = "&cohort_year."
 						and enrl_ind = 1
 						and substr(strm,4,1) = '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
-		left join (select distinct emplid, 
-						class_nbr,
-						unt_taken
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '7'
-						and ssr_component = 'LEC') as f
-			on a.emplid = f.emplid
-				and a.class_nbr = f.class_nbr
-		left join (select distinct emplid, 
-						class_nbr,
-						unt_taken
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '7'
-						and ssr_component = 'LAB') as g
-			on a.emplid = g.emplid
-				and a.class_nbr = g.class_nbr
-		left join (select distinct emplid, 
-						class_nbr,
-						unt_taken
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '3'
-						and ssr_component = 'LEC') as h
-			on a.emplid = h.emplid
-				and a.class_nbr = h.class_nbr
-		left join (select distinct emplid, 
-						class_nbr,
-						unt_taken
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '3'
-						and ssr_component = 'LAB') as i
-			on a.emplid = i.emplid
-				and a.class_nbr = i.class_nbr
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.enrl_ind = 1
@@ -893,43 +969,6 @@ run;
 				and a.ssr_component = e.ssr_component
 				and substr(a.strm,4,1) = '3'
 		group by a.emplid
-	;quit;
-	
-	proc sql;
-		create table midterm_&cohort_year. as
-		select distinct
-			strm,
-			emplid,
-			class_nbr,
-			crse_id,
-			subject_catalog_nbr,
-			case when crse_grade_input = 'A' 	then 4.0
-				when crse_grade_input = 'A-'	then 3.7
-				when crse_grade_input = 'B+'	then 3.3
-				when crse_grade_input = 'B'		then 3.0
-				when crse_grade_input = 'B-'	then 2.7
-				when crse_grade_input = 'C+'	then 2.3
-				when crse_grade_input = 'C'		then 2.0
-				when crse_grade_input = 'C-'	then 1.7
-				when crse_grade_input = 'D+'	then 1.3
-				when crse_grade_input = 'D'		then 1.0
-				when crse_grade_input = 'F'		then 0.0
-												else .
-												end as midterm_grade
-		from &dsn..class_registration_vw
-		where snapshot = 'midterm'
-			and substr(strm,4,1) = '7'
-			and full_acad_year = "&cohort_year."
-			and enrl_ind = 1
-	;quit;
-
-	proc sql;
-		create table midterm_grades_&cohort_year. as
-		select distinct
-			emplid,
-			avg(midterm_grade) as midterm_gpa_avg
-		from midterm_&cohort_year. 
-		group by emplid
 	;quit;
 	
 	proc sql;
@@ -1028,12 +1067,6 @@ run;
 			f.total_disb,
 			f.total_offer,
 			f.total_accept,
-			v.dependent_snap,
-			v.num_in_family,
-			v.stdnt_have_dependents,
-      		v.stdnt_have_children_to_support,
-      		v.stdnt_agi,
-      		v.stdnt_agi_blank,
 			g.best,
 			g.bestr,
 			g.qvalue,
@@ -1045,10 +1078,6 @@ run;
 			g.sat_comp,
 			h.ad_dta,
 			h.ad_ast,
-			h.ad_hsdip,
-			h.ad_ged,
-			h.ad_ger,
-			h.ad_gens,
 			i.ap,
 			i.rs,
 			i.chs,
@@ -1098,12 +1127,6 @@ run;
 			s.spring_lab_count,
 			s.total_lec_count,
 			s.total_lab_count,
-			s.fall_lec_units,
-			s.fall_lab_units,
-			s.spring_lec_units,
-			s.spring_lab_units,
-			s.total_fall_units,
-			(a.term_credit_hours - s.total_fall_units) as term_withdrawn_hours,
 			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,
@@ -1133,11 +1156,7 @@ run;
 			t.race_asian,
 			t.race_black,
 			t.race_native_hawaiian,
-			t.race_white,
-			u.midterm_gpa_avg,
-			case when u.midterm_gpa_avg is not null 	then 1
-														else 0
-														end as midterm_gpa_ind
+			t.race_white
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -1180,10 +1199,6 @@ run;
  			on a.emplid = s.emplid
  		left join race_detail_&cohort_year. as t
  			on a.emplid = t.emplid
- 		left join midterm_grades_&cohort_year. as u
- 			on a.emplid = u.emplid
- 		left join dependent_&cohort_year. as v
- 			on a.emplid = v.emplid
 	;quit;
 		
 	%end;
@@ -1297,11 +1312,6 @@ run;
 	;quit;
 	
 	proc sql;
-		create table eot_term_gpa_&cohort_year. as
-			
-	;quit;
-	
-	proc sql;
 		create table plan_&cohort_year. as 
 		select distinct 
 			emplid,
@@ -1372,45 +1382,7 @@ run;
 			and primary_plan_flag = 'Y'
 			and calculated split_plan = 0
 	;quit;
-	
-/* 	proc sql; */
-/* 		create table need_&cohort_year. as */
-/* 		select distinct */
-/* 			a.emplid, */
-/* 			b.snapshot as need_snap, */
-/* 			a.aid_year, */
-/* 			a.fed_efc, */
-/* 			a.fed_need */
-/* 		from &dsn..fa_award_period as a */
-/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b */
-/* 			on a.emplid = b.emplid */
-/* 				and a.aid_year = b.aid_year */
-/* 				and a.snapshot = b.snapshot */
-/* 		where a.aid_year = "&cohort_year."	 */
-/* 			and a.award_period in ('A','B') */
-/* 			and a.efc_status = 'O' */
-/* 	;quit; */
-	
-/* 	proc sql; */
-/* 		create table aid_&cohort_year. as */
-/* 		select distinct */
-/* 			a.emplid, */
-/* 			b.snapshot as aid_snap, */
-/* 			a.aid_year, */
-/* 			sum(a.disbursed_amt) as total_disb, */
-/* 			sum(a.offer_amt) as total_offer, */
-/* 			sum(a.accept_amt) as total_accept */
-/* 		from &dsn..fa_award_aid_year_vw as a */
-/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b */
-/* 			on a.emplid = b.emplid */
-/* 				and a.aid_year = b.aid_year */
-/* 				and a.snapshot = b.snapshot */
-/* 		where a.aid_year = "&cohort_year." */
-/* 			and a.award_period in ('A','B') */
-/* 			and a.award_status = 'A' */
-/* 		group by a.emplid; */
-/* 	;quit; */
-	
+
 	proc sql;
 		create table race_detail_&cohort_year. as
 		select 
@@ -1495,24 +1467,6 @@ run;
 	;quit;
 	
 	proc sql;
-		create table dependent_&cohort_year. as
-		select distinct
-			a.emplid,
-			b.snapshot as dependent_snap,
-			a.num_in_family,
-			a.stdnt_have_dependents,
-      		a.stdnt_have_children_to_support,
-      		a.stdnt_agi,
-      		a.stdnt_agi_blank
-		from &dsn..fa_isir as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
-			on a.emplid = b.emplid
-				and a.aid_year = b.aid_year
-				and a.snapshot = b.snapshot
-		where a.aid_year = "&cohort_year."
-	;quit;
-	
-	proc sql;
 		create table exams_&cohort_year. as 
 		select distinct
 			a.emplid,
@@ -1541,15 +1495,11 @@ run;
 		create table degrees_&cohort_year. as
 		select distinct
 			emplid,
-			case when degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B','AD_AST2C','AD_AST2M') 	then 'AD_AST' 
-				when substr(degree,1,6) = 'AD_DTA' 																then 'AD_DTA' 																						
-																												else degree end as degree,
+			case when degree = 'AD_AS-T' then 'AD_AST' else degree end as degree,
 			1 as ind
 		from &dsn..student_ext_degree
 		where floor(degree_term_code / 10) <= &cohort_year.
-			and degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B',
-							'AD_AST2C','AD_AST2M','AD_DTA','AD_GED','AD_GENS','AD_GER',
-							'AD_HSDIP')
+			and degree in ('AD_AS-T','AD_DTA')
 		order by emplid
 	;quit;
 	
@@ -1722,7 +1672,6 @@ run;
 			emplid,
 			class_nbr,
 			crse_id,
-			unt_taken,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 			ssr_component
 		from acs.subcatnbr_data
@@ -1840,16 +1789,8 @@ run;
 			count(c.class_nbr) as fall_lab_count,
 			count(d.class_nbr) as spring_lec_count,
 			count(e.class_nbr) as spring_lab_count,
-			sum(f.unt_taken) as fall_lec_units,
-			sum(g.unt_taken) as fall_lab_units,
-			sum(h.unt_taken) as spring_lec_units,
-			sum(i.unt_taken) as spring_lab_units,
 			coalesce(calculated fall_lec_count, 0) + coalesce(calculated spring_lec_count, 0) as total_lec_count,
-			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count,
-			coalesce(calculated fall_lec_units, 0) + coalesce(calculated spring_lec_units, 0) as total_lec_units,
-			coalesce(calculated fall_lab_units, 0) + coalesce(calculated spring_lab_units, 0) as total_lab_units,
-			coalesce(calculated fall_lec_units, 0) + coalesce(calculated fall_lab_units, 0) as total_fall_units,
-			coalesce(calculated spring_lec_units, 0) + coalesce(calculated spring_lab_units, 0) as total_spring_units
+			coalesce(calculated fall_lab_count, 0) + coalesce(calculated spring_lab_count, 0) as total_lab_count
 		from class_registration_&cohort_year. as a
 		left join (select distinct emplid, 
 						class_nbr
@@ -1879,38 +1820,6 @@ run;
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
-		left join (select distinct emplid, 
-						class_nbr,
-						unt_taken
-					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '7'
-						and ssr_component = 'LEC') as f
-			on a.emplid = f.emplid
-				and a.class_nbr = f.class_nbr
-		left join (select distinct emplid, 
-						class_nbr,
-						unt_taken
-					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '7'
-						and ssr_component = 'LAB') as g
-			on a.emplid = g.emplid
-				and a.class_nbr = g.class_nbr
-		left join (select distinct emplid, 
-						class_nbr,
-						unt_taken
-					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '3'
-						and ssr_component = 'LEC') as h
-			on a.emplid = h.emplid
-				and a.class_nbr = h.class_nbr
-		left join (select distinct emplid, 
-						class_nbr,
-						unt_taken
-					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '3'
-						and ssr_component = 'LAB') as i
-			on a.emplid = i.emplid
-				and a.class_nbr = i.class_nbr
 		group by a.emplid
 	;quit;
 	
@@ -1994,43 +1903,6 @@ run;
 				and a.ssr_component = e.ssr_component
 				and substr(a.strm,4,1) = '3'
 		group by a.emplid
-	;quit;
-	
-	proc sql;
-		create table midterm_&cohort_year. as
-		select distinct
-			strm,
-			emplid,
-			class_nbr,
-			crse_id,
-			subject_catalog_nbr,
-			case when crse_grade_input = 'A' 	then 4.0
-				when crse_grade_input = 'A-'	then 3.7
-				when crse_grade_input = 'B+'	then 3.3
-				when crse_grade_input = 'B'		then 3.0
-				when crse_grade_input = 'B-'	then 2.7
-				when crse_grade_input = 'C+'	then 2.3
-				when crse_grade_input = 'C'		then 2.0
-				when crse_grade_input = 'C-'	then 1.7
-				when crse_grade_input = 'D+'	then 1.3
-				when crse_grade_input = 'D'		then 1.0
-				when crse_grade_input = 'F'		then 0.0
-												else .
-												end as midterm_grade
-		from &dsn..class_registration_vw
-		where snapshot = 'midterm'
-			and substr(strm,4,1) = '7'
-			and full_acad_year = "&cohort_year."
-			and enrl_ind = 1
-	;quit;
-
-	proc sql;
-		create table midterm_grades_&cohort_year. as
-		select distinct
-			emplid,
-			avg(midterm_grade) as midterm_gpa_avg
-		from midterm_&cohort_year. 
-		group by emplid
 	;quit;
 	
 	proc sql;
@@ -2122,19 +1994,6 @@ run;
 			d.anywhere_stem_flag,
 			s.fed_need,
 			s.total_offer,
-			w.dependent_snap,
-			w.num_in_family,
-			w.stdnt_have_dependents,
-      		w.stdnt_have_children_to_support,
-      		w.stdnt_agi,
-      		w.stdnt_agi_blank,
-/* 			e.need_snap, */
-/* 			e.fed_efc, */
-/* 			e.fed_need, */
-/* 			f.aid_snap, */
-/* 			f.total_disb, */
-/* 			f.total_offer, */
-/* 			f.total_accept, */
 			g.best,
 			g.bestr,
 			g.qvalue,
@@ -2146,10 +2005,6 @@ run;
 			g.sat_comp,
 			h.ad_dta,
 			h.ad_ast,
-			h.ad_hsdip,
-			h.ad_ged,
-			h.ad_ger,
-			h.ad_gens,
 			i.ap,
 			i.rs,
 			i.chs,
@@ -2199,12 +2054,6 @@ run;
 			t.spring_lab_count,
 			t.total_lec_count,
 			t.total_lab_count,
-			t.fall_lec_units,
-			t.fall_lab_units,
-			t.spring_lec_units,
-			t.spring_lab_units,
-			t.total_fall_units,
-			(a.term_credit_hours - t.total_fall_units) as term_withdrawn_hours,
  			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
  			o.spring_lec_contact_hrs,
@@ -2234,11 +2083,7 @@ run;
 			u.race_asian,
 			u.race_black,
 			u.race_native_hawaiian,
-			u.race_white,
-			v.midterm_gpa_avg,
-			case when v.midterm_gpa_avg is not null 	then 1
-														else 0
-														end as midterm_gpa_ind
+			u.race_white
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2250,12 +2095,6 @@ run;
 	 					from acs.finaid_data
 	 					where aid_year = "&cohort_year." group by emplid) as s
  			on a.emplid = s.emplid
-/*  		left join need_&cohort_year. as e */
-/*  			on a.emplid = e.emplid */
-/*  				and a.aid_year = e.aid_year */
-/*  		left join aid_&cohort_year. as f */
-/*  			on a.emplid = f.emplid */
-/*  				and a.aid_year = f.aid_year */
  		left join exams_&cohort_year. as g
  			on a.emplid = g.emplid
  		left join degrees_&cohort_year. as h
@@ -2284,25 +2123,37 @@ run;
  			on a.emplid = t.emplid
  		left join race_detail_&cohort_year. as u
  			on a.emplid = u.emplid
- 		left join midterm_grades_&cohort_year. as v
- 			on a.emplid = v.emplid
- 		left join dependent_&cohort_year. as w
- 			on a.emplid = w.emplid
 	;quit;
 	
 %mend loop;
+""")
 
+print('Done\n')
+
+#%%
+# Run SAS macro program to prepare data from census
+print('Run SAS macro program...')
+start = time.perf_counter()
+
+sas_log = sas.submit("""
 %loop;
+""")
 
+HTML(sas_log['LOG'])
+
+stop = time.perf_counter()
+print(f'Done in {stop - start:.2f} seconds\n')
+
+#%%
+# Prepare data
+print('Prepare data...')
+
+sas.submit("""
 data full_set;
 	set dataset_&start_cohort.-dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
-	if ad_hsdip = . then ad_hsdip = 0;
-	if ad_ged = . then ad_ged = 0;
-	if ad_ger = . then ad_ger = 0;
-	if ad_gens = . then ad_gens = 0;
 	if ap = . then ap = 0;
 	if rs = . then rs = 0;
 	if chs = . then chs = 0;
@@ -2336,7 +2187,6 @@ data full_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2352,24 +2202,11 @@ data full_set;
 	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
 
-/* Note: There should be no duplicates */
-proc sort data=full_set nodupkey dupout=dups;
-	by emplid;
-run;
-
-/* proc means data=full_set median q1 q3; */
-/* 	var age; */
-/* run; */
-
 data training_set;
 	set dataset_&start_cohort.-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
-	if ad_hsdip = . then ad_hsdip = 0;
-	if ad_ged = . then ad_ged = 0;
-	if ad_ger = . then ad_ger = 0;
-	if ad_gens = . then ad_gens = 0;
 	if ap = . then ap = 0;
 	if rs = . then rs = 0;
 	if chs = . then chs = 0;
@@ -2403,7 +2240,6 @@ data training_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2424,10 +2260,6 @@ data testing_set;
 	if enrl_ind = . then enrl_ind = 0;
 	if ad_dta = . then ad_dta = 0;
 	if ad_ast = . then ad_ast = 0;
-	if ad_hsdip = . then ad_hsdip = 0;
-	if ad_ged = . then ad_ged = 0;
-	if ad_ger = . then ad_ger = 0;
-	if ad_gens = . then ad_gens = 0;
 	if ap = . then ap = 0;
 	if rs = . then rs = 0;
 	if chs = . then chs = 0;
@@ -2461,7 +2293,6 @@ data testing_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2476,48 +2307,1018 @@ data testing_set;
 	unmet_need_ofr = fed_need - total_offer;
 	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
 run;
+""")
 
-/* data training_set_anon; */
-/* 	set training_set; */
-/* 	do person_id = "         "; */
-/* 		do i = 1 to 9; */
-/* 			rannum = int(uniform(0)*10); */
-/* 			substr(person_id,i,1) = rannum; */
-/* 		end; */
-/* 	output; */
-/* 	end; */
-/* 	drop i rannum; */
-/* run; */
+print('Done\n')
 
-/* proc sort data=training_set_anon nodupkey dupout=dups; */
-/* 	by person_id; */
-/* run; */
+#%%
+# Export data from SAS
+print('Export data from SAS...')
 
-/* data anon_key (keep=emplid person_id); */
-/* 	set training_set_anon; */
-/* run; */
-
-proc means data=training_set;
-	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count;
-	title 'AY2020 Data';
-run;
-
-proc means data=testing_set;
-	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count;
-	title 'AY2021 Data';
-run;
-
-filename full "Z:\Nathan\Models\student_risk\datasets\full_set.csv" encoding="utf-8";
+sas_log = sas.submit("""
+filename full \"Z:\\Nathan\\Models\\student_risk\\datasets\\full_set.csv\" encoding="utf-8";
 
 proc export data=full_set outfile=full dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\datasets\training_set.csv" encoding="utf-8";
+filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv\" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\datasets\testing_set.csv" encoding="utf-8";
+filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
+""")
+
+HTML(sas_log['LOG'])
+
+print('Done\n')
+
+#%%
+# End SAS session
+sas.endsas()
+
+#%%
+# Import pre-split data
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8')
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8')
+
+#%%
+# Prepare base dataframes
+print('\nPrepare dataframes and preprocess data...')
+
+logit_df = training_set[[
+                        'enrl_ind', 
+                        # 'acad_year',
+                        # 'age_group', 
+                        # 'age',
+                        'male',
+						# 'race_hispanic',
+						# 'race_american_indian',
+						# 'race_alaska',
+						# 'race_asian',
+						# 'race_black',
+						# 'race_native_hawaiian',
+						# 'race_white',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
+                        # 'marital_status',
+                        # 'Distance',
+                        'pop_dens',
+                        'underrep_minority', 
+                        # 'ipeds_ethnic_group_descrshort',
+                        'pell_eligibility_ind', 
+                        # 'pell_recipient_ind',
+                        'first_gen_flag', 
+                        # 'LSAMP_STEM_Flag',
+                        # 'anywhere_STEM_Flag',
+                        'honors_program_ind',
+                        # 'afl_greek_indicator',
+                        'high_school_gpa',
+                        # 'awe_instrument',
+                        # 'cdi_instrument',
+                        'avg_difficulty',
+                        'avg_pct_withdrawn',
+                        # 'avg_pct_CDFW',
+                        'avg_pct_CDF',
+                        # 'avg_pct_DFW',
+                        # 'avg_pct_DF',
+						'fall_lec_count',
+						'fall_lab_count',
+                        # 'fall_lec_contact_hrs',
+                        # 'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        # 'spring_lec_contact_hrs',
+                        # 'spring_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+                        'cum_adj_transfer_hours',
+                        'resident',
+                        # 'father_wsu_flag',
+                        # 'mother_wsu_flag',
+                        'parent1_highest_educ_lvl',
+                        'parent2_highest_educ_lvl',
+                        # 'citizenship_country',
+                        'gini_indx',
+                        # 'pvrt_rate',
+                        'median_inc',
+                        # 'median_value',
+                        'educ_rate',
+                        'pct_blk',
+                        'pct_ai',
+                        # 'pct_asn',
+                        'pct_hawi',
+                        # 'pct_oth',
+                        'pct_two',
+                        # 'pct_non',
+                        'pct_hisp',
+                        # 'city_large',
+                        # 'city_mid',
+                        # 'city_small',
+                        # 'suburb_large',
+                        # 'suburb_mid',
+                        # 'suburb_small',
+                        # 'town_fringe',
+                        # 'town_distant',
+                        # 'town_remote',
+                        # 'rural_fringe',
+                        # 'rural_distant',
+                        # 'rural_remote',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE', 
+                        'term_credit_hours',
+                        # 'athlete',
+                        'remedial',
+                        # 'ACAD_PLAN',
+                        # 'plan_owner_org',
+                        'business',
+                        'cahnrs_anml',
+                        'cahnrs_envr',
+                        'cahnrs_econ',
+                        'cahnrext',
+                        'cas_chem',
+                        'cas_crim',
+                        'cas_math',
+                        'cas_psyc',
+                        'cas_biol',
+                        'cas_engl',
+                        'cas_phys',
+                        'cas',
+                        'comm',
+                        'education',
+                        'medicine',
+                        'nursing',
+                        'pharmacy',
+                        # 'provost',
+                        'vcea_bioe',
+                        'vcea_cive',
+                        'vcea_desn',
+                        'vcea_eecs',
+                        'vcea_mech',
+                        'vcea',
+                        'vet_med',
+                        # 'last_sch_proprietorship',
+                        # 'sat_erws',
+                        # 'sat_mss',
+                        # 'sat_comp',
+                        # 'attendee_alive',
+                        # 'attendee_campus_visit',
+                        # 'attendee_cashe',
+                        # 'attendee_destination',
+                        # 'attendee_experience',
+                        # 'attendee_fcd_pullman',
+                        # 'attendee_fced',
+                        # 'attendee_fcoc',
+                        # 'attendee_fcod',
+                        # 'attendee_group_visit',
+                        # 'attendee_honors_visit',
+                        # 'attendee_imagine_tomorrow',
+                        # 'attendee_imagine_u',
+                        # 'attendee_la_bienvenida',
+                        # 'attendee_lvp_camp',
+                        # 'attendee_oos_destination',
+                        # 'attendee_oos_experience',
+                        # 'attendee_preview',
+                        # 'attendee_preview_jrs',
+                        # 'attendee_shaping',
+                        # 'attendee_top_scholars',
+                        # 'attendee_transfer_day',
+                        # 'attendee_vibes',
+                        # 'attendee_welcome_center',
+                        # 'attendee_any_visitation_ind',
+                        # 'attendee_total_visits',
+                        # 'qvalue',
+                        # 'fed_efc',
+                        # 'fed_need',
+                        'unmet_need_ofr'
+                        ]].dropna()
+
+training_set = training_set[[
+                            'emplid',
+                            'enrl_ind', 
+							# 'acad_year',
+							# 'age_group', 
+							# 'age',
+							'male',
+							# 'race_hispanic',
+							# 'race_american_indian',
+							# 'race_alaska',
+							# 'race_asian',
+							# 'race_black',
+							# 'race_native_hawaiian',
+							# 'race_white',
+							# 'min_week_from_term_begin_dt',
+							# 'max_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
+							# 'marital_status',
+							# 'Distance',
+							'pop_dens',
+							'underrep_minority', 
+							# 'ipeds_ethnic_group_descrshort',
+							'pell_eligibility_ind', 
+							# 'pell_recipient_ind',
+							'first_gen_flag', 
+							# 'LSAMP_STEM_Flag',
+							# 'anywhere_STEM_Flag',
+							'honors_program_ind',
+							# 'afl_greek_indicator',
+							'high_school_gpa',
+							# 'awe_instrument',
+							# 'cdi_instrument',
+							'avg_difficulty',
+							'avg_pct_withdrawn',
+							# 'avg_pct_CDFW',
+							'avg_pct_CDF',
+							# 'avg_pct_DFW',
+							# 'avg_pct_DF',
+							'fall_lec_count',
+							'fall_lab_count',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
+							# 'spring_lec_contact_hrs',
+							# 'spring_lab_contact_hrs',
+							'total_fall_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'cum_adj_transfer_hours',
+							'resident',
+							# 'father_wsu_flag',
+							# 'mother_wsu_flag',
+							'parent1_highest_educ_lvl',
+							'parent2_highest_educ_lvl',
+							# 'citizenship_country',
+							'gini_indx',
+							# 'pvrt_rate',
+							'median_inc',
+							# 'median_value',
+							'educ_rate',
+							'pct_blk',
+							'pct_ai',
+							# 'pct_asn',
+							'pct_hawi',
+							# 'pct_oth',
+							'pct_two',
+							# 'pct_non',
+							'pct_hisp',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
+							# 'town_fringe',
+							# 'town_distant',
+							# 'town_remote',
+							# 'rural_fringe',
+							# 'rural_distant',
+							# 'rural_remote',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
+							# 'IB',
+							# 'AICE',
+							'IB_AICE', 
+							'term_credit_hours',
+							# 'athlete',
+							'remedial',
+							# 'ACAD_PLAN',
+							# 'plan_owner_org',
+							'business',
+							'cahnrs_anml',
+							'cahnrs_envr',
+							'cahnrs_econ',
+							'cahnrext',
+							'cas_chem',
+							'cas_crim',
+							'cas_math',
+							'cas_psyc',
+							'cas_biol',
+							'cas_engl',
+							'cas_phys',
+							'cas',
+							'comm',
+							'education',
+							'medicine',
+							'nursing',
+							'pharmacy',
+							# 'provost',
+							'vcea_bioe',
+							'vcea_cive',
+							'vcea_desn',
+							'vcea_eecs',
+							'vcea_mech',
+							'vcea',
+							'vet_med',
+							# 'last_sch_proprietorship',
+							# 'sat_erws',
+							# 'sat_mss',
+							# 'sat_comp',
+							# 'attendee_alive',
+							# 'attendee_campus_visit',
+							# 'attendee_cashe',
+							# 'attendee_destination',
+							# 'attendee_experience',
+							# 'attendee_fcd_pullman',
+							# 'attendee_fced',
+							# 'attendee_fcoc',
+							# 'attendee_fcod',
+							# 'attendee_group_visit',
+							# 'attendee_honors_visit',
+							# 'attendee_imagine_tomorrow',
+							# 'attendee_imagine_u',
+							# 'attendee_la_bienvenida',
+							# 'attendee_lvp_camp',
+							# 'attendee_oos_destination',
+							# 'attendee_oos_experience',
+							# 'attendee_preview',
+							# 'attendee_preview_jrs',
+							# 'attendee_shaping',
+							# 'attendee_top_scholars',
+							# 'attendee_transfer_day',
+							# 'attendee_vibes',
+							# 'attendee_welcome_center',
+							# 'attendee_any_visitation_ind',
+							# 'attendee_total_visits',
+							# 'qvalue',
+							# 'fed_efc',
+							# 'fed_need',
+							'unmet_need_ofr'
+                            ]].dropna()
+
+testing_set = testing_set[[
+                            'emplid',
+							# 'enrl_ind', 
+							# 'acad_year',
+							# 'age_group', 
+							# 'age',
+							'male',
+							# 'race_hispanic',
+							# 'race_american_indian',
+							# 'race_alaska',
+							# 'race_asian',
+							# 'race_black',
+							# 'race_native_hawaiian',
+							# 'race_white',
+							# 'min_week_from_term_begin_dt',
+							# 'max_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
+							# 'marital_status',
+							# 'Distance',
+							'pop_dens',
+							'underrep_minority', 
+							# 'ipeds_ethnic_group_descrshort',
+							'pell_eligibility_ind', 
+							# 'pell_recipient_ind',
+							'first_gen_flag', 
+							# 'LSAMP_STEM_Flag',
+							# 'anywhere_STEM_Flag',
+							'honors_program_ind',
+							# 'afl_greek_indicator',
+							'high_school_gpa',
+							# 'awe_instrument',
+							# 'cdi_instrument',
+							'avg_difficulty',
+							'avg_pct_withdrawn',
+							# 'avg_pct_CDFW',
+							'avg_pct_CDF',
+							# 'avg_pct_DFW',
+							# 'avg_pct_DF',
+							'fall_lec_count',
+							'fall_lab_count',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
+							# 'spring_lec_contact_hrs',
+							# 'spring_lab_contact_hrs',
+							'total_fall_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'cum_adj_transfer_hours',
+							'resident',
+							# 'father_wsu_flag',
+							# 'mother_wsu_flag',
+							'parent1_highest_educ_lvl',
+							'parent2_highest_educ_lvl',
+							# 'citizenship_country',
+							'gini_indx',
+							# 'pvrt_rate',
+							'median_inc',
+							# 'median_value',
+							'educ_rate',
+							'pct_blk',
+							'pct_ai',
+							# 'pct_asn',
+							'pct_hawi',
+							# 'pct_oth',
+							'pct_two',
+							# 'pct_non',
+							'pct_hisp',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
+							# 'town_fringe',
+							# 'town_distant',
+							# 'town_remote',
+							# 'rural_fringe',
+							# 'rural_distant',
+							# 'rural_remote',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
+							# 'IB',
+							# 'AICE',
+							'IB_AICE', 
+							'term_credit_hours',
+							# 'athlete',
+							'remedial',
+							# 'ACAD_PLAN',
+							# 'plan_owner_org',
+							'business',
+							'cahnrs_anml',
+							'cahnrs_envr',
+							'cahnrs_econ',
+							'cahnrext',
+							'cas_chem',
+							'cas_crim',
+							'cas_math',
+							'cas_psyc',
+							'cas_biol',
+							'cas_engl',
+							'cas_phys',
+							'cas',
+							'comm',
+							'education',
+							'medicine',
+							'nursing',
+							'pharmacy',
+							# 'provost',
+							'vcea_bioe',
+							'vcea_cive',
+							'vcea_desn',
+							'vcea_eecs',
+							'vcea_mech',
+							'vcea',
+							'vet_med',
+							# 'last_sch_proprietorship',
+							# 'sat_erws',
+							# 'sat_mss',
+							# 'sat_comp',
+							# 'attendee_alive',
+							# 'attendee_campus_visit',
+							# 'attendee_cashe',
+							# 'attendee_destination',
+							# 'attendee_experience',
+							# 'attendee_fcd_pullman',
+							# 'attendee_fced',
+							# 'attendee_fcoc',
+							# 'attendee_fcod',
+							# 'attendee_group_visit',
+							# 'attendee_honors_visit',
+							# 'attendee_imagine_tomorrow',
+							# 'attendee_imagine_u',
+							# 'attendee_la_bienvenida',
+							# 'attendee_lvp_camp',
+							# 'attendee_oos_destination',
+							# 'attendee_oos_experience',
+							# 'attendee_preview',
+							# 'attendee_preview_jrs',
+							# 'attendee_shaping',
+							# 'attendee_top_scholars',
+							# 'attendee_transfer_day',
+							# 'attendee_vibes',
+							# 'attendee_welcome_center',
+							# 'attendee_any_visitation_ind',
+							# 'attendee_total_visits',
+							# 'qvalue',
+							# 'fed_efc',
+							# 'fed_need',
+							'unmet_need_ofr'
+                            ]].dropna()
+
+testing_set = testing_set.reset_index()
+
+pred_outcome = testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+aggregate_outcome = testing_set[[ 
+                            'emplid',
+							'male',
+							'underrep_minority',
+							'first_gen_flag',
+							'resident'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+current_outcome = testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+#%%
+# Detect and remove outliers
+x_outlier = training_set.drop(columns='enrl_ind')
+
+outlier_prep = make_column_transformer(
+    (OneHotEncoder(drop='first'), [
+									# 'race_hispanic',
+									# 'race_american_indian',
+									# 'race_alaska',
+									# 'race_asian',
+									# 'race_black',
+									# 'race_native_hawaiian',
+									# 'race_white',
+                                    # 'acad_year', 
+                                    # 'age_group',
+                                    # 'marital_status',
+                                    'first_gen_flag',
+                                    # 'LSAMP_STEM_Flag',
+                                    # 'anywhere_STEM_Flag',
+                                    # 'afl_greek_indicator',
+                                    # 'ACAD_PLAN',
+                                    # 'plan_owner_org',
+                                    # 'ipeds_ethnic_group_descrshort',
+                                    # 'last_sch_proprietorship', 
+                                    'parent1_highest_educ_lvl',
+                                    'parent2_highest_educ_lvl'
+                                    ]),
+    remainder='passthrough'
+)
+
+x_outlier = outlier_prep.fit_transform(x_outlier)
+
+training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(x_outlier)
+
+outlier_set = training_set.drop(training_set[training_set['mask'] == 1].index)
+outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\outlier_set.csv', encoding='utf-8', index=False)
+
+training_set = training_set.drop(training_set[training_set['mask'] == -1].index)
+training_set = training_set.drop(columns='mask')
+
+#%%
+# Create SMOTENC oversampled and Tomek Link undersampled training set
+x_train = training_set.drop(columns=['enrl_ind','emplid'])
+
+x_test = testing_set[[
+                        # 'acad_year',
+                        # 'age_group', 
+                        # 'age',
+                        'male',
+						# 'race_hispanic',
+						# 'race_american_indian',
+						# 'race_alaska',
+						# 'race_asian',
+						# 'race_black',
+						# 'race_native_hawaiian',
+						# 'race_white',
+                        # 'min_week_from_term_begin_dt',
+                        # 'max_week_from_term_begin_dt',
+                        'count_week_from_term_begin_dt',
+                        # 'marital_status',
+                        # 'Distance',
+                        'pop_dens',
+                        'underrep_minority', 
+                        # 'ipeds_ethnic_group_descrshort',
+                        'pell_eligibility_ind', 
+                        # 'pell_recipient_ind',
+                        'first_gen_flag', 
+                        # 'LSAMP_STEM_Flag',
+                        # 'anywhere_STEM_Flag',
+                        'honors_program_ind',
+                        # 'afl_greek_indicator',
+                        'high_school_gpa',
+                        # 'awe_instrument',
+                        # 'cdi_instrument',
+                        'avg_difficulty',
+                        'avg_pct_withdrawn',
+                        # 'avg_pct_CDFW',
+                        'avg_pct_CDF',
+                        # 'avg_pct_DFW',
+                        # 'avg_pct_DF',
+						'fall_lec_count',
+						'fall_lab_count',
+                        # 'fall_lec_contact_hrs',
+                        # 'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+                        # 'spring_lec_contact_hrs',
+                        # 'spring_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+                        'cum_adj_transfer_hours',
+                        'resident',
+                        # 'father_wsu_flag',
+                        # 'mother_wsu_flag',
+                        'parent1_highest_educ_lvl',
+                        'parent2_highest_educ_lvl',
+                        # 'citizenship_country',
+                        'gini_indx',
+                        # 'pvrt_rate',
+                        'median_inc',
+                        # 'median_value',
+                        'educ_rate',
+                        'pct_blk',
+                        'pct_ai',
+                        # 'pct_asn',
+                        'pct_hawi',
+                        # 'pct_oth',
+                        'pct_two',
+                        # 'pct_non',
+                        'pct_hisp',
+                        # 'city_large',
+                        # 'city_mid',
+                        # 'city_small',
+                        # 'suburb_large',
+                        # 'suburb_mid',
+                        # 'suburb_small',
+                        # 'town_fringe',
+                        # 'town_distant',
+                        # 'town_remote',
+                        # 'rural_fringe',
+                        # 'rural_distant',
+                        # 'rural_remote',
+                        'AD_DTA',
+                        'AD_AST',
+                        'AP',
+                        'RS',
+                        'CHS',
+                        # 'IB',
+                        # 'AICE',
+                        'IB_AICE', 
+                        'term_credit_hours',
+                        # 'athlete',
+                        'remedial',
+                        # 'ACAD_PLAN',
+                        # 'plan_owner_org',
+                        'business',
+                        'cahnrs_anml',
+                        'cahnrs_envr',
+                        'cahnrs_econ',
+                        'cahnrext',
+                        'cas_chem',
+                        'cas_crim',
+                        'cas_math',
+                        'cas_psyc',
+                        'cas_biol',
+                        'cas_engl',
+                        'cas_phys',
+                        'cas',
+                        'comm',
+                        'education',
+                        'medicine',
+                        'nursing',
+                        'pharmacy',
+                        # 'provost',
+                        'vcea_bioe',
+                        'vcea_cive',
+                        'vcea_desn',
+                        'vcea_eecs',
+                        'vcea_mech',
+                        'vcea',
+                        'vet_med',
+                        # 'last_sch_proprietorship',
+                        # 'sat_erws',
+                        # 'sat_mss',
+                        # 'sat_comp',
+                        # 'attendee_alive',
+                        # 'attendee_campus_visit',
+                        # 'attendee_cashe',
+                        # 'attendee_destination',
+                        # 'attendee_experience',
+                        # 'attendee_fcd_pullman',
+                        # 'attendee_fced',
+                        # 'attendee_fcoc',
+                        # 'attendee_fcod',
+                        # 'attendee_group_visit',
+                        # 'attendee_honors_visit',
+                        # 'attendee_imagine_tomorrow',
+                        # 'attendee_imagine_u',
+                        # 'attendee_la_bienvenida',
+                        # 'attendee_lvp_camp',
+                        # 'attendee_oos_destination',
+                        # 'attendee_oos_experience',
+                        # 'attendee_preview',
+                        # 'attendee_preview_jrs',
+                        # 'attendee_shaping',
+                        # 'attendee_top_scholars',
+                        # 'attendee_transfer_day',
+                        # 'attendee_vibes',
+                        # 'attendee_welcome_center',
+                        # 'attendee_any_visitation_ind',
+                        # 'attendee_total_visits',
+                        # 'qvalue',
+                        # 'fed_efc',
+                        # 'fed_need',
+                        'unmet_need_ofr'
+                        ]]
+
+y_train = training_set['enrl_ind']
+# y_test = testing_set['enrl_ind']
+
+smotenc_prep = make_column_transformer(
+	(StandardScaler(), [
+						# 'age',
+						# 'min_week_from_term_begin_dt',
+						# 'max_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
+						# 'sat_erws',
+						# 'sat_mss',
+						# 'sat_comp',
+						# 'attendee_total_visits',
+						# 'Distance',
+						'pop_dens', 
+						# 'qvalue', 
+						'median_inc',
+						# 'median_value',
+						# 'term_credit_hours',
+						'high_school_gpa',
+						# 'awe_instrument',
+						# 'cdi_instrument',
+						'avg_difficulty',
+						'fall_lec_count',
+						'fall_lab_count',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+						# 'spring_lec_contact_hrs',
+						# 'spring_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'cum_adj_transfer_hours',
+						'term_credit_hours',
+						# 'fed_efc',
+						# 'fed_need', 
+						'unmet_need_ofr'
+						]),
+	(OneHotEncoder(drop='first'), [
+									# 'race_hispanic',
+									# 'race_american_indian',
+									# 'race_alaska',
+									# 'race_asian',
+									# 'race_black',
+									# 'race_native_hawaiian',
+									# 'race_white',
+                                    # 'acad_year', 
+                                    # 'age_group',
+                                    # 'marital_status',
+                                    'first_gen_flag',
+                                    # 'LSAMP_STEM_Flag',
+                                    # 'anywhere_STEM_Flag',
+                                    # 'afl_greek_indicator',
+                                    # 'ACAD_PLAN',
+                                    # 'plan_owner_org',
+                                    # 'ipeds_ethnic_group_descrshort',
+                                    # 'last_sch_proprietorship', 
+                                    'parent1_highest_educ_lvl',
+                                    'parent2_highest_educ_lvl'
+                                    ]),
+    remainder='passthrough'
+)
+
+x_train = smotenc_prep.fit_transform(x_train)
+x_test = smotenc_prep.fit_transform(x_test)
+
+# THIS NEEDS TO BE REWRITTEN FOR THE CORRECT CATEGORICAL FEATURES IF IT'S GOING TO BE USED
+# over = SMOTENC(categorical_features=[11,12,13,14,15,16,17,18,19,20,21,24,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63], sampling_strategy='minority', k_neighbors=2, n_jobs=-1)
+# x_train, y_train = over.fit_resample(x_train, y_train)
+
+under = TomekLinks(sampling_strategy='all', n_jobs=-1)
+x_train, y_train = under.fit_resample(x_train, y_train)
+
+tomek_index = under.sample_indices_
+training_set = training_set.reset_index(drop=True)
+
+tomek_set = training_set.drop(tomek_index)
+tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\tomek_set.csv', encoding='utf-8', index=False)
+
+#%%
+# Standard logistic model
+y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
+				+ male + underrep_minority \
+				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
+                + pell_eligibility_ind + honors_program_ind \
+				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
+				+ business + comm + education + medicine + nursing + pharmacy + vet_med \
+				+ cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
+				+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
+                + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
+                + first_gen_flag \
+                + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
+				+ fall_lec_count + fall_lab_count \
+				+ total_fall_contact_hrs \
+                + resident + gini_indx + median_inc \
+            	+ high_school_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
+				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
+            	+ unmet_need_ofr \
+				+ count_week_from_term_begin_dt', data=logit_df, return_type='dataframe')
+
+logit_mod = Logit(y, x)
+logit_res = logit_mod.fit(maxiter=500)
+print(logit_res.summary())
+
+print('\n')
+
+#%%
+# VIF diagnostic
+vif = pd.DataFrame()
+vif['vif factor'] = [variance_inflation_factor(x.values, i) for i in range(x.shape[1])]
+vif['features'] = x.columns
+print(vif.round(1))
+
+print('\n')
+
+#%%
+print('Run machine learning models...\n')
+
+# Logistic model
+lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(x_train, y_train)
+
+lreg_probs = lreg.predict_proba(x_train)
+lreg_probs = lreg_probs[:, 1]
+lreg_auc = roc_auc_score(y_train, lreg_probs)
+
+print(f'\nOverall accuracy for logistic model (training): {lreg.score(x_train, y_train):.4f}')
+print(f'ROC AUC for logistic model (training): {lreg_auc:.4f}\n')
+
+lreg_fpr, lreg_tpr, thresholds = roc_curve(y_train, lreg_probs, drop_intermediate=False)
+
+#%%
+# SGD model
+sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(x_train, y_train)
+
+sgd_probs = sgd.predict_proba(x_train)
+sgd_probs = sgd_probs[:, 1]
+sgd_auc = roc_auc_score(y_train, sgd_probs)
+
+print(f'\nOverall accuracy for SGD model (training): {sgd.score(x_train, y_train):.4f}')
+print(f'ROC AUC for SGD model (training): {sgd_auc:.4f}\n')
+
+sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=False)
+
+#%%
+# SVC model
+# svc = SVC(kernel='linear', class_weight='balanced', probability=True, verbose=True, shrinking=False).fit(x_train, y_train)
+
+# svc_probs = svc.predict_proba(x_train)
+# svc_probs = svc_probs[:, 1]
+# svc_auc = roc_auc_score(y_train, svc_probs)
+
+# print(f'\n\nOverall accuracy for linear SVC model (training): {svc.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for linear SVC model (training): {svc_auc:.4f}\n')
+
+# svc_fpr, svc_tpr, thresholds = roc_curve(y_train, svc_probs, drop_intermediate=False)
+
+#%%
+# Random forest model
+rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=10, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
+
+rfc_probs = rfc.predict_proba(x_train)
+rfc_probs = rfc_probs[:, 1]
+rfc_auc = roc_auc_score(y_train, rfc_probs)
+
+print(f'\nOverall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
+print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}\n')
+
+rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
+
+#%%
+# Multi-layer perceptron model
+# mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(x_train, y_train)
+
+# mlp_probs = mlp.predict_proba(x_train)
+# mlp_probs = mlp_probs[:, 1]
+# mlp_auc = roc_auc_score(y_train, mlp_probs)
+
+# print(f'\nOverall accuracy for multi-layer perceptron model (training): {mlp.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for multi-layer perceptron model (training): {mlp_auc:.4f}\n')
+
+# mlp_fpr, mlp_tpr, thresholds = roc_curve(y_train, mlp_probs, drop_intermediate=False)
+
+#%%
+# Ensemble model
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd), ('rfc', rfc)], voting='soft', weights=[1, 1, 1]).fit(x_train, y_train)
+
+vcf_probs = vcf.predict_proba(x_train)
+vcf_probs = vcf_probs[:, 1]
+vcf_auc = roc_auc_score(y_train, vcf_probs)
+
+print(f'\nOverall accuracy for ensemble model (training): {vcf.score(x_train, y_train):.4f}')
+print(f'ROC AUC for ensemble model (training): {vcf_auc:.4f}\n')
+
+vcf_fpr, vcf_tpr, thresholds = roc_curve(y_train, vcf_probs, drop_intermediate=False)
+
+#%%
+# Prepare model predictions
+print('Prepare model predictions...')
+
+lreg_pred_probs = lreg.predict_proba(x_test)
+lreg_pred_probs = lreg_pred_probs[:, 1]
+sgd_pred_probs = sgd.predict_proba(x_test)
+sgd_pred_probs = sgd_pred_probs[:, 1]
+# svc_pred_probs = svc.predict_proba(x_test)
+# svc_pred_probs = svc_pred_probs[:, 1]
+rfc_pred_probs = rfc.predict_proba(x_test)
+rfc_pred_probs = rfc_pred_probs[:, 1]
+# mlp_pred_probs = mlp.predict_proba(x_test)
+# mlp_pred_probs = mlp_pred_probs[:, 1]
+vcf_pred_probs = vcf.predict_proba(x_test)
+vcf_pred_probs = vcf_pred_probs[:, 1]
+
+print('Done\n')
+
+#%%
+# Output model predictions to file
+print('Output model predictions and model...')
+
+pred_outcome['lr_prob'] = pd.DataFrame(lreg_pred_probs)
+pred_outcome['lr_pred'] = lreg.predict(x_test)
+pred_outcome['sgd_prob'] = pd.DataFrame(sgd_pred_probs)
+pred_outcome['sgd_pred'] = sgd.predict(x_test)
+# pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
+# pred_outcome['svc_pred'] = svc.predict(x_test)
+pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
+pred_outcome['rfc_pred'] = rfc.predict(x_test)
+# pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
+# pred_outcome['mlp_pred'] = mlp.predict(x_test)
+pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
+pred_outcome['vcf_pred'] = vcf.predict(x_test)
+pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pred_outcome.csv', encoding='utf-8', index=False)
+
+#%%
+aggregate_outcome['emplid'] = aggregate_outcome['emplid'].astype(str).str.zfill(9)
+aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
+
+aggregate_outcome = aggregate_outcome.rename(columns={"male": "sex_ind"})
+aggregate_outcome.loc[aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
+aggregate_outcome.loc[aggregate_outcome['sex_ind'] == 0, 'sex_descr'] = 'Female'
+
+aggregate_outcome = aggregate_outcome.rename(columns={"underrep_minority": "underrep_minority_ind"})
+aggregate_outcome.loc[aggregate_outcome['underrep_minority_ind'] == 1, 'underrep_minority_descr'] = 'Minority'
+aggregate_outcome.loc[aggregate_outcome['underrep_minority_ind'] == 0, 'underrep_minority_descr'] = 'Non-minority'
+
+aggregate_outcome = aggregate_outcome.rename(columns={"resident": "resident_ind"})
+aggregate_outcome.loc[aggregate_outcome['resident_ind'] == 1, 'resident_descr'] = 'Resident'
+aggregate_outcome.loc[aggregate_outcome['resident_ind'] == 0, 'resident_descr'] = 'non-Resident'
+
+aggregate_outcome.loc[aggregate_outcome['first_gen_flag'] == 'Y', 'first_gen_flag'] = 1
+aggregate_outcome.loc[aggregate_outcome['first_gen_flag'] == 'N', 'first_gen_flag'] = 0
+
+aggregate_outcome = aggregate_outcome.rename(columns={"first_gen_flag": "first_gen_ind"})
+aggregate_outcome.loc[aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
+aggregate_outcome.loc[aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
+
+#%%
+aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\aggregate_outcome.csv', encoding='utf-8', index=False)
+# aggregate_outcome.to_sql('aggregate_outcome', con=auto_engine, if_exists='replace', index=False, schema='oracle_int.dbo')
+
+#%%
+current_outcome['emplid'] = current_outcome['emplid'].astype(str).str.zfill(9)
+current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
+
+# current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_idx'] = '3'
+# current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_idx'] = '2'
+# current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_idx'] = '1'
+
+# current_outcome.loc[current_outcome['risk_prob'] >= .6666,'risk_level_descr'] = 'High'
+# current_outcome.loc[(current_outcome['risk_prob'] < .6666) & (current_outcome['risk_prob'] >= .3333) ,'risk_level_descr'] = 'Mid'
+# current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_descr'] = 'Low'
+
+current_outcome['date'] = date.today()
+current_outcome['model_id'] = 2
+
+#%%
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv'):
+	current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+else:
+	prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv', encoding='utf-8', low_memory=False)
+	prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\student_backup.csv', encoding='utf-8', index=False)
+	student_outcome = pd.concat([prior_outcome, current_outcome])
+	student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv', encoding='utf-8', index=False)
+	current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+
+#%%
+# Output model
+joblib.dump(vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\model_v{sklearn.__version__}.pkl')
+
+print('Done\n')
