@@ -100,9 +100,11 @@ if config.cen_flag == True:
 												end) as snap_order
 			into: snap_check
 			separated by ''
-		from &dsn..student_enrolled
+		from &dsn..class_registration
 		where acad_career = 'UGRD'
-			and strm = "&strm."
+			and strm = (select distinct
+							max(strm)
+						from &dsn..class_registration where acad_career = 'UGRD')
 	;quit;
 	""")
 
@@ -298,7 +300,7 @@ sas.submit("""
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dev..new_student_profile_ugrd_cs
+		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus = 'PULLM'
 			and adj_admit_type_cat = 'FRSH'
@@ -1304,7 +1306,7 @@ sas.submit("""
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dev..new_student_profile_ugrd_cs
+		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus = 'PULLM'
 			and adj_admit_type_cat = 'FRSH'
@@ -2378,6 +2380,7 @@ logit_df = training_set[[
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         'high_school_gpa',
+						'eot_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         'avg_difficulty',
@@ -2390,12 +2393,12 @@ logit_df = training_set[[
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2545,12 +2548,12 @@ training_set = training_set[[
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
+							'spring_lec_count',
+							'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
+							'total_spring_contact_hrs',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2700,12 +2703,12 @@ testing_set = testing_set[[
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
+							'spring_lec_count',
+							'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
+							'total_spring_contact_hrs',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2918,12 +2921,12 @@ x_test = testing_set[[
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -3058,12 +3061,12 @@ smotenc_prep = make_column_transformer(
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'cum_adj_transfer_hours',
 						'term_credit_hours',
 						# 'fed_efc',
@@ -3125,9 +3128,11 @@ y, x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + first_gen_flag \
                 + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
+				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
+				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
+            	+ high_school_gpa + eot_term_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=logit_df, return_type='dataframe')
@@ -3190,16 +3195,16 @@ sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=F
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=10, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
+# rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=7, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
 
-rfc_probs = rfc.predict_proba(x_train)
-rfc_probs = rfc_probs[:, 1]
-rfc_auc = roc_auc_score(y_train, rfc_probs)
+# rfc_probs = rfc.predict_proba(x_train)
+# rfc_probs = rfc_probs[:, 1]
+# rfc_auc = roc_auc_score(y_train, rfc_probs)
 
-print(f'\nOverall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}\n')
+# print(f'\nOverall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}\n')
 
-rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
+# rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
 
 #%%
 # Multi-layer perceptron model
@@ -3216,7 +3221,7 @@ rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=F
 
 #%%
 # Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd), ('rfc', rfc)], voting='soft', weights=[1, 1, 1]).fit(x_train, y_train)
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd)], voting='soft', weights=[1, 1]).fit(x_train, y_train)
 
 vcf_probs = vcf.predict_proba(x_train)
 vcf_probs = vcf_probs[:, 1]
@@ -3237,8 +3242,8 @@ sgd_pred_probs = sgd.predict_proba(x_test)
 sgd_pred_probs = sgd_pred_probs[:, 1]
 # svc_pred_probs = svc.predict_proba(x_test)
 # svc_pred_probs = svc_pred_probs[:, 1]
-rfc_pred_probs = rfc.predict_proba(x_test)
-rfc_pred_probs = rfc_pred_probs[:, 1]
+# rfc_pred_probs = rfc.predict_proba(x_test)
+# rfc_pred_probs = rfc_pred_probs[:, 1]
 # mlp_pred_probs = mlp.predict_proba(x_test)
 # mlp_pred_probs = mlp_pred_probs[:, 1]
 vcf_pred_probs = vcf.predict_proba(x_test)
@@ -3256,8 +3261,8 @@ pred_outcome['sgd_prob'] = pd.DataFrame(sgd_pred_probs)
 pred_outcome['sgd_pred'] = sgd.predict(x_test)
 # pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
 # pred_outcome['svc_pred'] = svc.predict(x_test)
-pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
-pred_outcome['rfc_pred'] = rfc.predict(x_test)
+# pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
+# pred_outcome['rfc_pred'] = rfc.predict(x_test)
 # pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
 # pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)
@@ -3304,7 +3309,7 @@ current_outcome['risk_prob'] = 1 - pd.DataFrame(vcf_pred_probs).round(4)
 # current_outcome.loc[current_outcome['risk_prob'] < .3333,'risk_level_descr'] = 'Low'
 
 current_outcome['date'] = date.today()
-current_outcome['model_id'] = 2
+current_outcome['model_id'] = 5
 
 #%%
 if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\student_outcome.csv'):

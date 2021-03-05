@@ -155,6 +155,18 @@ run;
 	;quit;
 	
 	proc sql;
+		create table eot_term_gpa_&cohort_year. as
+		select distinct
+			emplid,
+			term_gpa,
+			term_gpa_hours
+		from &dsn..student_enrolled_vw
+		where snapshot = 'eot'
+			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+			and ipeds_full_part_time = 'F'
+	;quit;	
+	
+	proc sql;
 		create table enrolled_&cohort_year. as
 		select distinct 
 			emplid, 
@@ -984,8 +996,8 @@ run;
 		select 
 			a.*,
 			b.pell_recipient_ind,
-			b.eot_term_gpa,
-			b.eot_term_gpa_hours,
+			w.term_gpa,
+			w.term_gpa_hours,
 			c.cont_term,
 			c.enrl_ind,
 			d.acad_plan,
@@ -1141,6 +1153,8 @@ run;
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
+		left join eot_term_gpa_&cohort_year. as w
+			on a.emplid = w.emplid
 		left join enrolled_&cohort_year. as c
 			on a.emplid = c.emplid
  				and a.term_code + 10 = c.cont_term
@@ -1289,7 +1303,7 @@ run;
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dev..new_student_profile_ugrd_cs
+		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus = 'PULLM'
 			and adj_admit_type_cat = 'FRSH'
@@ -1298,8 +1312,15 @@ run;
 	
 	proc sql;
 		create table eot_term_gpa_&cohort_year. as
-			
-	;quit;
+		select distinct
+			emplid,
+			term_gpa,
+			term_gpa_hours
+		from &dsn..student_enrolled_vw
+		where snapshot = 'eot'
+			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+			and ipeds_full_part_time = 'F'
+	;quit;		
 	
 	proc sql;
 		create table plan_&cohort_year. as 
@@ -2085,8 +2106,8 @@ run;
 		select 
 			a.*,
 			b.pell_recipient_ind,
-			b.eot_term_gpa,
-			b.eot_term_gpa_hours,
+			x.term_gpa,
+			x.term_gpa_hours,
 			d.acad_plan,
 			d.acad_plan_descr,
 			d.plan_owner_org,
@@ -2242,6 +2263,8 @@ run;
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
+		left join eot_term_gpa_&cohort_year. as x
+			on a.emplid = x.emplid
  		left join plan_&cohort_year. as d
  			on a.emplid = d.emplid
  		left join (select distinct emplid, 

@@ -70,7 +70,7 @@ if config.pre_flag == False:
 		raise config.DateError(f'{date.today()}: Precensus day exception, outside of date range.')
 
 	else:
-		print(f'{date.today()}: No census date exceptions, running from precensus.')
+		print(f'{date.today()}: No precensus date exceptions, running from precensus.')
 
 #%%
 # Precensus snapshot check
@@ -292,7 +292,7 @@ sas.submit("""
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dev..new_student_profile_ugrd_cs
+		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus = 'PULLM'
 			and adj_admit_type_cat = 'FRSH'
@@ -1434,7 +1434,7 @@ sas.submit("""
 			pell_recipient_ind,
 			eot_term_gpa,
 			eot_term_gpa_hours
-		from &dev..new_student_profile_ugrd_cs
+		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus = 'PULLM'
 			and adj_admit_type_cat = 'FRSH'
@@ -3467,16 +3467,16 @@ sgd_fpr, sgd_tpr, thresholds = roc_curve(y_train, sgd_probs, drop_intermediate=F
 
 #%%
 # Random forest model
-rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=4, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
+# rfc = RandomForestClassifier(n_estimators=500, class_weight='balanced', max_depth=4, max_features='sqrt', n_jobs=-1, verbose=True).fit(x_train, y_train)
 
-rfc_probs = rfc.predict_proba(x_train)
-rfc_probs = rfc_probs[:, 1]
-rfc_auc = roc_auc_score(y_train, rfc_probs)
+# rfc_probs = rfc.predict_proba(x_train)
+# rfc_probs = rfc_probs[:, 1]
+# rfc_auc = roc_auc_score(y_train, rfc_probs)
 
-print(f'\nOverall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
-print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}\n')
+# print(f'\nOverall accuracy for random forest model (training): {rfc.score(x_train, y_train):.4f}')
+# print(f'ROC AUC for random forest model (training): {rfc_auc:.4f}\n')
 
-rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
+# rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=False)
 
 #%%
 # Multi-layer perceptron model
@@ -3493,7 +3493,7 @@ rfc_fpr, rfc_tpr, thresholds = roc_curve(y_train, rfc_probs, drop_intermediate=F
 
 #%%
 # Ensemble model
-vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd), ('rfc', rfc)], voting='soft', weights=[1, 1, 1]).fit(x_train, y_train)
+vcf = VotingClassifier(estimators=[('lreg', lreg), ('sgd', sgd)], voting='soft', weights=[1, 1]).fit(x_train, y_train)
 
 vcf_probs = vcf.predict_proba(x_train)
 vcf_probs = vcf_probs[:, 1]
@@ -3514,8 +3514,8 @@ sgd_pred_probs = sgd.predict_proba(x_test)
 sgd_pred_probs = sgd_pred_probs[:, 1]
 # svc_pred_probs = svc.predict_proba(x_test)
 # svc_pred_probs = svc_pred_probs[:, 1]
-rfc_pred_probs = rfc.predict_proba(x_test)
-rfc_pred_probs = rfc_pred_probs[:, 1]
+# rfc_pred_probs = rfc.predict_proba(x_test)
+# rfc_pred_probs = rfc_pred_probs[:, 1]
 # mlp_pred_probs = mlp.predict_proba(x_test)
 # mlp_pred_probs = mlp_pred_probs[:, 1]
 vcf_pred_probs = vcf.predict_proba(x_test)
@@ -3533,8 +3533,8 @@ pred_outcome['sgd_prob'] = pd.DataFrame(sgd_pred_probs)
 pred_outcome['sgd_pred'] = sgd.predict(x_test)
 # pred_outcome['svc_prob'] = pd.DataFrame(svc_pred_probs)
 # pred_outcome['svc_pred'] = svc.predict(x_test)
-pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
-pred_outcome['rfc_pred'] = rfc.predict(x_test)
+# pred_outcome['rfc_prob'] = pd.DataFrame(rfc_pred_probs)
+# pred_outcome['rfc_pred'] = rfc.predict(x_test)
 # pred_outcome['mlp_prob'] = pd.DataFrame(mlp_pred_probs)
 # pred_outcome['mlp_pred'] = mlp.predict(x_test)
 pred_outcome['vcf_prob'] = pd.DataFrame(vcf_pred_probs)

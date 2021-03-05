@@ -11,6 +11,7 @@ options mlogic mprint merror symbolgen ;
 libname census odbc dsn=census schema=dbo;
 libname dir "\\ad.wsu.edu\POIS\IR\Nathan\Models\student_risk\supplemental_files";
 
+
 %INCLUDE "\\ad.wsu.edu\POIS\IR\SAS\SAS-process\control\user\jon\determine_WSUNCT1T.sas";
 %INCLUDE "\\ad.wsu.edu\POIS\IR\SAS\SAS-process\control\erp\determine_WSUNCPRD.sas";
 %global curlib;

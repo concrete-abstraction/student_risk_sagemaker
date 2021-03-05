@@ -9,7 +9,8 @@ from datetime import date
 #%%
 sas = saspy.SASsession()
 
-sas.submit("""%let dsn = census;
+sas.submit("""
+%let dsn = census;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 
@@ -94,27 +95,27 @@ if __name__ == '__main__':
             except config.DataError as mid_snap_error:
                 print(mid_snap_error)
 
-        try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_census.py').read())
-        except config.DateError as cen_error:
-            print(cen_error)
-            config.cen_flag = True
+                try:
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_census.py').read())
+                except config.DateError as cen_error:
+                    print(cen_error)
+                    config.cen_flag = True
             
-            try: 
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_census.py').read())
-            except config.DataError as cen_snap_error:
-                print(cen_snap_error)
+                    try: 
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_census.py').read())
+                    except config.DataError as cen_snap_error:
+                        print(cen_snap_error)
 
-        try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_precensus.py').read())
-        except config.DateError as pre_error:
-            print(pre_error)
-            config.pre_flag = True
+                        try:
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_precensus.py').read())
+                        except config.DateError as pre_error:
+                            print(pre_error)
+                            config.pre_flag = True
 
-            try: 
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_precensus.py').read())
-            except config.DataError as pre_snap_error:
-                print(pre_snap_error)
+                            try: 
+                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_precensus.py').read())
+                            except config.DataError as pre_snap_error:
+                                print(pre_snap_error)
 
     if now_term == 'FAL':
 
@@ -129,18 +130,18 @@ if __name__ == '__main__':
             except config.DataError as mid_snap_error:
                 print(mid_snap_error)
 
-        try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_census.py').read())
-        except config.DateError as cen_error:
-            print(cen_error)
-            config.cen_flag = True
-            
-            try: 
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_census.py').read())
-            except config.DataError as cen_snap_error:
-                print(cen_snap_error)
+                try:
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_census.py').read())
+                except config.DateError as cen_error:
+                    print(cen_error)
+                    config.cen_flag = True
+                    
+                    try: 
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_census.py').read())
+                    except config.DataError as cen_snap_error:
+                        print(cen_snap_error)
 
-        try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_precensus.py').read())
-        except config.DateError as adm_error:
-            print(adm_error)
+                        try:
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_precensus.py').read())
+                        except config.DateError as adm_error:
+                            print(adm_error)
