@@ -284,7 +284,7 @@ sas.submit("""
 			on input(a.full_acad_year,4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm,4,1) = '7'
-			and a.adj_admit_campus = 'PULLM'
+			and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'FRSH'
 			and a.ipeds_full_part_time = 'F'
@@ -302,7 +302,7 @@ sas.submit("""
 			eot_term_gpa_hours
 		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and adj_admit_type_cat = 'FRSH'
 			and ipeds_full_part_time = 'F'
 	;quit;
@@ -471,7 +471,7 @@ sas.submit("""
 		where snapshot = 'census'
 			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 			and primary_plan_flag = 'Y'
@@ -1005,7 +1005,7 @@ sas.submit("""
 		from &dsn..new_student_enrolled_housing_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 	;quit;
@@ -1290,7 +1290,7 @@ sas.submit("""
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
-			and a.adj_admit_campus = 'PULLM'
+			and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'FRSH'
 			and a.ipeds_full_part_time = 'F'
@@ -1308,7 +1308,7 @@ sas.submit("""
 			eot_term_gpa_hours
 		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and adj_admit_type_cat = 'FRSH'
 			and ipeds_full_part_time = 'F'
 	;quit;
@@ -1378,7 +1378,7 @@ sas.submit("""
 		where snapshot = 'census'
 			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
 			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 			and primary_plan_flag = 'Y'
@@ -1939,7 +1939,7 @@ sas.submit("""
 		from &dsn..new_student_enrolled_housing_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and acad_career = 'UGRD'
 			and adj_admit_type_cat = 'FRSH'
 	;quit;

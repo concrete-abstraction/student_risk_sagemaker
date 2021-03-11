@@ -47,7 +47,7 @@ select * from connection to oracle
 
 SELECT DISTINCT A.STRM, A.EMPLID, B.SUBJECT, B.CATALOG_NBR, B.SSR_COMPONENT, B.CRSE_ID, B.CLASS_NBR, A.UNT_TAKEN, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate
 FROM PS_STDNT_ENRL A, PS_CLASS_TBL B
-WHERE (A.STRM = %bquote('&strm.')
+WHERE (A.STRM >= %bquote('&strm.')
 AND A.STDNT_ENRL_STATUS = 'E'
 AND A.ACAD_CAREER = 'UGRD'
 AND A.ACAD_CAREER = B.ACAD_CAREER
@@ -82,7 +82,7 @@ select * from connection to oracle
 
 SELECT DISTINCT A.EMPLID, A.ACAD_CAREER, A.STRM, CASE WHEN A.STDNT_ENRL_STATUS = 'E' THEN 1 ELSE 0 END AS ENRL_IND, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
 FROM PS_STDNT_ENRL_VW A
-WHERE (A.STRM = %bquote('&strm.')
+WHERE (A.STRM >= %bquote('&strm.')
 AND A.ACAD_CAREER = 'UGRD'
 AND A.STDNT_ENRL_STATUS = 'E')
 
