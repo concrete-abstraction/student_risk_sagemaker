@@ -2,7 +2,6 @@
 from student_risk import config
 import datetime
 import joblib
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pathlib
@@ -17,20 +16,14 @@ import urllib
 from datetime import date
 from patsy import dmatrices
 from IPython.display import HTML
-from imblearn.over_sampling import SMOTENC
-from imblearn.under_sampling import RandomUnderSampler, TomekLinks
-from matplotlib.legend_handler import HandlerLine2D
+from imblearn.under_sampling import TomekLinks
 from sklearn.compose import make_column_transformer
 from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
-from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import roc_curve, roc_auc_score
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
@@ -2348,7 +2341,7 @@ training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
 
 #%%
-# Prepare base dataframes
+# Prepare dataframes
 print('\nPrepare dataframes and preprocess data...')
 
 # Pullman dataframes
@@ -3814,6 +3807,8 @@ trici_current_outcome = trici_testing_set[[
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
+print('Done\n')
+
 #%%
 # Detect and remove outliers
 print('\nDetect and remove outliers...')
@@ -4097,9 +4092,9 @@ pullm_x_test = pullm_testing_set[[
                         ]]
 
 pullm_y_train = pullm_training_set['enrl_ind']
-# y_test = testing_set['enrl_ind']
+# pullm_y_test = pullm_testing_set['enrl_ind']
 
-pullm_smotenc_prep = make_column_transformer(
+pullm_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
 						# 'age',
 						# 'min_week_from_term_begin_dt',
@@ -4160,8 +4155,8 @@ pullm_smotenc_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-pullm_x_train = pullm_smotenc_prep.fit_transform(pullm_x_train)
-pullm_x_test = pullm_smotenc_prep.fit_transform(pullm_x_test)
+pullm_x_train = pullm_tomek_prep.fit_transform(pullm_x_train)
+pullm_x_test = pullm_tomek_prep.fit_transform(pullm_x_test)
 
 pullm_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 pullm_x_train, pullm_y_train = pullm_under.fit_resample(pullm_x_train, pullm_y_train)
@@ -4330,9 +4325,9 @@ vanco_x_test = vanco_testing_set[[
                         ]]
 
 vanco_y_train = vanco_training_set['enrl_ind']
-# y_test = testing_set['enrl_ind']
+# vanco_y_test = vanco_testing_set['enrl_ind']
 
-vanco_smotenc_prep = make_column_transformer(
+vanco_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
 						# 'age',
 						# 'min_week_from_term_begin_dt',
@@ -4393,8 +4388,8 @@ vanco_smotenc_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-vanco_x_train = vanco_smotenc_prep.fit_transform(vanco_x_train)
-vanco_x_test = vanco_smotenc_prep.fit_transform(vanco_x_test)
+vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
+vanco_x_test = vanco_tomek_prep.fit_transform(vanco_x_test)
 
 vanco_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 vanco_x_train, vanco_y_train = vanco_under.fit_resample(vanco_x_train, vanco_y_train)
@@ -4563,9 +4558,9 @@ trici_x_test = trici_testing_set[[
                         ]]
 
 trici_y_train = trici_training_set['enrl_ind']
-# y_test = testing_set['enrl_ind']
+# trici_y_test = trici_testing_set['enrl_ind']
 
-trici_smotenc_prep = make_column_transformer(
+trici_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
 						# 'age',
 						# 'min_week_from_term_begin_dt',
@@ -4626,8 +4621,8 @@ trici_smotenc_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-trici_x_train = trici_smotenc_prep.fit_transform(trici_x_train)
-trici_x_test = trici_smotenc_prep.fit_transform(trici_x_test)
+trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
+trici_x_test = trici_tomek_prep.fit_transform(trici_x_test)
 
 trici_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 trici_x_train, trici_y_train = trici_under.fit_resample(trici_x_train, trici_y_train)
@@ -4637,6 +4632,8 @@ trici_training_set = trici_training_set.reset_index(drop=True)
 
 trici_tomek_set = trici_training_set.drop(trici_tomek_index)
 trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tomek_set.csv', encoding='utf-8', index=False)
+
+print('Done\n')
 
 #%%
 # Standard logistic model
@@ -4923,10 +4920,6 @@ pullm_lreg_pred_probs = pullm_lreg.predict_proba(pullm_x_test)
 pullm_lreg_pred_probs = pullm_lreg_pred_probs[:, 1]
 pullm_sgd_pred_probs = pullm_sgd.predict_proba(pullm_x_test)
 pullm_sgd_pred_probs = pullm_sgd_pred_probs[:, 1]
-# pullm_svc_pred_probs = pullm_svc.predict_proba(pullm_x_test)
-# pullm_svc_pred_probs = pullm_svc_pred_probs[:, 1]
-# pullm_rfc_pred_probs = pullm_rfc.predict_proba(pullm_x_test)
-# pullm_rfc_pred_probs = pullm_rfc_pred_probs[:, 1]
 # pullm_mlp_pred_probs = pullm_mlp.predict_proba(pullm_x_test)
 # pullm_mlp_pred_probs = pullm_mlp_pred_probs[:, 1]
 pullm_vcf_pred_probs = pullm_vcf.predict_proba(pullm_x_test)
@@ -4938,10 +4931,6 @@ vanco_lreg_pred_probs = vanco_lreg.predict_proba(vanco_x_test)
 vanco_lreg_pred_probs = vanco_lreg_pred_probs[:, 1]
 vanco_sgd_pred_probs = vanco_sgd.predict_proba(vanco_x_test)
 vanco_sgd_pred_probs = vanco_sgd_pred_probs[:, 1]
-# vanco_svc_pred_probs = vanco_svc.predict_proba(vanco_x_test)
-# vanco_svc_pred_probs = vanco_svc_pred_probs[:, 1]
-# vanco_rfc_pred_probs = vanco_rfc.predict_proba(vanco_x_test)
-# vanco_rfc_pred_probs = vanco_rfc_pred_probs[:, 1]
 # vanco_mlp_pred_probs = vanco_mlp.predict_proba(vanco_x_test)
 # vanco_mlp_pred_probs = vanco_mlp_pred_probs[:, 1]
 vanco_vcf_pred_probs = vanco_vcf.predict_proba(vanco_x_test)
@@ -4953,10 +4942,6 @@ trici_lreg_pred_probs = trici_lreg.predict_proba(trici_x_test)
 trici_lreg_pred_probs = trici_lreg_pred_probs[:, 1]
 trici_sgd_pred_probs = trici_sgd.predict_proba(trici_x_test)
 trici_sgd_pred_probs = trici_sgd_pred_probs[:, 1]
-# trici_svc_pred_probs = trici_svc.predict_proba(trici_x_test)
-# trici_svc_pred_probs = trici_svc_pred_probs[:, 1]
-# trici_rfc_pred_probs = trici_rfc.predict_proba(trici_x_test)
-# trici_rfc_pred_probs = trici_rfc_pred_probs[:, 1]
 # trici_mlp_pred_probs = trici_mlp.predict_proba(trici_x_test)
 # trici_mlp_pred_probs = trici_mlp_pred_probs[:, 1]
 trici_vcf_pred_probs = trici_vcf.predict_proba(trici_x_test)
@@ -4973,10 +4958,6 @@ pullm_pred_outcome['lr_prob'] = pd.DataFrame(pullm_lreg_pred_probs)
 pullm_pred_outcome['lr_pred'] = pullm_lreg.predict(pullm_x_test)
 pullm_pred_outcome['sgd_prob'] = pd.DataFrame(pullm_sgd_pred_probs)
 pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
-# pullm_pred_outcome['svc_prob'] = pd.DataFrame(pullm_svc_pred_probs)
-# pullm_pred_outcome['svc_pred'] = pullm_svc.predict(pullm_x_test)
-# pullm_pred_outcome['rfc_prob'] = pd.DataFrame(pullm_rfc_pred_probs)
-# pullm_pred_outcome['rfc_pred'] = pullm_rfc.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_prob'] = pd.DataFrame(pullm_mlp_pred_probs)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
@@ -4989,10 +4970,6 @@ vanco_pred_outcome['lr_prob'] = pd.DataFrame(vanco_lreg_pred_probs)
 vanco_pred_outcome['lr_pred'] = vanco_lreg.predict(vanco_x_test)
 vanco_pred_outcome['sgd_prob'] = pd.DataFrame(vanco_sgd_pred_probs)
 vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
-# vanco_pred_outcome['svc_prob'] = pd.DataFrame(vanco_svc_pred_probs)
-# vanco_pred_outcome['svc_pred'] = vanco_svc.predict(vanco_x_test)
-# vanco_pred_outcome['rfc_prob'] = pd.DataFrame(vanco_rfc_pred_probs)
-# vanco_pred_outcome['rfc_pred'] = vanco_rfc.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_prob'] = pd.DataFrame(vanco_mlp_pred_probs)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
@@ -5005,10 +4982,6 @@ trici_pred_outcome['lr_prob'] = pd.DataFrame(trici_lreg_pred_probs)
 trici_pred_outcome['lr_pred'] = trici_lreg.predict(trici_x_test)
 trici_pred_outcome['sgd_prob'] = pd.DataFrame(trici_sgd_pred_probs)
 trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
-# trici_pred_outcome['svc_prob'] = pd.DataFrame(trici_svc_pred_probs)
-# trici_pred_outcome['svc_pred'] = trici_svc.predict(trici_x_test)
-# trici_pred_outcome['rfc_prob'] = pd.DataFrame(trici_rfc_pred_probs)
-# trici_pred_outcome['rfc_pred'] = trici_rfc.predict(trici_x_test)
 # trici_pred_outcome['mlp_prob'] = pd.DataFrame(trici_mlp_pred_probs)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
