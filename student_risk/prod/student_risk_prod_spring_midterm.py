@@ -629,7 +629,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 pullm_testing_set = pullm_testing_set.reset_index(drop=True)
 
 pullm_pred_outcome = pullm_testing_set[[ 
-                            'emplid',
+                            'emplid'
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -643,7 +643,7 @@ pullm_aggregate_outcome = pullm_testing_set[[
                             ]].copy(deep=True)
 
 pullm_current_outcome = pullm_testing_set[[ 
-                            'emplid',
+                            'emplid'
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -1155,7 +1155,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 vanco_testing_set = vanco_testing_set.reset_index(drop=True)
 
 vanco_pred_outcome = vanco_testing_set[[ 
-                            'emplid',
+                            'emplid'
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -1169,7 +1169,7 @@ vanco_aggregate_outcome = vanco_testing_set[[
                             ]].copy(deep=True)
 
 vanco_current_outcome = vanco_testing_set[[ 
-                            'emplid',
+                            'emplid'
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -1681,7 +1681,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 trici_testing_set = trici_testing_set.reset_index(drop=True)
 
 trici_pred_outcome = trici_testing_set[[ 
-                            'emplid',
+                            'emplid'
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -1695,7 +1695,7 @@ trici_aggregate_outcome = trici_testing_set[[
                             ]].copy(deep=True)
 
 trici_current_outcome = trici_testing_set[[ 
-                            'emplid',
+                            'emplid'
                             # 'enrl_ind'
                             ]].copy(deep=True)
 

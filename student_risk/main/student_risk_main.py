@@ -1,7 +1,5 @@
 #%%
 from student_risk import config
-import datetime
-import pandas as pd
 import saspy
 import sys
 from datetime import date

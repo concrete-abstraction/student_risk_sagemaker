@@ -514,8 +514,8 @@ pullm_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 pullm_testing_set = pullm_testing_set.reset_index()
 
 pullm_pred_outcome = pullm_testing_set[[ 
-                            'emplid',
-                            'ENRL_IND'
+                            'emplid'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 pullm_aggregate_outcome = pullm_testing_set[[ 
@@ -523,13 +523,13 @@ pullm_aggregate_outcome = pullm_testing_set[[
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
-							'resident',
-                            'ENRL_IND'
+							'resident'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 pullm_current_outcome = pullm_testing_set[[ 
-                            'emplid',
-                            'ENRL_IND'
+                            'emplid'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 #%%
@@ -974,8 +974,8 @@ vanco_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 vanco_testing_set = vanco_testing_set.reset_index()
 
 vanco_pred_outcome = vanco_testing_set[[ 
-                            'emplid',
-                            'ENRL_IND'
+                            'emplid'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 vanco_aggregate_outcome = vanco_testing_set[[ 
@@ -983,13 +983,13 @@ vanco_aggregate_outcome = vanco_testing_set[[
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
-							'resident',
-                            'ENRL_IND'
+							'resident'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 vanco_current_outcome = vanco_testing_set[[ 
-                            'emplid',
-                            'ENRL_IND'
+                            'emplid'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 #%%
@@ -1434,8 +1434,8 @@ trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 trici_testing_set = trici_testing_set.reset_index()
 
 trici_pred_outcome = trici_testing_set[[ 
-                            'emplid',
-                            'ENRL_IND'
+                            'emplid'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 trici_aggregate_outcome = trici_testing_set[[ 
@@ -1443,13 +1443,13 @@ trici_aggregate_outcome = trici_testing_set[[
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
-							'resident',
-                            'ENRL_IND'
+							'resident'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 trici_current_outcome = trici_testing_set[[ 
-                            'emplid',
-                            'ENRL_IND'
+                            'emplid'
+                            # 'ENRL_IND'
                             ]].copy(deep=True)
 
 #%%
@@ -1726,7 +1726,7 @@ pullm_x_test = pullm_testing_set[[
                         ]]
 
 pullm_y_train = pullm_training_set['enrl_ind']
-pullm_y_test = pullm_testing_set['ENRL_IND']
+# pullm_y_test = pullm_testing_set['ENRL_IND']
 
 pullm_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
@@ -1952,7 +1952,7 @@ vanco_x_test = vanco_testing_set[[
                         ]]
 
 vanco_y_train = vanco_training_set['enrl_ind']
-vanco_y_test = vanco_testing_set['ENRL_IND']
+# vanco_y_test = vanco_testing_set['ENRL_IND']
 
 vanco_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
@@ -2178,7 +2178,7 @@ trici_x_test = trici_testing_set[[
                         ]]
 
 trici_y_train = trici_training_set['enrl_ind']
-trici_y_test = trici_testing_set['ENRL_IND']
+# trici_y_test = trici_testing_set['ENRL_IND']
 
 trici_tomek_prep = make_column_transformer(
 	(StandardScaler(), [

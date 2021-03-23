@@ -768,15 +768,27 @@ run;
 		create table coursework_difficulty_&cohort_year. as
 		select distinct
 			a.emplid,
-			avg(b.class_average) as avg_difficulty,
-			avg(b.pct_withdrawn) as avg_pct_withdrawn,
-			avg(b.pct_CDFW) as avg_pct_CDFW,
-			avg(b.pct_CDF) as avg_pct_CDF,
-			avg(b.pct_DFW) as avg_pct_DFW,
-			avg(b.pct_DF) as avg_pct_DF
+			avg(b.class_average) as fall_avg_difficulty,
+			avg(b.pct_withdrawn) as fall_avg_pct_withdrawn,
+			avg(b.pct_CDFW) as fall_avg_pct_CDFW,
+			avg(b.pct_CDF) as fall_avg_pct_CDF,
+			avg(b.pct_DFW) as fall_avg_pct_DFW,
+			avg(b.pct_DF) as fall_avg_pct_DF,
+			avg(c.class_average) as spring_avg_difficulty,
+			avg(c.pct_withdrawn) as spring_avg_pct_withdrawn,
+			avg(c.pct_CDFW) as spring_avg_pct_CDFW,
+			avg(c.pct_CDF) as spring_avg_pct_CDF,
+			avg(c.pct_DFW) as spring_avg_pct_DFW,
+			avg(c.pct_DF) as spring_avg_pct_DF
 		from class_registration_&cohort_year. as a
 		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
+		left join class_difficulty_&cohort_year. as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
 	;quit;
 	
@@ -990,12 +1002,18 @@ run;
 			m.min_week_from_term_begin_dt,
 			m.max_week_from_term_begin_dt,
 			m.count_week_from_term_begin_dt,
-			(4.0 - n.avg_difficulty) as avg_difficulty,
-			n.avg_pct_withdrawn,
-			n.avg_pct_CDFW,
-			n.avg_pct_CDF,
-			n.avg_pct_DFW,
-			n.avg_pct_DF,
+			(4.0 - n.fall_avg_difficulty) as fall_avg_difficulty,
+			n.fall_avg_pct_withdrawn,
+			n.fall_avg_pct_CDFW,
+			n.fall_avg_pct_CDF,
+			n.fall_avg_pct_DFW,
+			n.fall_avg_pct_DF,
+			(4.0 - n.spring_avg_difficulty) as spring_avg_difficulty,
+			n.spring_avg_pct_withdrawn,
+			n.spring_avg_pct_CDFW,
+			n.spring_avg_pct_CDF,
+			n.spring_avg_pct_DFW,
+			n.spring_avg_pct_DF,
 			s.fall_lec_count,
 			s.fall_lab_count,
 			s.spring_lec_count,
@@ -1345,15 +1363,27 @@ run;
 		create table coursework_difficulty_&cohort_year. as
 		select distinct
 			a.emplid,
-			avg(b.class_average) as avg_difficulty,
-			avg(b.pct_withdrawn) as avg_pct_withdrawn,
-			avg(b.pct_CDFW) as avg_pct_CDFW,
-			avg(b.pct_CDF) as avg_pct_CDF,
-			avg(b.pct_DFW) as avg_pct_DFW,
-			avg(b.pct_DF) as avg_pct_DF
+			avg(b.class_average) as fall_avg_difficulty,
+			avg(b.pct_withdrawn) as fall_avg_pct_withdrawn,
+			avg(b.pct_CDFW) as fall_avg_pct_CDFW,
+			avg(b.pct_CDF) as fall_avg_pct_CDF,
+			avg(b.pct_DFW) as fall_avg_pct_DFW,
+			avg(b.pct_DF) as fall_avg_pct_DF,
+			avg(c.class_average) as spring_avg_difficulty,
+			avg(c.pct_withdrawn) as spring_avg_pct_withdrawn,
+			avg(c.pct_CDFW) as spring_avg_pct_CDFW,
+			avg(c.pct_CDF) as spring_avg_pct_CDF,
+			avg(c.pct_DFW) as spring_avg_pct_DFW,
+			avg(c.pct_DF) as spring_avg_pct_DF
 		from class_registration_&cohort_year. as a
 		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
+		left join class_difficulty_&cohort_year. as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
 	;quit;
 
@@ -1497,12 +1527,18 @@ run;
 			case when o.locale = '42' then 1 else 0 end as rural_distant,
 			case when o.locale = '43' then 1 else 0 end as rural_remote,
 			p.remedial,
-			(4.0 - q.avg_difficulty) as avg_difficulty,
-			q.avg_pct_withdrawn,
-			q.avg_pct_CDFW,
-			q.avg_pct_CDF,
-			q.avg_pct_DFW,
-			q.avg_pct_DF,
+			(4.0 - q.fall_avg_difficulty) as fall_avg_difficulty,
+			q.fall_avg_pct_withdrawn,
+			q.fall_avg_pct_CDFW,
+			q.fall_avg_pct_CDF,
+			q.fall_avg_pct_DFW,
+			q.fall_avg_pct_DF,
+			(4.0 - q.spring_avg_difficulty) as spring_avg_difficulty,
+			q.spring_avg_pct_withdrawn,
+			q.spring_avg_pct_CDFW,
+			q.spring_avg_pct_CDF,
+			q.spring_avg_pct_DFW,
+			q.spring_avg_pct_DF,
 			u.fall_lec_count,
 			u.fall_lab_count,
 			u.spring_lec_count,
