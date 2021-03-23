@@ -26,26 +26,38 @@ proc sql;
 ;quit;
 
 proc sql;
-    select min(term_type) into: term_type from &dsn..xw_term where term_year = year(today()) and month(datepart(term_begin_dt)) <= month(today()) and month(datepart(term_end_dt)) >= month(today()) and acad_career = 'UGRD'
+    create table adj_acad_calendar as
+    select distinct
+        *
+        ,day(datepart(term_begin_dt)) as begin_day
+        ,month(datepart(term_begin_dt)) as begin_month
+        ,year(datepart(term_begin_dt)) as begin_year
+        ,day(datepart(adj_term_census_dt)) as census_day
+        ,month(datepart(adj_term_census_dt)) as census_month
+        ,year(datepart(adj_term_census_dt)) as census_year
+        ,day(datepart(adj_term_midterm_dt)) as midterm_day
+        ,month(datepart(adj_term_midterm_dt)) as midterm_month
+        ,year(datepart(adj_term_midterm_dt)) as midterm_year
+        ,day(datepart(term_end_dt)) as end_day
+        ,month(datepart(term_end_dt)) as end_month
+        ,year(datepart(term_end_dt)) as end_year
+    from acad_calendar
+    order by term_code
 ;quit;
 
 filename calendar \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv\" encoding=\"utf-8\";
 
 proc export data=adj_acad_calendar outfile=calendar dbms=csv replace;
+
+proc sql;
+    select min(term_type) into: term_type from &dsn..xw_term where term_year = year(today()) and month(datepart(term_begin_dt)) <= month(today()) and month(datepart(term_end_dt)) >= month(today()) and acad_career = 'UGRD'
+;quit;
 run;
 """)
 
+term_type = sas.symget('term_type')
+
 sas.endsas()
-
-#%%
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True)
-now = datetime.datetime.now()
-
-now_day = now.day
-now_month = now.month
-now_year = now.year
-
-now_term = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['term_type'].values[0]
 
 #%%
 class Logger(object):
@@ -66,7 +78,7 @@ sys.stdout = Logger()
 #%%
 if __name__ == '__main__':
 
-    if now_term == 'SPR':
+    if term_type == 'SPR':
 
         try:
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_spring_midterm.py').read())
@@ -101,7 +113,7 @@ if __name__ == '__main__':
                             except config.DataError as pre_snap_error:
                                 print(pre_snap_error)
 
-    if now_term == 'FAL':
+    if term_type != 'SPR':
 
         try:
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\student_risk_prod_fall_midterm.py').read())

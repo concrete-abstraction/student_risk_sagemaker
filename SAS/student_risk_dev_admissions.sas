@@ -10,7 +10,7 @@
 %let acs_lag = 2;
 %let lag_year = 1;
 /* Note: This is a test date. Revert to 2015 in production. */
-%let start_cohort = 2015;
+%let start_cohort = 2020;
 %let end_cohort = 2020;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -131,12 +131,13 @@ run;
 			on input(a.full_acad_year, 4.) = l.acs_lag
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
-			and a.adj_admit_campus = 'PULLM'
+			and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat = 'FRSH'
+			and a.adj_admit_type_cat in ('FRSH','TRAN')
 			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
+			and a.WA_residency ^= 'NON-I'
 		order by a.emplid
 	;quit;
 	
@@ -149,9 +150,10 @@ run;
 			eot_term_gpa_hours
 		from &dev..new_student_profile_ugrd
 		where substr(strm, 4 , 1) = '7'
-			and adj_admit_campus = 'PULLM'
-			and adj_admit_type = 'FRS'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
+			and adj_admit_type_cat in ('FRSH','TRAN')
 			and ipeds_full_part_time = 'F'
+			and WA_residency ^= 'NON-I'
 	;quit;
 	
 	%if &cohort_year. < &end_cohort. %then %do;
@@ -332,11 +334,12 @@ run;
 			anywhere_stem_flag
 		from &dsn..student_acad_prog_plan_vw
 		where snapshot = 'census'
-			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
+			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat = 'FRSH'
+			and adj_admit_type_cat in ('FRSH','TRAN')
+			and WA_residency ^= 'NON-I'
 			and primary_plan_flag = 'Y'
 			and calculated split_plan = 0
 	;quit;
@@ -408,11 +411,15 @@ run;
 		create table degrees_&cohort_year. as
 		select distinct
 			emplid,
-			case when degree = 'AD_AS-T' then 'AD_AST' else degree end as degree,
+			case when degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B','AD_AST2C','AD_AST2M') 	then 'AD_AST' 
+				when substr(degree,1,6) = 'AD_DTA' 																then 'AD_DTA' 																						
+																												else degree end as degree,
 			1 as ind
 		from &dsn..student_ext_degree
 		where floor(degree_term_code / 10) <= &cohort_year.
-			and degree in ('AD_AS-T','AD_DTA')
+			and degree in ('AD_AAS_T','AD_AS-T','AD_AS-T1','AD_AS-T2','AD_AS-T2B',
+							'AD_AST2C','AD_AST2M','AD_DTA','AD_GED','AD_GENS','AD_GER',
+							'AD_HSDIP')
 		order by emplid
 	;quit;
 	
@@ -547,7 +554,7 @@ run;
 		from &dsn..student_athlete_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and ugrd_adj_admit_type = 'FRS'
+			and ugrd_adj_admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
 	;quit;
 	
 	proc sql;
@@ -586,7 +593,8 @@ run;
 			class_nbr,
 			crse_id,
 			subject_catalog_nbr,
-			ssr_component
+			ssr_component,
+			unt_taken
 		from &dsn..class_registration_vw
 		where snapshot = 'eot'
 			and full_acad_year = "&cohort_year."
@@ -665,6 +673,7 @@ run;
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LEC'
+						and grading_basis = 'GRD'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.ssr_component = b.ssr_component
@@ -687,13 +696,14 @@ run;
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LAB'
+						and grading_basis = 'GRD'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.ssr_component = c.ssr_component
 		where a.snapshot = 'eot'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
-		group by a.subject_catalog_nbr
+			and a.grading_basis = 'GRD'
 		order by a.subject_catalog_nbr
 	;quit;
 	
@@ -787,7 +797,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
@@ -800,7 +810,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
@@ -813,7 +823,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
@@ -826,7 +836,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as e
@@ -868,9 +878,9 @@ run;
 		from &dsn..new_student_enrolled_housing_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_campus = 'PULLM'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat = 'FRSH'
+			and adj_admit_type_cat in ('FRSH','TRAN')
 	;quit;
 	
 	proc sql;
@@ -1151,9 +1161,9 @@ run;
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
-			and a.campus = 'PULLM' 
+			and a.campus in ('PULLM','VANCO','TRICI') 
 			and a.enrolled = 1
-			and b.admit_type in ('FRS','IFR','IPF')
+			and b.admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
 	;quit;
 	
 	proc sql;
@@ -1177,6 +1187,7 @@ run;
 			emplid,
 			class_nbr,
 			crse_id,
+			unt_taken,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 			ssr_component
 		from acs.subcatnbr_data
@@ -1254,6 +1265,7 @@ run;
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LEC'
+						and grading_basis = 'GRD'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.ssr_component = b.ssr_component
@@ -1276,13 +1288,14 @@ run;
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LAB'
+						and grading_basis = 'GRD'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.ssr_component = c.ssr_component
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
-		group by a.subject_catalog_nbr
+			and a.grading_basis = 'GRD'
 		order by a.subject_catalog_nbr
 	;quit;
 	
@@ -1300,28 +1313,28 @@ run;
 		left join (select distinct emplid, 
 						class_nbr
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '7'
+					where substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
 				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '7'
+					where substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
 				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '3'
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
 				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '3'
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
@@ -1560,9 +1573,9 @@ run;
 		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
-			and a.campus = 'PULLM' 
+			and a.campus in ('PULLM','VANCO','TRICI') 
 			and a.enrolled = 1
-			and c.admit_type in ('FRS','IFR','IPF')
+			and c.admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
 	;quit;
 	
 %mend loop;

@@ -19,7 +19,11 @@ libname dir "\\ad.wsu.edu\POIS\IR\Nathan\Models\student_risk\supplemental_files"
 %let curlib = WSUNCPRD;
 /*%let curlib = WSUNCT1T;*/
 
-%let strm  = 2207;
+proc sql;
+select min(strm) into: strm from census.xw_term where datepart(term_end_dt) >= today() and substr(strm,4,1) in ('7','3') and acad_career = 'UGRD'
+;quit;
+
+/*%let strm  = 2207;*/
 
 proc sql;
 select aid_year into: aid_year 
@@ -63,16 +67,19 @@ proc sql;
 create table dir.finaid_data as 
 select * from connection to oracle 
 (
+SELECT  A.EMPLID, A.AWARD_PERIOD, A.INSTITUTION, A.AID_YEAR, A.ACAD_CAREER, SUM(A.OFFER_AMOUNT) AS TOTAL_OFFER, b.FED_NEED, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
 
-SELECT DISTINCT A.EMPLID, A.INSTITUTION, A.AID_YEAR, A.ACAD_CAREER, SUM(A.OFFER_AMOUNT) AS TOTAL_OFFER, B.FED_NEED, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
-FROM (PS_STDNT_AWARDS A 
-LEFT OUTER JOIN  PS_STDNT_AWD_PER B ON  A.EMPLID = B.EMPLID AND A.INSTITUTION = B.INSTITUTION AND A.AID_YEAR = B.AID_YEAR AND B.AWARD_PERIOD = A.AWARD_PERIOD)
-WHERE (A.AID_YEAR = %bquote('&aid_year.') AND A.AWARD_STATUS = 'O' AND A.AWARD_PERIOD = 'A'
-AND A.AWARD_PERIOD = 'A' AND A.ACAD_CAREER = 'UGRD')
-GROUP BY  A.EMPLID,  A.INSTITUTION,  A.AID_YEAR,  A.ACAD_CAREER,  B.FED_NEED, sysdate
+
+FROM PS_STDNT_AWARDS A 
+LEFT OUTER JOIN  PS_STDNT_AWD_PER B ON  A.EMPLID = B.EMPLID AND A.INSTITUTION = B.INSTITUTION AND A.AID_YEAR = B.AID_YEAR AND B.AWARD_PERIOD = A.AWARD_PERIOD
+WHERE (A.AID_YEAR = %bquote('&aid_year.')  AND A.AWARD_STATUS in ('O','A')  AND A.AWARD_PERIOD in ('A') AND A.ACAD_CAREER = 'UGRD' )
+GROUP BY  A.EMPLID,  A.INSTITUTION,  A.AID_YEAR,  A.ACAD_CAREER, A.AWARD_PERIOD
+,  B.FED_NEED
+, sysdate
 
 ); 
 quit;
+
 
 proc sql; 
 %include "&passthru."; 

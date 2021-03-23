@@ -37,6 +37,10 @@ proc import out=cpi
 	getnames=YES;
 run;
 
+proc sql;
+	select min(term_type) into: term_type from &dsn..xw_term where term_year = year(today()) and month(datepart(term_begin_dt)) <= month(today()) and month(datepart(term_end_dt)) >= month(today()) and acad_career = 'UGRD'
+;quit;
+
 %macro loop;
 	
 	%do cohort_year=&start_cohort. %to &end_cohort.;
@@ -133,10 +137,11 @@ run;
 			and substr(a.strm,4,1) = '7'
 			and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat = 'FRSH'
+			and a.adj_admit_type_cat in ('FRSH','TRAN')
 			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
+			and a.WA_residency ^= 'NON-I'
 		order by a.emplid
 	;quit;
 	
@@ -150,8 +155,9 @@ run;
 		from &dev..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus in ('PULLM','VANCO','TRICI')
-			and adj_admit_type_cat = 'FRSH'
+			and adj_admit_type_cat in ('FRSH','TRAN')
 			and ipeds_full_part_time = 'F'
+			and WA_residency ^= 'NON-I'
 	;quit;
 	
 	proc sql;
@@ -332,7 +338,8 @@ run;
 			and substr(strm, 4, 1) = '7'
 			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat = 'FRSH'
+			and adj_admit_type_cat in ('FRSH','TRAN')
+			and WA_residency ^= 'NON-I'
 			and primary_plan_flag = 'Y'
 			and calculated split_plan = 0
 	;quit;
@@ -351,7 +358,7 @@ run;
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."	
-			and a.award_period in ('A')
+			and a.award_period in ('A','B')
 			and a.efc_status = 'O'
 	;quit;
 	
@@ -565,7 +572,7 @@ run;
 		from &dsn..student_athlete_vw
 		where snapshot = 'eot'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and ugrd_adj_admit_type = 'FRS'
+			and ugrd_adj_admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
 	;quit;
 	
 	proc sql;
@@ -684,6 +691,7 @@ run;
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LEC'
+						and grading_basis = 'GRD'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.ssr_component = b.ssr_component
@@ -706,13 +714,14 @@ run;
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LAB'
+						and grading_basis = 'GRD'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.ssr_component = c.ssr_component
 		where a.snapshot = 'eot'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
-		group by a.subject_catalog_nbr
+			and a.grading_basis = 'GRD'
 		order by a.subject_catalog_nbr
 	;quit;
 	
@@ -829,15 +838,27 @@ run;
 		create table coursework_difficulty_&cohort_year. as
 		select distinct
 			a.emplid,
-			avg(b.class_average) as avg_difficulty,
-			avg(b.pct_withdrawn) as avg_pct_withdrawn,
-			avg(b.pct_CDFW) as avg_pct_CDFW,
-			avg(b.pct_CDF) as avg_pct_CDF,
-			avg(b.pct_DFW) as avg_pct_DFW,
-			avg(b.pct_DF) as avg_pct_DF
+			avg(b.class_average) as fall_avg_difficulty,
+			avg(b.pct_withdrawn) as fall_avg_pct_withdrawn,
+			avg(b.pct_CDFW) as fall_avg_pct_CDFW,
+			avg(b.pct_CDF) as fall_avg_pct_CDF,
+			avg(b.pct_DFW) as fall_avg_pct_DFW,
+			avg(b.pct_DF) as fall_avg_pct_DF,
+			avg(c.class_average) as spring_avg_difficulty,
+			avg(c.pct_withdrawn) as spring_avg_pct_withdrawn,
+			avg(c.pct_CDFW) as spring_avg_pct_CDFW,
+			avg(c.pct_CDF) as spring_avg_pct_CDF,
+			avg(c.pct_DFW) as spring_avg_pct_DFW,
+			avg(c.pct_DF) as spring_avg_pct_DF
 		from class_registration_&cohort_year. as a
 		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
+		left join class_difficulty_&cohort_year. as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
 	;quit;
 	
@@ -858,7 +879,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
@@ -871,7 +892,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
@@ -884,7 +905,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
@@ -897,7 +918,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'eot'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as e
@@ -908,7 +929,7 @@ run;
 	;quit;
 	
 	proc sql;
-		create table midterm_&cohort_year. as
+		create table fall_midterm_&cohort_year. as
 		select distinct
 			strm,
 			emplid,
@@ -927,10 +948,38 @@ run;
 				when crse_grade_input = 'D'		then 1.0
 				when crse_grade_input = 'F'		then 0.0
 												else .
-												end as midterm_grade
+												end as fall_midterm_grade
 		from &dsn..class_registration_vw
 		where snapshot = 'midterm'
 			and substr(strm,4,1) = '7'
+			and full_acad_year = "&cohort_year."
+			and enrl_ind = 1
+	;quit;
+	
+	proc sql;
+		create table spring_midterm_&cohort_year. as
+		select distinct
+			strm,
+			emplid,
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			case when crse_grade_input = 'A' 	then 4.0
+				when crse_grade_input = 'A-'	then 3.7
+				when crse_grade_input = 'B+'	then 3.3
+				when crse_grade_input = 'B'		then 3.0
+				when crse_grade_input = 'B-'	then 2.7
+				when crse_grade_input = 'C+'	then 2.3
+				when crse_grade_input = 'C'		then 2.0
+				when crse_grade_input = 'C-'	then 1.7
+				when crse_grade_input = 'D+'	then 1.3
+				when crse_grade_input = 'D'		then 1.0
+				when crse_grade_input = 'F'		then 0.0
+												else .
+												end as spring_midterm_grade
+		from &dsn..class_registration_vw
+		where snapshot = 'midterm'
+			and substr(strm,4,1) = '3'
 			and full_acad_year = "&cohort_year."
 			and enrl_ind = 1
 	;quit;
@@ -938,10 +987,13 @@ run;
 	proc sql;
 		create table midterm_grades_&cohort_year. as
 		select distinct
-			emplid,
-			avg(midterm_grade) as midterm_gpa_avg
-		from midterm_&cohort_year. 
-		group by emplid
+			a.emplid,
+			avg(a.fall_midterm_grade) as fall_midterm_gpa_avg,
+			avg(b.spring_midterm_grade) as spring_midterm_gpa_avg
+		from fall_midterm_&cohort_year. as a  
+		left join spring_midterm_&cohort_year. as b
+			on a.emplid = b.emplid
+		group by a.emplid
 	;quit;
 	
 	proc sql;
@@ -978,7 +1030,7 @@ run;
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat = 'FRSH'
+			and adj_admit_type_cat in ('FRSH','TRAN')
 	;quit;
 	
 	proc sql;
@@ -996,6 +1048,8 @@ run;
 		select 
 			a.*,
 			b.pell_recipient_ind,
+			b.eot_term_gpa,
+			b.eot_term_gpa_hours,
 			w.term_gpa,
 			w.term_gpa_hours,
 			c.cont_term,
@@ -1098,12 +1152,18 @@ run;
 			m.min_week_from_term_begin_dt,
 			m.max_week_from_term_begin_dt,
 			m.count_week_from_term_begin_dt,
-			(4.0 - n.avg_difficulty) as avg_difficulty,
-			n.avg_pct_withdrawn,
-			n.avg_pct_CDFW,
-			n.avg_pct_CDF,
-			n.avg_pct_DFW,
-			n.avg_pct_DF,
+			(4.0 - n.fall_avg_difficulty) as fall_avg_difficulty,
+			n.fall_avg_pct_withdrawn,
+			n.fall_avg_pct_CDFW,
+			n.fall_avg_pct_CDF,
+			n.fall_avg_pct_DFW,
+			n.fall_avg_pct_DF,
+			(4.0 - n.spring_avg_difficulty) as spring_avg_difficulty,
+			n.spring_avg_pct_withdrawn,
+			n.spring_avg_pct_CDFW,
+			n.spring_avg_pct_CDF,
+			n.spring_avg_pct_DFW,
+			n.spring_avg_pct_DF,
 			s.fall_lec_count,
 			s.fall_lab_count,
 			s.spring_lec_count,
@@ -1146,10 +1206,14 @@ run;
 			t.race_black,
 			t.race_native_hawaiian,
 			t.race_white,
-			u.midterm_gpa_avg,
-			case when u.midterm_gpa_avg is not null 	then 1
-														else 0
-														end as midterm_gpa_ind
+			u.fall_midterm_gpa_avg,
+			case when u.fall_midterm_gpa_avg is not null 	then 1
+															else 0
+															end as fall_midterm_gpa_ind,
+			u.spring_midterm_gpa_avg,
+			case when u.spring_midterm_gpa_avg is not null 		then 1
+																else 0
+																end as spring_midterm_gpa_ind
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -1289,10 +1353,11 @@ run;
 			and substr(a.strm, 4 , 1) = '7'
 			and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat = 'FRSH'
+			and a.adj_admit_type_cat in ('FRSH','TRAN')
 			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
+			and a.WA_residency ^= 'NON-I'
 		order by a.emplid
 	;quit;
 	
@@ -1306,8 +1371,9 @@ run;
 		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus in ('PULLM','VANCO','TRICI')
-			and adj_admit_type_cat = 'FRSH'
+			and adj_admit_type_cat in ('FRSH','TRAN')
 			and ipeds_full_part_time = 'F'
+			and WA_residency ^= 'NON-I'
 	;quit;
 	
 	proc sql;
@@ -1322,77 +1388,21 @@ run;
 			and ipeds_full_part_time = 'F'
 	;quit;		
 	
-	proc sql;
-		create table plan_&cohort_year. as 
-		select distinct 
-			emplid,
-			acad_plan,
-			acad_plan_descr,
-			plan_owner_org,
-			plan_owner_org_descr,
-			plan_owner_group_descrshort,
-			case when plan_owner_group_descrshort = 'Business' then 1 else 0 end as business,
-			case when plan_owner_group_descrshort = 'CAHNREXT' 
-				and plan_owner_org = '03_1240' then 1 else 0 end as cahnrs_anml,
-			case when plan_owner_group_descrshort = 'CAHNREXT' 
-				and plan_owner_org = '03_1990' then 1 else 0 end as cahnrs_envr,
-			case when plan_owner_group_descrshort = 'CAHNREXT' 
-				and plan_owner_org = '03_1150' then 1 else 0 end as cahnrs_econ,	
-			case when plan_owner_group_descrshort = 'CAHNREXT'
-				and plan_owner_org not in ('03_1240','03_1990','03_1150') then 1 else 0 end as cahnrext,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_1540' then 1 else 0 end as cas_chem,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_1710' then 1 else 0 end as cas_crim,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_2530' then 1 else 0 end as cas_math,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_2900' then 1 else 0 end as cas_psyc,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_8434' then 1 else 0 end as cas_biol,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_1830' then 1 else 0 end as cas_engl,
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org = '31_2790' then 1 else 0 end as cas_phys,	
-			case when plan_owner_group_descrshort = 'CAS'
-				and plan_owner_org not in ('31_1540','31_1710','31_2530','31_2900','31_8434','31_1830','31_2790') then 1 else 0 end as cas,
-			case when plan_owner_group_descrshort = 'Comm' then 1 else 0 end as comm,
-			case when plan_owner_group_descrshort = 'Education' then 1 else 0 end as education,
-			case when plan_owner_group_descrshort in ('Med Sci','Medicine') then 1 else 0 end as medicine,
-			case when plan_owner_group_descrshort = 'Nursing' then 1 else 0 end as nursing,
-			case when plan_owner_group_descrshort = 'Pharmacy' then 1 else 0 end as pharmacy,
-			case when plan_owner_group_descrshort = 'Provost' then 1 else 0 end as provost,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_1520' then 1 else 0 end as vcea_bioe,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_1590' then 1 else 0 end as vcea_cive,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_1260' then 1 else 0 end as vcea_desn,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_1770' then 1 else 0 end as vcea_eecs,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org = '05_2540' then 1 else 0 end as vcea_mech,
-			case when plan_owner_group_descrshort = 'VCEA' 
-				and plan_owner_org not in ('05_1520','05_1590','05_1260','05_1770','05_2540') then 1 else 0 end as vcea,				
-			case when plan_owner_group_descrshort = 'Vet Med' then 1 else 0 end as vet_med,
-			case when plan_owner_group_descrshort not in ('Business','CAHNREXT','CAS','Comm',
-														'Education','Med Sci','Medicine','Nursing',
-														'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
-			end as groupless,
-			case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595') then 1 else 0
-			end as split_plan,
-			lsamp_stem_flag,
-			anywhere_stem_flag
-		from &dsn..student_acad_prog_plan_vw
-		where snapshot = 'census'
-			and full_acad_year = "&cohort_year." /* Note: Was aid_year previously? Why? Check! */
-			and substr(strm, 4, 1) = '7'
-			and adj_admit_campus in ('PULLM','VANCO','TRICI')
-			and acad_career = 'UGRD'
-			and adj_admit_type_cat = 'FRSH'
-			and primary_plan_flag = 'Y'
-			and calculated split_plan = 0
-	;quit;
+/* 	proc sql; */
+/* 		create table enrolled_&cohort_year. as */
+/* 		select distinct  */
+/* 			emplid,  */
+/* 			max(strm) as strm, */
+/* 			case when max(strm) >= substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' 	then 1 */
+/* 																																								else 0 */
+/* 																																								end as fall_enrl, */
+/* 			case when max(strm) >= substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3' 	then 1 */
+/* 																														else 0 */
+/* 																														end as spring_enrl */
+/* 		from acs.enrl_data */
+/* 		group by emplid */
+/* 		order by emplid */
+/* 	;quit; */
 	
 /* 	proc sql; */
 /* 		create table need_&cohort_year. as */
@@ -1514,6 +1524,126 @@ run;
 						and xe6.ethnic_group = '3') as hispc
 			on a.emplid = hispc.emplid
 	;quit;
+	
+	proc sql;
+		create table plan_&cohort_year. as 
+		select distinct 
+			emplid,
+			acad_plan,
+			acad_plan_descr,
+			plan_owner_org,
+			plan_owner_org_descr,
+			plan_owner_group_descrshort,
+			case when plan_owner_group_descrshort = 'Business' then 1 else 0 end as business,
+			case when plan_owner_group_descrshort = 'CAHNREXT' 
+				and plan_owner_org = '03_1240' then 1 else 0 end as cahnrs_anml,
+			case when plan_owner_group_descrshort = 'CAHNREXT' 
+				and plan_owner_org = '03_1990' then 1 else 0 end as cahnrs_envr,
+			case when plan_owner_group_descrshort = 'CAHNREXT' 
+				and plan_owner_org = '03_1150' then 1 else 0 end as cahnrs_econ,	
+			case when plan_owner_group_descrshort = 'CAHNREXT'
+				and plan_owner_org not in ('03_1240','03_1990','03_1150') then 1 else 0 end as cahnrext,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_1540' then 1 else 0 end as cas_chem,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_1710' then 1 else 0 end as cas_crim,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_2530' then 1 else 0 end as cas_math,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_2900' then 1 else 0 end as cas_psyc,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_8434' then 1 else 0 end as cas_biol,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_1830' then 1 else 0 end as cas_engl,
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org = '31_2790' then 1 else 0 end as cas_phys,	
+			case when plan_owner_group_descrshort = 'CAS'
+				and plan_owner_org not in ('31_1540','31_1710','31_2530','31_2900','31_8434','31_1830','31_2790') then 1 else 0 end as cas,
+			case when plan_owner_group_descrshort = 'Comm' then 1 else 0 end as comm,
+			case when plan_owner_group_descrshort = 'Education' then 1 else 0 end as education,
+			case when plan_owner_group_descrshort in ('Med Sci','Medicine') then 1 else 0 end as medicine,
+			case when plan_owner_group_descrshort = 'Nursing' then 1 else 0 end as nursing,
+			case when plan_owner_group_descrshort = 'Pharmacy' then 1 else 0 end as pharmacy,
+			case when plan_owner_group_descrshort = 'Provost' then 1 else 0 end as provost,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_1520' then 1 else 0 end as vcea_bioe,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_1590' then 1 else 0 end as vcea_cive,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_1260' then 1 else 0 end as vcea_desn,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_1770' then 1 else 0 end as vcea_eecs,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org = '05_2540' then 1 else 0 end as vcea_mech,
+			case when plan_owner_group_descrshort = 'VCEA' 
+				and plan_owner_org not in ('05_1520','05_1590','05_1260','05_1770','05_2540') then 1 else 0 end as vcea,				
+			case when plan_owner_group_descrshort = 'Vet Med' then 1 else 0 end as vet_med,
+			case when plan_owner_group_descrshort not in ('Business','CAHNREXT','CAS','Comm',
+														'Education','Med Sci','Medicine','Nursing',
+														'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
+			end as groupless,
+			case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595') then 1 else 0
+			end as split_plan,
+			lsamp_stem_flag,
+			anywhere_stem_flag
+		from &dsn..student_acad_prog_plan_vw
+		where snapshot = 'census'
+			and full_acad_year = "&cohort_year."
+			and substr(strm, 4, 1) = '7'
+			and adj_admit_campus in ('PULLM','VANCO','TRICI')
+			and acad_career = 'UGRD'
+			and adj_admit_type_cat in ('FRSH','TRAN')
+			and WA_residency ^= 'NON-I'
+			and primary_plan_flag = 'Y'
+			and calculated split_plan = 0
+	;quit;
+	
+/* 	proc sql; */
+/* 		create table need_&cohort_year. as */
+/* 		select distinct */
+/* 			a.emplid, */
+/* 			b.snapshot as need_snap, */
+/* 			a.aid_year, */
+/* 			a.fed_efc, */
+/* 			a.fed_need */
+/* 		from &dsn..fa_award_period as a */
+/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b */
+/* 			on a.emplid = b.emplid */
+/* 				and a.aid_year = b.aid_year */
+/* 				and a.snapshot = b.snapshot */
+/* 		where a.aid_year = "&cohort_year."	 */
+/* 			and a.award_period in ('A') */
+/* 			and a.efc_status = 'O' */
+/* 	;quit; */
+	
+/* 	proc sql; */
+/* 		create table aid_&cohort_year. as */
+/* 		select distinct */
+/* 			a.emplid, */
+/* 			b.snapshot as aid_snap, */
+/* 			a.aid_year, */
+/* 			sum(a.disbursed_amt) as total_disb, */
+/* 			sum(a.offer_amt) as total_offer, */
+/* 			sum(a.accept_amt) as total_accept */
+/* 		from &dsn..fa_award_aid_year_vw as a */
+/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b */
+/* 			on a.emplid = b.emplid */
+/* 				and a.aid_year = b.aid_year */
+/* 				and a.snapshot = b.snapshot */
+/* 		where a.aid_year = "&cohort_year." */
+/* 			and a.award_period in ('A','B') */
+/* 			and a.award_status = 'A' */
+/* 		group by a.emplid; */
+/* 	;quit; */
+	
+/* 	proc sql; */
+/* 		select distinct  */
+/* 			emplid,  */
+/* 			fed_need,  */
+/* 		 	total_offer  */
+/* 		from acs.finaid_data */
+/* 		where aid_year = "&cohort_year." */
+/* 	;quit; */
 	
 	proc sql;
 		create table dependent_&cohort_year. as
@@ -1705,7 +1835,7 @@ run;
 		from &dsn..student_athlete_vw
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and ugrd_adj_admit_type = 'FRS'
+			and ugrd_adj_admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
 	;quit;
 	
 	proc sql;
@@ -1735,19 +1865,57 @@ run;
 		group by emplid
 		order by emplid;
 	;quit;
-
-	proc sql;
-		create table class_registration_&cohort_year. as
-		select distinct
-			strm,
-			emplid,
-			class_nbr,
-			crse_id,
-			unt_taken,
-			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
-			ssr_component
-		from acs.subcatnbr_data
-	;quit;
+	
+	%if &term_type. = SPR %then %do;
+		proc sql;
+			create table spring_class_registration_&cohort_year. as
+			select distinct
+				strm,
+				emplid,
+				class_nbr,
+				crse_id,
+				unt_taken,
+				strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
+				ssr_component
+			from acs.subcatnbr_data
+			where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
+		;quit;
+		
+		proc sql;
+			create table fall_class_registration_&cohort_year. as
+			select distinct
+				strm,
+				emplid,
+				class_nbr,
+				crse_id,
+				unt_taken,
+				subject_catalog_nbr,
+				ssr_component
+			from &dsn..class_registration_vw
+			where snapshot = 'eot'
+				and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+				and enrl_ind = 1
+		;quit;
+		
+		data class_registration_&cohort_year.;
+			set spring_class_registration_&cohort_year. fall_class_registration_&cohort_year.;
+		run;
+	%end;
+	
+	%if &term_type. ^= SPR %then %do;
+		proc sql;
+			create table class_registration_&cohort_year. as
+			select distinct
+				strm,
+				emplid,
+				class_nbr,
+				crse_id,
+				unt_taken,
+				strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
+				ssr_component
+			from acs.subcatnbr_data
+		;quit;
+	%end;
 	
 	proc sql;
 		create table class_difficulty_&cohort_year. as
@@ -1821,6 +1989,7 @@ run;
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LEC'
+						and grading_basis = 'GRD'
 					group by subject_catalog_nbr) as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.ssr_component = b.ssr_component
@@ -1843,13 +2012,14 @@ run;
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 						and ssr_component = 'LAB'
+						and grading_basis = 'GRD'
 					group by subject_catalog_nbr) as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.ssr_component = c.ssr_component
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.ssr_component in ('LEC','LAB')
-		group by a.subject_catalog_nbr
+			and a.grading_basis = 'GRD'
 		order by a.subject_catalog_nbr
 	;quit;
 	
@@ -1875,28 +2045,28 @@ run;
 		left join (select distinct emplid, 
 						class_nbr
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '7'
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
 				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '7'
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
 				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '3'
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
 				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '3'
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
@@ -1904,7 +2074,7 @@ run;
 						class_nbr,
 						unt_taken
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '7'
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LEC') as f
 			on a.emplid = f.emplid
 				and a.class_nbr = f.class_nbr
@@ -1912,7 +2082,7 @@ run;
 						class_nbr,
 						unt_taken
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '7'
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LAB') as g
 			on a.emplid = g.emplid
 				and a.class_nbr = g.class_nbr
@@ -1920,7 +2090,7 @@ run;
 						class_nbr,
 						unt_taken
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '3'
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LEC') as h
 			on a.emplid = h.emplid
 				and a.class_nbr = h.class_nbr
@@ -1928,7 +2098,7 @@ run;
 						class_nbr,
 						unt_taken
 					from class_registration_&cohort_year.
-					where substr(strm,4,1) = '3'
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LAB') as i
 			on a.emplid = i.emplid
 				and a.class_nbr = i.class_nbr
@@ -1939,15 +2109,27 @@ run;
 		create table coursework_difficulty_&cohort_year. as
 		select distinct
 			a.emplid,
-			avg(b.class_average) as avg_difficulty,
-			avg(b.pct_withdrawn) as avg_pct_withdrawn,
-			avg(b.pct_CDFW) as avg_pct_CDFW,
-			avg(b.pct_CDF) as avg_pct_CDF,
-			avg(b.pct_DFW) as avg_pct_DFW,
-			avg(b.pct_DF) as avg_pct_DF
+			avg(b.class_average) as fall_avg_difficulty,
+			avg(b.pct_withdrawn) as fall_avg_pct_withdrawn,
+			avg(b.pct_CDFW) as fall_avg_pct_CDFW,
+			avg(b.pct_CDF) as fall_avg_pct_CDF,
+			avg(b.pct_DFW) as fall_avg_pct_DFW,
+			avg(b.pct_DF) as fall_avg_pct_DF,
+			avg(c.class_average) as spring_avg_difficulty,
+			avg(c.pct_withdrawn) as spring_avg_pct_withdrawn,
+			avg(c.pct_CDFW) as spring_avg_pct_CDFW,
+			avg(c.pct_CDF) as spring_avg_pct_CDF,
+			avg(c.pct_DFW) as spring_avg_pct_DFW,
+			avg(c.pct_DF) as spring_avg_pct_DF
 		from class_registration_&cohort_year. as a
 		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
+				and a.ssr_component = b.ssr_component
+				and substr(a.strm,4,1) = '7'
+		left join class_difficulty_&cohort_year. as c
+			on a.subject_catalog_nbr = c.subject_catalog_nbr
+				and a.ssr_component = c.ssr_component
+				and substr(a.strm,4,1) = '3'
 		group by a.emplid
 	;quit;
 
@@ -1968,7 +2150,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as b
@@ -1981,7 +2163,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as c
@@ -1994,7 +2176,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LEC'
 					group by subject_catalog_nbr) as d
@@ -2007,7 +2189,7 @@ run;
 						ssr_component
 					from &dsn..class_vw
 					where snapshot = 'census'
-						and full_acad_year = put(%eval(&cohort_year.), 4.)
+						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
 					group by subject_catalog_nbr) as e
@@ -2018,7 +2200,7 @@ run;
 	;quit;
 	
 	proc sql;
-		create table midterm_&cohort_year. as
+		create table fall_midterm_&cohort_year. as
 		select distinct
 			strm,
 			emplid,
@@ -2037,10 +2219,38 @@ run;
 				when crse_grade_input = 'D'		then 1.0
 				when crse_grade_input = 'F'		then 0.0
 												else .
-												end as midterm_grade
+												end as fall_midterm_grade
 		from &dsn..class_registration_vw
 		where snapshot = 'midterm'
 			and substr(strm,4,1) = '7'
+			and full_acad_year = "&cohort_year."
+			and enrl_ind = 1
+	;quit;
+	
+	proc sql;
+		create table spring_midterm_&cohort_year. as
+		select distinct
+			strm,
+			emplid,
+			class_nbr,
+			crse_id,
+			subject_catalog_nbr,
+			case when crse_grade_input = 'A' 	then 4.0
+				when crse_grade_input = 'A-'	then 3.7
+				when crse_grade_input = 'B+'	then 3.3
+				when crse_grade_input = 'B'		then 3.0
+				when crse_grade_input = 'B-'	then 2.7
+				when crse_grade_input = 'C+'	then 2.3
+				when crse_grade_input = 'C'		then 2.0
+				when crse_grade_input = 'C-'	then 1.7
+				when crse_grade_input = 'D+'	then 1.3
+				when crse_grade_input = 'D'		then 1.0
+				when crse_grade_input = 'F'		then 0.0
+												else .
+												end as spring_midterm_grade
+		from &dsn..class_registration_vw
+		where snapshot = 'midterm'
+			and substr(strm,4,1) = '3'
 			and full_acad_year = "&cohort_year."
 			and enrl_ind = 1
 	;quit;
@@ -2048,10 +2258,13 @@ run;
 	proc sql;
 		create table midterm_grades_&cohort_year. as
 		select distinct
-			emplid,
-			avg(midterm_grade) as midterm_gpa_avg
-		from midterm_&cohort_year. 
-		group by emplid
+			a.emplid,
+			avg(a.fall_midterm_grade) as fall_midterm_gpa_avg,
+			avg(b.spring_midterm_grade) as spring_midterm_gpa_avg
+		from fall_midterm_&cohort_year. as a  
+		left join spring_midterm_&cohort_year. as b
+			on a.emplid = b.emplid
+		group by a.emplid
 	;quit;
 	
 	proc sql;
@@ -2088,7 +2301,7 @@ run;
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and adj_admit_campus in ('PULLM', 'VANCO', 'TRICI')
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat = 'FRSH'
+			and adj_admit_type_cat in ('FRSH','TRAN')
 	;quit;
 	
 	proc sql;
@@ -2106,6 +2319,8 @@ run;
 		select 
 			a.*,
 			b.pell_recipient_ind,
+			b.eot_term_gpa,
+			b.eot_term_gpa_hours,
 			x.term_gpa,
 			x.term_gpa_hours,
 			d.acad_plan,
@@ -2208,12 +2423,18 @@ run;
 			m.min_week_from_term_begin_dt,
 			m.max_week_from_term_begin_dt,
 			m.count_week_from_term_begin_dt,
-			(4.0 - n.avg_difficulty) as avg_difficulty,
-			n.avg_pct_withdrawn,
-			n.avg_pct_CDFW,
-			n.avg_pct_CDF,
-			n.avg_pct_DFW,
-			n.avg_pct_DF,
+			(4.0 - n.fall_avg_difficulty) as fall_avg_difficulty,
+			n.fall_avg_pct_withdrawn,
+			n.fall_avg_pct_CDFW,
+			n.fall_avg_pct_CDF,
+			n.fall_avg_pct_DFW,
+			n.fall_avg_pct_DF,
+			(4.0 - n.spring_avg_difficulty) as spring_avg_difficulty,
+			n.spring_avg_pct_withdrawn,
+			n.spring_avg_pct_CDFW,
+			n.spring_avg_pct_CDF,
+			n.spring_avg_pct_DFW,
+			n.spring_avg_pct_DF,
 			t.fall_lec_count,
 			t.fall_lab_count,
 			t.spring_lec_count,
@@ -2256,10 +2477,14 @@ run;
 			u.race_black,
 			u.race_native_hawaiian,
 			u.race_white,
-			v.midterm_gpa_avg,
-			case when v.midterm_gpa_avg is not null 	then 1
-														else 0
-														end as midterm_gpa_ind
+			v.fall_midterm_gpa_avg,
+			case when v.fall_midterm_gpa_avg is not null 	then 1
+															else 0
+															end as fall_midterm_gpa_ind,
+			v.spring_midterm_gpa_avg,
+			case when v.spring_midterm_gpa_avg is not null 	then 1
+															else 0
+															end as spring_midterm_gpa_ind
 		from cohort_&cohort_year. as a
 		left join new_student_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -2271,7 +2496,7 @@ run;
 							fed_need, 
 	 						total_offer 
 	 					from acs.finaid_data
-	 					where aid_year = "&cohort_year." group by emplid) as s
+	 					where aid_year = "&cohort_year.") as s
  			on a.emplid = s.emplid
 /*  		left join need_&cohort_year. as e */
 /*  			on a.emplid = e.emplid */
@@ -2343,12 +2568,18 @@ data full_set;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
-	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
-	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
-	if avg_pct_CDF = . then avg_pct_CDF = 0;
-	if avg_pct_DFW = . then avg_pct_DFW = 0;
-	if avg_pct_DF = . then avg_pct_DF = 0;
-	if avg_difficulty = . then avg_difficulty = 0;
+	if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
+	if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+	if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+	if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+	if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+	if fall_avg_difficulty = . then fall_avg_difficulty = 0;
+	if spring_avg_pct_withdrawn = . then spring_avg_pct_withdrawn = 0;
+	if spring_avg_pct_CDFW = . then spring_avg_pct_CDFW = 0;
+	if spring_avg_pct_CDF = . then spring_avg_pct_CDF = 0;
+	if spring_avg_pct_DFW = . then spring_avg_pct_DFW = 0;
+	if spring_avg_pct_DF = . then spring_avg_pct_DF = 0;
+	if spring_avg_difficulty = . then spring_avg_difficulty = 0;
 	if fall_lec_count = . then fall_lec_count = 0;
 	if fall_lab_count = . then fall_lab_count = 0;
 	if spring_lec_count = . then spring_lec_count = 0;
@@ -2359,7 +2590,9 @@ data full_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
+	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
+	if term_gpa = . then term_gpa = 0;
+	if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2410,12 +2643,18 @@ data training_set;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
-	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
-	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
-	if avg_pct_CDF = . then avg_pct_CDF = 0;
-	if avg_pct_DFW = . then avg_pct_DFW = 0;
-	if avg_pct_DF = . then avg_pct_DF = 0;
-	if avg_difficulty = . then avg_difficulty = 0;
+	if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
+	if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+	if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+	if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+	if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+	if fall_avg_difficulty = . then fall_avg_difficulty = 0;
+	if spring_avg_pct_withdrawn = . then spring_avg_pct_withdrawn = 0;
+	if spring_avg_pct_CDFW = . then spring_avg_pct_CDFW = 0;
+	if spring_avg_pct_CDF = . then spring_avg_pct_CDF = 0;
+	if spring_avg_pct_DFW = . then spring_avg_pct_DFW = 0;
+	if spring_avg_pct_DF = . then spring_avg_pct_DF = 0;
+	if spring_avg_difficulty = . then spring_avg_difficulty = 0;
 	if fall_lec_count = . then fall_lec_count = 0;
 	if fall_lab_count = . then fall_lab_count = 0;
 	if spring_lec_count = . then spring_lec_count = 0;
@@ -2426,7 +2665,9 @@ data training_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
+	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
+	if term_gpa = . then term_gpa = 0;
+	if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
@@ -2468,12 +2709,18 @@ data testing_set;
 	if sat_erws = . then sat_erws = 0;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
-	if avg_pct_withdrawn = . then avg_pct_withdrawn = 0;
-	if avg_pct_CDFW = . then avg_pct_CDFW = 0;
-	if avg_pct_CDF = . then avg_pct_CDF = 0;
-	if avg_pct_DFW = . then avg_pct_DFW = 0;
-	if avg_pct_DF = . then avg_pct_DF = 0;
-	if avg_difficulty = . then avg_difficulty = 0;
+	if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
+	if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+	if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+	if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+	if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+	if fall_avg_difficulty = . then fall_avg_difficulty = 0;
+	if spring_avg_pct_withdrawn = . then spring_avg_pct_withdrawn = 0;
+	if spring_avg_pct_CDFW = . then spring_avg_pct_CDFW = 0;
+	if spring_avg_pct_CDF = . then spring_avg_pct_CDF = 0;
+	if spring_avg_pct_DFW = . then spring_avg_pct_DFW = 0;
+	if spring_avg_pct_DF = . then spring_avg_pct_DF = 0;
+	if spring_avg_difficulty = . then spring_avg_difficulty = 0;
 	if fall_lec_count = . then fall_lec_count = 0;
 	if fall_lab_count = . then fall_lab_count = 0;
 	if spring_lec_count = . then spring_lec_count = 0;
@@ -2484,7 +2731,9 @@ data testing_set;
  	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
-	if midterm_gpa_avg = . then midterm_gpa_avg = 0;
+	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
+	if term_gpa = . then term_gpa = 0;
+	if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg = 0;
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
 	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
 	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
