@@ -26,23 +26,7 @@ proc sql;
 ;quit;
 
 proc sql;
-    create table adj_acad_calendar as
-    select distinct
-        *
-        ,day(datepart(term_begin_dt)) as begin_day
-        ,month(datepart(term_begin_dt)) as begin_month
-        ,year(datepart(term_begin_dt)) as begin_year
-        ,day(datepart(adj_term_census_dt)) as census_day
-        ,month(datepart(adj_term_census_dt)) as census_month
-        ,year(datepart(adj_term_census_dt)) as census_year
-        ,day(datepart(adj_term_midterm_dt)) as midterm_day
-        ,month(datepart(adj_term_midterm_dt)) as midterm_month
-        ,year(datepart(adj_term_midterm_dt)) as midterm_year
-        ,day(datepart(term_end_dt)) as end_day
-        ,month(datepart(term_end_dt)) as end_month
-        ,year(datepart(term_end_dt)) as end_year
-    from acad_calendar
-    order by term_code
+    select min(term_type) into: term_type from &dsn..xw_term where term_year = year(today()) and month(datepart(term_begin_dt)) <= month(today()) and month(datepart(term_end_dt)) >= month(today()) and acad_career = 'UGRD'
 ;quit;
 
 filename calendar \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv\" encoding=\"utf-8\";
