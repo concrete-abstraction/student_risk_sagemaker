@@ -79,85 +79,85 @@ if __name__ == '__main__':
     if term_type == 'SPR':
 
         try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\student_risk_prod_spr_frsh_midterm.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_midterm.py').read())
         except config.DateError as mid_error:
             print(mid_error)
             config.mid_flag = True
         else:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\student_risk_prod_spr_tran_midterm.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_midterm.py').read())
 
             try: 
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\student_risk_prod_spr_frsh_midterm.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_midterm.py').read())
             except config.DataError as mid_snap_error:
                 print(mid_snap_error)
             else:
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\student_risk_prod_spr_tran_midterm.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_midterm.py').read())
 
                 try:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\student_risk_prod_spr_frsh_census.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_census.py').read())
                 except config.DateError as cen_error:
                     print(cen_error)
                     config.cen_flag = True
                 else:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\student_risk_prod_spr_tran_census.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_census.py').read())
             
                     try: 
-                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\student_risk_prod_spr_frsh_census.py').read())
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_census.py').read())
                     except config.DataError as cen_snap_error:
                         print(cen_snap_error)
                     else:
-                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\student_risk_prod_spr_tran_census.py').read())
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_census.py').read())
 
                         try:
-                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\student_risk_prod_spr_frsh_eot.py').read())
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_eot.py').read())
                         except config.DateError as pre_error:
                             print(pre_error)
                             config.pre_flag = True
                         else:
-                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\student_risk_prod_spr_tran_eot.py').read())
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_eot.py').read())
 
                             try: 
-                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\student_risk_prod_spr_frsh_eot.py').read())
+                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_eot.py').read())
                             except config.DataError as pre_snap_error:
                                 print(pre_snap_error)
                             else:
-                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\student_risk_prod_spr_tran_eot.py').read())
+                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_eot.py').read())
 
     if term_type != 'SPR':
 
         try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\student_risk_prod_fal_frsh_midterm.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_midterm.py').read())
         except config.DateError as mid_error:
             print(mid_error)
             config.mid_flag = True
         else:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\student_risk_prod_fal_tran_midterm.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_midterm.py').read())
 
             try: 
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\student_risk_prod_fal_frsh_midterm.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_midterm.py').read())
             except config.DataError as mid_snap_error:
                 print(mid_snap_error)
             else:
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\student_risk_prod_fal_tran_midterm.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_midterm.py').read())
 
                 try:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\student_risk_prod_fal_frsh_census.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_census.py').read())
                 except config.DateError as cen_error:
                     print(cen_error)
                     config.cen_flag = True
                 else:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\student_risk_prod_fal_tran_census.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_census.py').read())
 
                     try: 
-                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\student_risk_prod_fal_frsh_census.py').read())
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_census.py').read())
                     except config.DataError as cen_snap_error:
                         print(cen_snap_error)
                     else:
-                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\student_risk_prod_fal_tran_census.py').read())
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_census.py').read())
 
                         try:
-                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\student_risk_prod_fal_frsh_admissions.py').read())
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_admissions.py').read())
                         except config.DateError as adm_error:
                             print(adm_error)
                         else:
-                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\student_risk_prod_fal_tran_admissions.py').read())
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_admissions.py').read())

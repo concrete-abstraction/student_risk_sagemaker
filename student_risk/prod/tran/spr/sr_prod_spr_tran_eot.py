@@ -1,14 +1,10 @@
 #%%
-from student_risk import config
-from student_risk import builder
-import datetime
 import joblib
 import numpy as np
 import pandas as pd
 import pathlib
 import pyodbc
 import os
-import saspy
 import sklearn
 import sqlalchemy
 import urllib
@@ -27,91 +23,10 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
 # Database connection
-cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
-params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
-engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
-auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
-
-#%%
-# Global variable intialization
-strm = None
-
-#%%
-# Census date check 
-if config.cen_flag == False:
-
-	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
-	now = datetime.datetime.now()
-
-	now_day = now.day
-	now_month = now.month
-	now_year = now.year
-
-	strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
-
-	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
-	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
-	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
-
-	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
-	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
-	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
-
-	if now_year < census_year or now_year > midterm_year:
-		raise config.DateError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
-
-	elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
-		raise config.DateError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
-
-	elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
-		raise config.DateError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
-
-	else:
-		print(f'{date.today()}: No census date exceptions, running from census.')
-
-#%%
-# Census snapshot check
-if config.cen_flag == True:
-
-	sas = saspy.SASsession()
-
-	sas.symput('strm', strm)
-
-	sas.submit("""
-	%let dsn = census;
-
-	libname &dsn. odbc dsn=&dsn. schema=dbo;
-
-	proc sql;
-		select distinct
-			max(case when snapshot = 'census' 	then 1
-				when snapshot = 'midterm' 		then 2
-				when snapshot = 'eot'			then 3
-												else 0
-												end) as snap_order
-			into: snap_check
-			separated by ''
-		from &dsn..class_registration
-		where acad_career = 'UGRD'
-			and strm = (select distinct
-							max(strm)
-						from &dsn..class_registration where acad_career = 'UGRD')
-	;quit;
-	""")
-
-	snap_check = sas.symget('snap_check')
-
-	sas.endsas()
-
-	if snap_check != 1:
-		raise config.DataError(f'{date.today()}: Census snapshot exception, attempting to run from precensus.')
-
-	else:
-		print(f'{date.today()}: No census snapshot exceptions, running from census.')
-
-#%%
-# SAS dataset builder
-builder.DatasetBuilder.build_census()
+# cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
+# params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
+# engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
+# auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
 # Import pre-split data
@@ -123,7 +38,7 @@ testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_s
 print('\nPrepare dataframes and preprocess data...')
 
 # Pullman dataframes
-pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
@@ -151,26 +66,27 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
-						'fall_cum_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -212,6 +128,8 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'AICE',
                         'IB_AICE', 
                         'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -278,7 +196,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'unmet_need_ofr'
                         ]].dropna()
 
-pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             'enrl_ind', 
 							# 'acad_year',
@@ -307,25 +225,27 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							'spring_lec_count',
-							'spring_lab_count',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							'total_spring_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -367,6 +287,8 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'AICE',
 							'IB_AICE', 
 							'term_credit_hours',
+							# 'total_fall_units',
+							'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -433,7 +355,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -462,25 +384,27 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							'spring_lec_count',
-							'spring_lab_count',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							'total_spring_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -522,6 +446,8 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'AICE',
 							'IB_AICE', 
 							'term_credit_hours',
+							# 'total_fall_units',
+							'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -611,7 +537,7 @@ pullm_current_outcome = pullm_testing_set[[
 
 #%%
 # Vancouver dataframes
-vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
@@ -639,26 +565,27 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
-						'fall_cum_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -700,6 +627,8 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'AICE',
                         'IB_AICE', 
                         'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -766,7 +695,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'unmet_need_ofr'
                         ]].dropna()
 
-vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             'enrl_ind', 
 							# 'acad_year',
@@ -795,25 +724,27 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							'spring_lec_count',
-							'spring_lab_count',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							'total_spring_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -855,6 +786,8 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'AICE',
 							'IB_AICE', 
 							'term_credit_hours',
+							# 'total_fall_units',
+							'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -921,7 +854,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -950,25 +883,27 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							'spring_lec_count',
-							'spring_lab_count',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							'total_spring_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1010,6 +945,8 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'AICE',
 							'IB_AICE', 
 							'term_credit_hours',
+							# 'total_fall_units',
+							'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1099,7 +1036,7 @@ vanco_current_outcome = vanco_testing_set[[
 
 #%%
 # Tri-Cities dataframes
-trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
@@ -1127,26 +1064,27 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
-						'fall_cum_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -1188,6 +1126,8 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'AICE',
                         'IB_AICE', 
                         'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -1254,7 +1194,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'unmet_need_ofr'
                         ]].dropna()
 
-trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             'enrl_ind', 
 							# 'acad_year',
@@ -1283,25 +1223,27 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							'spring_lec_count',
-							'spring_lab_count',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							'total_spring_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1343,6 +1285,8 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'AICE',
 							'IB_AICE', 
 							'term_credit_hours',
+							# 'total_fall_units',
+							'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1409,7 +1353,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -1438,25 +1382,27 @@ trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							'spring_lec_count',
-							'spring_lab_count',
+							# 'spring_lec_count',
+							# 'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							'total_spring_contact_hrs',
+							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1498,6 +1444,8 @@ trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							# 'AICE',
 							'IB_AICE', 
 							'term_credit_hours',
+							# 'total_fall_units',
+							'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1585,8 +1533,6 @@ trici_current_outcome = trici_testing_set[[
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
-print('Done\n')
-
 #%%
 # Detect and remove outliers
 print('\nDetect and remove outliers...')
@@ -1625,7 +1571,7 @@ pullm_x_outlier = pullm_outlier_prep.fit_transform(pullm_x_outlier)
 pullm_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_outlier)
 
 pullm_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_outlier_set.csv', encoding='utf-8', index=False)
+pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_outlier_set.csv', encoding='utf-8', index=False)
 
 pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
 pullm_training_set = pullm_training_set.drop(columns='mask')
@@ -1665,7 +1611,7 @@ vanco_x_outlier = vanco_outlier_prep.fit_transform(vanco_x_outlier)
 vanco_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_outlier)
 
 vanco_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_outlier_set.csv', encoding='utf-8', index=False)
+vanco_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_outlier_set.csv', encoding='utf-8', index=False)
 
 vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
 vanco_training_set = vanco_training_set.drop(columns='mask')
@@ -1705,7 +1651,7 @@ trici_x_outlier = trici_outlier_prep.fit_transform(trici_x_outlier)
 trici_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_outlier)
 
 trici_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_outlier_set.csv', encoding='utf-8', index=False)
+trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_outlier_set.csv', encoding='utf-8', index=False)
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
@@ -1743,25 +1689,27 @@ pullm_x_test = pullm_testing_set[[
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -1803,6 +1751,8 @@ pullm_x_test = pullm_testing_set[[
                         # 'AICE',
                         'IB_AICE', 
                         'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -1888,22 +1838,25 @@ pullm_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'avg_difficulty',
+						'fall_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
 						'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -1943,7 +1896,7 @@ pullm_tomek_index = pullm_under.sample_indices_
 pullm_training_set = pullm_training_set.reset_index(drop=True)
 
 pullm_tomek_set = pullm_training_set.drop(pullm_tomek_index)
-pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tomek_set.csv', encoding='utf-8', index=False)
+pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver undersample
@@ -1976,25 +1929,27 @@ vanco_x_test = vanco_testing_set[[
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2036,6 +1991,8 @@ vanco_x_test = vanco_testing_set[[
                         # 'AICE',
                         'IB_AICE', 
                         'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -2121,22 +2078,25 @@ vanco_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'avg_difficulty',
+						'fall_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
 						'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -2176,7 +2136,7 @@ vanco_tomek_index = vanco_under.sample_indices_
 vanco_training_set = vanco_training_set.reset_index(drop=True)
 
 vanco_tomek_set = vanco_training_set.drop(vanco_tomek_index)
-vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tomek_set.csv', encoding='utf-8', index=False)
+vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities undersample
@@ -2209,25 +2169,27 @@ trici_x_test = trici_testing_set[[
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2269,6 +2231,8 @@ trici_x_test = trici_testing_set[[
                         # 'AICE',
                         'IB_AICE', 
                         'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
@@ -2354,22 +2318,25 @@ trici_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'avg_difficulty',
+						'fall_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						'spring_lec_count',
-						'spring_lab_count',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						'total_spring_contact_hrs',
+						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
 						'term_credit_hours',
+						# 'total_fall_units',
+						'term_withdrawn_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -2409,9 +2376,7 @@ trici_tomek_index = trici_under.sample_indices_
 trici_training_set = trici_training_set.reset_index(drop=True)
 
 trici_tomek_set = trici_training_set.drop(trici_tomek_index)
-trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tomek_set.csv', encoding='utf-8', index=False)
-
-print('Done\n')
+trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model
@@ -2424,21 +2389,15 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + pell_eligibility_ind + honors_program_ind \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
-				+ business + comm + education + medicine + nursing + pharmacy + vet_med \
-				+ cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
-				+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
-                + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
                 + first_gen_flag \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
-				+ total_spring_contact_hrs \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + fall_cum_gpa \
-				+ remedial \
-				+ cum_adj_transfer_hours + term_credit_hours \
+            	+ transfer_gpa \
+                + remedial \
+				+ cum_adj_transfer_hours + term_withdrawn_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
@@ -2459,15 +2418,13 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + pell_eligibility_ind \
                 + first_gen_flag \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
-				+ total_spring_contact_hrs \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + fall_cum_gpa \
-				+ remedial \
-				+ cum_adj_transfer_hours + term_credit_hours \
+            	+ transfer_gpa \
+                + remedial \
+				+ cum_adj_transfer_hours + term_withdrawn_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
@@ -2488,15 +2445,13 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + pell_eligibility_ind \
                 + first_gen_flag \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
-				+ total_spring_contact_hrs \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_ind \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + fall_cum_gpa \
-				+ remedial \
-				+ cum_adj_transfer_hours + term_credit_hours \
+            	+ transfer_gpa \
+                + remedial \
+				+ cum_adj_transfer_hours + term_withdrawn_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
@@ -2753,7 +2708,7 @@ pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
-pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_pred_outcome.csv', encoding='utf-8', index=False)
+pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver predicted outcome
@@ -2765,7 +2720,7 @@ vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
 vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
-vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_pred_outcome.csv', encoding='utf-8', index=False)
+vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities predicted outcome
@@ -2777,7 +2732,7 @@ trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
-trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_pred_outcome.csv', encoding='utf-8', index=False)
+trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome
@@ -2803,7 +2758,7 @@ pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"first_gen_fla
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_aggregate_outcome.csv', encoding='utf-8', index=False)
+pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver aggregate outcome
@@ -2829,7 +2784,7 @@ vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"first_gen_fla
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_aggregate_outcome.csv', encoding='utf-8', index=False)
+vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities aggregate outcome
@@ -2855,7 +2810,7 @@ trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"first_gen_fla
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_aggregate_outcome.csv', encoding='utf-8', index=False)
+trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman current outcome
@@ -2883,15 +2838,15 @@ trici_current_outcome['model_id'] = 5
 
 #%%
 # Pullman to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv'):
-	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
-	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-else:
-	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', low_memory=False)
-	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_backup.csv', encoding='utf-8', index=False)
-	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
-	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
-	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv'):
+# 	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
+# 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+# else:
+# 	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', low_memory=False)
+# 	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_backup.csv', encoding='utf-8', index=False)
+# 	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
+# 	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
+# 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Vancouver to csv and to sql
