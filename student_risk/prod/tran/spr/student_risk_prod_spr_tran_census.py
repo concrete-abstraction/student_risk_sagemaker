@@ -1,14 +1,10 @@
 #%%
-from student_risk import config
-from student_risk import builder
-import datetime
 import joblib
 import numpy as np
 import pandas as pd
 import pathlib
 import pyodbc
 import os
-import saspy
 import sklearn
 import sqlalchemy
 import urllib
@@ -33,87 +29,6 @@ engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
-# Global variable intialization
-strm = None
-
-#%%
-# Census date check 
-if config.cen_flag == False:
-
-	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
-	now = datetime.datetime.now()
-
-	now_day = now.day
-	now_month = now.month
-	now_year = now.year
-
-	strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
-
-	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
-	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
-	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
-
-	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
-	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
-	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
-
-	if now_year < census_year or now_year > midterm_year:
-		raise config.DateError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
-
-	elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
-		raise config.DateError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
-
-	elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
-		raise config.DateError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
-
-	else:
-		print(f'{date.today()}: No census date exceptions, running from census.')
-
-#%%
-# Census snapshot check
-if config.cen_flag == True:
-
-	sas = saspy.SASsession()
-
-	sas.symput('strm', strm)
-
-	sas.submit("""
-	%let dsn = census;
-
-	libname &dsn. odbc dsn=&dsn. schema=dbo;
-
-	proc sql;
-		select distinct
-			max(case when snapshot = 'census' 	then 1
-				when snapshot = 'midterm' 		then 2
-				when snapshot = 'eot'			then 3
-												else 0
-												end) as snap_order
-			into: snap_check
-			separated by ''
-		from &dsn..class_registration
-		where acad_career = 'UGRD'
-			and strm = (select distinct
-							max(strm)
-						from &dsn..class_registration where acad_career = 'UGRD')
-	;quit;
-	""")
-
-	snap_check = sas.symget('snap_check')
-
-	sas.endsas()
-
-	if snap_check != 1:
-		raise config.DataError(f'{date.today()}: Census snapshot exception, attempting to run from precensus.')
-
-	else:
-		print(f'{date.today()}: No census snapshot exceptions, running from census.')
-
-#%%
-# SAS dataset builder
-builder.DatasetBuilder.build_census()
-
-#%%
 # Import pre-split data
 training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8', low_memory=False)
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
@@ -123,7 +38,7 @@ testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_s
 print('\nPrepare dataframes and preprocess data...')
 
 # Pullman dataframes
-pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
@@ -151,8 +66,8 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
-						'eot_term_gpa',
+                        'transfer_gpa',
+						'fall_cum_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         'avg_difficulty',
@@ -278,7 +193,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'unmet_need_ofr'
                         ]].dropna()
 
-pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             'enrl_ind', 
 							# 'acad_year',
@@ -307,7 +222,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'avg_difficulty',
@@ -433,7 +348,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -462,7 +377,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'avg_difficulty',
@@ -611,7 +526,7 @@ pullm_current_outcome = pullm_testing_set[[
 
 #%%
 # Vancouver dataframes
-vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
@@ -639,8 +554,8 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
-						'eot_term_gpa',
+                        'transfer_gpa',
+						'fall_cum_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         'avg_difficulty',
@@ -766,7 +681,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'unmet_need_ofr'
                         ]].dropna()
 
-vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             'enrl_ind', 
 							# 'acad_year',
@@ -795,7 +710,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'avg_difficulty',
@@ -921,7 +836,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
+vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -950,7 +865,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'avg_difficulty',
@@ -1099,7 +1014,7 @@ vanco_current_outcome = vanco_testing_set[[
 
 #%%
 # Tri-Cities dataframes
-trici_logit_df = training_set[training_set['adj_acad_prog_primary_campus'] == 'TRICI'][[
+trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
@@ -1127,8 +1042,8 @@ trici_logit_df = training_set[training_set['adj_acad_prog_primary_campus'] == 'T
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
-						'eot_term_gpa',
+                        'transfer_gpa',
+						'fall_cum_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         'avg_difficulty',
@@ -1254,7 +1169,7 @@ trici_logit_df = training_set[training_set['adj_acad_prog_primary_campus'] == 'T
                         'unmet_need_ofr'
                         ]].dropna()
 
-trici_training_set = training_set[training_set['adj_acad_prog_primary_campus'] == 'TRICI'][[
+trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             'enrl_ind', 
 							# 'acad_year',
@@ -1283,7 +1198,7 @@ trici_training_set = training_set[training_set['adj_acad_prog_primary_campus'] =
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'avg_difficulty',
@@ -1409,7 +1324,7 @@ trici_training_set = training_set[training_set['adj_acad_prog_primary_campus'] =
 							'unmet_need_ofr'
                             ]].dropna()
 
-trici_testing_set = testing_set[testing_set['adj_acad_prog_primary_campus'] == 'TRICI'][[
+trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -1438,7 +1353,7 @@ trici_testing_set = testing_set[testing_set['adj_acad_prog_primary_campus'] == '
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'avg_difficulty',
@@ -1743,7 +1658,7 @@ pullm_x_test = pullm_testing_set[[
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         'avg_difficulty',
@@ -1888,7 +1803,7 @@ pullm_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'avg_difficulty',
@@ -1976,7 +1891,7 @@ vanco_x_test = vanco_testing_set[[
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         'avg_difficulty',
@@ -2121,7 +2036,7 @@ vanco_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'avg_difficulty',
@@ -2209,7 +2124,7 @@ trici_x_test = trici_testing_set[[
                         # 'anywhere_STEM_Flag',
                         'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
+                        'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         'avg_difficulty',
@@ -2354,7 +2269,7 @@ trici_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'avg_difficulty',
@@ -2424,18 +2339,17 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + pell_eligibility_ind + honors_program_ind \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
-				+ business + comm + education + medicine + nursing + pharmacy + vet_med \
-				+ cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
-				+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
-                + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
                 + first_gen_flag \
-                + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
+                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + eot_term_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
+            	+ transfer_gpa + fall_cum_gpa \
+				+ remedial \
+				+ cum_adj_transfer_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
@@ -2453,15 +2367,19 @@ print('\nStandard logistic model for Vancouver...\n')
 vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + pell_eligibility_ind \
+                + pell_eligibility_ind + honors_program_ind \
+				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + first_gen_flag \
-                + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
+                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + eot_term_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
+            	+ transfer_gpa + fall_cum_gpa \
+				+ remedial \
+				+ cum_adj_transfer_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
@@ -2479,15 +2397,19 @@ print('\nStandard logistic model for Tri-Cities...\n')
 trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + pell_eligibility_ind \
+                + pell_eligibility_ind + honors_program_ind \
+				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + first_gen_flag \
-                + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
+                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + eot_term_gpa + remedial + cum_adj_transfer_hours + term_credit_hours \
+            	+ transfer_gpa + fall_cum_gpa \
+				+ remedial \
+				+ cum_adj_transfer_hours + term_credit_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
@@ -2874,15 +2796,15 @@ trici_current_outcome['model_id'] = 5
 
 #%%
 # Pullman to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv'):
-	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
-	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-else:
-	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', low_memory=False)
-	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_backup.csv', encoding='utf-8', index=False)
-	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
-	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
-	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv'):
+# 	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
+# 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+# else:
+# 	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', low_memory=False)
+# 	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_backup.csv', encoding='utf-8', index=False)
+# 	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
+# 	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
+# 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Vancouver to csv and to sql
