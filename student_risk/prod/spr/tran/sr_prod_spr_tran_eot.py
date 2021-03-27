@@ -23,15 +23,15 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
 # Database connection
-cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
-params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
-engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
-auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
+# cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
+# params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
+# engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
+# auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8')
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8', low_memory=False)
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
 
 #%%
 # Prepare dataframes
@@ -69,12 +69,12 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
@@ -85,6 +85,8 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -125,37 +127,39 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'IB',
                         # 'AICE',
                         'IB_AICE', 
-                        'term_credit_hours',
+                        # 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
                         # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
@@ -224,12 +228,12 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
@@ -240,6 +244,8 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -280,37 +286,39 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'IB',
 							# 'AICE',
 							'IB_AICE', 
-							'term_credit_hours',
+							# 'term_credit_hours',
+							# 'total_fall_units',
+							# 'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
-							'business',
-							'cahnrs_anml',
-							'cahnrs_envr',
-							'cahnrs_econ',
-							'cahnrext',
-							'cas_chem',
-							'cas_crim',
-							'cas_math',
-							'cas_psyc',
-							'cas_biol',
-							'cas_engl',
-							'cas_phys',
-							'cas',
-							'comm',
-							'education',
-							'medicine',
-							'nursing',
-							'pharmacy',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
 							# 'provost',
-							'vcea_bioe',
-							'vcea_cive',
-							'vcea_desn',
-							'vcea_eecs',
-							'vcea_mech',
-							'vcea',
-							'vet_med',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
 							# 'last_sch_proprietorship',
 							# 'sat_erws',
 							# 'sat_mss',
@@ -347,7 +355,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-pullm_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -379,12 +387,12 @@ pullm_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
@@ -395,6 +403,8 @@ pullm_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -435,37 +445,39 @@ pullm_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							# 'IB',
 							# 'AICE',
 							'IB_AICE', 
-							'term_credit_hours',
+							# 'term_credit_hours',
+							# 'total_fall_units',
+							# 'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
-							'business',
-							'cahnrs_anml',
-							'cahnrs_envr',
-							'cahnrs_econ',
-							'cahnrext',
-							'cas_chem',
-							'cas_crim',
-							'cas_math',
-							'cas_psyc',
-							'cas_biol',
-							'cas_engl',
-							'cas_phys',
-							'cas',
-							'comm',
-							'education',
-							'medicine',
-							'nursing',
-							'pharmacy',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
 							# 'provost',
-							'vcea_bioe',
-							'vcea_cive',
-							'vcea_desn',
-							'vcea_eecs',
-							'vcea_mech',
-							'vcea',
-							'vet_med',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
 							# 'last_sch_proprietorship',
 							# 'sat_erws',
 							# 'sat_mss',
@@ -502,7 +514,7 @@ pullm_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							'unmet_need_ofr'
                             ]].dropna()
 
-pullm_testing_set = testing_set.reset_index()
+pullm_testing_set = pullm_testing_set.reset_index()
 
 pullm_pred_outcome = pullm_testing_set[[ 
                             'emplid',
@@ -556,12 +568,12 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
@@ -572,6 +584,8 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -611,38 +625,40 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'CHS',
                         # 'IB',
                         # 'AICE',
-                        'IB_AICE', 
-                        'term_credit_hours',
+                        # 'IB_AICE', 
+                        # 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
                         # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
@@ -711,12 +727,12 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
@@ -727,6 +743,8 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -766,38 +784,40 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'CHS',
 							# 'IB',
 							# 'AICE',
-							'IB_AICE', 
-							'term_credit_hours',
+							# 'IB_AICE', 
+							# 'term_credit_hours',
+							# 'total_fall_units',
+							# 'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
-							'business',
-							'cahnrs_anml',
-							'cahnrs_envr',
-							'cahnrs_econ',
-							'cahnrext',
-							'cas_chem',
-							'cas_crim',
-							'cas_math',
-							'cas_psyc',
-							'cas_biol',
-							'cas_engl',
-							'cas_phys',
-							'cas',
-							'comm',
-							'education',
-							'medicine',
-							'nursing',
-							'pharmacy',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
 							# 'provost',
-							'vcea_bioe',
-							'vcea_cive',
-							'vcea_desn',
-							'vcea_eecs',
-							'vcea_mech',
-							'vcea',
-							'vet_med',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
 							# 'last_sch_proprietorship',
 							# 'sat_erws',
 							# 'sat_mss',
@@ -834,7 +854,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-vanco_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -866,12 +886,12 @@ vanco_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
@@ -882,6 +902,8 @@ vanco_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -921,38 +943,40 @@ vanco_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							'CHS',
 							# 'IB',
 							# 'AICE',
-							'IB_AICE', 
-							'term_credit_hours',
+							# 'IB_AICE', 
+							# 'term_credit_hours',
+							# 'total_fall_units',
+							# 'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
-							'business',
-							'cahnrs_anml',
-							'cahnrs_envr',
-							'cahnrs_econ',
-							'cahnrext',
-							'cas_chem',
-							'cas_crim',
-							'cas_math',
-							'cas_psyc',
-							'cas_biol',
-							'cas_engl',
-							'cas_phys',
-							'cas',
-							'comm',
-							'education',
-							'medicine',
-							'nursing',
-							'pharmacy',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
 							# 'provost',
-							'vcea_bioe',
-							'vcea_cive',
-							'vcea_desn',
-							'vcea_eecs',
-							'vcea_mech',
-							'vcea',
-							'vet_med',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
 							# 'last_sch_proprietorship',
 							# 'sat_erws',
 							# 'sat_mss',
@@ -989,7 +1013,7 @@ vanco_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							'unmet_need_ofr'
                             ]].dropna()
 
-vanco_testing_set = testing_set.reset_index()
+vanco_testing_set = vanco_testing_set.reset_index()
 
 vanco_pred_outcome = vanco_testing_set[[ 
                             'emplid',
@@ -1043,12 +1067,12 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
@@ -1059,6 +1083,8 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -1098,38 +1124,40 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'CHS',
                         # 'IB',
                         # 'AICE',
-                        'IB_AICE', 
-                        'term_credit_hours',
+                        # 'IB_AICE', 
+                        # 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
                         # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
@@ -1198,12 +1226,12 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
@@ -1214,6 +1242,8 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1253,38 +1283,40 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'CHS',
 							# 'IB',
 							# 'AICE',
-							'IB_AICE', 
-							'term_credit_hours',
+							# 'IB_AICE', 
+							# 'term_credit_hours',
+							# 'total_fall_units',
+							# 'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
-							'business',
-							'cahnrs_anml',
-							'cahnrs_envr',
-							'cahnrs_econ',
-							'cahnrext',
-							'cas_chem',
-							'cas_crim',
-							'cas_math',
-							'cas_psyc',
-							'cas_biol',
-							'cas_engl',
-							'cas_phys',
-							'cas',
-							'comm',
-							'education',
-							'medicine',
-							'nursing',
-							'pharmacy',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
 							# 'provost',
-							'vcea_bioe',
-							'vcea_cive',
-							'vcea_desn',
-							'vcea_eecs',
-							'vcea_mech',
-							'vcea',
-							'vet_med',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
 							# 'last_sch_proprietorship',
 							# 'sat_erws',
 							# 'sat_mss',
@@ -1321,7 +1353,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -1353,12 +1385,12 @@ trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							'transfer_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'avg_difficulty',
-							'avg_pct_withdrawn',
-							# 'avg_pct_CDFW',
-							'avg_pct_CDF',
-							# 'avg_pct_DFW',
-							# 'avg_pct_DF',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
@@ -1369,6 +1401,8 @@ trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
 							# 'total_spring_contact_hrs',
+							'fall_midterm_gpa_avg',
+							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1408,38 +1442,40 @@ trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							'CHS',
 							# 'IB',
 							# 'AICE',
-							'IB_AICE', 
-							'term_credit_hours',
+							# 'IB_AICE', 
+							# 'term_credit_hours',
+							# 'total_fall_units',
+							# 'term_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
-							'business',
-							'cahnrs_anml',
-							'cahnrs_envr',
-							'cahnrs_econ',
-							'cahnrext',
-							'cas_chem',
-							'cas_crim',
-							'cas_math',
-							'cas_psyc',
-							'cas_biol',
-							'cas_engl',
-							'cas_phys',
-							'cas',
-							'comm',
-							'education',
-							'medicine',
-							'nursing',
-							'pharmacy',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
 							# 'provost',
-							'vcea_bioe',
-							'vcea_cive',
-							'vcea_desn',
-							'vcea_eecs',
-							'vcea_mech',
-							'vcea',
-							'vet_med',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
 							# 'last_sch_proprietorship',
 							# 'sat_erws',
 							# 'sat_mss',
@@ -1476,7 +1512,7 @@ trici_testing_set = testing_set[(training_set['adj_acad_prog_primary_campus'] ==
 							'unmet_need_ofr'
                             ]].dropna()
 
-trici_testing_set = testing_set.reset_index()
+trici_testing_set = trici_testing_set.reset_index()
 
 trici_pred_outcome = trici_testing_set[[ 
                             'emplid',
@@ -1535,7 +1571,7 @@ pullm_x_outlier = pullm_outlier_prep.fit_transform(pullm_x_outlier)
 pullm_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_outlier)
 
 pullm_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_outlier_set.csv', encoding='utf-8', index=False)
+pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_outlier_set.csv', encoding='utf-8', index=False)
 
 pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
 pullm_training_set = pullm_training_set.drop(columns='mask')
@@ -1575,13 +1611,13 @@ vanco_x_outlier = vanco_outlier_prep.fit_transform(vanco_x_outlier)
 vanco_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_outlier)
 
 vanco_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_outlier_set.csv', encoding='utf-8', index=False)
+vanco_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_outlier_set.csv', encoding='utf-8', index=False)
 
 vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
 vanco_training_set = vanco_training_set.drop(columns='mask')
 
 #%%
-# Pullman outliers
+# Tri-Cities outliers
 trici_x_outlier = trici_training_set.drop(columns='enrl_ind')
 
 trici_outlier_prep = make_column_transformer(
@@ -1615,7 +1651,7 @@ trici_x_outlier = trici_outlier_prep.fit_transform(trici_x_outlier)
 trici_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_outlier)
 
 trici_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_outlier_set.csv', encoding='utf-8', index=False)
+trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_outlier_set.csv', encoding='utf-8', index=False)
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
@@ -1656,12 +1692,12 @@ pullm_x_test = pullm_testing_set[[
                         'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
@@ -1672,6 +1708,8 @@ pullm_x_test = pullm_testing_set[[
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -1712,37 +1750,39 @@ pullm_x_test = pullm_testing_set[[
                         # 'IB',
                         # 'AICE',
                         'IB_AICE', 
-                        'term_credit_hours',
+                        # 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
                         # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
@@ -1801,7 +1841,7 @@ pullm_tomek_prep = make_column_transformer(
 						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'avg_difficulty',
+						'fall_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
@@ -1812,8 +1852,11 @@ pullm_tomek_prep = make_column_transformer(
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
-						'term_credit_hours',
+						# 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -1853,10 +1896,10 @@ pullm_tomek_index = pullm_under.sample_indices_
 pullm_training_set = pullm_training_set.reset_index(drop=True)
 
 pullm_tomek_set = pullm_training_set.drop(pullm_tomek_index)
-pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tomek_set.csv', encoding='utf-8', index=False)
+pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
-# Pullman undersample
+# Vancouver undersample
 vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_x_test = vanco_testing_set[[
@@ -1889,12 +1932,12 @@ vanco_x_test = vanco_testing_set[[
                         'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
@@ -1905,6 +1948,8 @@ vanco_x_test = vanco_testing_set[[
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -1944,38 +1989,40 @@ vanco_x_test = vanco_testing_set[[
                         'CHS',
                         # 'IB',
                         # 'AICE',
-                        'IB_AICE', 
-                        'term_credit_hours',
+                        # 'IB_AICE', 
+                        # 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
                         # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
@@ -2034,7 +2081,7 @@ vanco_tomek_prep = make_column_transformer(
 						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'avg_difficulty',
+						'fall_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
@@ -2045,8 +2092,11 @@ vanco_tomek_prep = make_column_transformer(
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
-						'term_credit_hours',
+						# 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -2086,10 +2136,10 @@ vanco_tomek_index = vanco_under.sample_indices_
 vanco_training_set = vanco_training_set.reset_index(drop=True)
 
 vanco_tomek_set = vanco_training_set.drop(vanco_tomek_index)
-vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tomek_set.csv', encoding='utf-8', index=False)
+vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
-# Pullman undersample
+# Tri-Cities undersample
 trici_x_train = trici_training_set.drop(columns=['enrl_ind','emplid'])
 
 trici_x_test = trici_testing_set[[
@@ -2122,12 +2172,12 @@ trici_x_test = trici_testing_set[[
                         'transfer_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
-                        'avg_difficulty',
-                        'avg_pct_withdrawn',
-                        # 'avg_pct_CDFW',
-                        'avg_pct_CDF',
-                        # 'avg_pct_DFW',
-                        # 'avg_pct_DF',
+                        'fall_avg_difficulty',
+                        'fall_avg_pct_withdrawn',
+                        # 'fall_avg_pct_CDFW',
+                        'fall_avg_pct_CDF',
+                        # 'fall_avg_pct_DFW',
+                        # 'fall_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
@@ -2138,6 +2188,8 @@ trici_x_test = trici_testing_set[[
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
                         'resident',
                         # 'father_wsu_flag',
@@ -2177,38 +2229,40 @@ trici_x_test = trici_testing_set[[
                         'CHS',
                         # 'IB',
                         # 'AICE',
-                        'IB_AICE', 
-                        'term_credit_hours',
+                        # 'IB_AICE', 
+                        # 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
                         # 'athlete',
                         'remedial',
                         # 'ACAD_PLAN',
                         # 'plan_owner_org',
-                        'business',
-                        'cahnrs_anml',
-                        'cahnrs_envr',
-                        'cahnrs_econ',
-                        'cahnrext',
-                        'cas_chem',
-                        'cas_crim',
-                        'cas_math',
-                        'cas_psyc',
-                        'cas_biol',
-                        'cas_engl',
-                        'cas_phys',
-                        'cas',
-                        'comm',
-                        'education',
-                        'medicine',
-                        'nursing',
-                        'pharmacy',
+                        # 'business',
+                        # 'cahnrs_anml',
+                        # 'cahnrs_envr',
+                        # 'cahnrs_econ',
+                        # 'cahnrext',
+                        # 'cas_chem',
+                        # 'cas_crim',
+                        # 'cas_math',
+                        # 'cas_psyc',
+                        # 'cas_biol',
+                        # 'cas_engl',
+                        # 'cas_phys',
+                        # 'cas',
+                        # 'comm',
+                        # 'education',
+                        # 'medicine',
+                        # 'nursing',
+                        # 'pharmacy',
                         # 'provost',
-                        'vcea_bioe',
-                        'vcea_cive',
-                        'vcea_desn',
-                        'vcea_eecs',
-                        'vcea_mech',
-                        'vcea',
-                        'vet_med',
+                        # 'vcea_bioe',
+                        # 'vcea_cive',
+                        # 'vcea_desn',
+                        # 'vcea_eecs',
+                        # 'vcea_mech',
+                        # 'vcea',
+                        # 'vet_med',
                         # 'last_sch_proprietorship',
                         # 'sat_erws',
                         # 'sat_mss',
@@ -2267,7 +2321,7 @@ trici_tomek_prep = make_column_transformer(
 						'transfer_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'avg_difficulty',
+						'fall_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
@@ -2278,8 +2332,11 @@ trici_tomek_prep = make_column_transformer(
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
 						# 'total_spring_contact_hrs',
+						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
-						'term_credit_hours',
+						# 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -2319,7 +2376,7 @@ trici_tomek_index = trici_under.sample_indices_
 trici_training_set = trici_training_set.reset_index(drop=True)
 
 trici_tomek_set = trici_training_set.drop(trici_tomek_index)
-trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tomek_set.csv', encoding='utf-8', index=False)
+trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model
@@ -2333,13 +2390,14 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + pell_eligibility_ind + honors_program_ind \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + first_gen_flag \
-                + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
+                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ total_fall_contact_hrs \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_ind \
                 + resident + gini_indx + median_inc \
             	+ transfer_gpa \
                 + remedial \
-                + cum_adj_transfer_hours + term_credit_hours \
+				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
@@ -2358,14 +2416,16 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + pell_eligibility_ind \
+				+ AD_DTA + AD_AST + AP + RS + CHS \
                 + first_gen_flag \
-                + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
+                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ total_fall_contact_hrs \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_ind \
                 + resident + gini_indx + median_inc \
             	+ transfer_gpa \
                 + remedial \
-                + cum_adj_transfer_hours + term_credit_hours \
+				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
@@ -2384,14 +2444,16 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + pell_eligibility_ind \
+				+ AD_DTA + AD_AST + AP + RS + CHS \
                 + first_gen_flag \
-                + avg_difficulty + avg_pct_CDF + avg_pct_withdrawn \
+                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ total_fall_contact_hrs \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_ind \
                 + resident + gini_indx + median_inc \
             	+ transfer_gpa \
                 + remedial \
-                + cum_adj_transfer_hours + term_credit_hours \
+				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr \
 				+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
@@ -2648,7 +2710,7 @@ pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
-pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_pred_outcome.csv', encoding='utf-8', index=False)
+pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver predicted outcome
@@ -2660,7 +2722,7 @@ vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
 vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
-vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_pred_outcome.csv', encoding='utf-8', index=False)
+vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities predicted outcome
@@ -2672,7 +2734,7 @@ trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
-trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_pred_outcome.csv', encoding='utf-8', index=False)
+trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome
@@ -2698,7 +2760,7 @@ pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"first_gen_fla
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_aggregate_outcome.csv', encoding='utf-8', index=False)
+pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver aggregate outcome
@@ -2724,7 +2786,7 @@ vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"first_gen_fla
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_aggregate_outcome.csv', encoding='utf-8', index=False)
+vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities aggregate outcome
@@ -2750,7 +2812,7 @@ trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"first_gen_fla
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_aggregate_outcome.csv', encoding='utf-8', index=False)
+trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman current outcome
@@ -2816,14 +2878,14 @@ trici_current_outcome['model_id'] = 5
 # Output model
 
 # Pullman model output
-joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_model_v{sklearn.__version__}.pkl')
+joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_tran_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver model output
-joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_model_v{sklearn.__version__}.pkl')
+joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_tran_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities model output
-joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_model_v{sklearn.__version__}.pkl')
+joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_tran_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')

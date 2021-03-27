@@ -2,7 +2,11 @@
 from student_risk import config
 import saspy
 import sys
+import time
 from datetime import date
+
+#%%
+start = time.perf_counter()
 
 #%%
 sas = saspy.SASsession()
@@ -79,85 +83,102 @@ if __name__ == '__main__':
     if term_type == 'SPR':
 
         try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_midterm.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_mid.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_mid.py').read())
         except config.DateError as mid_error:
             print(mid_error)
             config.mid_flag = True
-        else:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_midterm.py').read())
-
+        except KeyError as key_error:
+            print(key_error)
+            
             try: 
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_midterm.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_mid.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_mid.py').read())
             except config.DataError as mid_snap_error:
                 print(mid_snap_error)
-            else:
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_midterm.py').read())
+            except KeyError as key_error:
+                print(key_error)
 
                 try:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_census.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_cen.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_cen.py').read())
                 except config.DateError as cen_error:
                     print(cen_error)
                     config.cen_flag = True
-                else:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_census.py').read())
-            
+                except KeyError as key_error:
+                    print(key_error)
+                    
                     try: 
-                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_census.py').read())
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_cen.py').read())
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_cen.py').read())
                     except config.DataError as cen_snap_error:
                         print(cen_snap_error)
-                    else:
-                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_census.py').read())
-
+            
                         try:
-                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_eot.py').read())
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_eot.py').read())
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_eot.py').read())
                         except config.DateError as pre_error:
                             print(pre_error)
                             config.pre_flag = True
-                        else:
-                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_eot.py').read())
+                        except KeyError as key_error:
+                            print(key_error)
 
                             try: 
-                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\spr\\sr_prod_spr_frsh_eot.py').read())
+                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_eot.py').read())
+                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_eot.py').read())
                             except config.DataError as pre_snap_error:
                                 print(pre_snap_error)
-                            else:
-                                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\spr\\sr_prod_spr_tran_eot.py').read())
+                            except KeyError as key_error:
+                                print(key_error)
+        
+        else:
+            stop = time.perf_counter()
+            print(f'Completed in {(stop - start)/60:.2f} minutes\n')
 
     if term_type != 'SPR':
 
         try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_midterm.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_mid.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_mid.py').read())
         except config.DateError as mid_error:
             print(mid_error)
             config.mid_flag = True
-        else:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_midterm.py').read())
+        except KeyError as key_error:
+            print(key_error)
 
             try: 
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_midterm.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_mid.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_mid.py').read())
             except config.DataError as mid_snap_error:
                 print(mid_snap_error)
-            else:
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_midterm.py').read())
+            except KeyError as key_error:
+                print(key_error)
 
                 try:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_census.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_cen.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_cen.py').read())
                 except config.DateError as cen_error:
                     print(cen_error)
                     config.cen_flag = True
-                else:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_census.py').read())
+                except KeyError as key_error:
+                    print(key_error)
 
                     try: 
-                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_census.py').read())
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_cen.py').read())
+                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_cen.py').read())
                     except config.DataError as cen_snap_error:
                         print(cen_snap_error)
-                    else:
-                        exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_census.py').read())
+                    except KeyError as key_error:
+                        print(key_error)
 
                         try:
-                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\frsh\\fal\\sr_prod_fal_frsh_admissions.py').read())
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_adm.py').read())
+                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_adm.py').read())
                         except config.DateError as adm_error:
                             print(adm_error)
-                        else:
-                            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\tran\\fal\\sr_prod_fal_tran_admissions.py').read())
+                        except KeyError as key_error:
+                            print(key_error)
+        
+        else:
+            stop = time.perf_counter()
+            print(f'Completed in {(stop - start)/60:.2f} minutes\n')

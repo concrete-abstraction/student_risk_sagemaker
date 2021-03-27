@@ -68,7 +68,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -96,7 +96,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_gpa_avg',
 						# 'fall_midterm_gpa_avg_ind',
 						# 'spring_midterm_gpa_avg',
-						'spring_midterm_gpa_avg_ind',
+						# 'spring_midterm_gpa_avg_ind',
 						'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -237,7 +237,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'fall_cum_gpa',
-							'spring_midterm_gpa_change',
+							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -265,7 +265,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_gpa_avg',
 							# 'fall_midterm_gpa_avg_ind',
 							# 'spring_midterm_gpa_avg',
-							'spring_midterm_gpa_avg_ind',
+							# 'spring_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -406,7 +406,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'fall_cum_gpa',
-							'spring_midterm_gpa_change',
+							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -434,7 +434,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_gpa_avg',
 							# 'fall_midterm_gpa_avg_ind',
 							# 'spring_midterm_gpa_avg',
-							'spring_midterm_gpa_avg_ind',
+							# 'spring_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -544,10 +544,10 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'unmet_need_ofr'
                             ]].dropna()
 
-pullm_testing_set = pullm_testing_set.reset_index(drop=True)
+pullm_testing_set = pullm_testing_set.reset_index()
 
 pullm_pred_outcome = pullm_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -561,7 +561,7 @@ pullm_aggregate_outcome = pullm_testing_set[[
                             ]].copy(deep=True)
 
 pullm_current_outcome = pullm_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -597,7 +597,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -625,7 +625,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_gpa_avg',
 						# 'fall_midterm_gpa_avg_ind',
 						# 'spring_midterm_gpa_avg',
-						'spring_midterm_gpa_avg_ind',
+						# 'spring_midterm_gpa_avg_ind',
 						'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -766,7 +766,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'fall_cum_gpa',
-							'spring_midterm_gpa_change',
+							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -794,7 +794,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_gpa_avg',
 							# 'fall_midterm_gpa_avg_ind',
 							# 'spring_midterm_gpa_avg',
-							'spring_midterm_gpa_avg_ind',
+							# 'spring_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -935,7 +935,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'fall_cum_gpa',
-							'spring_midterm_gpa_change',
+							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -963,7 +963,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_gpa_avg',
 							# 'fall_midterm_gpa_avg_ind',
 							# 'spring_midterm_gpa_avg',
-							'spring_midterm_gpa_avg_ind',
+							# 'spring_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1073,10 +1073,10 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'unmet_need_ofr'
                             ]].dropna()
 
-vanco_testing_set = vanco_testing_set.reset_index(drop=True)
+vanco_testing_set = vanco_testing_set.reset_index()
 
 vanco_pred_outcome = vanco_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -1090,7 +1090,7 @@ vanco_aggregate_outcome = vanco_testing_set[[
                             ]].copy(deep=True)
 
 vanco_current_outcome = vanco_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -1126,7 +1126,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -1154,7 +1154,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_gpa_avg',
 						# 'fall_midterm_gpa_avg_ind',
 						# 'spring_midterm_gpa_avg',
-						'spring_midterm_gpa_avg_ind',
+						# 'spring_midterm_gpa_avg_ind',
 						'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -1295,7 +1295,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'fall_cum_gpa',
-							'spring_midterm_gpa_change',
+							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1323,7 +1323,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_gpa_avg',
 							# 'fall_midterm_gpa_avg_ind',
 							# 'spring_midterm_gpa_avg',
-							'spring_midterm_gpa_avg_ind',
+							# 'spring_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1464,7 +1464,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'fall_cum_gpa',
-							'spring_midterm_gpa_change',
+							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1492,7 +1492,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_gpa_avg',
 							# 'fall_midterm_gpa_avg_ind',
 							# 'spring_midterm_gpa_avg',
-							'spring_midterm_gpa_avg_ind',
+							# 'spring_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1602,10 +1602,10 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'unmet_need_ofr'
                             ]].dropna()
 
-trici_testing_set = trici_testing_set.reset_index(drop=True)
+trici_testing_set = trici_testing_set.reset_index()
 
 trici_pred_outcome = trici_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -1619,9 +1619,11 @@ trici_aggregate_outcome = trici_testing_set[[
                             ]].copy(deep=True)
 
 trici_current_outcome = trici_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
+
+print('Done\n')
 
 #%%
 # Detect and remove outliers
@@ -1753,7 +1755,7 @@ trici_training_set = trici_training_set.drop(columns='mask')
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_x_test = pullm_testing_set[[
-                    	# 'acad_year',
+                        # 'acad_year',
 						# 'age_group', 
 						# 'age',
 						'male',
@@ -1781,7 +1783,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -1809,7 +1811,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'fall_midterm_gpa_avg',
 						# 'fall_midterm_gpa_avg_ind',
 						# 'spring_midterm_gpa_avg',
-						'spring_midterm_gpa_avg_ind',
+						# 'spring_midterm_gpa_avg_ind',
 						'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -1940,7 +1942,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'term_credit_hours',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2035,7 +2037,7 @@ vanco_x_test = vanco_testing_set[[
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2063,7 +2065,7 @@ vanco_x_test = vanco_testing_set[[
 						# 'fall_midterm_gpa_avg',
 						# 'fall_midterm_gpa_avg_ind',
 						# 'spring_midterm_gpa_avg',
-						'spring_midterm_gpa_avg_ind',
+						# 'spring_midterm_gpa_avg_ind',
 						'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -2194,7 +2196,7 @@ vanco_tomek_prep = make_column_transformer(
 						# 'term_credit_hours',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2289,7 +2291,7 @@ trici_x_test = trici_testing_set[[
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2317,7 +2319,7 @@ trici_x_test = trici_testing_set[[
 						# 'fall_midterm_gpa_avg',
 						# 'fall_midterm_gpa_avg_ind',
 						# 'spring_midterm_gpa_avg',
-						'spring_midterm_gpa_avg_ind',
+						# 'spring_midterm_gpa_avg_ind',
 						'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -2448,7 +2450,7 @@ trici_tomek_prep = make_column_transformer(
 						# 'term_credit_hours',
 						'transfer_gpa',
 						'fall_cum_gpa',
-						'spring_midterm_gpa_change',
+						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2510,6 +2512,8 @@ trici_training_set = trici_training_set.reset_index(drop=True)
 trici_tomek_set = trici_training_set.drop(trici_tomek_index)
 trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_set.csv', encoding='utf-8', index=False)
 
+print('Done\n')
+
 #%%
 # Standard logistic model
 
@@ -2530,7 +2534,6 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
             	+ transfer_gpa + fall_cum_gpa \
-				+ spring_midterm_gpa_change + spring_midterm_gpa_avg_ind \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -2561,7 +2564,6 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
             	+ transfer_gpa + fall_cum_gpa \
-				+ spring_midterm_gpa_change + spring_midterm_gpa_avg_ind \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -2592,7 +2594,6 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
             	+ transfer_gpa + fall_cum_gpa \
-				+ spring_midterm_gpa_change + spring_midterm_gpa_avg_ind \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -2961,7 +2962,7 @@ pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).st
 pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_vcf_pred_probs).round(4)
 
 pullm_current_outcome['date'] = date.today()
-pullm_current_outcome['model_id'] = 6
+pullm_current_outcome['model_id'] = 5
 
 #%%
 # Vancouver current outcome
@@ -2969,7 +2970,7 @@ vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).st
 vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_vcf_pred_probs).round(4)
 
 vanco_current_outcome['date'] = date.today()
-vanco_current_outcome['model_id'] = 6
+vanco_current_outcome['model_id'] = 5
 
 #%%
 # Tri-Cities current outcome
@@ -2977,7 +2978,7 @@ trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).st
 trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_vcf_pred_probs).round(4)
 
 trici_current_outcome['date'] = date.today()
-trici_current_outcome['model_id'] = 6
+trici_current_outcome['model_id'] = 5
 
 #%%
 # Pullman to csv and to sql
@@ -3019,14 +3020,14 @@ trici_current_outcome['model_id'] = 6
 # Output model
 
 # Pullman model output
-joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_model_v{sklearn.__version__}.pkl')
+joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_tran_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver model output
-joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_model_v{sklearn.__version__}.pkl')
+joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_tran_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities model output
-joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_model_v{sklearn.__version__}.pkl')
+joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_tran_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')

@@ -1669,7 +1669,7 @@ class DatasetBuilder:
 		HTML(sas_log['LOG'])
 
 		stop = time.perf_counter()
-		print(f'Done in {stop - start:.2f} seconds\n')
+		print(f'Done in {(stop - start)/60:.2f} minutes\n')
 
 		# Prepare data
 		print('Prepare data...')
@@ -4363,7 +4363,7 @@ class DatasetBuilder:
 		HTML(sas_log['LOG'])
 
 		stop = time.perf_counter()
-		print(f'Done in {stop - start:.2f} seconds\n')
+		print(f'Done in {(stop - start)/60:.2f} minutes\n')
 
 		# Prepare data
 		print('Prepare data...')
