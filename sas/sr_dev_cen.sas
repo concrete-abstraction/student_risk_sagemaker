@@ -757,94 +757,67 @@ proc sql;
 			coalesce(calculated fall_lab_units, 0) + coalesce(calculated spring_lab_units, 0) as total_lab_units,
 			coalesce(calculated fall_lec_units, 0) + coalesce(calculated fall_lab_units, 0) as total_fall_units,
 			coalesce(calculated spring_lec_units, 0) + coalesce(calculated spring_lab_units, 0) as total_spring_units
-		from &dsn..class_registration_vw as a
+		from class_registration_&cohort_year. as a
 		left join (select distinct emplid, 
 						class_nbr
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '7'
+					from class_registration_&cohort_year.
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LEC') as b
 			on a.emplid = b.emplid
 				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '7'
+					from class_registration_&cohort_year.
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LAB') as c
 			on a.emplid = c.emplid
 				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '3'
+					from class_registration_&cohort_year.
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LEC') as d
 			on a.emplid = d.emplid
 				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '3'
+					from class_registration_&cohort_year.
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LAB') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '7'
+					from class_registration_&cohort_year.
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LEC') as f
 			on a.emplid = f.emplid
 				and a.class_nbr = f.class_nbr
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '7'
+					from class_registration_&cohort_year.
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LAB') as g
 			on a.emplid = g.emplid
 				and a.class_nbr = g.class_nbr
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '3'
+					from class_registration_&cohort_year.
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LEC') as h
 			on a.emplid = h.emplid
 				and a.class_nbr = h.class_nbr
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from &dsn..class_registration_vw
-					where snapshot = 'eot'
-						and full_acad_year = "&cohort_year."
-						and enrl_ind = 1
-						and substr(strm,4,1) = '3'
+					from class_registration_&cohort_year.
+					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LAB') as i
 			on a.emplid = i.emplid
 				and a.class_nbr = i.class_nbr
-		where a.snapshot = 'census'
-			and a.full_acad_year = "&cohort_year."
-			and a.enrl_ind = 1
 		group by a.emplid
 	;quit;
 	
@@ -868,11 +841,11 @@ proc sql;
 		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.ssr_component = b.ssr_component
-				and substr(a.strm,4,1) = '7'
+				and a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 		left join class_difficulty_&cohort_year. as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.ssr_component = c.ssr_component
-				and substr(a.strm,4,1) = '3'
+				and a.strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 		group by a.emplid
 	;quit;
 	
@@ -2151,11 +2124,11 @@ proc sql;
 		left join class_difficulty_&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.ssr_component = b.ssr_component
-				and substr(a.strm,4,1) = '7'
+				and a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 		left join class_difficulty_&cohort_year. as c
 			on a.subject_catalog_nbr = c.subject_catalog_nbr
 				and a.ssr_component = c.ssr_component
-				and substr(a.strm,4,1) = '3'
+				and a.strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 		group by a.emplid
 	;quit;
 

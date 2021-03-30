@@ -537,7 +537,7 @@ pullm_current_outcome = pullm_testing_set[[
 
 #%%
 # Vancouver dataframes
-vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
@@ -695,7 +695,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'unmet_need_ofr'
                         ]].dropna()
 
-vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             'enrl_ind', 
                         	# 'acad_year',
@@ -854,7 +854,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
+vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							'enrl_ind',
                             # 'acad_year',
@@ -1036,7 +1036,7 @@ vanco_current_outcome = vanco_testing_set[[
 
 #%%
 # Tri-Cities dataframes
-trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                         'enrl_ind', 
                         # 'acad_year',
                         # 'age_group', 
@@ -1194,7 +1194,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'unmet_need_ofr'
                         ]].dropna()
 
-trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             'enrl_ind', 
                         	# 'acad_year',
@@ -1353,7 +1353,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
+trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
 							'enrl_ind',
                             # 'acad_year',

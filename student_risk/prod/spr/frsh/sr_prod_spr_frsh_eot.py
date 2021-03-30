@@ -152,16 +152,22 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'fall_avg_pct_CDF',
                         # 'fall_avg_pct_DFW',
                         # 'fall_avg_pct_DF',
+						'spring_avg_difficulty',
+                        'spring_avg_pct_withdrawn',
+                        # 'spring_avg_pct_CDFW',
+                        'spring_avg_pct_CDF',
+                        # 'spring_avg_pct_DFW',
+                        # 'spring_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
@@ -311,16 +317,22 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
+							'spring_avg_difficulty',
+							'spring_avg_pct_withdrawn',
+							# 'spring_avg_pct_CDFW',
+							'spring_avg_pct_CDF',
+							# 'spring_avg_pct_DFW',
+							# 'spring_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
+							'spring_lec_count',
+							'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
+							'total_spring_contact_hrs',
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
@@ -470,16 +482,22 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
+							'spring_avg_difficulty',
+							'spring_avg_pct_withdrawn',
+							# 'spring_avg_pct_CDFW',
+							'spring_avg_pct_CDF',
+							# 'spring_avg_pct_DFW',
+							# 'spring_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
+							'spring_lec_count',
+							'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
+							'total_spring_contact_hrs',
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
@@ -651,16 +669,22 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'fall_avg_pct_CDF',
                         # 'fall_avg_pct_DFW',
                         # 'fall_avg_pct_DF',
+						'spring_avg_difficulty',
+                        'spring_avg_pct_withdrawn',
+                        # 'spring_avg_pct_CDFW',
+                        'spring_avg_pct_CDF',
+                        # 'spring_avg_pct_DFW',
+                        # 'spring_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
@@ -810,16 +834,22 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
+							'spring_avg_difficulty',
+							'spring_avg_pct_withdrawn',
+							# 'spring_avg_pct_CDFW',
+							'spring_avg_pct_CDF',
+							# 'spring_avg_pct_DFW',
+							# 'spring_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
+							'spring_lec_count',
+							'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
+							'total_spring_contact_hrs',
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
@@ -969,16 +999,22 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
+							'spring_avg_difficulty',
+							'spring_avg_pct_withdrawn',
+							# 'spring_avg_pct_CDFW',
+							'spring_avg_pct_CDF',
+							# 'spring_avg_pct_DFW',
+							# 'spring_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
+							'spring_lec_count',
+							'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
+							'total_spring_contact_hrs',
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
@@ -1150,16 +1186,22 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'fall_avg_pct_CDF',
                         # 'fall_avg_pct_DFW',
                         # 'fall_avg_pct_DF',
+						'spring_avg_difficulty',
+                        'spring_avg_pct_withdrawn',
+                        # 'spring_avg_pct_CDFW',
+                        'spring_avg_pct_CDF',
+                        # 'spring_avg_pct_DFW',
+                        # 'spring_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
@@ -1309,16 +1351,22 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
+							'spring_avg_difficulty',
+							'spring_avg_pct_withdrawn',
+							# 'spring_avg_pct_CDFW',
+							'spring_avg_pct_CDF',
+							# 'spring_avg_pct_DFW',
+							# 'spring_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
+							'spring_lec_count',
+							'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
+							'total_spring_contact_hrs',
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
@@ -1468,16 +1516,22 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
+							'spring_avg_difficulty',
+							'spring_avg_pct_withdrawn',
+							# 'spring_avg_pct_CDFW',
+							'spring_avg_pct_CDF',
+							# 'spring_avg_pct_DFW',
+							# 'spring_avg_pct_DF',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
+							'spring_lec_count',
+							'spring_lab_count',
 							# 'spring_lec_contact_hrs',
 							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
+							'total_spring_contact_hrs',
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_ind',
 							'cum_adj_transfer_hours',
@@ -1775,16 +1829,22 @@ pullm_x_test = pullm_testing_set[[
                         'fall_avg_pct_CDF',
                         # 'fall_avg_pct_DFW',
                         # 'fall_avg_pct_DF',
+						'spring_avg_difficulty',
+                        'spring_avg_pct_withdrawn',
+                        # 'spring_avg_pct_CDFW',
+                        'spring_avg_pct_CDF',
+                        # 'spring_avg_pct_DFW',
+                        # 'spring_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
@@ -1919,16 +1979,17 @@ pullm_tomek_prep = make_column_transformer(
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
+						'spring_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
 						# 'term_credit_hours',
@@ -2015,16 +2076,22 @@ vanco_x_test = vanco_testing_set[[
                         'fall_avg_pct_CDF',
                         # 'fall_avg_pct_DFW',
                         # 'fall_avg_pct_DF',
+						'spring_avg_difficulty',
+                        'spring_avg_pct_withdrawn',
+                        # 'spring_avg_pct_CDFW',
+                        'spring_avg_pct_CDF',
+                        # 'spring_avg_pct_DFW',
+                        # 'spring_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
@@ -2159,16 +2226,17 @@ vanco_tomek_prep = make_column_transformer(
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
+						'spring_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
 						# 'term_credit_hours',
@@ -2255,16 +2323,22 @@ trici_x_test = trici_testing_set[[
                         'fall_avg_pct_CDF',
                         # 'fall_avg_pct_DFW',
                         # 'fall_avg_pct_DF',
+						'spring_avg_difficulty',
+                        'spring_avg_pct_withdrawn',
+                        # 'spring_avg_pct_CDFW',
+                        'spring_avg_pct_CDF',
+                        # 'spring_avg_pct_DFW',
+                        # 'spring_avg_pct_DF',
 						'fall_lec_count',
 						'fall_lab_count',
                         # 'fall_lec_contact_hrs',
                         # 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
                         # 'spring_lec_contact_hrs',
                         # 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_ind',
                         'cum_adj_transfer_hours',
@@ -2399,16 +2473,17 @@ trici_tomek_prep = make_column_transformer(
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
+						'spring_avg_difficulty',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
+						'spring_lec_count',
+						'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
+						'total_spring_contact_hrs',
 						'fall_midterm_gpa_avg',
 						'cum_adj_transfer_hours',
 						# 'term_credit_hours',
@@ -2472,8 +2547,11 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
                 + first_gen_flag \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
+				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
+				+ total_spring_contact_hrs \
 				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_ind \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa \
@@ -2499,8 +2577,11 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + pell_eligibility_ind \
                 + first_gen_flag \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
+				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
+				+ total_spring_contact_hrs \
 				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_ind \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa \
@@ -2526,8 +2607,11 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + pell_eligibility_ind \
                 + first_gen_flag \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
+				+ spring_lec_count + spring_lab_count \
 				+ total_fall_contact_hrs \
+				+ total_spring_contact_hrs \
 				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_ind \
                 + resident + gini_indx + median_inc \
             	+ high_school_gpa \
@@ -2789,7 +2873,7 @@ pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
-pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_pred_outcome.csv', encoding='utf-8', index=False)
+pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_frsh_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver predicted outcome
@@ -2801,7 +2885,7 @@ vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
 vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
-vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_pred_outcome.csv', encoding='utf-8', index=False)
+vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_frsh_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities predicted outcome
@@ -2813,7 +2897,7 @@ trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
-trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_pred_outcome.csv', encoding='utf-8', index=False)
+trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_frsh_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome
@@ -2839,7 +2923,7 @@ pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"first_gen_fla
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_aggregate_outcome.csv', encoding='utf-8', index=False)
+pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver aggregate outcome
@@ -2865,7 +2949,7 @@ vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"first_gen_fla
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_aggregate_outcome.csv', encoding='utf-8', index=False)
+vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities aggregate outcome
@@ -2891,7 +2975,7 @@ trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"first_gen_fla
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_aggregate_outcome.csv', encoding='utf-8', index=False)
+trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman current outcome
@@ -2957,14 +3041,14 @@ else:
 # Output model
 
 # Pullman model output
-joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_model_v{sklearn.__version__}.pkl')
+joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_frsh_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver model output
-joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_model_v{sklearn.__version__}.pkl')
+joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_frsh_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities model output
-joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_model_v{sklearn.__version__}.pkl')
+joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_frsh_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')
