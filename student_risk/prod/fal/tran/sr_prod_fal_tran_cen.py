@@ -2412,6 +2412,7 @@ print('VIF for Pullman...\n')
 pullm_vif = pd.DataFrame()
 pullm_vif['vif factor'] = [variance_inflation_factor(pullm_x.values, i) for i in range(pullm_x.shape[1])]
 pullm_vif['features'] = pullm_x.columns
+pullm_vif = pullm_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(pullm_vif.round(1).to_string())
 print('\n')
 
@@ -2421,6 +2422,7 @@ print('VIF for Vancouver...\n')
 vanco_vif = pd.DataFrame()
 vanco_vif['vif factor'] = [variance_inflation_factor(vanco_x.values, i) for i in range(vanco_x.shape[1])]
 vanco_vif['features'] = vanco_x.columns
+vanco_vif = vanco_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(vanco_vif.round(1).to_string())
 print('\n')
 
@@ -2430,6 +2432,7 @@ print('VIF for Tri-Cities...\n')
 trici_vif = pd.DataFrame()
 trici_vif['vif factor'] = [variance_inflation_factor(trici_x.values, i) for i in range(trici_x.shape[1])]
 trici_vif['features'] = trici_x.columns
+trici_vif = trici_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(trici_vif.round(1).to_string())
 print('\n')
 
