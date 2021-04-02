@@ -3129,7 +3129,7 @@ pullm_vcf_probs = pullm_vcf_probs[:, 1]
 pullm_vcf_auc = roc_auc_score(pullm_y_train, pullm_vcf_probs)
 
 print(f'\nOverall accuracy for Pullman ensemble model (training): {pullm_vcf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman ensemble model (training): {pullm_vcf_auc:.4f}\n')
+print(f'ROC AUC for Pullman ensemble model (training): {pullm_vcf_auc:.4f}')
 print(f'Overall accuracy for Pullman ensemble model (testing): {pullm_vcf.score(pullm_x_test, pullm_y_test):.4f}')
 
 pullm_vcf_fpr, pullm_vcf_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_vcf_probs, drop_intermediate=False)
@@ -3160,7 +3160,7 @@ vanco_vcf_probs = vanco_vcf_probs[:, 1]
 vanco_vcf_auc = roc_auc_score(vanco_y_train, vanco_vcf_probs)
 
 print(f'\nOverall accuracy for Vancouver ensemble model (training): {vanco_vcf.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver ensemble model (training): {vanco_vcf_auc:.4f}\n')
+print(f'ROC AUC for Vancouver ensemble model (training): {vanco_vcf_auc:.4f}')
 print(f'Overall accuracy for Vancouver ensemble model (testing): {vanco_vcf.score(vanco_x_test, vanco_y_test):.4f}')
 
 vanco_vcf_fpr, vanco_vcf_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_vcf_probs, drop_intermediate=False)
@@ -3191,7 +3191,7 @@ trici_vcf_probs = trici_vcf_probs[:, 1]
 trici_vcf_auc = roc_auc_score(trici_y_train, trici_vcf_probs)
 
 print(f'\nOverall accuracy for Tri-Cities ensemble model (training): {trici_vcf.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities ensemble model (training): {trici_vcf_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities ensemble model (training): {trici_vcf_auc:.4f}')
 print(f'Overall accuracy for Tri-Cities ensemble model (testing): {trici_vcf.score(trici_x_test, trici_y_test):.4f}')
 
 trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_vcf_probs, drop_intermediate=False)
