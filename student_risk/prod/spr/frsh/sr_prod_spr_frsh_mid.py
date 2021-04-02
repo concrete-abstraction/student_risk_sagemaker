@@ -151,7 +151,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'anywhere_STEM_Flag',
 						'honors_program_ind',
 						# 'afl_greek_indicator',
-						'high_school_gpa',
+						# 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -320,7 +320,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							# 'high_school_gpa',
 							'fall_cum_gpa',
 							'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -489,7 +489,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'anywhere_STEM_Flag',
 							'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							# 'high_school_gpa',
 							'fall_cum_gpa',
 							'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -680,7 +680,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'anywhere_STEM_Flag',
                         # 'honors_program_ind',
                         # 'afl_greek_indicator',
-                        'high_school_gpa',
+                        # 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
                         # 'awe_instrument',
@@ -849,7 +849,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							# 'high_school_gpa',
 							'fall_cum_gpa',
 							'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -1018,7 +1018,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							# 'high_school_gpa',
 							'fall_cum_gpa',
 							'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -1209,7 +1209,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
-						'high_school_gpa',
+						# 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -1378,7 +1378,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							# 'high_school_gpa',
 							'fall_cum_gpa',
 							'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -1547,7 +1547,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
-							'high_school_gpa',
+							# 'high_school_gpa',
 							'fall_cum_gpa',
 							'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -1864,7 +1864,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'anywhere_STEM_Flag',
 						'honors_program_ind',
 						# 'afl_greek_indicator',
-						'high_school_gpa',
+						# 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2023,7 +2023,7 @@ pullm_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						# 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2118,7 +2118,7 @@ vanco_x_test = vanco_testing_set[[
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
-						'high_school_gpa',
+						# 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2277,7 +2277,7 @@ vanco_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						# 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2372,7 +2372,7 @@ trici_x_test = trici_testing_set[[
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
-						'high_school_gpa',
+						# 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2531,7 +2531,7 @@ trici_tomek_prep = make_column_transformer(
 						'median_inc',
 						# 'median_value',
 						# 'term_credit_hours',
-						'high_school_gpa',
+						# 'high_school_gpa',
 						'fall_cum_gpa',
 						'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2618,7 +2618,7 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_fall_contact_hrs \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + fall_cum_gpa \
+				+ fall_cum_gpa \
 				+ spring_midterm_gpa_change + spring_midterm_gpa_avg_ind \
 				+ remedial \
 				+ cum_adj_transfer_hours \
@@ -2648,7 +2648,7 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_fall_contact_hrs \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + fall_cum_gpa \
+            	+ fall_cum_gpa \
 				+ spring_midterm_gpa_change + spring_midterm_gpa_avg_ind \
 				+ remedial \
 				+ cum_adj_transfer_hours \
@@ -2678,7 +2678,7 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ total_fall_contact_hrs \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ high_school_gpa + fall_cum_gpa \
+            	+ fall_cum_gpa \
 				+ spring_midterm_gpa_change + spring_midterm_gpa_avg_ind \
 				+ remedial \
 				+ cum_adj_transfer_hours \
@@ -2700,7 +2700,7 @@ print('VIF for Pullman...\n')
 pullm_vif = pd.DataFrame()
 pullm_vif['vif factor'] = [variance_inflation_factor(pullm_x.values, i) for i in range(pullm_x.shape[1])]
 pullm_vif['features'] = pullm_x.columns
-pullm_vif = pullm_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+pullm_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(pullm_vif.round(1).to_string())
 print('\n')
 
@@ -2710,7 +2710,7 @@ print('VIF for Vancouver...\n')
 vanco_vif = pd.DataFrame()
 vanco_vif['vif factor'] = [variance_inflation_factor(vanco_x.values, i) for i in range(vanco_x.shape[1])]
 vanco_vif['features'] = vanco_x.columns
-vanco_vif = vanco_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+vanco_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(vanco_vif.round(1).to_string())
 print('\n')
 
@@ -2720,7 +2720,7 @@ print('VIF for Tri-Cities...\n')
 trici_vif = pd.DataFrame()
 trici_vif['vif factor'] = [variance_inflation_factor(trici_x.values, i) for i in range(trici_x.shape[1])]
 trici_vif['features'] = trici_x.columns
-trici_vif = trici_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+trici_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(trici_vif.round(1).to_string())
 print('\n')
 
@@ -2730,7 +2730,7 @@ print('Run machine learning models...\n')
 # Logistic model
 
 # Pullman logistic
-pullm_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(pullm_x_train, pullm_y_train)
+pullm_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
 
 pullm_lreg_probs = pullm_lreg.predict_proba(pullm_x_train)
 pullm_lreg_probs = pullm_lreg_probs[:, 1]
@@ -2743,7 +2743,7 @@ pullm_lreg_fpr, pullm_lreg_tpr, pullm_thresholds = roc_curve(pullm_y_train, pull
 
 #%%
 # Vancouver logistic
-vanco_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
+vanco_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_lreg_probs = vanco_lreg.predict_proba(vanco_x_train)
 vanco_lreg_probs = vanco_lreg_probs[:, 1]
@@ -2756,7 +2756,7 @@ vanco_lreg_fpr, vanco_lreg_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanc
 
 #%%
 # Tri-Cities logistic
-trici_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
+trici_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
 
 trici_lreg_probs = trici_lreg.predict_proba(trici_x_train)
 trici_lreg_probs = trici_lreg_probs[:, 1]
@@ -2771,7 +2771,7 @@ trici_lreg_fpr, trici_lreg_tpr, trici_thresholds = roc_curve(trici_y_train, tric
 # Stochastic gradient descent model
 
 # Pullman SGD
-pullm_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(pullm_x_train, pullm_y_train)
+pullm_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
 
 pullm_sgd_probs = pullm_sgd.predict_proba(pullm_x_train)
 pullm_sgd_probs = pullm_sgd_probs[:, 1]
@@ -2784,7 +2784,7 @@ pullm_sgd_fpr, pullm_sgd_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_
 
 #%%
 # Vancouver SGD
-vanco_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
+vanco_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_sgd_probs = vanco_sgd.predict_proba(vanco_x_train)
 vanco_sgd_probs = vanco_sgd_probs[:, 1]
@@ -2797,7 +2797,7 @@ vanco_sgd_fpr, vanco_sgd_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_
 
 #%%
 # Tri-Cities SGD
-trici_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
+trici_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
 
 trici_sgd_probs = trici_sgd.predict_proba(trici_x_train)
 trici_sgd_probs = trici_sgd_probs[:, 1]
@@ -2812,7 +2812,7 @@ trici_sgd_fpr, trici_sgd_tpr, trici_thresholds = roc_curve(trici_y_train, trici_
 # Multi-layer perceptron model
 
 # Pullman MLP
-# pullm_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(pullm_x_train, pullm_y_train)
+# pullm_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=False).fit(pullm_x_train, pullm_y_train)
 
 # pullm_mlp_probs = pullm_mlp.predict_proba(pullm_x_train)
 # pullm_mlp_probs = pullm_mlp_probs[:, 1]
@@ -2825,7 +2825,7 @@ trici_sgd_fpr, trici_sgd_tpr, trici_thresholds = roc_curve(trici_y_train, trici_
 
 #%%
 # Vancouver MLP
-# vanco_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(vanco_x_train, vanco_y_train)
+# vanco_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=False).fit(vanco_x_train, vanco_y_train)
 
 # vanco_mlp_probs = vanco_mlp.predict_proba(vanco_x_train)
 # vanco_mlp_probs = vanco_mlp_probs[:, 1]
@@ -2838,7 +2838,7 @@ trici_sgd_fpr, trici_sgd_tpr, trici_thresholds = roc_curve(trici_y_train, trici_
 
 #%%
 # Tri-Cities MLP
-# trici_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(trici_x_train, trici_y_train)
+# trici_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=False).fit(trici_x_train, trici_y_train)
 
 # trici_mlp_probs = trici_mlp.predict_proba(trici_x_train)
 # trici_mlp_probs = trici_mlp_probs[:, 1]
