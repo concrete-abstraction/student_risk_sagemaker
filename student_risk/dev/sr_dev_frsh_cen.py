@@ -12,8 +12,6 @@ from sklearn.compose import make_column_transformer
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
 from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
@@ -28,8 +26,8 @@ builder.DatasetBuilder.build_census_dev()
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\training_set_dev.csv', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\Datasets\\testing_set_dev.csv', encoding='utf-8')
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8', low_memory=False)
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
 
 #%%
 # Training AWE instrumental variable
@@ -2924,14 +2922,14 @@ plt.show()
 # Stochastic gradient descent model
 
 # Pullman SGD
-pullm_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
+pullm_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(pullm_x_train, pullm_y_train)
 
 pullm_sgd_probs = pullm_sgd.predict_proba(pullm_x_train)
 pullm_sgd_probs = pullm_sgd_probs[:, 1]
 pullm_sgd_auc = roc_auc_score(pullm_y_train, pullm_sgd_probs)
 
 print(f'\nOverall accuracy for Pullman SGD model (training): {pullm_sgd.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman SGD model (training): {pullm_sgd_auc:.4f}\n')
+print(f'ROC AUC for Pullman SGD model (training): {pullm_sgd_auc:.4f}')
 print(f'Overall accuracy for Pullman SGD model (testing): {pullm_sgd.score(pullm_x_test, pullm_y_test):.4f}')
 
 pullm_sgd_fpr, pullm_sgd_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_sgd_probs, drop_intermediate=False)
@@ -2955,14 +2953,14 @@ plt.show()
 
 #%%
 # Vancouver SGD
-vanco_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
+vanco_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
 
 vanco_sgd_probs = vanco_sgd.predict_proba(vanco_x_train)
 vanco_sgd_probs = vanco_sgd_probs[:, 1]
 vanco_sgd_auc = roc_auc_score(vanco_y_train, vanco_sgd_probs)
 
 print(f'\nOverall accuracy for Vancouver SGD model (training): {vanco_sgd.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver SGD model (training): {vanco_sgd_auc:.4f}\n')
+print(f'ROC AUC for Vancouver SGD model (training): {vanco_sgd_auc:.4f}')
 print(f'Overall accuracy for Vancouver SGD model (testing): {vanco_sgd.score(vanco_x_test, vanco_y_test):.4f}')
 
 vanco_sgd_fpr, vanco_sgd_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_sgd_probs, drop_intermediate=False)
@@ -2986,14 +2984,14 @@ plt.show()
 
 #%%
 # Tri-Cities SGD
-trici_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
+trici_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
 
 trici_sgd_probs = trici_sgd.predict_proba(trici_x_train)
 trici_sgd_probs = trici_sgd_probs[:, 1]
 trici_sgd_auc = roc_auc_score(trici_y_train, trici_sgd_probs)
 
 print(f'\nOverall accuracy for Tri-Cities SGD model (training): {trici_sgd.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities SGD model (training): {trici_sgd_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities SGD model (training): {trici_sgd_auc:.4f}')
 print(f'Overall accuracy for Tri-Cities SGD model (testing): {trici_sgd.score(trici_x_test, trici_y_test):.4f}')
 
 trici_sgd_fpr, trici_sgd_tpr, trici_thresholds = roc_curve(trici_y_train, trici_sgd_probs, drop_intermediate=False)
@@ -3019,14 +3017,14 @@ plt.show()
 # Multi-layer perceptron model
 
 # Pullman MLP
-pullm_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=False).fit(pullm_x_train, pullm_y_train)
+pullm_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(pullm_x_train, pullm_y_train)
 
 pullm_mlp_probs = pullm_mlp.predict_proba(pullm_x_train)
 pullm_mlp_probs = pullm_mlp_probs[:, 1]
 pullm_mlp_auc = roc_auc_score(pullm_y_train, pullm_mlp_probs)
 
 print(f'\nOverall accuracy for Pullman multi-layer perceptron model (training): {pullm_mlp.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman multi-layer perceptron model (training): {pullm_mlp_auc:.4f}\n')
+print(f'ROC AUC for Pullman multi-layer perceptron model (training): {pullm_mlp_auc:.4f}')
 print(f'Overall accuracy for Pullman multi-layer perceptron model (testing): {pullm_mlp.score(pullm_x_test, pullm_y_test):.4f}')
 
 pullm_mlp_fpr, pullm_mlp_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_mlp_probs, drop_intermediate=False)
@@ -3050,14 +3048,14 @@ plt.show()
 
 #%%
 # Vancouver MLP
-vanco_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=False).fit(vanco_x_train, vanco_y_train)
+vanco_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(vanco_x_train, vanco_y_train)
 
 vanco_mlp_probs = vanco_mlp.predict_proba(vanco_x_train)
 vanco_mlp_probs = vanco_mlp_probs[:, 1]
 vanco_mlp_auc = roc_auc_score(vanco_y_train, vanco_mlp_probs)
 
 print(f'\nOverall accuracy for Vancouver multi-layer perceptron model (training): {vanco_mlp.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver multi-layer perceptron model (training): {vanco_mlp_auc:.4f}\n')
+print(f'ROC AUC for Vancouver multi-layer perceptron model (training): {vanco_mlp_auc:.4f}')
 print(f'Overall accuracy for Vancouver multi-layer perceptron model (testing): {vanco_mlp.score(vanco_x_test, vanco_y_test):.4f}')
 
 vanco_mlp_fpr, vanco_mlp_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_mlp_probs, drop_intermediate=False)
@@ -3081,14 +3079,14 @@ plt.show()
 
 #%%
 # Tri-Cities MLP
-trici_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=False).fit(trici_x_train, trici_y_train)
+trici_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=2000, verbose=True).fit(trici_x_train, trici_y_train)
 
 trici_mlp_probs = trici_mlp.predict_proba(trici_x_train)
 trici_mlp_probs = trici_mlp_probs[:, 1]
 trici_mlp_auc = roc_auc_score(trici_y_train, trici_mlp_probs)
 
 print(f'\nOverall accuracy for Tri-Cities multi-layer perceptron model (training): {trici_mlp.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities multi-layer perceptron model (training): {trici_mlp_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities multi-layer perceptron model (training): {trici_mlp_auc:.4f}')
 print(f'Overall accuracy for Tri-Cities multi-layer perceptron model (testing): {trici_mlp.score(trici_x_test, trici_y_test):.4f}')
 
 trici_mlp_fpr, trici_mlp_tpr, trici_thresholds = roc_curve(trici_y_train, trici_mlp_probs, drop_intermediate=False)
