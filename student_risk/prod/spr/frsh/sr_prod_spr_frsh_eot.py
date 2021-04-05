@@ -2549,7 +2549,7 @@ trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_t
 # Standard logistic model
 
 # Pullman standard model
-print('\nStandard logistic model for Pullman...\n')
+print('\nStandard logistic model for Pullman freshmen...\n')
 
 pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ male + underrep_minority \
@@ -2584,7 +2584,7 @@ print('\n')
 
 #%%
 # Vancouver standard model
-print('\nStandard logistic model for Vancouver...\n')
+print('\nStandard logistic model for Vancouver freshmen...\n')
 
 vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ male + underrep_minority \
@@ -2614,7 +2614,7 @@ print('\n')
 
 #%%
 # Tri-Cities standard model
-print('\nStandard logistic model for Tri-Cities...\n')
+print('\nStandard logistic model for Tri-Cities freshmen...\n')
 
 trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ male + underrep_minority \
@@ -2675,7 +2675,7 @@ print(trici_vif.round(1).to_string())
 print('\n')
 
 #%%
-print('Run machine learning models...\n')
+print('Run machine learning models for freshmen...\n')
 
 # Logistic model
 
