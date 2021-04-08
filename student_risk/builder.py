@@ -403,7 +403,7 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."	
-					and a.award_period in ('A','B')
+					and a.award_period in ('A')
 					and a.efc_status = 'O'
 			;quit;
 			
@@ -422,8 +422,8 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."
-					and a.award_period in ('A','B')
-					and a.award_status = 'A'
+					and a.award_period in ('A')
+					and a.award_status in ('O','A')
 				group by a.emplid;
 			;quit;
 			
@@ -2445,7 +2445,7 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."	
-					and a.award_period in ('A','B')
+					and a.award_period in ('A')
 					and a.efc_status = 'O'
 			;quit;
 			
@@ -2464,8 +2464,8 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."
-					and a.award_period in ('A','B')
-					and a.award_status = 'A'
+					and a.award_period in ('A')
+					and a.award_status in ('O','A')
 				group by a.emplid;
 			;quit;
 			
@@ -5189,7 +5189,7 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."	
-					and a.award_period in ('A','B')
+					and a.award_period in ('A')
 					and a.efc_status = 'O'
 			;quit;
 			
@@ -5208,8 +5208,8 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."
-					and a.award_period in ('A','B')
-					and a.award_status = 'A'
+					and a.award_period in ('A')
+					and a.award_status in ('O','A')
 				group by a.emplid;
 			;quit;
 			
@@ -7231,7 +7231,7 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."	
-					and a.award_period in ('A','B')
+					and a.award_period in ('A')
 					and a.efc_status = 'O'
 			;quit;
 			
@@ -7250,8 +7250,8 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."
-					and a.award_period in ('A','B')
-					and a.award_status = 'A'
+					and a.award_period in ('A')
+					and a.award_status in ('O','A')
 				group by a.emplid;
 			;quit;
 			

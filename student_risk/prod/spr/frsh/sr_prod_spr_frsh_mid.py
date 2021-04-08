@@ -2941,7 +2941,7 @@ pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
-pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_frsh_pred_outcome.csv', encoding='utf-8', index=False)
+pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver predicted outcome
@@ -2953,7 +2953,7 @@ vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
 vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
-vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_frsh_pred_outcome.csv', encoding='utf-8', index=False)
+vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities predicted outcome
@@ -2965,7 +2965,7 @@ trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
-trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_frsh_pred_outcome.csv', encoding='utf-8', index=False)
+trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome
@@ -2991,7 +2991,7 @@ pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"first_gen_fla
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
+pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver aggregate outcome
@@ -3017,7 +3017,7 @@ vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"first_gen_fla
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
+vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities aggregate outcome
@@ -3043,7 +3043,7 @@ trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"first_gen_fla
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
+trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman current outcome

@@ -16,3 +16,4 @@ reference_files/*.sas
 *.lst
 *.bin
 *.pyc
+*.zip
