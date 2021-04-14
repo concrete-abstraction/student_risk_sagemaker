@@ -2206,7 +2206,7 @@ class DatasetBuilder:
 					on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 				left join cpi as l
 					on input(a.full_acad_year,4.) = l.acs_lag
-				where a.full_acad_year = "&cohort_year"
+				where a.full_acad_year = "&cohort_year."
 					and substr(a.strm,4,1) = '7'
 					and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and a.acad_career = 'UGRD'
@@ -2445,7 +2445,7 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."	
-					and a.award_period in ('A')
+					and a.award_period in ('A','B')
 					and a.efc_status = 'O'
 			;quit;
 			
@@ -2464,8 +2464,8 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."
-					and a.award_period in ('A')
-					and a.award_status in ('O','A')
+					and a.award_period in ('A','B')
+					and a.award_status = 'A'
 				group by a.emplid;
 			;quit;
 			
@@ -2691,6 +2691,26 @@ class DatasetBuilder:
 			;quit;
 
 			proc sql;
+				create table term_credit_hours_&cohort_year. as
+				select distinct
+					a.emplid,
+					coalesce(a.term_credit_hours, 0) as fall_credit_hours,
+					coalesce(b.term_credit_hours, 0) as spring_credit_hours
+				from &dsn..student_enrolled_vw as a
+				left join &dsn..student_enrolled_vw as b
+					on a.emplid = b.emplid
+						and a.acad_career = b.acad_career
+						and b.snapshot = 'census'
+						and b.strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
+						and b.enrl_ind = 1
+						and a.ipeds_full_part_time = 'F'
+				where a.snapshot = 'census'
+					and a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+					and a.enrl_ind = 1
+					and a.ipeds_full_part_time = 'F'
+			;quit;
+			
+			proc sql;
 				create table class_registration_&cohort_year. as
 				select distinct
 					strm,
@@ -2704,6 +2724,7 @@ class DatasetBuilder:
 				where snapshot = 'eot'
 					and full_acad_year = "&cohort_year."
 					and enrl_ind = 1
+					and subject_catalog_nbr ^= 'NURS 399'
 			;quit;
 			
 			proc sql;
@@ -3239,7 +3260,9 @@ class DatasetBuilder:
 					s.spring_lec_units,
 					s.spring_lab_units,
 					s.total_fall_units,
-					(a.term_credit_hours - s.total_fall_units) as term_withdrawn_hours,
+					s.total_spring_units,
+					x.fall_credit_hours,
+					x.spring_credit_hours,
 					o.fall_lec_contact_hrs,
 					o.fall_lab_contact_hrs,
 					o.spring_lec_contact_hrs,
@@ -3320,6 +3343,8 @@ class DatasetBuilder:
 					on a.emplid = u.emplid
 				left join dependent_&cohort_year. as v
 					on a.emplid = v.emplid
+				left join term_credit_hours_&cohort_year. as x
+					on a.emplid = x.emplid
 			;quit;
 				
 			%end;
@@ -3615,7 +3640,7 @@ class DatasetBuilder:
 					and primary_plan_flag = 'Y'
 					and calculated split_plan = 0
 			;quit;
-			
+
 			proc sql;
 				create table dependent_&cohort_year. as
 				select distinct
@@ -3837,6 +3862,26 @@ class DatasetBuilder:
 				order by emplid;
 			;quit;
 			
+			proc sql;
+				create table term_credit_hours_&cohort_year. as
+				select distinct
+					a.emplid,
+					coalesce(a.term_credit_hours, 0) as fall_credit_hours,
+					coalesce(b.term_credit_hours, 0) as spring_credit_hours
+				from &dsn..student_enrolled_vw as a
+				left join &dsn..student_enrolled_vw as b
+					on a.emplid = b.emplid
+						and a.acad_career = b.acad_career
+						and b.snapshot = 'census'
+						and b.strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
+						and b.enrl_ind = 1
+						and a.ipeds_full_part_time = 'F'
+				where a.snapshot = 'census'
+					and a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+					and a.enrl_ind = 1
+					and a.ipeds_full_part_time = 'F'
+			;quit;
+			
 			%if &term_type. = SPR %then %do;
 				proc sql;
 					create table spring_class_registration_&cohort_year. as
@@ -3850,6 +3895,7 @@ class DatasetBuilder:
 						ssr_component
 					from acs.subcatnbr_data
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
+						and calculated subject_catalog_nbr ^= 'NURS 399'
 				;quit;
 				
 				proc sql;
@@ -3866,6 +3912,7 @@ class DatasetBuilder:
 					where snapshot = 'eot'
 						and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and enrl_ind = 1
+						and subject_catalog_nbr ^= 'NURS 399'
 				;quit;
 				
 				data class_registration_&cohort_year.;
@@ -3885,6 +3932,7 @@ class DatasetBuilder:
 						strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 						ssr_component
 					from acs.subcatnbr_data
+					where calculated subject_catalog_nbr ^= 'NURS 399'
 				;quit;
 			%end;
 			
@@ -4414,7 +4462,9 @@ class DatasetBuilder:
 					t.spring_lec_units,
 					t.spring_lab_units,
 					t.total_fall_units,
-					(a.term_credit_hours - t.total_fall_units) as term_withdrawn_hours,
+					t.total_spring_units,
+					y.fall_credit_hours,
+					y.spring_credit_hours, 
 					o.fall_lec_contact_hrs,
 					o.fall_lab_contact_hrs,
 					o.spring_lec_contact_hrs,
@@ -4492,6 +4542,8 @@ class DatasetBuilder:
 					on a.emplid = v.emplid
 				left join dependent_&cohort_year. as w
 					on a.emplid = w.emplid
+				left join term_credit_hours_&cohort_year. as y
+					on a.emplid = y.emplid
 			;quit;
 			
 		%mend loop;
@@ -4562,6 +4614,10 @@ class DatasetBuilder:
 			if spring_lec_count = . then spring_lec_count = 0;
 			if spring_lab_count = . then spring_lab_count_ind = 0; else spring_lab_count_ind = 1;
 			if spring_lab_count = . then spring_lab_count = 0;
+			if total_fall_units = . then total_fall_units = 0;
+			if total_spring_units = . then total_spring_units = 0;
+			if fall_credit_hours = . then fall_credit_hours = 0;
+			if spring_credit_hours = . then spring_credit_hours = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
@@ -4591,6 +4647,8 @@ class DatasetBuilder:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+			fall_withdrawn_hours = total_fall_units - fall_credit_hours;
+			spring_withdrawn_hours = total_spring_units - spring_credit_hours;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
@@ -4644,6 +4702,10 @@ class DatasetBuilder:
 			if spring_lec_count = . then spring_lec_count = 0;
 			if spring_lab_count = . then spring_lab_count_ind = 0; else spring_lab_count_ind = 1;
 			if spring_lab_count = . then spring_lab_count = 0;
+			if total_fall_units = . then total_fall_units = 0;
+			if total_spring_units = . then total_spring_units = 0;
+			if fall_credit_hours = . then fall_credit_hours = 0;
+			if spring_credit_hours = . then spring_credit_hours = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
@@ -4673,6 +4735,8 @@ class DatasetBuilder:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+			fall_withdrawn_hours = total_fall_units - fall_credit_hours;
+			spring_withdrawn_hours = total_spring_units - spring_credit_hours;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
@@ -4726,6 +4790,10 @@ class DatasetBuilder:
 			if spring_lec_count = . then spring_lec_count = 0;
 			if spring_lab_count = . then spring_lab_count_ind = 0; else spring_lab_count_ind = 1;
 			if spring_lab_count = . then spring_lab_count = 0;
+			if total_fall_units = . then total_fall_units = 0;
+			if total_spring_units = . then total_spring_units = 0;
+			if fall_credit_hours = . then fall_credit_hours = 0;
+			if spring_credit_hours = . then spring_credit_hours = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
@@ -4755,6 +4823,8 @@ class DatasetBuilder:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+			fall_withdrawn_hours = total_fall_units - fall_credit_hours;
+			spring_withdrawn_hours = total_spring_units - spring_credit_hours;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
@@ -6992,7 +7062,7 @@ class DatasetBuilder:
 					on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 				left join cpi as l
 					on input(a.full_acad_year,4.) = l.acs_lag
-				where a.full_acad_year = "&cohort_year"
+				where a.full_acad_year = "&cohort_year."
 					and substr(a.strm,4,1) = '7'
 					and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and a.acad_career = 'UGRD'
@@ -7231,7 +7301,7 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."	
-					and a.award_period in ('A')
+					and a.award_period in ('A','B')
 					and a.efc_status = 'O'
 			;quit;
 			
@@ -7250,8 +7320,8 @@ class DatasetBuilder:
 						and a.aid_year = b.aid_year
 						and a.snapshot = b.snapshot
 				where a.aid_year = "&cohort_year."
-					and a.award_period in ('A')
-					and a.award_status in ('O','A')
+					and a.award_period in ('A','B')
+					and a.award_status = 'A'
 				group by a.emplid;
 			;quit;
 			
@@ -7477,6 +7547,26 @@ class DatasetBuilder:
 			;quit;
 
 			proc sql;
+				create table term_credit_hours_&cohort_year. as
+				select distinct
+					a.emplid,
+					coalesce(a.term_credit_hours, 0) as fall_credit_hours,
+					coalesce(b.term_credit_hours, 0) as spring_credit_hours
+				from &dsn..student_enrolled_vw as a
+				left join &dsn..student_enrolled_vw as b
+					on a.emplid = b.emplid
+						and a.acad_career = b.acad_career
+						and b.snapshot = 'census'
+						and b.strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
+						and b.enrl_ind = 1
+						and a.ipeds_full_part_time = 'F'
+				where a.snapshot = 'census'
+					and a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+					and a.enrl_ind = 1
+					and a.ipeds_full_part_time = 'F'
+			;quit;
+			
+			proc sql;
 				create table class_registration_&cohort_year. as
 				select distinct
 					strm,
@@ -7490,6 +7580,7 @@ class DatasetBuilder:
 				where snapshot = 'eot'
 					and full_acad_year = "&cohort_year."
 					and enrl_ind = 1
+					and subject_catalog_nbr ^= 'NURS 399'
 			;quit;
 			
 			proc sql;
@@ -8025,7 +8116,9 @@ class DatasetBuilder:
 					s.spring_lec_units,
 					s.spring_lab_units,
 					s.total_fall_units,
-					(a.term_credit_hours - s.total_fall_units) as term_withdrawn_hours,
+					s.total_spring_units,
+					x.fall_credit_hours,
+					x.spring_credit_hours,
 					o.fall_lec_contact_hrs,
 					o.fall_lab_contact_hrs,
 					o.spring_lec_contact_hrs,
@@ -8106,6 +8199,8 @@ class DatasetBuilder:
 					on a.emplid = u.emplid
 				left join dependent_&cohort_year. as v
 					on a.emplid = v.emplid
+				left join term_credit_hours_&cohort_year. as x
+					on a.emplid = x.emplid
 			;quit;
 				
 			%end;
@@ -8401,7 +8496,7 @@ class DatasetBuilder:
 					and primary_plan_flag = 'Y'
 					and calculated split_plan = 0
 			;quit;
-			
+
 			proc sql;
 				create table dependent_&cohort_year. as
 				select distinct
@@ -8623,6 +8718,26 @@ class DatasetBuilder:
 				order by emplid;
 			;quit;
 			
+			proc sql;
+				create table term_credit_hours_&cohort_year. as
+				select distinct
+					a.emplid,
+					coalesce(a.term_credit_hours, 0) as fall_credit_hours,
+					coalesce(b.term_credit_hours, 0) as spring_credit_hours
+				from &dsn..student_enrolled_vw as a
+				left join &dsn..student_enrolled_vw as b
+					on a.emplid = b.emplid
+						and a.acad_career = b.acad_career
+						and b.snapshot = 'census'
+						and b.strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
+						and b.enrl_ind = 1
+						and a.ipeds_full_part_time = 'F'
+				where a.snapshot = 'census'
+					and a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+					and a.enrl_ind = 1
+					and a.ipeds_full_part_time = 'F'
+			;quit;
+			
 			%if &term_type. = SPR %then %do;
 				proc sql;
 					create table spring_class_registration_&cohort_year. as
@@ -8636,6 +8751,7 @@ class DatasetBuilder:
 						ssr_component
 					from acs.subcatnbr_data
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
+						and calculated subject_catalog_nbr ^= 'NURS 399'
 				;quit;
 				
 				proc sql;
@@ -8652,6 +8768,7 @@ class DatasetBuilder:
 					where snapshot = 'eot'
 						and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and enrl_ind = 1
+						and subject_catalog_nbr ^= 'NURS 399'
 				;quit;
 				
 				data class_registration_&cohort_year.;
@@ -8671,6 +8788,7 @@ class DatasetBuilder:
 						strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 						ssr_component
 					from acs.subcatnbr_data
+					where calculated subject_catalog_nbr ^= 'NURS 399'
 				;quit;
 			%end;
 			
@@ -9200,7 +9318,9 @@ class DatasetBuilder:
 					t.spring_lec_units,
 					t.spring_lab_units,
 					t.total_fall_units,
-					(a.term_credit_hours - t.total_fall_units) as term_withdrawn_hours,
+					t.total_spring_units,
+					y.fall_credit_hours,
+					y.spring_credit_hours, 
 					o.fall_lec_contact_hrs,
 					o.fall_lab_contact_hrs,
 					o.spring_lec_contact_hrs,
@@ -9278,6 +9398,8 @@ class DatasetBuilder:
 					on a.emplid = v.emplid
 				left join dependent_&cohort_year. as w
 					on a.emplid = w.emplid
+				left join term_credit_hours_&cohort_year. as y
+					on a.emplid = y.emplid
 			;quit;
 			
 		%mend loop;
@@ -9348,6 +9470,10 @@ class DatasetBuilder:
 			if spring_lec_count = . then spring_lec_count = 0;
 			if spring_lab_count = . then spring_lab_count_ind = 0; else spring_lab_count_ind = 1;
 			if spring_lab_count = . then spring_lab_count = 0;
+			if total_fall_units = . then total_fall_units = 0;
+			if total_spring_units = . then total_spring_units = 0;
+			if fall_credit_hours = . then fall_credit_hours = 0;
+			if spring_credit_hours = . then spring_credit_hours = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
@@ -9377,6 +9503,8 @@ class DatasetBuilder:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+			fall_withdrawn_hours = total_fall_units - fall_credit_hours;
+			spring_withdrawn_hours = total_spring_units - spring_credit_hours;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
@@ -9430,6 +9558,10 @@ class DatasetBuilder:
 			if spring_lec_count = . then spring_lec_count = 0;
 			if spring_lab_count = . then spring_lab_count_ind = 0; else spring_lab_count_ind = 1;
 			if spring_lab_count = . then spring_lab_count = 0;
+			if total_fall_units = . then total_fall_units = 0;
+			if total_spring_units = . then total_spring_units = 0;
+			if fall_credit_hours = . then fall_credit_hours = 0;
+			if spring_credit_hours = . then spring_credit_hours = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
@@ -9459,6 +9591,8 @@ class DatasetBuilder:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+			fall_withdrawn_hours = total_fall_units - fall_credit_hours;
+			spring_withdrawn_hours = total_spring_units - spring_credit_hours;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
@@ -9512,6 +9646,10 @@ class DatasetBuilder:
 			if spring_lec_count = . then spring_lec_count = 0;
 			if spring_lab_count = . then spring_lab_count_ind = 0; else spring_lab_count_ind = 1;
 			if spring_lab_count = . then spring_lab_count = 0;
+			if total_fall_units = . then total_fall_units = 0;
+			if total_spring_units = . then total_spring_units = 0;
+			if fall_credit_hours = . then fall_credit_hours = 0;
+			if spring_credit_hours = . then spring_credit_hours = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
@@ -9541,6 +9679,8 @@ class DatasetBuilder:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+			fall_withdrawn_hours = total_fall_units - fall_credit_hours;
+			spring_withdrawn_hours = total_spring_units - spring_credit_hours;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
