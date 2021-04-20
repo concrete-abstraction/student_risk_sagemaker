@@ -17,3 +17,5 @@ reference_files/*.sas
 *.bin
 *.pyc
 *.zip
+*.png
+documentation/resources/Thumbs.db
