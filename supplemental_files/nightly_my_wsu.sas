@@ -20,17 +20,35 @@ libname dir "\\ad.wsu.edu\POIS\IR\Nathan\Models\student_risk\supplemental_files"
 /*%let curlib = WSUNCT1T;*/
 
 proc sql;
-select min(strm) into: strm from census.xw_term where datepart(term_end_dt) >= today() and substr(strm,4,1) in ('7','3') and acad_career = 'UGRD'
+select strm
+into: strm 
+from census.xw_term where term_year = year(today()) and acad_career = 'UGRD' 
+	and term_type  = (case when today() lt input(catx('/','07','01',put(year(today()),z4.)), mmddyy10.)  then 'SPR' else 'FAL' end)
 ;quit;
-
-/*%let strm  = 2207;*/
 
 proc sql;
 select aid_year into: aid_year 
 from census.xw_term where strm = "&strm." and acad_career = 'UGRD';
 quit;
 
-%put &aid_year.;
+proc sql;
+create table strms as
+select strm from census.xw_term 
+where acad_career = 'UGRD' 
+and  substr(strm,4,1) in ('7','3')
+and strm between  
+		(select max(strm)  from census.xw_term where strm < "&strm."  and acad_career = 'UGRD' and substr(strm,4,1) in ('7','3')) 
+		and 
+		(select min(strm)  from census.xw_term where strm > "&strm."  and acad_career = 'UGRD' and substr(strm,4,1) in ('7','3'))
+		;quit;
+
+proc sql noprint;
+select distinct 
+	strm into: list_of_strms
+	separated by "','"
+	from strms
+	;quit;
+	%put &list_of_strms.;
 
 %macro passthrulib;
 %if &curlib. = WSUNCPRD %then %do;
@@ -89,7 +107,7 @@ select * from connection to oracle
 
 SELECT DISTINCT A.EMPLID, A.ACAD_CAREER, A.STRM, CASE WHEN A.STDNT_ENRL_STATUS = 'E' THEN 1 ELSE 0 END AS ENRL_IND, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
 FROM PS_STDNT_ENRL_VW A
-WHERE (A.STRM >= %bquote('&strm.')
+WHERE (a.strm  in %bquote(('&list_of_strms.'))
 AND A.ACAD_CAREER = 'UGRD'
 AND A.STDNT_ENRL_STATUS = 'E')
 

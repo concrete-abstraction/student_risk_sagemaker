@@ -1,5 +1,5 @@
 #%%
-from student_risk import builder
+from student_risk import build_dev
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -21,8 +21,13 @@ from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
+# Global variables
+wsu_color = (0.596,0.117,0.196)
+wsu_cmap = sns.light_palette("#981e32",as_cmap=True)
+
+#%%
 # SAS dataset builder
-builder.DatasetBuilder.build_census_dev()
+build_dev.DatasetBuilderDev.build_census_dev()
 
 #%%
 # Import pre-split data
@@ -230,7 +235,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'max_week_from_term_begin_dt',
 						'count_week_from_term_begin_dt',
 						# 'marital_status',
-						# 'Distance',
+						'Distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -241,15 +246,15 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'anywhere_STEM_Flag',
 						'honors_program_ind',
 						# 'afl_greek_indicator',
-						# 'high_school_gpa',
+						'high_school_gpa',
 						'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						# 'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
+						'fall_avg_difficulty',
+						'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
+						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						'spring_avg_difficulty',
@@ -258,18 +263,18 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'spring_avg_pct_CDF',
 						# 'spring_avg_pct_DFW',
 						# 'spring_avg_pct_DF',
-						# 'fall_lec_count',
-						# 'fall_lab_count',
+						'fall_lec_count',
+						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
 						'spring_lec_count',
 						'spring_lab_count',
 						# 'spring_lec_contact_hrs',
 						# 'spring_lab_contact_hrs',
-						# 'total_fall_contact_hrs',
+						'total_fall_contact_hrs',
 						'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
+						'fall_midterm_gpa_avg',
+						'fall_midterm_gpa_avg_ind',
 						'spring_midterm_gpa_avg',
 						'spring_midterm_gpa_avg_ind',
 						'cum_adj_transfer_hours',
@@ -280,7 +285,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'parent2_highest_educ_lvl',
 						# 'citizenship_country',
 						'gini_indx',
-						# 'pvrt_rate',
+						'pvrt_rate',
 						'median_inc',
 						# 'median_value',
 						'educ_rate',
@@ -292,18 +297,18 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'pct_two',
 						# 'pct_non',
 						'pct_hisp',
-						# 'city_large',
-						# 'city_mid',
-						# 'city_small',
-						# 'suburb_large',
-						# 'suburb_mid',
-						# 'suburb_small',
-						# 'town_fringe',
-						# 'town_distant',
-						# 'town_remote',
-						# 'rural_fringe',
-						# 'rural_distant',
-						# 'rural_remote',
+						'city_large',
+						'city_mid',
+						'city_small',
+						'suburb_large',
+						'suburb_mid',
+						'suburb_small',
+						'town_fringe',
+						'town_distant',
+						'town_remote',
+						'rural_fringe',
+						'rural_distant',
+						'rural_remote',
 						'AD_DTA',
 						'AD_AST',
 						'AP',
@@ -2693,13 +2698,12 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
                 + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
                 + first_gen_flag \
-				+ spring_avg_difficulty + spring_avg_pct_CDF + spring_avg_pct_withdrawn \
-				+ spring_lec_count + spring_lab_count \
-				+ total_spring_contact_hrs \
-				+ spring_withdrawn_hours \
+				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+				+ fall_lec_count + fall_lab_count \
+				+ total_fall_contact_hrs \
                 + resident + gini_indx + median_inc \
-				+ fall_cum_gpa \
-				+ spring_midterm_gpa_avg + spring_midterm_gpa_avg_ind \
+				+ high_school_gpa \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_ind \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3108,21 +3112,36 @@ plt.show()
 # Pullman VCF
 pullm_vcf = VotingClassifier(estimators=[('lreg', pullm_lreg), ('sgd', pullm_sgd)], voting='soft', weights=[1, 1]).fit(pullm_x_train, pullm_y_train)
 
-pullm_vcf_probs = pullm_vcf.predict_proba(pullm_x_train)
-pullm_vcf_probs = pullm_vcf_probs[:, 1]
-pullm_vcf_auc = roc_auc_score(pullm_y_train, pullm_vcf_probs)
+pullm_vcf_probs_train = pullm_vcf.predict_proba(pullm_x_train)
+pullm_vcf_probs_train = pullm_vcf_probs_train[:, 1]
+pullm_vcf_auc_train = roc_auc_score(pullm_y_train, pullm_vcf_probs_train)
+
+pullm_vcf_probs_test = pullm_vcf.predict_proba(pullm_x_test)
+pullm_vcf_probs_test = pullm_vcf_probs_test[:, 1]
+pullm_vcf_auc_test = roc_auc_score(pullm_y_test, pullm_vcf_probs_test)
 
 print(f'\nOverall accuracy for Pullman ensemble model (training): {pullm_vcf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman ensemble model (training): {pullm_vcf_auc:.4f}')
-print(f'Overall accuracy for Pullman ensemble model (testing): {pullm_vcf.score(pullm_x_test, pullm_y_test):.4f}')
+print(f'ROC AUC for Pullman ensemble model (training): {pullm_vcf_auc_train:.4f}')
 
-pullm_vcf_fpr, pullm_vcf_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_vcf_probs, drop_intermediate=False)
+pullm_vcf_fpr_train, pullm_vcf_tpr_train, pullm_thresholds_train = roc_curve(pullm_y_train, pullm_vcf_probs_train, drop_intermediate=False)
 
-plt.plot(pullm_vcf_fpr, pullm_vcf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(pullm_vcf_fpr_train, pullm_vcf_tpr_train, color=wsu_color, lw=4, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=4, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('ENSEMBLE ROC CURVE (TRAINING)')
+plt.show()
+
+print(f'Overall accuracy for Pullman ensemble model (testing): {pullm_vcf.score(pullm_x_test, pullm_y_test):.4f}')
+print(f'ROC AUC for Pullman ensemble model (testing): {pullm_vcf_auc_test:.4f}')
+
+pullm_vcf_fpr_test, pullm_vcf_tpr_test, pullm_thresholds_test = roc_curve(pullm_y_test, pullm_vcf_probs_test, drop_intermediate=False)
+
+plt.plot(pullm_vcf_fpr_test, pullm_vcf_tpr_test, color=wsu_color, lw=4, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=4, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('ENSEMBLE ROC CURVE (TESTING)')
 plt.show()
 
 #%%
@@ -3130,7 +3149,7 @@ plt.show()
 pullm_vcf_matrix = confusion_matrix(pullm_y_test, pullm_vcf.predict(pullm_x_test))
 pullm_vcf_df = pd.DataFrame(pullm_vcf_matrix)
 
-sns.heatmap(pullm_vcf_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(pullm_vcf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('ENSEMBLE CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()

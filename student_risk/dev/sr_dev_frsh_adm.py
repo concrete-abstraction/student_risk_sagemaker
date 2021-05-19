@@ -21,6 +21,11 @@ from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 #%%
+# Global variables
+wsu_color = (0.596,0.117,0.196)
+wsu_cmap = sns.light_palette("#981e32",as_cmap=True)
+
+#%%
 # SAS dataset builder
 builder.DatasetBuilder.build_admissions_dev()
 
@@ -230,7 +235,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'max_week_from_term_begin_dt',
 						# 'count_week_from_term_begin_dt',
 						# 'marital_status',
-						'Distance',
+						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -399,7 +404,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'max_week_from_term_begin_dt',
 							# 'count_week_from_term_begin_dt',
 							# 'marital_status',
-							'Distance',
+							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -550,7 +555,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr'
                             ]].dropna()
 
-pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
+pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
 							'enrl_ind',
                             # 'acad_year',
@@ -568,7 +573,7 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							# 'max_week_from_term_begin_dt',
 							# 'count_week_from_term_begin_dt',
 							# 'marital_status',
-							'Distance',
+							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -722,7 +727,7 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 pullm_testing_set = pullm_testing_set.reset_index()
 
 pullm_pred_outcome = pullm_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             'enrl_ind'
                             ]].copy(deep=True)
 
@@ -745,7 +750,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'max_week_from_term_begin_dt',
 						# 'count_week_from_term_begin_dt',
 						# 'marital_status',
-						'Distance',
+						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -914,7 +919,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'max_week_from_term_begin_dt',
 							# 'count_week_from_term_begin_dt',
 							# 'marital_status',
-							'Distance',
+							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1083,7 +1088,7 @@ vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_se
 							# 'max_week_from_term_begin_dt',
 							# 'count_week_from_term_begin_dt',
 							# 'marital_status',
-							'Distance',
+							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1260,7 +1265,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'max_week_from_term_begin_dt',
 						# 'count_week_from_term_begin_dt',
 						# 'marital_status',
-						'Distance',
+						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -1429,7 +1434,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'max_week_from_term_begin_dt',
 							# 'count_week_from_term_begin_dt',
 							# 'marital_status',
-							'Distance',
+							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1598,7 +1603,7 @@ trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_se
 							# 'max_week_from_term_begin_dt',
 							# 'count_week_from_term_begin_dt',
 							# 'marital_status',
-							'Distance',
+							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1904,7 +1909,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'max_week_from_term_begin_dt',
 						# 'count_week_from_term_begin_dt',
 						# 'marital_status',
-						'Distance',
+						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -2060,7 +2065,7 @@ pullm_y_test = pullm_testing_set['enrl_ind']
 
 pullm_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
-						'Distance',
+						'distance',
 						# 'age',
 						'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
@@ -2167,7 +2172,7 @@ vanco_x_test = vanco_testing_set[[
 						# 'max_week_from_term_begin_dt',
 						# 'count_week_from_term_begin_dt',
 						# 'marital_status',
-						'Distance',
+						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -2323,7 +2328,7 @@ vanco_y_test = vanco_testing_set['enrl_ind']
 
 vanco_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
-						'Distance',
+						'distance',
 						# 'age',
 						'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
@@ -2428,7 +2433,7 @@ trici_x_test = trici_testing_set[[
 						# 'max_week_from_term_begin_dt',
 						# 'count_week_from_term_begin_dt',
 						# 'marital_status',
-						'Distance',
+						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -2584,7 +2589,7 @@ trici_y_test = trici_testing_set['enrl_ind']
 
 trici_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
-						'Distance',
+						'distance',
 						# 'age',
 						'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
@@ -2710,7 +2715,7 @@ plt.show()
 # Standard logistic model
 
 # Pullman standard model
-pullm_y, pullm_x = dmatrices('enrl_ind ~ Distance + pvrt_rate + pop_dens + educ_rate \
+pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
 				+ city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
 				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
@@ -2732,7 +2737,7 @@ print(pullm_logit_res.summary())
 
 #%%
 # Vancouver standard model
-vanco_y, vanco_x = dmatrices('enrl_ind ~ Distance + pvrt_rate + pop_dens + educ_rate \
+vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
 				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + pell_eligibility_ind \
@@ -2753,7 +2758,7 @@ print(vanco_logit_res.summary())
 
 #%%
 # Tri-Cities standard model
-trici_y, trici_x = dmatrices('enrl_ind ~ Distance + pvrt_rate + pop_dens + educ_rate \
+trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
 				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
                 + pell_eligibility_ind \
@@ -3124,21 +3129,36 @@ plt.show()
 # Pullman VCF
 pullm_vcf = VotingClassifier(estimators=[('lreg', pullm_lreg), ('sgd', pullm_sgd)], voting='soft', weights=[1, 1]).fit(pullm_x_train, pullm_y_train)
 
-pullm_vcf_probs = pullm_vcf.predict_proba(pullm_x_train)
-pullm_vcf_probs = pullm_vcf_probs[:, 1]
-pullm_vcf_auc = roc_auc_score(pullm_y_train, pullm_vcf_probs)
+pullm_vcf_probs_train = pullm_vcf.predict_proba(pullm_x_train)
+pullm_vcf_probs_train = pullm_vcf_probs_train[:, 1]
+pullm_vcf_auc_train = roc_auc_score(pullm_y_train, pullm_vcf_probs_train)
+
+pullm_vcf_probs_test = pullm_vcf.predict_proba(pullm_x_test)
+pullm_vcf_probs_test = pullm_vcf_probs_test[:, 1]
+pullm_vcf_auc_test = roc_auc_score(pullm_y_test, pullm_vcf_probs_test)
 
 print(f'\nOverall accuracy for Pullman ensemble model (training): {pullm_vcf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman ensemble model (training): {pullm_vcf_auc:.4f}')
-print(f'Overall accuracy for Pullman ensemble model (testing): {pullm_vcf.score(pullm_x_test, pullm_y_test):.4f}')
+print(f'ROC AUC for Pullman ensemble model (training): {pullm_vcf_auc_train:.4f}')
 
-pullm_vcf_fpr, pullm_vcf_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_vcf_probs, drop_intermediate=False)
+pullm_vcf_fpr_train, pullm_vcf_tpr_train, pullm_thresholds_train = roc_curve(pullm_y_train, pullm_vcf_probs_train, drop_intermediate=False)
 
-plt.plot(pullm_vcf_fpr, pullm_vcf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(pullm_vcf_fpr_train, pullm_vcf_tpr_train, color=wsu_color, lw=4, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=4, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('ENSEMBLE ROC CURVE (TRAINING)')
+plt.show()
+
+print(f'Overall accuracy for Pullman ensemble model (testing): {pullm_vcf.score(pullm_x_test, pullm_y_test):.4f}')
+print(f'ROC AUC for Pullman ensemble model (testing): {pullm_vcf_auc_test:.4f}')
+
+pullm_vcf_fpr_test, pullm_vcf_tpr_test, pullm_thresholds_test = roc_curve(pullm_y_test, pullm_vcf_probs_test, drop_intermediate=False)
+
+plt.plot(pullm_vcf_fpr_test, pullm_vcf_tpr_test, color=wsu_color, lw=4, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=4, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('ENSEMBLE ROC CURVE (TESTING)')
 plt.show()
 
 #%%

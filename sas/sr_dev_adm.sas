@@ -166,7 +166,7 @@ proc sql;
 			select distinct 
 				emplid, 
 				term_code as cont_term,
-				enrl_ind
+				enrl_ind as enrl_ind
 			from &dsn..student_enrolled_vw
 			where snapshot = 'census'
 				and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
@@ -184,7 +184,7 @@ proc sql;
 			select distinct 
 				emplid, 
 				input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
-				enrl_ind
+				enrl_ind as enrl_ind
 			from acs.enrl_data
 			where substr(strm, 4, 1) = '7'
 				and acad_career = 'UGRD'
