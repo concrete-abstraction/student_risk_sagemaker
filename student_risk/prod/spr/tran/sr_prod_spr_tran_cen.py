@@ -1630,7 +1630,7 @@ print('Done\n')
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
-pullm_x_outlier = pullm_training_set.drop(columns='enrl_ind')
+pullm_x_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1670,7 +1670,7 @@ pullm_training_set = pullm_training_set.drop(columns='mask')
 
 #%%
 # Vancouver outliers
-vanco_x_outlier = vanco_training_set.drop(columns='enrl_ind')
+vanco_x_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1710,7 +1710,7 @@ vanco_training_set = vanco_training_set.drop(columns='mask')
 
 #%%
 # Tri-Cities outliers
-trici_x_outlier = trici_training_set.drop(columns='enrl_ind')
+trici_x_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
 
 trici_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [

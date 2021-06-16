@@ -1727,7 +1727,7 @@ trici_current_outcome = trici_testing_set[[
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
-pullm_x_outlier = pullm_training_set.drop(columns='enrl_ind')
+pullm_x_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1767,7 +1767,7 @@ pullm_training_set = pullm_training_set.drop(columns='mask')
 
 #%%
 # Vancouver outliers
-vanco_x_outlier = vanco_training_set.drop(columns='enrl_ind')
+vanco_x_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1807,7 +1807,7 @@ vanco_training_set = vanco_training_set.drop(columns='mask')
 
 #%%
 # Tri-Cities outliers
-trici_x_outlier = trici_training_set.drop(columns='enrl_ind')
+trici_x_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
 
 trici_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -3117,7 +3117,7 @@ pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).st
 pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_vcf_pred_probs).round(4)
 
 pullm_current_outcome['date'] = date.today()
-pullm_current_outcome['model_id'] = 6
+pullm_current_outcome['model_id'] = 7
 
 #%%
 # Vancouver current outcome
@@ -3125,7 +3125,7 @@ vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).st
 vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_vcf_pred_probs).round(4)
 
 vanco_current_outcome['date'] = date.today()
-vanco_current_outcome['model_id'] = 6
+vanco_current_outcome['model_id'] = 7
 
 #%%
 # Tri-Cities current outcome
@@ -3133,7 +3133,7 @@ trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).st
 trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_vcf_pred_probs).round(4)
 
 trici_current_outcome['date'] = date.today()
-trici_current_outcome['model_id'] = 6
+trici_current_outcome['model_id'] = 7
 
 #%%
 # Pullman to csv and to sql

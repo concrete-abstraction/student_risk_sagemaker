@@ -1,5 +1,4 @@
 #%%
-from imblearn import under_sampling
 from student_risk import build_prod, config
 import datetime
 import joblib
@@ -9,13 +8,13 @@ import pathlib
 import pyodbc
 import os
 import saspy
-import shap
+# import shap
 import sklearn
 import sqlalchemy
 import urllib
 from datetime import date
 from patsy import dmatrices
-from imblearn.under_sampling import TomekLinks, RandomUnderSampler
+from imblearn.under_sampling import TomekLinks, NearMiss
 from sklearn.compose import make_column_transformer
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -2481,6 +2480,19 @@ vanco_tomek_prep = make_column_transformer(
 vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
 vanco_x_test = vanco_tomek_prep.fit_transform(vanco_x_test)
 
+vanco_feat_names = []
+
+for name, transformer, features, _ in vanco_tomek_prep._iter(fitted=True):
+
+	if transformer != 'passthrough':
+		try:
+			vanco_feat_names.extend(vanco_tomek_prep.named_transformers_[name].get_feature_names())
+		except AttributeError:
+			vanco_feat_names.extend(features)
+
+	if transformer == 'passthrough':
+		vanco_feat_names.extend(vanco_tomek_prep._feature_names_in[features])
+
 vanco_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 vanco_x_train, vanco_y_train = vanco_under.fit_resample(vanco_x_train, vanco_y_train)
 
@@ -2754,6 +2766,19 @@ trici_tomek_prep = make_column_transformer(
 
 trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
 trici_x_test = trici_tomek_prep.fit_transform(trici_x_test)
+
+trici_feat_names = []
+
+for name, transformer, features, _ in trici_tomek_prep._iter(fitted=True):
+
+	if transformer != 'passthrough':
+		try:
+			trici_feat_names.extend(trici_tomek_prep.named_transformers_[name].get_feature_names())
+		except AttributeError:
+			trici_feat_names.extend(features)
+
+	if transformer == 'passthrough':
+		trici_feat_names.extend(trici_tomek_prep._feature_names_in[features])
 
 trici_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 trici_x_train, trici_y_train = trici_under.fit_resample(trici_x_train, trici_y_train)
@@ -3055,23 +3080,60 @@ trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_
 
 #%%
 # Pullman SHAP undersample
-pullm_under_shap = RandomUnderSampler(sampling_strategy={0:150, 1:300})
-pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
+# pullm_under_shap = NearMiss(sampling_strategy={0:100, 1:400}, version=2, n_jobs=-1)
+# pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
 
 #%%
-# SHAP training using "background data" (see: https://github.com/slundberg/shap)
-pullm_shap_test_df = pd.DataFrame(data=pullm_x_test, index=pullm_current_outcome.emplid, columns=pullm_feat_names)
-explainer = shap.SamplingExplainer(model=pullm_vcf.predict_proba, data=pullm_x_shap)
+# Pullman SHAP training (see: https://github.com/slundberg/shap)
+# pullm_shap_test_df = pd.DataFrame(data=pullm_x_test, index=pullm_current_outcome.emplid, columns=pullm_feat_names)
+# pullm_explainer = shap.KernelExplainer(model=pullm_vcf.predict_proba, data=pullm_x_shap)
 
 #%%
-# SHAP prediction using testing data
-shap_values = explainer.shap_values(X=pullm_shap_test_df, nsamples=150)
+# Pullman SHAP prediction
+# pullm_shap_values = pullm_explainer.shap_values(X=pullm_shap_test_df, nsamples=200)
 
 #%%
-pullm_shap_test_df.iloc[0:1,:]
+# Pullman SHAP plots
+# for index in pullm_shap_values[0]:
+# 	shap.plots._waterfall.waterfall_legacy(pullm_explainer.expected_value[0], pullm_shap_values[0][index], pullm_x_test[index], feature_names=pullm_feat_names)
 
 #%%
-shap.plots._waterfall.waterfall_legacy(explainer.expected_value[0], shap_values[0][0], pullm_x_test[0], feature_names=pullm_feat_names)
+# Vancouver SHAP undersample
+# vanco_under_shap = NearMiss(sampling_strategy={0:100, 1:400}, version=2, n_jobs=-1)
+# vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
+
+#%%
+# Vancouver SHAP training (see: https://github.com/slundberg/shap)
+# vanco_shap_test_df = pd.DataFrame(data=vanco_x_test, index=vanco_current_outcome.emplid, columns=vanco_feat_names)
+# vanco_explainer = shap.KernelExplainer(model=vanco_vcf.predict_proba, data=vanco_x_shap)
+
+#%%
+# Vancouver SHAP prediction
+# vanco_shap_values = vanco_explainer.shap_values(X=vanco_shap_test_df, nsamples=200)
+
+#%%
+# Vancouver SHAP plots
+# for index in vanco_shap_values[0]:
+# 	shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=pullm_feat_names)
+
+#%%
+# Tri-Cities SHAP undersample
+# trici_under_shap = NearMiss(sampling_strategy={0:100, 1:400}, version=2, n_jobs=-1)
+# trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
+
+#%%
+# Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
+# trici_shap_test_df = pd.DataFrame(data=trici_x_test, index=trici_current_outcome.emplid, columns=trici_feat_names)
+# trici_explainer = shap.KernelExplainer(model=trici_vcf.predict_proba, data=trici_x_shap)
+
+#%%
+# Tri-Cities SHAP prediction
+# trici_shap_values = trici_explainer.shap_values(X=trici_shap_test_df, nsamples=200)
+
+#%%
+# Tri-Cities SHAP plots
+# for index in trici_shap_values[0]:
+# 	shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=pullm_feat_names)
 
 #%%
 # Prepare model predictions

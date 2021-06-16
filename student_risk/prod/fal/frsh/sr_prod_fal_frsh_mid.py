@@ -1,6 +1,5 @@
 #%%
-from student_risk import config
-from student_risk import builder
+from student_risk import build_prod, config
 import datetime
 import joblib
 import numpy as np
@@ -111,7 +110,7 @@ if config.mid_flag == True:
 
 #%%
 # SAS dataset builder
-builder.DatasetBuilder.build_census()
+build_prod.DatasetBuilderProd.build_census_prod
 
 #%%
 # Import pre-split data
@@ -119,7 +118,7 @@ training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
 
 #%%
-# Prepare base dataframes
+# Prepare dataframes
 print('\nPrepare dataframes and preprocess data...')
 
 # Pullman dataframes
@@ -1714,7 +1713,7 @@ trici_current_outcome = trici_testing_set[[
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
-pullm_x_outlier = pullm_training_set.drop(columns='enrl_ind')
+pullm_x_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1754,7 +1753,7 @@ pullm_training_set = pullm_training_set.drop(columns='mask')
 
 #%%
 # Vancouver outliers
-vanco_x_outlier = vanco_training_set.drop(columns='enrl_ind')
+vanco_x_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1794,7 +1793,7 @@ vanco_training_set = vanco_training_set.drop(columns='mask')
 
 #%%
 # Tri-Cities outliers
-trici_x_outlier = trici_training_set.drop(columns='enrl_ind')
+trici_x_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
 
 trici_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
