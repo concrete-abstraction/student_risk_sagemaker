@@ -9,7 +9,7 @@ import pathlib
 import pyodbc
 import os
 import saspy
-# import shap
+import shap
 import sklearn
 import sqlalchemy
 import urllib
@@ -3054,24 +3054,24 @@ print(f'ROC AUC for Tri-Cities ensemble model (training): {trici_vcf_auc:.4f}\n'
 trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_vcf_probs, drop_intermediate=False)
 
 #%%
-# Pullman SHAP
-# pullm_under_shap = RandomUnderSampler(sampling_strategy={0:100, 1:400})
-# pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
+# Pullman SHAP undersample
+pullm_under_shap = RandomUnderSampler(sampling_strategy={0:150, 1:300})
+pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
 
 #%%
-# pullm_shap_test_df = pd.DataFrame(data=pullm_x_test, index=pullm_current_outcome.emplid, columns=pullm_feat_names)
+# SHAP training using "background data" (see: https://github.com/slundberg/shap)
+pullm_shap_test_df = pd.DataFrame(data=pullm_x_test, index=pullm_current_outcome.emplid, columns=pullm_feat_names)
+explainer = shap.SamplingExplainer(model=pullm_vcf.predict_proba, data=pullm_x_shap)
 
 #%%
-# explainer = shap.SamplingExplainer(model=pullm_vcf.predict_proba, data=pullm_shap_test_df.head(10))
+# SHAP prediction using testing data
+shap_values = explainer.shap_values(X=pullm_shap_test_df, nsamples=150)
 
 #%%
-# shap_values = explainer.shap_values(X=pullm_shap_test_df.head(10), nsamples=100)
+pullm_shap_test_df.iloc[0:1,:]
 
 #%%
-# pullm_shap_test_df.iloc[0:1,:]
-
-#%%
-# shap.plots._waterfall.waterfall_legacy(explainer.expected_value[0], shap_values[0][0], pullm_x_test[0], feature_names=pullm_feat_names)
+shap.plots._waterfall.waterfall_legacy(explainer.expected_value[0], shap_values[0][0], pullm_x_test[0], feature_names=pullm_feat_names)
 
 #%%
 # Prepare model predictions
