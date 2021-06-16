@@ -67,7 +67,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -233,7 +233,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'transfer_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -399,7 +399,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'transfer_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -587,7 +587,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -753,7 +753,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'transfer_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -919,7 +919,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'transfer_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -1107,7 +1107,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -1273,7 +1273,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'transfer_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -1439,7 +1439,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'transfer_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -1753,7 +1753,7 @@ pullm_x_test = pullm_testing_set[[
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -1909,7 +1909,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'median_value',
 						# 'term_credit_hours',
 						# 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
@@ -2002,7 +2002,7 @@ vanco_x_test = vanco_testing_set[[
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -2158,7 +2158,7 @@ vanco_tomek_prep = make_column_transformer(
 						# 'median_value',
 						# 'term_credit_hours',
 						# 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
@@ -2251,7 +2251,7 @@ trici_x_test = trici_testing_set[[
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -2407,7 +2407,7 @@ trici_tomek_prep = make_column_transformer(
 						# 'median_value',
 						# 'term_credit_hours',
 						# 'transfer_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
@@ -2484,7 +2484,7 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ spring_lec_count + spring_lab_count \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ fall_cum_gpa \
+            	+ fall_term_gpa \
                 + remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -2511,7 +2511,7 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ spring_lec_count + spring_lab_count \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ fall_cum_gpa \
+            	+ fall_term_gpa \
                 + remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -2538,7 +2538,7 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ spring_lec_count + spring_lab_count \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ fall_cum_gpa \
+            	+ fall_term_gpa \
                 + remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \

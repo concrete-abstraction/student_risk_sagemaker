@@ -33,8 +33,8 @@ engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
-# Precensus date check 
-if config.pre_flag == False:
+# End of term date check 
+if config.eot_flag == False:
 
 	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
 	now = datetime.datetime.now()
@@ -43,29 +43,29 @@ if config.pre_flag == False:
 	now_month = now.month
 	now_year = now.year
 
-	precensus_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
-	precensus_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
-	precensus_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
+	eot_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
+	eot_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
+	eot_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
 
 	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
 	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
 	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
 
-	if now_year < precensus_year or now_year > census_year:
-		raise config.DateError(f'{date.today()}: Precensus year exception, outside of date range.')
+	if now_year < eot_year or now_year > census_year:
+		raise config.DateError(f'{date.today()}: End of term year exception, outside of date range.')
 
-	elif (now_year == precensus_year and now_month < precensus_month) or (now_year == census_year and now_month > census_month):
-		raise config.DateError(f'{date.today()}: Precensus month exception, outside of date range.')
+	elif (now_year == eot_year and now_month < eot_month) or (now_year == census_year and now_month > census_month):
+		raise config.DateError(f'{date.today()}: End of term month exception, outside of date range.')
 
-	elif (now_year == precensus_year and now_month == precensus_month and now_day < precensus_day) or (now_year == census_year and now_month == census_month and now_day >= census_day):
-		raise config.DateError(f'{date.today()}: Precensus day exception, outside of date range.')
+	elif (now_year == eot_year and now_month == eot_month and now_day < eot_day) or (now_year == census_year and now_month == census_month and now_day >= census_day):
+		raise config.DateError(f'{date.today()}: End of term day exception, outside of date range.')
 
 	else:
-		print(f'{date.today()}: No precensus date exceptions, running from precensus.')
+		print(f'{date.today()}: No end of term exceptions, running from eot.')
 
 #%%
-# Precensus snapshot check
-if config.pre_flag == True:
+# End of term snapshot check
+if config.eot_flag == True:
 
 	sas = saspy.SASsession()
 
@@ -96,10 +96,10 @@ if config.pre_flag == True:
 	sas.endsas()
 
 	if snap_check == 0:
-		raise config.DataError(f'{date.today()}: Precensus snapshot exception, data not available.')
+		raise config.DataError(f'{date.today()}: End of term snapshot exception, data not available.')
 
 	else:
-		print(f'{date.today()}: No precensus snapshot exceptions, running from precensus.')
+		print(f'{date.today()}: No end of term snapshot exceptions, running from eot.')
 
 #%%
 # SAS dataset builder
@@ -144,7 +144,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -310,7 +310,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'high_school_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -476,7 +476,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'high_school_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -664,7 +664,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -830,7 +830,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'high_school_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -996,7 +996,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'high_school_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -1184,7 +1184,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -1350,7 +1350,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'high_school_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -1516,7 +1516,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'honors_program_ind',
 							# 'afl_greek_indicator',
 							# 'high_school_gpa',
-							'fall_cum_gpa',
+							'fall_term_gpa',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							# 'fall_avg_difficulty',
@@ -1830,7 +1830,7 @@ pullm_x_test = pullm_testing_set[[
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -1986,7 +1986,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'median_value',
 						# 'term_credit_hours',
 						# 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
@@ -2079,7 +2079,7 @@ vanco_x_test = vanco_testing_set[[
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -2235,7 +2235,7 @@ vanco_tomek_prep = make_column_transformer(
 						# 'median_value',
 						# 'term_credit_hours',
 						# 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
@@ -2328,7 +2328,7 @@ trici_x_test = trici_testing_set[[
                         'honors_program_ind',
                         # 'afl_greek_indicator',
                         # 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
                         # 'awe_instrument',
                         # 'cdi_instrument',
                         # 'fall_avg_difficulty',
@@ -2484,7 +2484,7 @@ trici_tomek_prep = make_column_transformer(
 						# 'median_value',
 						# 'term_credit_hours',
 						# 'high_school_gpa',
-						'fall_cum_gpa',
+						'fall_term_gpa',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
@@ -2565,7 +2565,7 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ spring_lec_count + spring_lab_count \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ fall_cum_gpa \
+            	+ fall_term_gpa \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -2591,7 +2591,7 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ spring_lec_count + spring_lab_count \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ fall_cum_gpa \
+            	+ fall_term_gpa \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -2617,7 +2617,7 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ spring_lec_count + spring_lab_count \
 				+ total_spring_contact_hrs \
                 + resident + gini_indx + median_inc \
-            	+ fall_cum_gpa \
+            	+ fall_term_gpa \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \

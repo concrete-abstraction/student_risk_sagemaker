@@ -1,6 +1,6 @@
-mid_flag = False
 cen_flag = False
-pre_flag = False
+mid_flag = False
+eot_flag = False
 
 
 class DateError(Exception):

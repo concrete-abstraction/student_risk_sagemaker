@@ -21,36 +21,26 @@ proc sql;
     create table acad_calendar as
     select distinct
         *
-        ,intnx('dtday', term_census_dt, 31, 'same') as adj_term_census_dt format=datetime22.3
-        ,intnx('dtday', term_midterm_dt, 15, 'same') as adj_term_midterm_dt format=datetime22.3
+        ,day(datepart(term_begin_dt)) as begin_day
+        ,month(datepart(term_begin_dt)) as begin_month
+        ,year(datepart(term_begin_dt)) as begin_year
+        ,day(datepart(term_census_dt)) as census_day
+        ,month(datepart(term_census_dt)) as census_month
+        ,year(datepart(term_census_dt)) as census_year
+        ,day(datepart(term_midterm_dt)) as midterm_day
+        ,month(datepart(term_midterm_dt)) as midterm_month
+        ,year(datepart(term_midterm_dt)) as midterm_year
+        ,day(datepart(term_end_dt)) as end_day
+        ,month(datepart(term_end_dt)) as end_month
+        ,year(datepart(term_end_dt)) as end_year
     from &dsn..xw_term
     where acad_career = 'UGRD'
     order by term_code
 ;quit;
 
-proc sql;
-    create table adj_acad_calendar as
-    select distinct
-        *
-        ,day(datepart(term_begin_dt)) as begin_day
-        ,month(datepart(term_begin_dt)) as begin_month
-        ,year(datepart(term_begin_dt)) as begin_year
-        ,day(datepart(adj_term_census_dt)) as census_day
-        ,month(datepart(adj_term_census_dt)) as census_month
-        ,year(datepart(adj_term_census_dt)) as census_year
-        ,day(datepart(adj_term_midterm_dt)) as midterm_day
-        ,month(datepart(adj_term_midterm_dt)) as midterm_month
-        ,year(datepart(adj_term_midterm_dt)) as midterm_year
-        ,day(datepart(term_end_dt)) as end_day
-        ,month(datepart(term_end_dt)) as end_month
-        ,year(datepart(term_end_dt)) as end_year
-    from acad_calendar
-    order by term_code
-;quit;
-
 filename calendar \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv\" encoding=\"utf-8\";
 
-proc export data=adj_acad_calendar outfile=calendar dbms=csv replace;
+proc export data=acad_calendar outfile=calendar dbms=csv replace;
 
 proc sql;
     select min(term_type) into: term_type from &dsn..xw_term where term_year = year(today()) and month(datepart(term_begin_dt)) <= month(today()) and month(datepart(term_end_dt)) >= month(today()) and acad_career = 'UGRD'
@@ -80,6 +70,23 @@ sys.stdout = Logger()
 
 #%%
 if __name__ == '__main__':
+
+    if term_type == 'SUM':
+        
+        try:
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\frsh\\sr_prod_sum_frsh_eot.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\tran\\sr_prod_sum_tran_eot.py').read())
+        except config.DateError as eot_error:
+            print(eot_error)
+            config.eot_flag = True
+        
+        except KeyError as key_error:
+            print(key_error)
+        except:
+            traceback.print_exc(file=sys.stdout)
+        else:
+            stop = time.perf_counter()
+            print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
     if term_type == 'SPR':
 
@@ -112,15 +119,15 @@ if __name__ == '__main__':
                         try:
                             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_eot.py').read())
                             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_eot.py').read())
-                        except config.DateError as pre_error:
-                            print(pre_error)
-                            config.pre_flag = True
+                        except config.DateError as eot_error:
+                            print(eot_error)
+                            config.eot_flag = True
 
                             try: 
                                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_eot.py').read())
                                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_eot.py').read())
-                            except config.DataError as pre_snap_error:
-                                print(pre_snap_error)
+                            except config.DataError as eot_snap_error:
+                                print(eot_snap_error)
         
         except KeyError as key_error:
             print(key_error)
@@ -130,7 +137,7 @@ if __name__ == '__main__':
             stop = time.perf_counter()
             print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-    if term_type != 'SPR':
+    if term_type == 'FAL':
 
         try:
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_mid.py').read())

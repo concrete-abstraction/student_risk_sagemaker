@@ -4,6 +4,8 @@
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
+/* Note: Review this and remove variables that aren't used during the admissions model. */
+
 %let dsn = census;
 %let dev = cendev;
 %let adm = adm;
@@ -598,7 +600,25 @@ proc sql;
 			crse_id,
 			subject_catalog_nbr,
 			ssr_component,
-			unt_taken
+			unt_taken,
+			credit_hours_earned,
+			class_gpa,
+			crse_grade_off,
+			case when crse_grade_off = 'I' 	then 1
+											else 0
+											end as I_grade_ind,
+			case when crse_grade_off = 'X' 	then 1
+											else 0
+											end as X_grade_ind,
+			case when crse_grade_off = 'U' 	then 1
+											else 0
+											end as U_grade_ind,
+			case when crse_grade_off = 'S' 	then 1
+											else 0
+											end as S_grade_ind,
+			case when crse_grade_off = 'P' 	then 1
+											else 0
+											end as P_grade_ind
 		from &dsn..class_registration_vw
 		where snapshot = 'eot'
 			and full_acad_year = "&cohort_year."
@@ -632,6 +652,13 @@ proc sql;
 			(calculated total_grade_D * 1.0) as total_grade_D_GPA,
 			coalesce(b.total_grade_F, 0) + coalesce(c.total_grade_F, 0) as total_grade_F,
 			coalesce(b.total_withdrawn, 0) + coalesce(c.total_withdrawn, 0) as total_withdrawn,
+			coalesce(b.total_dropped, 0) + coalesce(c.total_dropped, 0) as total_dropped,
+			coalesce(b.total_grade_I, 0) + coalesce(c.total_grade_I, 0) as total_grade_I,
+			coalesce(b.total_grade_X, 0) + coalesce(c.total_grade_X, 0) as total_grade_X,
+			coalesce(b.total_grade_U, 0) + coalesce(c.total_grade_U, 0) as total_grade_U,
+			coalesce(b.total_grade_S, 0) + coalesce(c.total_grade_S, 0) as total_grade_S,
+			coalesce(b.total_grade_P, 0) + coalesce(c.total_grade_P, 0) as total_grade_P,
+			coalesce(b.total_no_grade, 0) + coalesce(c.total_no_grade, 0) as total_no_grade,
 			(calculated total_grade_A + calculated total_grade_A_minus 
 				+ calculated total_grade_B_plus + calculated total_grade_B + calculated total_grade_B_minus
 				+ calculated total_grade_C_plus + calculated total_grade_C + calculated total_grade_C_minus
@@ -672,7 +699,14 @@ proc sql;
 						sum(total_grade_D_plus) as total_grade_D_plus,
 						sum(total_grade_D) as total_grade_D,
 						sum(total_grade_F) as total_grade_F,
-						sum(total_withdrawn) as total_withdrawn
+						sum(total_withdrawn) as total_withdrawn,
+						sum(total_dropped) as total_dropped,
+						sum(total_grade_I) as total_grade_I,
+						sum(total_grade_X) as total_grade_X,
+						sum(total_grade_U) as total_grade_U,
+						sum(total_grade_S) as total_grade_S,
+						sum(total_grade_P) as total_grade_P,
+						sum(total_no_grade) as total_no_grade
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
@@ -695,7 +729,14 @@ proc sql;
 						sum(total_grade_D_plus) as total_grade_D_plus,
 						sum(total_grade_D) as total_grade_D,
 						sum(total_grade_F) as total_grade_F,
-						sum(total_withdrawn) as total_withdrawn
+						sum(total_withdrawn) as total_withdrawn,
+						sum(total_dropped) as total_dropped,
+						sum(total_grade_I) as total_grade_I,
+						sum(total_grade_X) as total_grade_X,
+						sum(total_grade_U) as total_grade_U,
+						sum(total_grade_S) as total_grade_S,
+						sum(total_grade_P) as total_grade_P,
+						sum(total_no_grade) as total_no_grade
 					from &dsn..class_vw
 					where snapshot = 'eot'
 						and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
