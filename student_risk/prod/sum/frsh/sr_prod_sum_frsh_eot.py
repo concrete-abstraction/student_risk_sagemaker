@@ -1,5 +1,6 @@
 #%%
 from student_risk import build_prod, config
+# import csv
 import datetime
 import joblib
 import numpy as np
@@ -15,6 +16,7 @@ import urllib
 from datetime import date
 from patsy import dmatrices
 from imblearn.under_sampling import TomekLinks, NearMiss
+# from itertools import islice
 from sklearn.compose import make_column_transformer
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
@@ -35,6 +37,7 @@ auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOM
 #%%
 # Global variable intialization
 strm = None
+top_N = 3
 
 #%%
 # End of term date check 
@@ -660,6 +663,8 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 
 pullm_testing_set = pullm_testing_set.reset_index(drop=True)
 
+pullm_shap_outcome = pullm_testing_set['emplid'].copy(deep=True).values.tolist()
+
 pullm_pred_outcome = pullm_testing_set[[ 
                             'emplid'
                             # 'enrl_ind'
@@ -1222,6 +1227,8 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 
 vanco_testing_set = vanco_testing_set.reset_index(drop=True)
 
+vanco_shap_outcome = vanco_testing_set['emplid'].copy(deep=True).values.tolist()
+
 vanco_pred_outcome = vanco_testing_set[[ 
                             'emplid'
                             # 'enrl_ind'
@@ -1783,6 +1790,8 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
                             ]].dropna()
 
 trici_testing_set = trici_testing_set.reset_index(drop=True)
+
+trici_shap_outcome = trici_testing_set['emplid'].copy(deep=True).values.tolist()
 
 trici_pred_outcome = trici_testing_set[[ 
                             'emplid'
@@ -3085,17 +3094,24 @@ trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_
 
 #%%
 # Pullman SHAP training (see: https://github.com/slundberg/shap)
-# pullm_shap_test_df = pd.DataFrame(data=pullm_x_test, index=pullm_current_outcome.emplid, columns=pullm_feat_names)
 # pullm_explainer = shap.KernelExplainer(model=pullm_vcf.predict_proba, data=pullm_x_shap)
 
 #%%
 # Pullman SHAP prediction
-# pullm_shap_values = pullm_explainer.shap_values(X=pullm_shap_test_df, nsamples=200)
+# pullm_shap_values = pullm_explainer.shap_values(X=pullm_x_test, nsamples=200)
 
 #%%
 # Pullman SHAP plots
-# for index in pullm_shap_values[0]:
-# 	shap.plots._waterfall.waterfall_legacy(pullm_explainer.expected_value[0], pullm_shap_values[0][index], pullm_x_test[index], feature_names=pullm_feat_names)
+# for index in range(len(pullm_shap_values[0])):
+# 	shap.plots._waterfall.waterfall_legacy(pullm_explainer.expected_value[0], pullm_shap_values[0][index], pullm_x_test[index], feature_names=pullm_feat_names, max_display=4)
+
+#%%
+# pullm_shap_results = []
+
+# for index in range(len(pullm_shap_values[0])):
+# 	pullm_shap_results.extend(pd.DataFrame(data=pullm_shap_values[0][index].reshape(1, len(pullm_feat_names)), columns=pullm_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+
+# pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 
 #%%
 # Vancouver SHAP undersample
@@ -3104,17 +3120,24 @@ trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_
 
 #%%
 # Vancouver SHAP training (see: https://github.com/slundberg/shap)
-# vanco_shap_test_df = pd.DataFrame(data=vanco_x_test, index=vanco_current_outcome.emplid, columns=vanco_feat_names)
 # vanco_explainer = shap.KernelExplainer(model=vanco_vcf.predict_proba, data=vanco_x_shap)
 
 #%%
 # Vancouver SHAP prediction
-# vanco_shap_values = vanco_explainer.shap_values(X=vanco_shap_test_df, nsamples=200)
+# vanco_shap_values = vanco_explainer.shap_values(X=vanco_x_test, nsamples=200)
 
 #%%
 # Vancouver SHAP plots
-# for index in vanco_shap_values[0]:
-# 	shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=pullm_feat_names)
+# for index in range(len(vanco_shap_values[0])):
+	# shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=pullm_feat_names, max_display=4)
+
+#%%
+# vanco_shap_results = []
+
+# for index in range(len(vanco_shap_values[0])):
+# 	vanco_shap_results.extend(pd.DataFrame(data=vanco_shap_values[0][index].reshape(1, 35), columns=vanco_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+
+# vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
 
 #%%
 # Tri-Cities SHAP undersample
@@ -3123,17 +3146,24 @@ trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_
 
 #%%
 # Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
-# trici_shap_test_df = pd.DataFrame(data=trici_x_test, index=trici_current_outcome.emplid, columns=trici_feat_names)
 # trici_explainer = shap.KernelExplainer(model=trici_vcf.predict_proba, data=trici_x_shap)
 
 #%%
 # Tri-Cities SHAP prediction
-# trici_shap_values = trici_explainer.shap_values(X=trici_shap_test_df, nsamples=200)
+# trici_shap_values = trici_explainer.shap_values(X=trici_x_test, nsamples=200)
 
 #%%
 # Tri-Cities SHAP plots
-# for index in trici_shap_values[0]:
-# 	shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=pullm_feat_names)
+# for index in range(len(trici_shap_values[0])):
+# 	shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=pullm_feat_names, max_display=4)
+
+#%%
+# trici_shap_results = []
+
+# for index in range(len(trici_shap_values[0])):
+# 	trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, 35), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+
+# trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
 
 #%%
 # Prepare model predictions
@@ -3349,6 +3379,36 @@ else:
 # 	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
 # 	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_student_outcome.csv', encoding='utf-8', index=False)
 # 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+
+#%%
+# Pullman top-N SHAP values to csv and to sql
+# pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_shap.csv', 'w', newline='')
+# pullm_shap_writer = csv.writer(pullm_shap_file)
+
+# for emplid in pullm_shap_zip:
+# 	pullm_shap_writer.writerow([emplid, dict(islice(pullm_shap_zip[emplid].items(), top_N))])
+
+# pullm_shap_file.close()
+
+#%%
+# Vancouver top-N SHAP values to csv and to sql
+# vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_shap.csv', 'w', newline='')
+# vanco_shap_writer = csv.writer(vanco_shap_file)
+
+# for emplid in vanco_shap_zip:
+# 	vanco_shap_writer.writerow([emplid, dict(islice(vanco_shap_zip[emplid].items(), top_N))])
+
+# vanco_shap_file.close()
+
+#%%
+# Tri-Cities top-N SHAP values to csv and to sql
+# trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_shap.csv', 'w', newline='')
+# trici_shap_writer = csv.writer(trici_shap_file)
+
+# for emplid in trici_shap_zip:
+# 	trici_shap_writer.writerow([emplid, dict(islice(trici_shap_zip[emplid].items(), top_N))])
+
+# trici_shap_file.close()
 
 #%%
 # Output model
