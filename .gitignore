@@ -4,7 +4,6 @@ reference_files/*.sas
 *.R
 *.json
 *.code-workspace
-*.ipynb
 *.qgz
 *.zip
 *.xlsx
@@ -19,3 +18,5 @@ reference_files/*.sas
 *.zip
 *.png
 documentation/resources/Thumbs.db
+student_risk/dev/.ipynb_checkpoints/sr_dev_frsh_cen-checkpoint.ipynb
+reference_files/dummy_encoding.ipynb
