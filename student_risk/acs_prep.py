@@ -18,9 +18,7 @@ for featsClass_idx in range(gdb.GetLayerCount()):
 
 # %%
 
-cmd_lst = ["C:\\Program Files\\QGIS 3.14\\bin\\ogr2ogr.exe", "-overwrite", "-skipfailures", "-f", "CSV", "C:\\Users\\nathan.lindstedt\\Desktop\\acs_raw\\acs_2016_5yr_zctz_race.csv", "C:\\Users\\nathan.lindstedt\\Desktop\\shapefiles\\zcta\\ACS_2016_5YR_ZCTA.gdb.zip", "X02_RACE"]
+cmd_lst = ["C:\\Program Files\\QGIS 3.14\\bin\\ogr2ogr.exe", "-skipfailures", "-f", "CSV", "C:\\Users\\nathan.lindstedt\\Desktop\\acs_raw\\acs_2016_5yr_zcta_race.csv", "C:\\Users\\nathan.lindstedt\\Desktop\\shapefiles\\zcta\\ACS_2016_5YR_ZCTA.gdb.zip", "X02_RACE"]
 
 #%%
-subprocess.check_call(["C:\\Program Files\\QGIS 3.14\\bin\\ogr2ogr.exe", "-overwrite", "-skipfailures", "-f", "CSV", "C:\\Users\\nathan.lindstedt\\Desktop\\acs_raw\\acs_2016_5yr_zctz_race.csv", "C:\\Users\\nathan.lindstedt\\Desktop\\shapefiles\\zcta\\ACS_2016_5YR_ZCTA.gdb.zip", "X02_RACE"])
-
-# %%
+subprocess.check_call(cmd_lst)
