@@ -3133,7 +3133,7 @@ pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 #%%
 # Vancouver SHAP plots
 # for index in range(len(vanco_shap_values[0])):
-	# shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=pullm_feat_names, max_display=4)
+	# shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=vanco_feat_names, max_display=4)
 
 #%%
 # vanco_shap_results = []
@@ -3159,7 +3159,7 @@ pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 #%%
 # Tri-Cities SHAP plots
 # for index in range(len(trici_shap_values[0])):
-# 	shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=pullm_feat_names, max_display=4)
+# 	shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=trici_feat_names, max_display=4)
 
 #%%
 # trici_shap_results = []
@@ -3402,7 +3402,7 @@ for emplid in pullm_shap_zip:
 
 	for _ in range(top_N):
 		shap_str, shap_float = pullm_shap_sql[1][_]
-		pullm_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
+		pullm_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
 
 pullm_shap_file.close()
 
@@ -3429,7 +3429,7 @@ while pullm_shap_insert:
 
 # 	for _ in range(top_N):
 # 		shap_str, shap_float = vanco_shap_sql[1][_]
-# 		vanco_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
+# 		vanco_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
 
 # vanco_shap_file.close()
 
@@ -3456,7 +3456,7 @@ while pullm_shap_insert:
 
 # 	for _ in range(top_N):
 # 		shap_str, shap_float = trici_shap_sql[1][_]
-# 		trici_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
+# 		trici_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
 
 # trici_shap_file.close()
 
