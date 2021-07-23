@@ -3400,8 +3400,8 @@ for emplid in pullm_shap_zip:
 	 
 	pullm_shap_insert.append(str(pullm_shap_sql[0]).zfill(9))
 
-	for _ in range(top_N):
-		shap_str, shap_float = pullm_shap_sql[1][_]
+	for index in range(top_N):
+		shap_str, shap_float = pullm_shap_sql[1][index]
 		pullm_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
 
 pullm_shap_file.close()
@@ -3427,8 +3427,8 @@ while pullm_shap_insert:
 	 
 # 	vanco_shap_insert.append(str(vanco_shap_sql[0]).zfill(9))
 
-# 	for _ in range(top_N):
-# 		shap_str, shap_float = vanco_shap_sql[1][_]
+# 	for index in range(top_N):
+# 		shap_str, shap_float = vanco_shap_sql[1][index]
 # 		vanco_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
 
 # vanco_shap_file.close()
@@ -3454,8 +3454,8 @@ while pullm_shap_insert:
 	 
 # 	trici_shap_insert.append(str(trici_shap_sql[0]).zfill(9))
 
-# 	for _ in range(top_N):
-# 		shap_str, shap_float = trici_shap_sql[1][_]
+# 	for index in range(top_N):
+# 		shap_str, shap_float = trici_shap_sql[1][index]
 # 		trici_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
 
 # trici_shap_file.close()
