@@ -3091,66 +3091,70 @@ print(f'ROC AUC for Tri-Cities ensemble model (training): {trici_vcf_auc:.4f}\n'
 trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_vcf_probs, drop_intermediate=False)
 
 #%%
-print('Calculate SHAP values...')
+if datetime.datetime.today().weekday() == 5:
+
+	print('Calculate SHAP values...')
+
+#%%
 # Pullman SHAP undersample
-pullm_under_shap = NearMiss(sampling_strategy={0:250, 1:1000}, version=2, n_jobs=-1)
-pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
+	pullm_under_shap = NearMiss(sampling_strategy={0:750, 1:3000}, version=2, n_jobs=-1)
+	pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
 
 #%%
 # Pullman SHAP training (see: https://github.com/slundberg/shap)
-pullm_explainer = shap.KernelExplainer(model=pullm_vcf.predict_proba, data=pullm_x_shap)
+	pullm_explainer = shap.KernelExplainer(model=pullm_vcf.predict_proba, data=pullm_x_shap)
 
 #%%
 # Pullman SHAP prediction
-pullm_shap_values = pullm_explainer.shap_values(X=pullm_x_test, nsamples=500)
+	pullm_shap_values = pullm_explainer.shap_values(X=pullm_x_test, nsamples=1500)
 
 #%%
 # Pullman SHAP plots
-# for index in range(len(pullm_shap_values[0])):
-# 	shap.plots._waterfall.waterfall_legacy(pullm_explainer.expected_value[0], pullm_shap_values[0][index], pullm_x_test[index], feature_names=pullm_feat_names, max_display=4)
+# 	for index in range(len(pullm_shap_values[0])):
+# 		shap.plots._waterfall.waterfall_legacy(pullm_explainer.expected_value[0], pullm_shap_values[0][index], pullm_x_test[index], feature_names=pullm_feat_names, max_display=4)
 
 #%%
-pullm_shap_results = []
+	pullm_shap_results = []
 
-for index in range(len(pullm_shap_values[0])):
-	pullm_shap_results.extend(pd.DataFrame(data=pullm_shap_values[0][index].reshape(1, len(pullm_feat_names)), columns=pullm_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+	for index in range(len(pullm_shap_values[0])):
+		pullm_shap_results.extend(pd.DataFrame(data=pullm_shap_values[0][index].reshape(1, len(pullm_feat_names)), columns=pullm_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
+	pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 
 #%%
 # Vancouver SHAP undersample
-# vanco_under_shap = NearMiss(sampling_strategy={0:250, 1:1000}, version=2, n_jobs=-1)
-# vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
+# 	vanco_under_shap = NearMiss(sampling_strategy={0:250, 1:1000}, version=2, n_jobs=-1)
+# 	vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
 
 #%%
 # Vancouver SHAP training (see: https://github.com/slundberg/shap)
-# vanco_explainer = shap.KernelExplainer(model=vanco_vcf.predict_proba, data=vanco_x_shap)
+# 	vanco_explainer = shap.KernelExplainer(model=vanco_vcf.predict_proba, data=vanco_x_shap)
 
 #%%
 # Vancouver SHAP prediction
-# vanco_shap_values = vanco_explainer.shap_values(X=vanco_x_test, nsamples=500)
+# 	vanco_shap_values = vanco_explainer.shap_values(X=vanco_x_test, nsamples=500)
 
 #%%
 # Vancouver SHAP plots
-# for index in range(len(vanco_shap_values[0])):
-	# shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=vanco_feat_names, max_display=4)
+# 	for index in range(len(vanco_shap_values[0])):
+# 		shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=vanco_feat_names, max_display=4)
 
 #%%
-# vanco_shap_results = []
+#	vanco_shap_results = []
 
-# for index in range(len(vanco_shap_values[0])):
-# 	vanco_shap_results.extend(pd.DataFrame(data=vanco_shap_values[0][index].reshape(1, len(vanco_feat_names)), columns=vanco_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+#	for index in range(len(vanco_shap_values[0])):
+#		vanco_shap_results.extend(pd.DataFrame(data=vanco_shap_values[0][index].reshape(1, len(vanco_feat_names)), columns=vanco_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-# vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
+#	vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
 
 #%%
 # Tri-Cities SHAP undersample
-# trici_under_shap = NearMiss(sampling_strategy={0:100, 1:400}, version=2, n_jobs=-1)
-# trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
+#	trici_under_shap = NearMiss(sampling_strategy={0:100, 1:400}, version=2, n_jobs=-1)
+#	trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
 
 #%%
 # Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
-# trici_explainer = shap.KernelExplainer(model=trici_vcf.predict_proba, data=trici_x_shap)
+#	trici_explainer = shap.KernelExplainer(model=trici_vcf.predict_proba, data=trici_x_shap)
 
 #%%
 # Tri-Cities SHAP prediction
@@ -3162,14 +3166,14 @@ pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 # 	shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=trici_feat_names, max_display=4)
 
 #%%
-# trici_shap_results = []
+#	trici_shap_results = []
 
-# for index in range(len(trici_shap_values[0])):
-# 	trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, len(trici_feat_names)), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+#	for index in range(len(trici_shap_values[0])):
+#		trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, len(trici_feat_names)), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-# trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
+#	trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
 
-print('Done\n')
+	print('Done\n')
 
 #%%
 # Prepare model predictions
@@ -3388,84 +3392,91 @@ else:
 
 #%%
 # Pullman top-N SHAP values to csv and to sql
-pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_shap.csv', 'w', newline='')
-pullm_shap_writer = csv.writer(pullm_shap_file)
-pullm_shap_insert = []
 
-pullm_shap_writer.writerow(['emplid','shap_values'])
+if datetime.datetime.today().weekday() == 5:
 
-for emplid in pullm_shap_zip:
-	pullm_shap_writer.writerow([emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))])
-	pullm_shap_sql = [emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))]
-	 
-	pullm_shap_insert.append(str(pullm_shap_sql[0]).zfill(9))
+	pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_shap.csv', 'w', newline='')
+	pullm_shap_writer = csv.writer(pullm_shap_file)
+	pullm_shap_insert = []
 
-	for index in range(top_N):
-		shap_str, shap_float = pullm_shap_sql[1][index]
-		pullm_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
+	pullm_shap_writer.writerow(['emplid','shap_values'])
 
-pullm_shap_file.close()
+	for emplid in pullm_shap_zip:
+		pullm_shap_writer.writerow([emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))])
+		pullm_shap_sql = [emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))]
+		
+		pullm_shap_insert.append(str(pullm_shap_sql[0]).zfill(9))
 
-while pullm_shap_insert:
-	ins = student_shap.insert().values(EMPLID=pullm_shap_insert.pop(0), shap_value_1=pullm_shap_insert.pop(0),
-										shap_value_2=pullm_shap_insert.pop(0), shap_value_3=pullm_shap_insert.pop(0), 
-										shap_value_4=pullm_shap_insert.pop(0), shap_value_5=pullm_shap_insert.pop(0), 
-										DATE=date.today(), model_id=7)
-	engine.execute(ins)
+		for index in range(top_N):
+			shap_str, shap_float = pullm_shap_sql[1][index]
+			pullm_shap_insert.append(shap_str) 
+			pullm_shap_insert.append(round(shap_float, 4))
+
+	pullm_shap_file.close()
+
+	while pullm_shap_insert:
+		ins = student_shap.insert().values(emplid=pullm_shap_insert.pop(0), 
+											shap_descr_1=pullm_shap_insert.pop(0), shap_value_1=pullm_shap_insert.pop(0), 
+											shap_descr_2=pullm_shap_insert.pop(0), shap_value_2=pullm_shap_insert.pop(0), 
+											shap_descr_3=pullm_shap_insert.pop(0), shap_value_3=pullm_shap_insert.pop(0), 
+											shap_descr_4=pullm_shap_insert.pop(0), shap_value_4=pullm_shap_insert.pop(0), 
+											shap_descr_5=pullm_shap_insert.pop(0), shap_value_5=pullm_shap_insert.pop(0), 
+											date=date.today(), model_id=7)
+		engine.execute(ins)
 
 #%%
 # Vancouver top-N SHAP values to csv and to sql
-# vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_shap.csv', 'w', newline='')
-# vanco_shap_writer = csv.writer(vanco_shap_file)
-# vanco_shap_insert = []
+# 	vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_shap.csv', 'w', newline='')
+# 	vanco_shap_writer = csv.writer(vanco_shap_file)
+# 	vanco_shap_insert = []
 
-# vanco_shap_writer.writerow(['emplid','shap_values'])
+# 	vanco_shap_writer.writerow(['emplid','shap_values'])
 
-# for emplid in vanco_shap_zip:
-# 	vanco_shap_writer.writerow([emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))])
-# 	vanco_shap_sql = [emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))]
-	 
-# 	vanco_shap_insert.append(str(vanco_shap_sql[0]).zfill(9))
+# 	for emplid in vanco_shap_zip:
+# 		vanco_shap_writer.writerow([emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))])
+# 		vanco_shap_sql = [emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))]
+		
+# 		vanco_shap_insert.append(str(vanco_shap_sql[0]).zfill(9))
 
-# 	for index in range(top_N):
-# 		shap_str, shap_float = vanco_shap_sql[1][index]
-# 		vanco_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
+# 		for index in range(top_N):
+# 			shap_str, shap_float = vanco_shap_sql[1][index]
+# 			vanco_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
 
-# vanco_shap_file.close()
+# 	vanco_shap_file.close()
 
-# while vanco_shap_insert:
-# 	ins = student_shap.insert().values(EMPLID=vanco_shap_insert.pop(0), shap_value_1=vanco_shap_insert.pop(0),
-# 										shap_value_2=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
-# 										shap_value_4=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
-# 										DATE=date.today(), model_id=7)
-# 	engine.execute(ins)
+# 	while vanco_shap_insert:
+# 		ins = student_shap.insert().values(EMPLID=vanco_shap_insert.pop(0), shap_value_1=vanco_shap_insert.pop(0),
+# 											shap_value_2=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
+# 											shap_value_4=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
+# 											DATE=date.today(), model_id=7)
+# 		engine.execute(ins)
 
 #%%
 # Tri-Cities top-N SHAP values to csv and to sql
-# trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_shap.csv', 'w', newline='')
-# trici_shap_writer = csv.writer(trici_shap_file)
-# trici_shap_insert = []
+# 	trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_shap.csv', 'w', newline='')
+# 	trici_shap_writer = csv.writer(trici_shap_file)
+# 	trici_shap_insert = []
 
-# trici_shap_writer.writerow(['emplid','shap_values'])
+# 	trici_shap_writer.writerow(['emplid','shap_values'])
 
-# for emplid in trici_shap_zip:
-# 	trici_shap_writer.writerow([emplid, list(islice(trici_shap_zip[emplid].items(), top_N))])
-# 	trici_shap_sql = [emplid, list(islice(trici_shap_zip[emplid].items(), top_N))]
-	 
-# 	trici_shap_insert.append(str(trici_shap_sql[0]).zfill(9))
+# 	for emplid in trici_shap_zip:
+# 		trici_shap_writer.writerow([emplid, list(islice(trici_shap_zip[emplid].items(), top_N))])
+# 		trici_shap_sql = [emplid, list(islice(trici_shap_zip[emplid].items(), top_N))]
+		
+# 		trici_shap_insert.append(str(trici_shap_sql[0]).zfill(9))
 
-# 	for index in range(top_N):
-# 		shap_str, shap_float = trici_shap_sql[1][index]
-# 		trici_shap_insert.append(shap_str + ': ' + str(round(shap_float * -100, 1)) + "%")
+# 		for index in range(top_N):
+# 			shap_str, shap_float = trici_shap_sql[1][index]
+# 			trici_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
 
-# trici_shap_file.close()
+# 	trici_shap_file.close()
 
-# while trici_shap_insert:
-# 	ins = student_shap.insert().values(EMPLID=trici_shap_insert.pop(0), shap_value_1=trici_shap_insert.pop(0), 
-# 										shap_value_2=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
-# 										shap_value_4=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
-# 										DATE=date.today(), model_id=7)
-# 	engine.execute(ins)
+# 	while trici_shap_insert:
+# 		ins = student_shap.insert().values(EMPLID=trici_shap_insert.pop(0), shap_value_1=trici_shap_insert.pop(0), 
+# 											shap_value_2=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
+# 											shap_value_4=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
+# 											DATE=date.today(), model_id=7)
+# 		engine.execute(ins)
 
 #%%
 # Output model
