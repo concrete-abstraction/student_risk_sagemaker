@@ -3017,7 +3017,7 @@ pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).st
 pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_vcf_pred_probs).round(4)
 
 pullm_current_outcome['date'] = date.today()
-pullm_current_outcome['model_id'] = 5
+pullm_current_outcome['model_id'] = 2
 
 #%%
 # Vancouver current outcome
@@ -3025,7 +3025,7 @@ vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).st
 vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_vcf_pred_probs).round(4)
 
 vanco_current_outcome['date'] = date.today()
-vanco_current_outcome['model_id'] = 5
+vanco_current_outcome['model_id'] = 2
 
 #%%
 # Tri-Cities current outcome
@@ -3033,7 +3033,7 @@ trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).st
 trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_vcf_pred_probs).round(4)
 
 trici_current_outcome['date'] = date.today()
-trici_current_outcome['model_id'] = 5
+trici_current_outcome['model_id'] = 2
 
 #%%
 # Pullman to csv and to sql
