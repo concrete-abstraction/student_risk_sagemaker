@@ -170,6 +170,12 @@ if __name__ == '__main__':
                             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_adm.py').read())
                         except config.DateError as adm_error:
                             print(adm_error)
+
+                            # try:
+                            #     exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_adm.py').read())
+                            #     exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_adm.py').read())
+                            # except config.DataError as adm_snap_error:
+                            #     print(adm_snap_error)
         
         except KeyError as key_error:
             print(key_error)

@@ -176,7 +176,6 @@ class DatasetBuilderProd:
 					on input(a.full_acad_year, 4.) = l.acs_lag
 				where a.full_acad_year = "&cohort_year"
 					and substr(a.strm, 4 , 1) = '7'
-					and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and a.acad_career = 'UGRD'
 					and a.adj_admit_type_cat in ('FRSH','TRAN')
 					and a.ipeds_full_part_time = 'F'
@@ -195,7 +194,6 @@ class DatasetBuilderProd:
 					eot_term_gpa_hours
 				from &dev..new_student_profile_ugrd
 				where substr(strm, 4 , 1) = '7'
-					and adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and adj_admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
 					and ipeds_full_part_time = 'F'
 					and WA_residency ^= 'NON-I'
@@ -381,7 +379,6 @@ class DatasetBuilderProd:
 				where snapshot = 'census'
 					and full_acad_year = "&cohort_year."
 					and substr(strm, 4, 1) = '7'
-					and adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and acad_career = 'UGRD'
 					and adj_admit_type_cat in ('FRSH','TRAN')
 					and WA_residency ^= 'NON-I'
@@ -960,7 +957,6 @@ class DatasetBuilderProd:
 				from &dsn..new_student_enrolled_housing_vw
 				where snapshot = 'census'
 					and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-					and adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and acad_career = 'UGRD'
 					and adj_admit_type_cat in ('FRSH','TRAN')
 			;quit;
@@ -1254,8 +1250,7 @@ class DatasetBuilderProd:
 					on a.emplid = hispc.emplid
 				where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 										from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
-					and a.acad_career = 'UGRD' 
-					and a.campus in ('PULLM','VANCO','TRICI') 
+					and a.acad_career = 'UGRD'
 					and a.enrolled = 1
 					and b.admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
 			;quit;
@@ -1785,8 +1780,7 @@ class DatasetBuilderProd:
 					on a.emplid = w.emplid
 				where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
 										from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
-					and a.acad_career = 'UGRD' 
-					and a.campus in ('PULLM','VANCO','TRICI') 
+					and a.acad_career = 'UGRD'
 					and a.enrolled = 1
 					and c.admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
 			;quit;
@@ -2262,7 +2256,6 @@ class DatasetBuilderProd:
 					on input(a.full_acad_year,4.) = l.acs_lag
 				where a.full_acad_year = "&cohort_year."
 					and substr(a.strm,4,1) = '7'
-					and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and a.acad_career = 'UGRD'
 					and a.adj_admit_type_cat in ('FRSH','TRAN')
 					and a.ipeds_full_part_time = 'F'
@@ -2279,7 +2272,6 @@ class DatasetBuilderProd:
 					pell_recipient_ind
 				from &dev..new_student_profile_ugrd_cs
 				where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-					and adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and adj_admit_type_cat in ('FRSH','TRAN')
 					and ipeds_full_part_time = 'F'
 					and WA_residency ^= 'NON-I'
@@ -2477,7 +2469,6 @@ class DatasetBuilderProd:
 				where snapshot = 'census'
 					and full_acad_year = "&cohort_year."
 					and substr(strm, 4, 1) = '7'
-					and adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and acad_career = 'UGRD'
 					and adj_admit_type_cat in ('FRSH','TRAN')
 					and WA_residency ^= 'NON-I'
@@ -3339,7 +3330,6 @@ class DatasetBuilderProd:
 				from &dsn..new_student_enrolled_housing_vw
 				where snapshot = 'census'
 					and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-					and adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and acad_career = 'UGRD'
 					and adj_admit_type_cat in ('FRSH','TRAN')
 			;quit;
@@ -3680,7 +3670,6 @@ class DatasetBuilderProd:
 					on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 				where a.full_acad_year = "&cohort_year"
 					and substr(a.strm, 4 , 1) = '7'
-					and a.adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and a.acad_career = 'UGRD'
 					and a.adj_admit_type_cat in ('FRSH','TRAN')
 					and a.ipeds_full_part_time = 'F'
@@ -3697,7 +3686,6 @@ class DatasetBuilderProd:
 					pell_recipient_ind
 				from &dsn..new_student_profile_ugrd_cs
 				where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-					and adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and adj_admit_type_cat in ('FRSH','TRAN')
 					and ipeds_full_part_time = 'F'
 					and WA_residency ^= 'NON-I'
@@ -3879,7 +3867,6 @@ class DatasetBuilderProd:
 				where snapshot = 'census'
 					and full_acad_year = "&cohort_year."
 					and substr(strm, 4, 1) = '7'
-					and adj_admit_campus in ('PULLM','VANCO','TRICI')
 					and acad_career = 'UGRD'
 					and adj_admit_type_cat in ('FRSH','TRAN')
 					and WA_residency ^= 'NON-I'
@@ -4799,7 +4786,6 @@ class DatasetBuilderProd:
 				from &dsn..new_student_enrolled_housing_vw
 				where snapshot = 'census'
 					and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-					and adj_admit_campus in ('PULLM', 'VANCO', 'TRICI')
 					and acad_career = 'UGRD'
 					and adj_admit_type_cat in ('FRSH','TRAN')
 			;quit;
