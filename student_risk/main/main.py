@@ -43,9 +43,15 @@ filename calendar \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_c
 proc export data=acad_calendar outfile=calendar dbms=csv replace;
 
 proc sql;
-    select min(term_type) into: term_type from &dsn..xw_term where term_year = year(today()) and month(datepart(term_begin_dt)) <= month(today()) and month(datepart(term_end_dt)) >= month(today()) and acad_career = 'UGRD'
+    select term_type into: term_type 
+    from &dsn..xw_term 
+    where term_year = year(today())
+        and month(datepart(term_begin_dt)) <= month(today()) 
+        and month(datepart(term_end_dt)) >= month(today()) 
+        and week(datepart(term_begin_dt)) <= week(today())
+        and week(datepart(term_end_dt)) >= week(today())
+        and acad_career = 'UGRD'
 ;quit;
-run;
 """)
 
 term_type = sas.symget('term_type')
@@ -66,13 +72,13 @@ class Logger(object):
         pass
 
 
-sys.stdout = Logger()
-
 #%%
 if __name__ == '__main__':
 
     if term_type == 'SUM':
         
+        sys.stdout = Logger()
+
         try:
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\frsh\\sr_prod_sum_frsh_eot.py').read())
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\tran\\sr_prod_sum_tran_eot.py').read())
@@ -89,6 +95,8 @@ if __name__ == '__main__':
             print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
     if term_type == 'SPR':
+
+        sys.stdout = Logger()
 
         try:
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_mid.py').read())
@@ -138,6 +146,8 @@ if __name__ == '__main__':
             print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
     if term_type == 'FAL':
+        
+        sys.stdout = Logger()
 
         try:
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_mid.py').read())

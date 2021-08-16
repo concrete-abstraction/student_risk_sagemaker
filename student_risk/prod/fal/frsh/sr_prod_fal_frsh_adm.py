@@ -98,22 +98,26 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'race_black',
 						# 'race_native_hawaiian',
 						# 'race_white',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'marital_status',
+						'acs_mi',
 						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
-						'first_gen_flag', 
+						'first_gen_flag',
+						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
+						'high_school_gpa_mi',
 						# 'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -124,26 +128,12 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						# 'spring_avg_pct_DFW',
-						# 'spring_avg_pct_DF',
+						'fall_crse_mi',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_ind',
 						# 'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -164,12 +154,12 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'pct_two',
 						# 'pct_non',
 						'pct_hisp',
-						'city_large',
-						'city_mid',
-						'city_small',
-						'suburb_large',
-						'suburb_mid',
-						'suburb_small',
+						# 'city_large',
+						# 'city_mid',
+						# 'city_small',
+						# 'suburb_large',
+						# 'suburb_mid',
+						# 'suburb_small',
 						# 'town_fringe',
 						# 'town_distant',
 						# 'town_remote',
@@ -188,7 +178,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'total_fall_units',
 						# 'term_withdrawn_hours',
 						# 'athlete',
-						'remedial',
+						# 'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
 						# 'business',
@@ -250,13 +240,14 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'qvalue',
 						# 'fed_efc',
 						# 'fed_need',
-						'unmet_need_ofr'
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
                         ]].dropna()
 
 pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
                             'enrl_ind', 
-                        	# 'acad_year',
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
@@ -267,22 +258,26 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'race_black',
 							# 'race_native_hawaiian',
 							# 'race_white',
-							'min_week_from_term_begin_dt',
+							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
+							'acs_mi',
 							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
-							'first_gen_flag', 
+							'first_gen_flag',
+							'first_gen_flag_mi', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
+							'high_school_gpa_mi',
 							# 'fall_cum_gpa',
 							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -293,26 +288,12 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
-							# 'spring_avg_difficulty',
-							# 'spring_avg_pct_withdrawn',
-							# 'spring_avg_pct_CDFW',
-							# 'spring_avg_pct_CDF',
-							# 'spring_avg_pct_DFW',
-							# 'spring_avg_pct_DF',
+							'fall_crse_mi',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
-							# 'spring_lec_contact_hrs',
-							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
-							# 'fall_midterm_gpa_avg',
-							# 'fall_midterm_gpa_avg_ind',
-							# 'spring_midterm_gpa_avg',
-							# 'spring_midterm_gpa_avg_ind',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -333,12 +314,12 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'pct_two',
 							# 'pct_non',
 							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
 							# 'town_fringe',
 							# 'town_distant',
 							# 'town_remote',
@@ -357,7 +338,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'total_fall_units',
 							# 'term_withdrawn_hours',
 							# 'athlete',
-							'remedial',
+							# 'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
 							# 'business',
@@ -419,13 +400,14 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'qvalue',
 							# 'fed_efc',
 							# 'fed_need',
-							'unmet_need_ofr'
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
                             ]].dropna()
 
 pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
-							# 'enrl_ind',
-                            # 'acad_year',
+                            'enrl_ind', 
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
@@ -436,22 +418,26 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							# 'race_black',
 							# 'race_native_hawaiian',
 							# 'race_white',
-							'min_week_from_term_begin_dt',
+							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
+							'acs_mi',
 							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
-							'first_gen_flag', 
+							'first_gen_flag',
+							'first_gen_flag_mi', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
+							'high_school_gpa_mi',
 							# 'fall_cum_gpa',
 							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -462,26 +448,12 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
-							# 'spring_avg_difficulty',
-							# 'spring_avg_pct_withdrawn',
-							# 'spring_avg_pct_CDFW',
-							# 'spring_avg_pct_CDF',
-							# 'spring_avg_pct_DFW',
-							# 'spring_avg_pct_DF',
+							'fall_crse_mi',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
-							# 'spring_lec_contact_hrs',
-							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
-							# 'fall_midterm_gpa_avg',
-							# 'fall_midterm_gpa_avg_ind',
-							# 'spring_midterm_gpa_avg',
-							# 'spring_midterm_gpa_avg_ind',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -502,12 +474,12 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							'pct_two',
 							# 'pct_non',
 							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
 							# 'town_fringe',
 							# 'town_distant',
 							# 'town_remote',
@@ -526,7 +498,7 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							# 'total_fall_units',
 							# 'term_withdrawn_hours',
 							# 'athlete',
-							'remedial',
+							# 'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
 							# 'business',
@@ -588,7 +560,8 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							# 'qvalue',
 							# 'fed_efc',
 							# 'fed_need',
-							'unmet_need_ofr'
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
                             ]].dropna()
 
 pullm_testing_set = pullm_testing_set.reset_index()
@@ -629,22 +602,26 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'race_black',
 						# 'race_native_hawaiian',
 						# 'race_white',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'marital_status',
+						'acs_mi',
 						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
-						'first_gen_flag', 
+						'first_gen_flag',
+						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
+						'high_school_gpa_mi',
 						# 'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -655,26 +632,12 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						# 'spring_avg_pct_DFW',
-						# 'spring_avg_pct_DF',
+						'fall_crse_mi',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_ind',
 						# 'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -719,7 +682,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'total_fall_units',
 						# 'term_withdrawn_hours',
 						# 'athlete',
-						'remedial',
+						# 'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
 						# 'business',
@@ -781,13 +744,14 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'qvalue',
 						# 'fed_efc',
 						# 'fed_need',
-						'unmet_need_ofr'
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
                         ]].dropna()
 
 vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
                             'enrl_ind', 
-                        	# 'acad_year',
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
@@ -798,22 +762,26 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'race_black',
 							# 'race_native_hawaiian',
 							# 'race_white',
-							'min_week_from_term_begin_dt',
+							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
+							'acs_mi',
 							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
-							'first_gen_flag', 
+							'first_gen_flag',
+							'first_gen_flag_mi', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
+							'high_school_gpa_mi',
 							# 'fall_cum_gpa',
 							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -824,26 +792,12 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
-							# 'spring_avg_difficulty',
-							# 'spring_avg_pct_withdrawn',
-							# 'spring_avg_pct_CDFW',
-							# 'spring_avg_pct_CDF',
-							# 'spring_avg_pct_DFW',
-							# 'spring_avg_pct_DF',
+							'fall_crse_mi',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
-							# 'spring_lec_contact_hrs',
-							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
-							# 'fall_midterm_gpa_avg',
-							# 'fall_midterm_gpa_avg_ind',
-							# 'spring_midterm_gpa_avg',
-							# 'spring_midterm_gpa_avg_ind',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -888,7 +842,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'total_fall_units',
 							# 'term_withdrawn_hours',
 							# 'athlete',
-							'remedial',
+							# 'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
 							# 'business',
@@ -950,13 +904,14 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'qvalue',
 							# 'fed_efc',
 							# 'fed_need',
-							'unmet_need_ofr'
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
                             ]].dropna()
 
 vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
-							'enrl_ind',
-                            # 'acad_year',
+                            'enrl_ind', 
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
@@ -967,22 +922,26 @@ vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_se
 							# 'race_black',
 							# 'race_native_hawaiian',
 							# 'race_white',
-							'min_week_from_term_begin_dt',
+							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
+							'acs_mi',
 							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
-							'first_gen_flag', 
+							'first_gen_flag',
+							'first_gen_flag_mi', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
+							'high_school_gpa_mi',
 							# 'fall_cum_gpa',
 							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -993,26 +952,12 @@ vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_se
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
-							# 'spring_avg_difficulty',
-							# 'spring_avg_pct_withdrawn',
-							# 'spring_avg_pct_CDFW',
-							# 'spring_avg_pct_CDF',
-							# 'spring_avg_pct_DFW',
-							# 'spring_avg_pct_DF',
+							'fall_crse_mi',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
-							# 'spring_lec_contact_hrs',
-							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
-							# 'fall_midterm_gpa_avg',
-							# 'fall_midterm_gpa_avg_ind',
-							# 'spring_midterm_gpa_avg',
-							# 'spring_midterm_gpa_avg_ind',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1057,7 +1002,7 @@ vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_se
 							# 'total_fall_units',
 							# 'term_withdrawn_hours',
 							# 'athlete',
-							'remedial',
+							# 'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
 							# 'business',
@@ -1119,7 +1064,8 @@ vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_se
 							# 'qvalue',
 							# 'fed_efc',
 							# 'fed_need',
-							'unmet_need_ofr'
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
                             ]].dropna()
 
 vanco_testing_set = vanco_testing_set.reset_index()
@@ -1160,22 +1106,26 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'race_black',
 						# 'race_native_hawaiian',
 						# 'race_white',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'marital_status',
+						'acs_mi',
 						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
-						'first_gen_flag', 
+						'first_gen_flag',
+						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
+						'high_school_gpa_mi',
 						# 'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -1186,26 +1136,12 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						# 'spring_avg_pct_DFW',
-						# 'spring_avg_pct_DF',
+						'fall_crse_mi',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_ind',
 						# 'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -1250,7 +1186,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'total_fall_units',
 						# 'term_withdrawn_hours',
 						# 'athlete',
-						'remedial',
+						# 'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
 						# 'business',
@@ -1312,13 +1248,14 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'qvalue',
 						# 'fed_efc',
 						# 'fed_need',
-						'unmet_need_ofr'
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
                         ]].dropna()
 
 trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') & (training_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
                             'enrl_ind', 
-                        	# 'acad_year',
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
@@ -1329,22 +1266,26 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'race_black',
 							# 'race_native_hawaiian',
 							# 'race_white',
-							'min_week_from_term_begin_dt',
+							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
+							'acs_mi',
 							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
-							'first_gen_flag', 
+							'first_gen_flag',
+							'first_gen_flag_mi', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
+							'high_school_gpa_mi',
 							# 'fall_cum_gpa',
 							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -1355,26 +1296,12 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
-							# 'spring_avg_difficulty',
-							# 'spring_avg_pct_withdrawn',
-							# 'spring_avg_pct_CDFW',
-							# 'spring_avg_pct_CDF',
-							# 'spring_avg_pct_DFW',
-							# 'spring_avg_pct_DF',
+							'fall_crse_mi',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
-							# 'spring_lec_contact_hrs',
-							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
-							# 'fall_midterm_gpa_avg',
-							# 'fall_midterm_gpa_avg_ind',
-							# 'spring_midterm_gpa_avg',
-							# 'spring_midterm_gpa_avg_ind',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1419,7 +1346,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'total_fall_units',
 							# 'term_withdrawn_hours',
 							# 'athlete',
-							'remedial',
+							# 'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
 							# 'business',
@@ -1481,13 +1408,14 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'qvalue',
 							# 'fed_efc',
 							# 'fed_need',
-							'unmet_need_ofr'
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
                             ]].dropna()
 
 trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
-							'enrl_ind',
-                            # 'acad_year',
+                            'enrl_ind', 
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
@@ -1498,22 +1426,26 @@ trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_se
 							# 'race_black',
 							# 'race_native_hawaiian',
 							# 'race_white',
-							'min_week_from_term_begin_dt',
+							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
+							'acs_mi',
 							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
-							'first_gen_flag', 
+							'first_gen_flag',
+							'first_gen_flag_mi', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
+							'high_school_gpa_mi',
 							# 'fall_cum_gpa',
 							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -1524,26 +1456,12 @@ trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_se
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
-							# 'spring_avg_difficulty',
-							# 'spring_avg_pct_withdrawn',
-							# 'spring_avg_pct_CDFW',
-							# 'spring_avg_pct_CDF',
-							# 'spring_avg_pct_DFW',
-							# 'spring_avg_pct_DF',
+							'fall_crse_mi',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
-							# 'spring_lec_contact_hrs',
-							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
-							# 'fall_midterm_gpa_avg',
-							# 'fall_midterm_gpa_avg_ind',
-							# 'spring_midterm_gpa_avg',
-							# 'spring_midterm_gpa_avg_ind',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1588,7 +1506,7 @@ trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_se
 							# 'total_fall_units',
 							# 'term_withdrawn_hours',
 							# 'athlete',
-							'remedial',
+							# 'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
 							# 'business',
@@ -1650,7 +1568,8 @@ trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_se
 							# 'qvalue',
 							# 'fed_efc',
 							# 'fed_need',
-							'unmet_need_ofr'
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
                             ]].dropna()
 
 trici_testing_set = trici_testing_set.reset_index()
@@ -1691,22 +1610,26 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						# 'race_black',
 						# 'race_native_hawaiian',
 						# 'race_white',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'marital_status',
+						'acs_mi',
 						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
-						'first_gen_flag', 
+						'first_gen_flag',
+						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
+						'high_school_gpa_mi',
 						# 'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -1717,26 +1640,12 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						# 'spring_avg_pct_DFW',
-						# 'spring_avg_pct_DF',
+						'fall_crse_mi',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_ind',
 						# 'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -1781,7 +1690,7 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						# 'total_fall_units',
 						# 'term_withdrawn_hours',
 						# 'athlete',
-						'remedial',
+						# 'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
 						# 'business',
@@ -1843,13 +1752,14 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						# 'qvalue',
 						# 'fed_efc',
 						# 'fed_need',
-						'unmet_need_ofr'
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
                         ]].dropna()
 
 univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
                             'enrl_ind', 
-                        	# 'acad_year',
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
@@ -1860,22 +1770,26 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							# 'race_black',
 							# 'race_native_hawaiian',
 							# 'race_white',
-							'min_week_from_term_begin_dt',
+							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
+							'acs_mi',
 							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
-							'first_gen_flag', 
+							'first_gen_flag',
+							'first_gen_flag_mi', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
+							'high_school_gpa_mi',
 							# 'fall_cum_gpa',
 							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -1886,26 +1800,12 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
-							# 'spring_avg_difficulty',
-							# 'spring_avg_pct_withdrawn',
-							# 'spring_avg_pct_CDFW',
-							# 'spring_avg_pct_CDF',
-							# 'spring_avg_pct_DFW',
-							# 'spring_avg_pct_DF',
+							'fall_crse_mi',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
-							# 'spring_lec_contact_hrs',
-							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
-							# 'fall_midterm_gpa_avg',
-							# 'fall_midterm_gpa_avg_ind',
-							# 'spring_midterm_gpa_avg',
-							# 'spring_midterm_gpa_avg_ind',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -1950,7 +1850,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							# 'total_fall_units',
 							# 'term_withdrawn_hours',
 							# 'athlete',
-							'remedial',
+							# 'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
 							# 'business',
@@ -2012,13 +1912,14 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							# 'qvalue',
 							# 'fed_efc',
 							# 'fed_need',
-							'unmet_need_ofr'
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
                             ]].dropna()
 
 univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_set['adj_admit_type_cat'] == 'FRSH')) | ((testing_set['campus'] == 'SPOKA') & (testing_set['adj_admit_type_cat'] == 'FRSH')) | ((testing_set['campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'FRSH'))][[
                             'emplid',
-							'enrl_ind',
-                            # 'acad_year',
+							'enrl_ind', 
+							# 'acad_year',
 							# 'age_group', 
 							# 'age',
 							'male',
@@ -2029,22 +1930,26 @@ univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_s
 							# 'race_black',
 							# 'race_native_hawaiian',
 							# 'race_white',
-							'min_week_from_term_begin_dt',
+							# 'min_week_from_term_begin_dt',
 							# 'max_week_from_term_begin_dt',
-							# 'count_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
 							# 'marital_status',
+							'acs_mi',
 							'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind', 
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
-							'first_gen_flag', 
+							'first_gen_flag',
+							'first_gen_flag_mi', 
 							# 'LSAMP_STEM_Flag',
 							# 'anywhere_STEM_Flag',
 							# 'honors_program_ind',
 							# 'afl_greek_indicator',
 							'high_school_gpa',
+							'high_school_gpa_mi',
 							# 'fall_cum_gpa',
 							# 'spring_midterm_gpa_change',
 							# 'awe_instrument',
@@ -2055,26 +1960,12 @@ univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_s
 							'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
-							# 'spring_avg_difficulty',
-							# 'spring_avg_pct_withdrawn',
-							# 'spring_avg_pct_CDFW',
-							# 'spring_avg_pct_CDF',
-							# 'spring_avg_pct_DFW',
-							# 'spring_avg_pct_DF',
+							'fall_crse_mi',
 							'fall_lec_count',
 							'fall_lab_count',
 							# 'fall_lec_contact_hrs',
 							# 'fall_lab_contact_hrs',
-							# 'spring_lec_count',
-							# 'spring_lab_count',
-							# 'spring_lec_contact_hrs',
-							# 'spring_lab_contact_hrs',
 							'total_fall_contact_hrs',
-							# 'total_spring_contact_hrs',
-							# 'fall_midterm_gpa_avg',
-							# 'fall_midterm_gpa_avg_ind',
-							# 'spring_midterm_gpa_avg',
-							# 'spring_midterm_gpa_avg_ind',
 							# 'cum_adj_transfer_hours',
 							'resident',
 							# 'father_wsu_flag',
@@ -2119,7 +2010,7 @@ univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_s
 							# 'total_fall_units',
 							# 'term_withdrawn_hours',
 							# 'athlete',
-							'remedial',
+							# 'remedial',
 							# 'ACAD_PLAN',
 							# 'plan_owner_org',
 							# 'business',
@@ -2181,8 +2072,9 @@ univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_s
 							# 'qvalue',
 							# 'fed_efc',
 							# 'fed_need',
-							'unmet_need_ofr'
-                            ]].dropna()
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
+                            ]]
 
 univr_testing_set = univr_testing_set.reset_index()
 
@@ -2390,22 +2282,26 @@ pullm_x_test = pullm_testing_set[[
 						# 'race_black',
 						# 'race_native_hawaiian',
 						# 'race_white',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'marital_status',
+						'acs_mi',
 						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
-						'first_gen_flag', 
+						'first_gen_flag',
+						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
+						'high_school_gpa_mi',
 						# 'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2416,26 +2312,12 @@ pullm_x_test = pullm_testing_set[[
 						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						# 'spring_avg_pct_DFW',
-						# 'spring_avg_pct_DF',
+						'fall_crse_mi',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_ind',
 						# 'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -2456,12 +2338,12 @@ pullm_x_test = pullm_testing_set[[
 						'pct_two',
 						# 'pct_non',
 						'pct_hisp',
-						'city_large',
-						'city_mid',
-						'city_small',
-						'suburb_large',
-						'suburb_mid',
-						'suburb_small',
+						# 'city_large',
+						# 'city_mid',
+						# 'city_small',
+						# 'suburb_large',
+						# 'suburb_mid',
+						# 'suburb_small',
 						# 'town_fringe',
 						# 'town_distant',
 						# 'town_remote',
@@ -2480,7 +2362,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'total_fall_units',
 						# 'term_withdrawn_hours',
 						# 'athlete',
-						'remedial',
+						# 'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
 						# 'business',
@@ -2542,7 +2424,8 @@ pullm_x_test = pullm_testing_set[[
 						# 'qvalue',
 						# 'fed_efc',
 						# 'fed_need',
-						'unmet_need_ofr'
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
                         ]]
 
 pullm_y_train = pullm_training_set['enrl_ind']
@@ -2552,9 +2435,9 @@ pullm_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
 						'distance',
 						# 'age',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'sat_erws',
 						# 'sat_mss',
 						# 'sat_comp',
@@ -2655,7 +2538,7 @@ pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_t
 vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_x_test = vanco_testing_set[[
-                         # 'acad_year',
+                        # 'acad_year',
 						# 'age_group', 
 						# 'age',
 						'male',
@@ -2666,22 +2549,26 @@ vanco_x_test = vanco_testing_set[[
 						# 'race_black',
 						# 'race_native_hawaiian',
 						# 'race_white',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'marital_status',
+						'acs_mi',
 						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
-						'first_gen_flag', 
+						'first_gen_flag',
+						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
+						'high_school_gpa_mi',
 						# 'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2692,26 +2579,12 @@ vanco_x_test = vanco_testing_set[[
 						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						# 'spring_avg_pct_DFW',
-						# 'spring_avg_pct_DF',
+						'fall_crse_mi',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_ind',
 						# 'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -2756,7 +2629,7 @@ vanco_x_test = vanco_testing_set[[
 						# 'total_fall_units',
 						# 'term_withdrawn_hours',
 						# 'athlete',
-						'remedial',
+						# 'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
 						# 'business',
@@ -2818,7 +2691,8 @@ vanco_x_test = vanco_testing_set[[
 						# 'qvalue',
 						# 'fed_efc',
 						# 'fed_need',
-						'unmet_need_ofr'
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
                         ]]
 
 vanco_y_train = vanco_training_set['enrl_ind']
@@ -2828,9 +2702,9 @@ vanco_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
 						'distance',
 						# 'age',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'sat_erws',
 						# 'sat_mss',
 						# 'sat_comp',
@@ -2929,7 +2803,7 @@ vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_t
 trici_x_train = trici_training_set.drop(columns=['enrl_ind','emplid'])
 
 trici_x_test = trici_testing_set[[
-                         # 'acad_year',
+                        # 'acad_year',
 						# 'age_group', 
 						# 'age',
 						'male',
@@ -2940,22 +2814,26 @@ trici_x_test = trici_testing_set[[
 						# 'race_black',
 						# 'race_native_hawaiian',
 						# 'race_white',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'marital_status',
+						'acs_mi',
 						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
-						'first_gen_flag', 
+						'first_gen_flag',
+						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
+						'high_school_gpa_mi',
 						# 'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -2966,26 +2844,12 @@ trici_x_test = trici_testing_set[[
 						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						# 'spring_avg_pct_DFW',
-						# 'spring_avg_pct_DF',
+						'fall_crse_mi',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_ind',
 						# 'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -3030,7 +2894,7 @@ trici_x_test = trici_testing_set[[
 						# 'total_fall_units',
 						# 'term_withdrawn_hours',
 						# 'athlete',
-						'remedial',
+						# 'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
 						# 'business',
@@ -3092,7 +2956,8 @@ trici_x_test = trici_testing_set[[
 						# 'qvalue',
 						# 'fed_efc',
 						# 'fed_need',
-						'unmet_need_ofr'
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
                         ]]
 
 trici_y_train = trici_training_set['enrl_ind']
@@ -3102,9 +2967,9 @@ trici_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
 						'distance',
 						# 'age',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'sat_erws',
 						# 'sat_mss',
 						# 'sat_comp',
@@ -3203,7 +3068,7 @@ trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_t
 univr_x_train = univr_training_set.drop(columns=['enrl_ind','emplid'])
 
 univr_x_test = univr_testing_set[[
-                         # 'acad_year',
+                        # 'acad_year',
 						# 'age_group', 
 						# 'age',
 						'male',
@@ -3214,22 +3079,26 @@ univr_x_test = univr_testing_set[[
 						# 'race_black',
 						# 'race_native_hawaiian',
 						# 'race_white',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'marital_status',
+						'acs_mi',
 						'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
-						'pell_eligibility_ind', 
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
-						'first_gen_flag', 
+						'first_gen_flag',
+						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
 						# 'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
+						'high_school_gpa_mi',
 						# 'fall_cum_gpa',
 						# 'spring_midterm_gpa_change',
 						# 'awe_instrument',
@@ -3240,26 +3109,12 @@ univr_x_test = univr_testing_set[[
 						'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						# 'spring_avg_pct_DFW',
-						# 'spring_avg_pct_DF',
+						'fall_crse_mi',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_lec_contact_hrs',
 						# 'fall_lab_contact_hrs',
-						# 'spring_lec_count',
-						# 'spring_lab_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
 						'total_fall_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'fall_midterm_gpa_avg',
-						# 'fall_midterm_gpa_avg_ind',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_ind',
 						# 'cum_adj_transfer_hours',
 						'resident',
 						# 'father_wsu_flag',
@@ -3304,7 +3159,7 @@ univr_x_test = univr_testing_set[[
 						# 'total_fall_units',
 						# 'term_withdrawn_hours',
 						# 'athlete',
-						'remedial',
+						# 'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
 						# 'business',
@@ -3366,7 +3221,8 @@ univr_x_test = univr_testing_set[[
 						# 'qvalue',
 						# 'fed_efc',
 						# 'fed_need',
-						'unmet_need_ofr'
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
                         ]]
 
 univr_y_train = univr_training_set['enrl_ind']
@@ -3376,9 +3232,9 @@ univr_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
 						'distance',
 						# 'age',
-						'min_week_from_term_begin_dt',
+						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
 						# 'sat_erws',
 						# 'sat_mss',
 						# 'sat_comp',
@@ -3479,20 +3335,16 @@ univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_t
 print('\nStandard logistic model for Pullman freshmen...\n')
 
 pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-				+ city_large + city_mid + city_small + suburb_large + suburb_mid + suburb_small \
-				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + pell_eligibility_ind \
-                + first_gen_flag \
+				+ gini_indx + median_inc + acs_mi \
+				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ fall_lec_count + fall_lab_count \
-				+ total_fall_contact_hrs \
-                + resident + gini_indx + median_inc \
-            	+ high_school_gpa \
-				+ remedial \
+				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
+                + resident \
+            	+ high_school_gpa + high_school_gpa_mi \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr \
-				+ min_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
+            	+ unmet_need_ofr + unmet_need_ofr_mi \
+				+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
 
 pullm_logit_mod = Logit(pullm_y, pullm_x)
 pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -3505,19 +3357,16 @@ print('\n')
 print('\nStandard logistic model for Vancouver freshmen...\n')
 
 vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + pell_eligibility_ind \
-                + first_gen_flag \
+				+ gini_indx + median_inc + acs_mi \
+				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ fall_lec_count + fall_lab_count \
-				+ total_fall_contact_hrs \
-                + resident + gini_indx + median_inc \
-            	+ high_school_gpa \
-				+ remedial \
+				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
+                + resident \
+            	+ high_school_gpa + high_school_gpa_mi \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr \
-				+ min_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
+            	+ unmet_need_ofr + unmet_need_ofr_mi \
+				+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
 
 vanco_logit_mod = Logit(vanco_y, vanco_x)
 vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
@@ -3530,19 +3379,16 @@ print('\n')
 print('\nStandard logistic model for Tri-Cities freshmen...\n')
 
 trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + pell_eligibility_ind \
-                + first_gen_flag \
+				+ gini_indx + median_inc + acs_mi \
+				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ fall_lec_count + fall_lab_count \
-				+ total_fall_contact_hrs \
-                + resident + gini_indx + median_inc \
-            	+ high_school_gpa \
-				+ remedial \
+				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
+                + resident \
+            	+ high_school_gpa + high_school_gpa_mi \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr \
-				+ min_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
+            	+ unmet_need_ofr + unmet_need_ofr_mi \
+				+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
 
 trici_logit_mod = Logit(trici_y, trici_x)
 trici_logit_res = trici_logit_mod.fit(maxiter=500)
@@ -3555,19 +3401,16 @@ print('\n')
 print('\nStandard logistic model for University freshmen...\n')
 
 univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-				+ male + underrep_minority \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-                + pell_eligibility_ind \
-                + first_gen_flag \
+				+ gini_indx + median_inc + acs_mi \
+				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ fall_lec_count + fall_lab_count \
-				+ total_fall_contact_hrs \
-                + resident + gini_indx + median_inc \
-            	+ high_school_gpa \
-				+ remedial \
+				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
+                + resident \
+            	+ high_school_gpa + high_school_gpa_mi \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr \
-				+ min_week_from_term_begin_dt', data=univr_logit_df, return_type='dataframe')
+            	+ unmet_need_ofr + unmet_need_ofr_mi \
+				+ count_week_from_term_begin_dt', data=univr_logit_df, return_type='dataframe')
 
 univr_logit_mod = Logit(univr_y, univr_x)
 univr_logit_res = univr_logit_mod.fit(maxiter=500)
@@ -3623,7 +3466,7 @@ print('Run machine learning models for freshmen...\n')
 # Logistic model
 
 # Pullman logistic
-pullm_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
+pullm_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
 
 pullm_lreg_probs = pullm_lreg.predict_proba(pullm_x_train)
 pullm_lreg_probs = pullm_lreg_probs[:, 1]
@@ -3636,7 +3479,7 @@ pullm_lreg_fpr, pullm_lreg_tpr, pullm_thresholds = roc_curve(pullm_y_train, pull
 
 #%%
 # Vancouver logistic
-vanco_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
+vanco_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_lreg_probs = vanco_lreg.predict_proba(vanco_x_train)
 vanco_lreg_probs = vanco_lreg_probs[:, 1]
@@ -3649,7 +3492,7 @@ vanco_lreg_fpr, vanco_lreg_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanc
 
 #%%
 # Tri-Cities logistic
-trici_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
+trici_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
 
 trici_lreg_probs = trici_lreg.predict_proba(trici_x_train)
 trici_lreg_probs = trici_lreg_probs[:, 1]
@@ -3662,7 +3505,7 @@ trici_lreg_fpr, trici_lreg_tpr, trici_thresholds = roc_curve(trici_y_train, tric
 
 #%%
 # University logistic
-univr_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(univr_x_train, univr_y_train)
+univr_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(univr_x_train, univr_y_train)
 
 univr_lreg_probs = univr_lreg.predict_proba(univr_x_train)
 univr_lreg_probs = univr_lreg_probs[:, 1]
@@ -3917,6 +3760,32 @@ if datetime.datetime.today().weekday() == 5:
 #		trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, len(trici_feat_names)), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
 #	trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
+
+#%%
+# University SHAP undersample
+#	univr_under_shap = NearMiss(sampling_strategy={0:100, 1:400}, version=2, n_jobs=-1)
+#	univr_x_shap, univr_y_shap = univr_under_shap.fit_resample(univr_x_train, univr_y_train)
+
+#%%
+# University SHAP training (see: https://github.com/slundberg/shap)
+#	univr_explainer = shap.KernelExplainer(model=univr_vcf.predict_proba, data=univr_x_shap)
+
+#%%
+# University SHAP prediction
+# univr_shap_values = univr_explainer.shap_values(X=univr_x_test, nsamples=200)
+
+#%%
+# University SHAP plots
+# for index in range(len(univr_shap_values[0])):
+# 	shap.plots._waterfall.waterfall_legacy(univr_explainer.expected_value[0], univr_shap_values[0][index], univr_x_test[index], feature_names=univr_feat_names, max_display=4)
+
+#%%
+#	univr_shap_results = []
+
+#	for index in range(len(univr_shap_values[0])):
+#		univr_shap_results.extend(pd.DataFrame(data=univr_shap_values[0][index].reshape(1, len(univr_feat_names)), columns=univr_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+
+#	univr_shap_zip = dict(zip(univr_shap_outcome, univr_shap_results))
 
 	print('Done\n')
 
@@ -4209,7 +4078,7 @@ else:
 
 if datetime.datetime.today().weekday() == 5:
 
-	pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_shap.csv', 'w', newline='')
+	pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_frsh_shap.csv', 'w', newline='')
 	pullm_shap_writer = csv.writer(pullm_shap_file)
 	pullm_shap_insert = []
 
@@ -4240,7 +4109,7 @@ if datetime.datetime.today().weekday() == 5:
 
 #%%
 # Vancouver top-N SHAP values to csv and to sql
-# 	vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_shap.csv', 'w', newline='')
+# 	vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_frsh_shap.csv', 'w', newline='')
 # 	vanco_shap_writer = csv.writer(vanco_shap_file)
 # 	vanco_shap_insert = []
 
@@ -4267,7 +4136,7 @@ if datetime.datetime.today().weekday() == 5:
 
 #%%
 # Tri-Cities top-N SHAP values to csv and to sql
-# 	trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_shap.csv', 'w', newline='')
+# 	trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_frsh_shap.csv', 'w', newline='')
 # 	trici_shap_writer = csv.writer(trici_shap_file)
 # 	trici_shap_insert = []
 
@@ -4289,6 +4158,33 @@ if datetime.datetime.today().weekday() == 5:
 # 		ins = student_shap.insert().values(EMPLID=trici_shap_insert.pop(0), shap_value_1=trici_shap_insert.pop(0), 
 # 											shap_value_2=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
 # 											shap_value_4=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
+# 											DATE=date.today(), model_id=7)
+# 		engine.execute(ins)
+
+#%%
+# University top-N SHAP values to csv and to sql
+# 	univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\univr_frsh_shap.csv', 'w', newline='')
+# 	univr_shap_writer = csv.writer(univr_shap_file)
+# 	univr_shap_insert = []
+
+# 	univr_shap_writer.writerow(['emplid','shap_values'])
+
+# 	for emplid in univr_shap_zip:
+# 		univr_shap_writer.writerow([emplid, list(islice(univr_shap_zip[emplid].items(), top_N))])
+# 		univr_shap_sql = [emplid, list(islice(univr_shap_zip[emplid].items(), top_N))]
+		
+# 		univr_shap_insert.append(str(univr_shap_sql[0]).zfill(9))
+
+# 		for index in range(top_N):
+# 			shap_str, shap_float = univr_shap_sql[1][index]
+# 			univr_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
+
+# 	univr_shap_file.close()
+
+# 	while univr_shap_insert:
+# 		ins = student_shap.insert().values(EMPLID=univr_shap_insert.pop(0), shap_value_1=univr_shap_insert.pop(0), 
+# 											shap_value_2=univr_shap_insert.pop(0), shap_value_3=univr_shap_insert.pop(0), 
+# 											shap_value_4=univr_shap_insert.pop(0), shap_value_5=univr_shap_insert.pop(0), 
 # 											DATE=date.today(), model_id=7)
 # 		engine.execute(ins)
 

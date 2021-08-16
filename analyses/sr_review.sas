@@ -7,7 +7,7 @@
 libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 
 proc import out=pullm_frsh_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\predictions\pullm\pullm_frsh_pred_outcome.csv"
+	datafile="Z:\Nathan\Models\student_risk\analyses\pullm_frsh_pred_outcome.csv"
 	dbms=CSV REPLACE;
 	getnames=YES;
 run;

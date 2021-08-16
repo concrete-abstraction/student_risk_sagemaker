@@ -139,7 +139,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'max_week_from_term_begin_dt',
 						'count_week_from_term_begin_dt',
 						# 'marital_status',
-						# 'Distance',
+						# 'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -310,7 +310,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
 							# 'marital_status',
-							# 'Distance',
+							# 'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -481,7 +481,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
 							# 'marital_status',
-							# 'Distance',
+							# 'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -674,7 +674,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
                         # 'max_week_from_term_begin_dt',
                         'count_week_from_term_begin_dt',
                         # 'marital_status',
-                        # 'Distance',
+                        # 'distance',
                         'pop_dens',
                         'underrep_minority', 
                         # 'ipeds_ethnic_group_descrshort',
@@ -845,7 +845,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
 							# 'marital_status',
-							# 'Distance',
+							# 'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1016,7 +1016,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
 							# 'marital_status',
-							# 'Distance',
+							# 'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1209,7 +1209,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'max_week_from_term_begin_dt',
 						'count_week_from_term_begin_dt',
 						# 'marital_status',
-						# 'Distance',
+						# 'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -1380,7 +1380,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
 							# 'marital_status',
-							# 'Distance',
+							# 'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1551,7 +1551,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'max_week_from_term_begin_dt',
 							'count_week_from_term_begin_dt',
 							# 'marital_status',
-							# 'Distance',
+							# 'distance',
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
@@ -1870,7 +1870,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'max_week_from_term_begin_dt',
 						'count_week_from_term_begin_dt',
 						# 'marital_status',
-						# 'Distance',
+						# 'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -2036,7 +2036,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'sat_mss',
 						# 'sat_comp',
 						# 'attendee_total_visits',
-						# 'Distance',
+						# 'distance',
 						'pop_dens', 
 						# 'qvalue', 
 						'median_inc',
@@ -2128,7 +2128,7 @@ vanco_x_test = vanco_testing_set[[
 						# 'max_week_from_term_begin_dt',
 						'count_week_from_term_begin_dt',
 						# 'marital_status',
-						# 'Distance',
+						# 'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -2294,7 +2294,7 @@ vanco_tomek_prep = make_column_transformer(
 						# 'sat_mss',
 						# 'sat_comp',
 						# 'attendee_total_visits',
-						# 'Distance',
+						# 'distance',
 						'pop_dens', 
 						# 'qvalue', 
 						'median_inc',
@@ -2386,7 +2386,7 @@ trici_x_test = trici_testing_set[[
 						# 'max_week_from_term_begin_dt',
 						'count_week_from_term_begin_dt',
 						# 'marital_status',
-						# 'Distance',
+						# 'distance',
 						'pop_dens',
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
@@ -2552,7 +2552,7 @@ trici_tomek_prep = make_column_transformer(
 						# 'sat_mss',
 						# 'sat_comp',
 						# 'attendee_total_visits',
-						# 'Distance',
+						# 'distance',
 						'pop_dens', 
 						# 'qvalue', 
 						'median_inc',
@@ -2753,7 +2753,7 @@ print('Run machine learning models for freshmen...\n')
 # Logistic model
 
 # Pullman logistic
-pullm_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
+pullm_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
 
 pullm_lreg_probs = pullm_lreg.predict_proba(pullm_x_train)
 pullm_lreg_probs = pullm_lreg_probs[:, 1]
@@ -2766,7 +2766,7 @@ pullm_lreg_fpr, pullm_lreg_tpr, pullm_thresholds = roc_curve(pullm_y_train, pull
 
 #%%
 # Vancouver logistic
-vanco_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
+vanco_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_lreg_probs = vanco_lreg.predict_proba(vanco_x_train)
 vanco_lreg_probs = vanco_lreg_probs[:, 1]
@@ -2779,7 +2779,7 @@ vanco_lreg_fpr, vanco_lreg_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanc
 
 #%%
 # Tri-Cities logistic
-trici_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
+trici_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
 
 trici_lreg_probs = trici_lreg.predict_proba(trici_x_train)
 trici_lreg_probs = trici_lreg_probs[:, 1]
