@@ -372,7 +372,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 
 pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
-                            'enrl_ind', 
+                            # 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -876,7 +876,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 
 vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
-                            'enrl_ind', 
+                            # 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -1380,7 +1380,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 
 trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
-                            'enrl_ind', 
+                            # 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -1557,6 +1557,510 @@ trici_aggregate_outcome = trici_testing_set[[
                             ]].copy(deep=True)
 
 trici_current_outcome = trici_testing_set[[ 
+                            'emplid'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+#%%
+# Online dataframes
+onlin_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'ONLIN') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+                        'enrl_ind', 
+                        # 'acad_year',
+						# 'age_group', 
+						# 'age',
+						'male',
+						# 'race_hispanic',
+						# 'race_american_indian',
+						# 'race_alaska',
+						# 'race_asian',
+						# 'race_black',
+						# 'race_native_hawaiian',
+						# 'race_white',
+						# 'min_week_from_term_begin_dt',
+						# 'max_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
+						# 'marital_status',
+						'acs_mi',
+						'distance',
+						'pop_dens',
+						'underrep_minority', 
+						# 'ipeds_ethnic_group_descrshort',
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
+						# 'pell_recipient_ind',
+						'first_gen_flag',
+						'first_gen_flag_mi', 
+						# 'LSAMP_STEM_Flag',
+						# 'anywhere_STEM_Flag',
+						# 'honors_program_ind',
+						# 'afl_greek_indicator',
+						'transfer_gpa',
+						'transfer_gpa_mi',
+						# 'fall_cum_gpa',
+						# 'spring_midterm_gpa_change',
+						# 'awe_instrument',
+						# 'cdi_instrument',
+						'fall_avg_difficulty',
+						'fall_avg_pct_withdrawn',
+						# 'fall_avg_pct_CDFW',
+						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_DFW',
+						# 'fall_avg_pct_DF',
+						'fall_crse_mi',
+						'fall_lec_count',
+						'fall_lab_count',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'cum_adj_transfer_hours',
+						'resident',
+						# 'father_wsu_flag',
+						# 'mother_wsu_flag',
+						'parent1_highest_educ_lvl',
+						'parent2_highest_educ_lvl',
+						# 'citizenship_country',
+						'gini_indx',
+						'pvrt_rate',
+						'median_inc',
+						# 'median_value',
+						'educ_rate',
+						'pct_blk',
+						'pct_ai',
+						# 'pct_asn',
+						'pct_hawi',
+						# 'pct_oth',
+						'pct_two',
+						# 'pct_non',
+						'pct_hisp',
+						# 'city_large',
+						# 'city_mid',
+						# 'city_small',
+						# 'suburb_large',
+						# 'suburb_mid',
+						# 'suburb_small',
+						# 'town_fringe',
+						# 'town_distant',
+						# 'town_remote',
+						# 'rural_fringe',
+						# 'rural_distant',
+						# 'rural_remote',
+						# 'AD_DTA',
+						# 'AD_AST',
+						# 'AP',
+						# 'RS',
+						# 'CHS',
+						# 'IB',
+						# 'AICE',
+						# 'IB_AICE', 
+						# 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
+						# 'athlete',
+						# 'remedial',
+						# 'ACAD_PLAN',
+						# 'plan_owner_org',
+						# 'business',
+						# 'cahnrs_anml',
+						# 'cahnrs_envr',
+						# 'cahnrs_econ',
+						# 'cahnrext',
+						# 'cas_chem',
+						# 'cas_crim',
+						# 'cas_math',
+						# 'cas_psyc',
+						# 'cas_biol',
+						# 'cas_engl',
+						# 'cas_phys',
+						# 'cas',
+						# 'comm',
+						# 'education',
+						# 'medicine',
+						# 'nursing',
+						# 'pharmacy',
+						# 'provost',
+						# 'vcea_bioe',
+						# 'vcea_cive',
+						# 'vcea_desn',
+						# 'vcea_eecs',
+						# 'vcea_mech',
+						# 'vcea',
+						# 'vet_med',
+						# 'last_sch_proprietorship',
+						# 'sat_erws',
+						# 'sat_mss',
+						# 'sat_comp',
+						# 'attendee_alive',
+						# 'attendee_campus_visit',
+						# 'attendee_cashe',
+						# 'attendee_destination',
+						# 'attendee_experience',
+						# 'attendee_fcd_pullman',
+						# 'attendee_fced',
+						# 'attendee_fcoc',
+						# 'attendee_fcod',
+						# 'attendee_group_visit',
+						# 'attendee_honors_visit',
+						# 'attendee_imagine_tomorrow',
+						# 'attendee_imagine_u',
+						# 'attendee_la_bienvenida',
+						# 'attendee_lvp_camp',
+						# 'attendee_oos_destination',
+						# 'attendee_oos_experience',
+						# 'attendee_preview',
+						# 'attendee_preview_jrs',
+						# 'attendee_shaping',
+						# 'attendee_top_scholars',
+						# 'attendee_transfer_day',
+						# 'attendee_vibes',
+						# 'attendee_welcome_center',
+						# 'attendee_any_visitation_ind',
+						# 'attendee_total_visits',
+						# 'qvalue',
+						# 'fed_efc',
+						# 'fed_need',
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
+                        ]].dropna()
+
+onlin_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'ONLIN') & (training_set['adj_admit_type_cat'] == 'TRAN')][[
+                            'emplid',
+                            'enrl_ind', 
+							# 'acad_year',
+							# 'age_group', 
+							# 'age',
+							'male',
+							# 'race_hispanic',
+							# 'race_american_indian',
+							# 'race_alaska',
+							# 'race_asian',
+							# 'race_black',
+							# 'race_native_hawaiian',
+							# 'race_white',
+							# 'min_week_from_term_begin_dt',
+							# 'max_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
+							# 'marital_status',
+							'acs_mi',
+							'distance',
+							'pop_dens',
+							'underrep_minority', 
+							# 'ipeds_ethnic_group_descrshort',
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
+							# 'pell_recipient_ind',
+							'first_gen_flag',
+							'first_gen_flag_mi', 
+							# 'LSAMP_STEM_Flag',
+							# 'anywhere_STEM_Flag',
+							# 'honors_program_ind',
+							# 'afl_greek_indicator',
+							'transfer_gpa',
+							'transfer_gpa_mi',
+							# 'fall_cum_gpa',
+							# 'spring_midterm_gpa_change',
+							# 'awe_instrument',
+							# 'cdi_instrument',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
+							'fall_crse_mi',
+							'fall_lec_count',
+							'fall_lab_count',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
+							'total_fall_contact_hrs',
+							# 'cum_adj_transfer_hours',
+							'resident',
+							# 'father_wsu_flag',
+							# 'mother_wsu_flag',
+							'parent1_highest_educ_lvl',
+							'parent2_highest_educ_lvl',
+							# 'citizenship_country',
+							'gini_indx',
+							'pvrt_rate',
+							'median_inc',
+							# 'median_value',
+							'educ_rate',
+							'pct_blk',
+							'pct_ai',
+							# 'pct_asn',
+							'pct_hawi',
+							# 'pct_oth',
+							'pct_two',
+							# 'pct_non',
+							'pct_hisp',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
+							# 'town_fringe',
+							# 'town_distant',
+							# 'town_remote',
+							# 'rural_fringe',
+							# 'rural_distant',
+							# 'rural_remote',
+							# 'AD_DTA',
+							# 'AD_AST',
+							# 'AP',
+							# 'RS',
+							# 'CHS',
+							# 'IB',
+							# 'AICE',
+							# 'IB_AICE', 
+							# 'term_credit_hours',
+							# 'total_fall_units',
+							# 'term_withdrawn_hours',
+							# 'athlete',
+							# 'remedial',
+							# 'ACAD_PLAN',
+							# 'plan_owner_org',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
+							# 'provost',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
+							# 'last_sch_proprietorship',
+							# 'sat_erws',
+							# 'sat_mss',
+							# 'sat_comp',
+							# 'attendee_alive',
+							# 'attendee_campus_visit',
+							# 'attendee_cashe',
+							# 'attendee_destination',
+							# 'attendee_experience',
+							# 'attendee_fcd_pullman',
+							# 'attendee_fced',
+							# 'attendee_fcoc',
+							# 'attendee_fcod',
+							# 'attendee_group_visit',
+							# 'attendee_honors_visit',
+							# 'attendee_imagine_tomorrow',
+							# 'attendee_imagine_u',
+							# 'attendee_la_bienvenida',
+							# 'attendee_lvp_camp',
+							# 'attendee_oos_destination',
+							# 'attendee_oos_experience',
+							# 'attendee_preview',
+							# 'attendee_preview_jrs',
+							# 'attendee_shaping',
+							# 'attendee_top_scholars',
+							# 'attendee_transfer_day',
+							# 'attendee_vibes',
+							# 'attendee_welcome_center',
+							# 'attendee_any_visitation_ind',
+							# 'attendee_total_visits',
+							# 'qvalue',
+							# 'fed_efc',
+							# 'fed_need',
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
+                            ]].dropna()
+
+onlin_testing_set = testing_set[(testing_set['campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
+                            'emplid',
+                            # 'enrl_ind', 
+							# 'acad_year',
+							# 'age_group', 
+							# 'age',
+							'male',
+							# 'race_hispanic',
+							# 'race_american_indian',
+							# 'race_alaska',
+							# 'race_asian',
+							# 'race_black',
+							# 'race_native_hawaiian',
+							# 'race_white',
+							# 'min_week_from_term_begin_dt',
+							# 'max_week_from_term_begin_dt',
+							'count_week_from_term_begin_dt',
+							# 'marital_status',
+							'acs_mi',
+							'distance',
+							'pop_dens',
+							'underrep_minority', 
+							# 'ipeds_ethnic_group_descrshort',
+							'pell_eligibility_ind',
+							# 'pell_eligibility_ind_mi', 
+							# 'pell_recipient_ind',
+							'first_gen_flag',
+							'first_gen_flag_mi', 
+							# 'LSAMP_STEM_Flag',
+							# 'anywhere_STEM_Flag',
+							# 'honors_program_ind',
+							# 'afl_greek_indicator',
+							'transfer_gpa',
+							'transfer_gpa_mi',
+							# 'fall_cum_gpa',
+							# 'spring_midterm_gpa_change',
+							# 'awe_instrument',
+							# 'cdi_instrument',
+							'fall_avg_difficulty',
+							'fall_avg_pct_withdrawn',
+							# 'fall_avg_pct_CDFW',
+							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_DFW',
+							# 'fall_avg_pct_DF',
+							'fall_crse_mi',
+							'fall_lec_count',
+							'fall_lab_count',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
+							'total_fall_contact_hrs',
+							# 'cum_adj_transfer_hours',
+							'resident',
+							# 'father_wsu_flag',
+							# 'mother_wsu_flag',
+							'parent1_highest_educ_lvl',
+							'parent2_highest_educ_lvl',
+							# 'citizenship_country',
+							'gini_indx',
+							'pvrt_rate',
+							'median_inc',
+							# 'median_value',
+							'educ_rate',
+							'pct_blk',
+							'pct_ai',
+							# 'pct_asn',
+							'pct_hawi',
+							# 'pct_oth',
+							'pct_two',
+							# 'pct_non',
+							'pct_hisp',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
+							# 'town_fringe',
+							# 'town_distant',
+							# 'town_remote',
+							# 'rural_fringe',
+							# 'rural_distant',
+							# 'rural_remote',
+							# 'AD_DTA',
+							# 'AD_AST',
+							# 'AP',
+							# 'RS',
+							# 'CHS',
+							# 'IB',
+							# 'AICE',
+							# 'IB_AICE', 
+							# 'term_credit_hours',
+							# 'total_fall_units',
+							# 'term_withdrawn_hours',
+							# 'athlete',
+							# 'remedial',
+							# 'ACAD_PLAN',
+							# 'plan_owner_org',
+							# 'business',
+							# 'cahnrs_anml',
+							# 'cahnrs_envr',
+							# 'cahnrs_econ',
+							# 'cahnrext',
+							# 'cas_chem',
+							# 'cas_crim',
+							# 'cas_math',
+							# 'cas_psyc',
+							# 'cas_biol',
+							# 'cas_engl',
+							# 'cas_phys',
+							# 'cas',
+							# 'comm',
+							# 'education',
+							# 'medicine',
+							# 'nursing',
+							# 'pharmacy',
+							# 'provost',
+							# 'vcea_bioe',
+							# 'vcea_cive',
+							# 'vcea_desn',
+							# 'vcea_eecs',
+							# 'vcea_mech',
+							# 'vcea',
+							# 'vet_med',
+							# 'last_sch_proprietorship',
+							# 'sat_erws',
+							# 'sat_mss',
+							# 'sat_comp',
+							# 'attendee_alive',
+							# 'attendee_campus_visit',
+							# 'attendee_cashe',
+							# 'attendee_destination',
+							# 'attendee_experience',
+							# 'attendee_fcd_pullman',
+							# 'attendee_fced',
+							# 'attendee_fcoc',
+							# 'attendee_fcod',
+							# 'attendee_group_visit',
+							# 'attendee_honors_visit',
+							# 'attendee_imagine_tomorrow',
+							# 'attendee_imagine_u',
+							# 'attendee_la_bienvenida',
+							# 'attendee_lvp_camp',
+							# 'attendee_oos_destination',
+							# 'attendee_oos_experience',
+							# 'attendee_preview',
+							# 'attendee_preview_jrs',
+							# 'attendee_shaping',
+							# 'attendee_top_scholars',
+							# 'attendee_transfer_day',
+							# 'attendee_vibes',
+							# 'attendee_welcome_center',
+							# 'attendee_any_visitation_ind',
+							# 'attendee_total_visits',
+							# 'qvalue',
+							# 'fed_efc',
+							# 'fed_need',
+							'unmet_need_ofr',
+							'unmet_need_ofr_mi'
+                            ]].dropna()
+
+onlin_testing_set = onlin_testing_set.reset_index()
+
+onlin_shap_outcome = onlin_testing_set['emplid'].copy(deep=True).values.tolist()
+
+onlin_pred_outcome = onlin_testing_set[[ 
+                            'emplid'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+onlin_aggregate_outcome = onlin_testing_set[[ 
+                            'emplid',
+							'male',
+							'underrep_minority',
+							'first_gen_flag',
+							'resident'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+onlin_current_outcome = onlin_testing_set[[ 
                             'emplid'
                             # 'enrl_ind'
                             ]].copy(deep=True)
@@ -1882,9 +2386,169 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_set['adj_admit_type_cat'] == 'TRAN')) | ((testing_set['campus'] == 'SPOKA') & (testing_set['adj_admit_type_cat'] == 'TRAN')) | ((testing_set['campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'TRAN'))][[
+# univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_set['adj_admit_type_cat'] == 'TRAN')) | ((testing_set['campus'] == 'SPOKA') & (testing_set['adj_admit_type_cat'] == 'TRAN')) | ((testing_set['campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'TRAN'))][[
+#                             'emplid',
+# 							# 'enrl_ind', 
+# 							# 'acad_year',
+# 							# 'age_group', 
+# 							# 'age',
+# 							'male',
+# 							# 'race_hispanic',
+# 							# 'race_american_indian',
+# 							# 'race_alaska',
+# 							# 'race_asian',
+# 							# 'race_black',
+# 							# 'race_native_hawaiian',
+# 							# 'race_white',
+# 							# 'min_week_from_term_begin_dt',
+# 							# 'max_week_from_term_begin_dt',
+# 							'count_week_from_term_begin_dt',
+# 							# 'marital_status',
+# 							'acs_mi',
+# 							'distance',
+# 							'pop_dens',
+# 							'underrep_minority', 
+# 							# 'ipeds_ethnic_group_descrshort',
+# 							'pell_eligibility_ind',
+# 							# 'pell_eligibility_ind_mi', 
+# 							# 'pell_recipient_ind',
+# 							'first_gen_flag',
+# 							'first_gen_flag_mi', 
+# 							# 'LSAMP_STEM_Flag',
+# 							# 'anywhere_STEM_Flag',
+# 							# 'honors_program_ind',
+# 							# 'afl_greek_indicator',
+# 							'transfer_gpa',
+# 							'transfer_gpa_mi',
+# 							# 'fall_cum_gpa',
+# 							# 'spring_midterm_gpa_change',
+# 							# 'awe_instrument',
+# 							# 'cdi_instrument',
+# 							'fall_avg_difficulty',
+# 							'fall_avg_pct_withdrawn',
+# 							# 'fall_avg_pct_CDFW',
+# 							'fall_avg_pct_CDF',
+# 							# 'fall_avg_pct_DFW',
+# 							# 'fall_avg_pct_DF',
+# 							'fall_crse_mi',
+# 							'fall_lec_count',
+# 							'fall_lab_count',
+# 							# 'fall_lec_contact_hrs',
+# 							# 'fall_lab_contact_hrs',
+# 							'total_fall_contact_hrs',
+# 							# 'cum_adj_transfer_hours',
+# 							'resident',
+# 							# 'father_wsu_flag',
+# 							# 'mother_wsu_flag',
+# 							'parent1_highest_educ_lvl',
+# 							'parent2_highest_educ_lvl',
+# 							# 'citizenship_country',
+# 							'gini_indx',
+# 							'pvrt_rate',
+# 							'median_inc',
+# 							# 'median_value',
+# 							'educ_rate',
+# 							'pct_blk',
+# 							'pct_ai',
+# 							# 'pct_asn',
+# 							'pct_hawi',
+# 							# 'pct_oth',
+# 							'pct_two',
+# 							# 'pct_non',
+# 							'pct_hisp',
+# 							# 'city_large',
+# 							# 'city_mid',
+# 							# 'city_small',
+# 							# 'suburb_large',
+# 							# 'suburb_mid',
+# 							# 'suburb_small',
+# 							# 'town_fringe',
+# 							# 'town_distant',
+# 							# 'town_remote',
+# 							# 'rural_fringe',
+# 							# 'rural_distant',
+# 							# 'rural_remote',
+# 							# 'AD_DTA',
+# 							# 'AD_AST',
+# 							# 'AP',
+# 							# 'RS',
+# 							# 'CHS',
+# 							# 'IB',
+# 							# 'AICE',
+# 							# 'IB_AICE', 
+# 							# 'term_credit_hours',
+# 							# 'total_fall_units',
+# 							# 'term_withdrawn_hours',
+# 							# 'athlete',
+# 							# 'remedial',
+# 							# 'ACAD_PLAN',
+# 							# 'plan_owner_org',
+# 							# 'business',
+# 							# 'cahnrs_anml',
+# 							# 'cahnrs_envr',
+# 							# 'cahnrs_econ',
+# 							# 'cahnrext',
+# 							# 'cas_chem',
+# 							# 'cas_crim',
+# 							# 'cas_math',
+# 							# 'cas_psyc',
+# 							# 'cas_biol',
+# 							# 'cas_engl',
+# 							# 'cas_phys',
+# 							# 'cas',
+# 							# 'comm',
+# 							# 'education',
+# 							# 'medicine',
+# 							# 'nursing',
+# 							# 'pharmacy',
+# 							# 'provost',
+# 							# 'vcea_bioe',
+# 							# 'vcea_cive',
+# 							# 'vcea_desn',
+# 							# 'vcea_eecs',
+# 							# 'vcea_mech',
+# 							# 'vcea',
+# 							# 'vet_med',
+# 							# 'last_sch_proprietorship',
+# 							# 'sat_erws',
+# 							# 'sat_mss',
+# 							# 'sat_comp',
+# 							# 'attendee_alive',
+# 							# 'attendee_campus_visit',
+# 							# 'attendee_cashe',
+# 							# 'attendee_destination',
+# 							# 'attendee_experience',
+# 							# 'attendee_fcd_pullman',
+# 							# 'attendee_fced',
+# 							# 'attendee_fcoc',
+# 							# 'attendee_fcod',
+# 							# 'attendee_group_visit',
+# 							# 'attendee_honors_visit',
+# 							# 'attendee_imagine_tomorrow',
+# 							# 'attendee_imagine_u',
+# 							# 'attendee_la_bienvenida',
+# 							# 'attendee_lvp_camp',
+# 							# 'attendee_oos_destination',
+# 							# 'attendee_oos_experience',
+# 							# 'attendee_preview',
+# 							# 'attendee_preview_jrs',
+# 							# 'attendee_shaping',
+# 							# 'attendee_top_scholars',
+# 							# 'attendee_transfer_day',
+# 							# 'attendee_vibes',
+# 							# 'attendee_welcome_center',
+# 							# 'attendee_any_visitation_ind',
+# 							# 'attendee_total_visits',
+# 							# 'qvalue',
+# 							# 'fed_efc',
+# 							# 'fed_need',
+# 							'unmet_need_ofr',
+# 							'unmet_need_ofr_mi'
+#                             ]]
+
+univr_testing_set = testing_set[((testing_set['campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'TRAN'))][[
                             'emplid',
-							'enrl_ind', 
+							# 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -2187,6 +2851,46 @@ trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
+
+#%%
+# Online outliers
+onlin_x_outlier = onlin_training_set.drop(columns=['enrl_ind','emplid'])
+
+onlin_outlier_prep = make_column_transformer(
+    (OneHotEncoder(drop='first'), [
+									# 'race_hispanic',
+									# 'race_american_indian',
+									# 'race_alaska',
+									# 'race_asian',
+									# 'race_black',
+									# 'race_native_hawaiian',
+									# 'race_white',
+                                    # 'acad_year', 
+                                    # 'age_group',
+                                    # 'marital_status',
+                                    'first_gen_flag',
+                                    # 'LSAMP_STEM_Flag',
+                                    # 'anywhere_STEM_Flag',
+                                    # 'afl_greek_indicator',
+                                    # 'ACAD_PLAN',
+                                    # 'plan_owner_org',
+                                    # 'ipeds_ethnic_group_descrshort',
+                                    # 'last_sch_proprietorship', 
+                                    'parent1_highest_educ_lvl',
+                                    'parent2_highest_educ_lvl'
+                                    ]),
+    remainder='passthrough'
+)
+
+onlin_x_outlier = onlin_outlier_prep.fit_transform(onlin_x_outlier)
+
+onlin_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(onlin_x_outlier)
+
+onlin_outlier_set = onlin_training_set.drop(onlin_training_set[onlin_training_set['mask'] == 1].index)
+onlin_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\onlin_tran_outlier_set.csv', encoding='utf-8', index=False)
+
+onlin_training_set = onlin_training_set.drop(onlin_training_set[onlin_training_set['mask'] == -1].index)
+onlin_training_set = onlin_training_set.drop(columns='mask')
 
 #%%
 # University outliers
@@ -3028,6 +3732,271 @@ trici_tomek_set = trici_training_set.drop(trici_tomek_index)
 trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
+# Online undersample
+onlin_x_train = onlin_training_set.drop(columns=['enrl_ind','emplid'])
+
+onlin_x_test = onlin_testing_set[[
+                        # 'acad_year',
+						# 'age_group', 
+						# 'age',
+						'male',
+						# 'race_hispanic',
+						# 'race_american_indian',
+						# 'race_alaska',
+						# 'race_asian',
+						# 'race_black',
+						# 'race_native_hawaiian',
+						# 'race_white',
+						# 'min_week_from_term_begin_dt',
+						# 'max_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
+						# 'marital_status',
+						'acs_mi',
+						'distance',
+						'pop_dens',
+						'underrep_minority', 
+						# 'ipeds_ethnic_group_descrshort',
+						'pell_eligibility_ind',
+						# 'pell_eligibility_ind_mi', 
+						# 'pell_recipient_ind',
+						'first_gen_flag',
+						'first_gen_flag_mi', 
+						# 'LSAMP_STEM_Flag',
+						# 'anywhere_STEM_Flag',
+						# 'honors_program_ind',
+						# 'afl_greek_indicator',
+						'transfer_gpa',
+						'transfer_gpa_mi',
+						# 'fall_cum_gpa',
+						# 'spring_midterm_gpa_change',
+						# 'awe_instrument',
+						# 'cdi_instrument',
+						'fall_avg_difficulty',
+						'fall_avg_pct_withdrawn',
+						# 'fall_avg_pct_CDFW',
+						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_DFW',
+						# 'fall_avg_pct_DF',
+						'fall_crse_mi',
+						'fall_lec_count',
+						'fall_lab_count',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'cum_adj_transfer_hours',
+						'resident',
+						# 'father_wsu_flag',
+						# 'mother_wsu_flag',
+						'parent1_highest_educ_lvl',
+						'parent2_highest_educ_lvl',
+						# 'citizenship_country',
+						'gini_indx',
+						'pvrt_rate',
+						'median_inc',
+						# 'median_value',
+						'educ_rate',
+						'pct_blk',
+						'pct_ai',
+						# 'pct_asn',
+						'pct_hawi',
+						# 'pct_oth',
+						'pct_two',
+						# 'pct_non',
+						'pct_hisp',
+						# 'city_large',
+						# 'city_mid',
+						# 'city_small',
+						# 'suburb_large',
+						# 'suburb_mid',
+						# 'suburb_small',
+						# 'town_fringe',
+						# 'town_distant',
+						# 'town_remote',
+						# 'rural_fringe',
+						# 'rural_distant',
+						# 'rural_remote',
+						# 'AD_DTA',
+						# 'AD_AST',
+						# 'AP',
+						# 'RS',
+						# 'CHS',
+						# 'IB',
+						# 'AICE',
+						# 'IB_AICE', 
+						# 'term_credit_hours',
+						# 'total_fall_units',
+						# 'term_withdrawn_hours',
+						# 'athlete',
+						# 'remedial',
+						# 'ACAD_PLAN',
+						# 'plan_owner_org',
+						# 'business',
+						# 'cahnrs_anml',
+						# 'cahnrs_envr',
+						# 'cahnrs_econ',
+						# 'cahnrext',
+						# 'cas_chem',
+						# 'cas_crim',
+						# 'cas_math',
+						# 'cas_psyc',
+						# 'cas_biol',
+						# 'cas_engl',
+						# 'cas_phys',
+						# 'cas',
+						# 'comm',
+						# 'education',
+						# 'medicine',
+						# 'nursing',
+						# 'pharmacy',
+						# 'provost',
+						# 'vcea_bioe',
+						# 'vcea_cive',
+						# 'vcea_desn',
+						# 'vcea_eecs',
+						# 'vcea_mech',
+						# 'vcea',
+						# 'vet_med',
+						# 'last_sch_proprietorship',
+						# 'sat_erws',
+						# 'sat_mss',
+						# 'sat_comp',
+						# 'attendee_alive',
+						# 'attendee_campus_visit',
+						# 'attendee_cashe',
+						# 'attendee_destination',
+						# 'attendee_experience',
+						# 'attendee_fcd_pullman',
+						# 'attendee_fced',
+						# 'attendee_fcoc',
+						# 'attendee_fcod',
+						# 'attendee_group_visit',
+						# 'attendee_honors_visit',
+						# 'attendee_imagine_tomorrow',
+						# 'attendee_imagine_u',
+						# 'attendee_la_bienvenida',
+						# 'attendee_lvp_camp',
+						# 'attendee_oos_destination',
+						# 'attendee_oos_experience',
+						# 'attendee_preview',
+						# 'attendee_preview_jrs',
+						# 'attendee_shaping',
+						# 'attendee_top_scholars',
+						# 'attendee_transfer_day',
+						# 'attendee_vibes',
+						# 'attendee_welcome_center',
+						# 'attendee_any_visitation_ind',
+						# 'attendee_total_visits',
+						# 'qvalue',
+						# 'fed_efc',
+						# 'fed_need',
+						'unmet_need_ofr',
+						'unmet_need_ofr_mi'
+                        ]]
+
+onlin_y_train = onlin_training_set['enrl_ind']
+# onlin_y_test = onlin_testing_set['enrl_ind']
+
+onlin_tomek_prep = make_column_transformer(
+	(StandardScaler(), [
+						'distance',
+						# 'age',
+						# 'min_week_from_term_begin_dt',
+						# 'max_week_from_term_begin_dt',
+						'count_week_from_term_begin_dt',
+						# 'sat_erws',
+						# 'sat_mss',
+						# 'sat_comp',
+						# 'attendee_total_visits',
+						'pop_dens', 
+						# 'qvalue', 
+						# 'gini_indx',
+						'median_inc',
+						# 'pvrt_rate',
+						# 'median_value',
+						# 'educ_rate',
+						# 'pct_blk',
+						# 'pct_ai',
+						# 'pct_asn',
+						# 'pct_hawi',
+						# 'pct_oth',
+						# 'pct_two',
+						# 'pct_non',
+						# 'pct_hisp',
+						# 'term_credit_hours',
+						'transfer_gpa',
+						# 'awe_instrument',
+						# 'cdi_instrument',
+						'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
+						# 'fall_avg_pct_CDFW',
+						# 'fall_avg_pct_CDF',
+						'fall_lec_count',
+						'fall_lab_count',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
+						# 'spring_lec_count',
+						# 'spring_lab_count',
+						# 'spring_lec_contact_hrs',
+						# 'spring_lab_contact_hrs',
+						'total_fall_contact_hrs',
+						# 'total_spring_contact_hrs',
+						# 'cum_adj_transfer_hours',
+						# 'term_credit_hours',
+						# 'fed_efc',
+						# 'fed_need', 
+						'unmet_need_ofr'
+						]),
+	(OneHotEncoder(drop='first'), [
+									# 'race_hispanic',
+									# 'race_american_indian',
+									# 'race_alaska',
+									# 'race_asian',
+									# 'race_black',
+									# 'race_native_hawaiian',
+									# 'race_white',
+                                    # 'acad_year', 
+                                    # 'age_group',
+                                    # 'marital_status',
+                                    'first_gen_flag',
+                                    # 'LSAMP_STEM_Flag',
+                                    # 'anywhere_STEM_Flag',
+                                    # 'afl_greek_indicator',
+                                    # 'ACAD_PLAN',
+                                    # 'plan_owner_org',
+                                    # 'ipeds_ethnic_group_descrshort',
+                                    # 'last_sch_proprietorship', 
+                                    'parent1_highest_educ_lvl',
+                                    'parent2_highest_educ_lvl'
+                                    ]),
+    remainder='passthrough'
+)
+
+onlin_x_train = onlin_tomek_prep.fit_transform(onlin_x_train)
+onlin_x_test = onlin_tomek_prep.fit_transform(onlin_x_test)
+
+onlin_feat_names = []
+
+for name, transformer, features, _ in onlin_tomek_prep._iter(fitted=True):
+
+	if transformer != 'passthrough':
+		try:
+			onlin_feat_names.extend(onlin_tomek_prep.named_transformers_[name].get_feature_names())
+		except AttributeError:
+			onlin_feat_names.extend(features)
+
+	if transformer == 'passthrough':
+		onlin_feat_names.extend(onlin_tomek_prep._feature_names_in[features])
+
+onlin_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
+onlin_x_train, onlin_y_train = onlin_under.fit_resample(onlin_x_train, onlin_y_train)
+
+onlin_tomek_index = onlin_under.sample_indices_
+onlin_training_set = onlin_training_set.reset_index(drop=True)
+
+onlin_tomek_set = onlin_training_set.drop(onlin_tomek_index)
+onlin_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\onlin_tran_tomek_set.csv', encoding='utf-8', index=False)
+
+#%%
 # University undersample
 univr_x_train = univr_training_set.drop(columns=['enrl_ind','emplid'])
 
@@ -3361,6 +4330,28 @@ print(trici_logit_res.summary())
 print('\n')
 
 #%%
+# Online standard model
+print('\nStandard logistic model for Online transfers...\n')
+
+onlin_y, onlin_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
+				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
+				+ gini_indx + median_inc + acs_mi \
+				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
+                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
+                + resident \
+            	+ transfer_gpa + transfer_gpa_mi \
+				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
+            	+ unmet_need_ofr + unmet_need_ofr_mi \
+				+ count_week_from_term_begin_dt', data=onlin_logit_df, return_type='dataframe')
+
+onlin_logit_mod = Logit(onlin_y, onlin_x)
+onlin_logit_res = onlin_logit_mod.fit(maxiter=500)
+print(onlin_logit_res.summary())
+
+print('\n')
+
+#%%
 # University standard model
 print('\nStandard logistic model for University transfers...\n')
 
@@ -3468,6 +4459,19 @@ print(f'ROC AUC for Tri-Cities logistic model (training): {trici_lreg_auc:.4f}\n
 trici_lreg_fpr, trici_lreg_tpr, trici_thresholds = roc_curve(trici_y_train, trici_lreg_probs, drop_intermediate=False)
 
 #%%
+# Online logistic
+onlin_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(onlin_x_train, onlin_y_train)
+
+onlin_lreg_probs = onlin_lreg.predict_proba(onlin_x_train)
+onlin_lreg_probs = onlin_lreg_probs[:, 1]
+onlin_lreg_auc = roc_auc_score(onlin_y_train, onlin_lreg_probs)
+
+print(f'\nOverall accuracy for Online logistic model (training): {onlin_lreg.score(onlin_x_train, onlin_y_train):.4f}')
+print(f'ROC AUC for Online logistic model (training): {onlin_lreg_auc:.4f}\n')
+
+onlin_lreg_fpr, onlin_lreg_tpr, onlin_thresholds = roc_curve(onlin_y_train, onlin_lreg_probs, drop_intermediate=False)
+
+#%%
 # University logistic
 univr_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=2000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(univr_x_train, univr_y_train)
 
@@ -3520,6 +4524,19 @@ print(f'\nOverall accuracy for Tri-Cities SGD model (training): {trici_sgd.score
 print(f'ROC AUC for Tri-Cities SGD model (training): {trici_sgd_auc:.4f}\n')
 
 trici_sgd_fpr, trici_sgd_tpr, trici_thresholds = roc_curve(trici_y_train, trici_sgd_probs, drop_intermediate=False)
+
+#%%
+# Online SGD
+onlin_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=2000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(onlin_x_train, onlin_y_train)
+
+onlin_sgd_probs = onlin_sgd.predict_proba(onlin_x_train)
+onlin_sgd_probs = onlin_sgd_probs[:, 1]
+onlin_sgd_auc = roc_auc_score(onlin_y_train, onlin_sgd_probs)
+
+print(f'\nOverall accuracy for Online SGD model (training): {onlin_sgd.score(onlin_x_train, onlin_y_train):.4f}')
+print(f'ROC AUC for Online SGD model (training): {onlin_sgd_auc:.4f}\n')
+
+onlin_sgd_fpr, onlin_sgd_tpr, onlin_thresholds = roc_curve(onlin_y_train, onlin_sgd_probs, drop_intermediate=False)
 
 #%%
 # University SGD
@@ -3628,6 +4645,19 @@ print(f'\nOverall accuracy for Tri-Cities ensemble model (training): {trici_vcf.
 print(f'ROC AUC for Tri-Cities ensemble model (training): {trici_vcf_auc:.4f}\n')
 
 trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_vcf_probs, drop_intermediate=False)
+
+#%%
+# Online VCF
+onlin_vcf = VotingClassifier(estimators=[('lreg', onlin_lreg), ('sgd', onlin_sgd)], voting='soft', weights=[1, 1]).fit(onlin_x_train, onlin_y_train)
+
+onlin_vcf_probs = onlin_vcf.predict_proba(onlin_x_train)
+onlin_vcf_probs = onlin_vcf_probs[:, 1]
+onlin_vcf_auc = roc_auc_score(onlin_y_train, onlin_vcf_probs)
+
+print(f'\nOverall accuracy for Online ensemble model (training): {onlin_vcf.score(onlin_x_train, onlin_y_train):.4f}')
+print(f'ROC AUC for Online ensemble model (training): {onlin_vcf_auc:.4f}\n')
+
+onlin_vcf_fpr, onlin_vcf_tpr, onlin_thresholds = roc_curve(onlin_y_train, onlin_vcf_probs, drop_intermediate=False)
 
 #%%
 # University VCF
@@ -3790,6 +4820,17 @@ trici_vcf_pred_probs = trici_vcf.predict_proba(trici_x_test)
 trici_vcf_pred_probs = trici_vcf_pred_probs[:, 1]
 
 #%%
+# Online probabilities
+onlin_lreg_pred_probs = onlin_lreg.predict_proba(onlin_x_test)
+onlin_lreg_pred_probs = onlin_lreg_pred_probs[:, 1]
+onlin_sgd_pred_probs = onlin_sgd.predict_proba(onlin_x_test)
+onlin_sgd_pred_probs = onlin_sgd_pred_probs[:, 1]
+# onlin_mlp_pred_probs = onlin_mlp.predict_proba(onlin_x_test)
+# onlin_mlp_pred_probs = onlin_mlp_pred_probs[:, 1]
+onlin_vcf_pred_probs = onlin_vcf.predict_proba(onlin_x_test)
+onlin_vcf_pred_probs = onlin_vcf_pred_probs[:, 1]
+
+#%%
 # University probabilities
 univr_lreg_pred_probs = univr_lreg.predict_proba(univr_x_test)
 univr_lreg_pred_probs = univr_lreg_pred_probs[:, 1]
@@ -3842,6 +4883,18 @@ trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
 trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
+# Online predicted outcome
+onlin_pred_outcome['lr_prob'] = pd.DataFrame(onlin_lreg_pred_probs)
+onlin_pred_outcome['lr_pred'] = onlin_lreg.predict(onlin_x_test)
+onlin_pred_outcome['sgd_prob'] = pd.DataFrame(onlin_sgd_pred_probs)
+onlin_pred_outcome['sgd_pred'] = onlin_sgd.predict(onlin_x_test)
+# onlin_pred_outcome['mlp_prob'] = pd.DataFrame(onlin_mlp_pred_probs)
+# onlin_pred_outcome['mlp_pred'] = onlin_mlp.predict(onlin_x_test)
+onlin_pred_outcome['vcf_prob'] = pd.DataFrame(onlin_vcf_pred_probs)
+onlin_pred_outcome['vcf_pred'] = onlin_vcf.predict(onlin_x_test)
+onlin_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\onlin\\onlin_tran_pred_outcome.csv', encoding='utf-8', index=False)
+
+#%%
 # University predicted outcome
 univr_pred_outcome['lr_prob'] = pd.DataFrame(univr_lreg_pred_probs)
 univr_pred_outcome['lr_pred'] = univr_lreg.predict(univr_x_test)
@@ -3851,7 +4904,7 @@ univr_pred_outcome['sgd_pred'] = univr_sgd.predict(univr_x_test)
 # univr_pred_outcome['mlp_pred'] = univr_mlp.predict(univr_x_test)
 univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)
 univr_pred_outcome['vcf_pred'] = univr_vcf.predict(univr_x_test)
-univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_pred_outcome.csv', encoding='utf-8', index=False)
+univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome

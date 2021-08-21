@@ -406,7 +406,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 
 pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
-                            'enrl_ind', 
+                            # 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -910,7 +910,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 
 vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
-                            'enrl_ind', 
+                            # 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -1414,7 +1414,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 
 trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
-                            'enrl_ind', 
+                            # 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -1918,7 +1918,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 
 univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_set['adj_admit_type_cat'] == 'FRSH')) | ((testing_set['campus'] == 'SPOKA') & (testing_set['adj_admit_type_cat'] == 'FRSH')) | ((testing_set['campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'FRSH'))][[
                             'emplid',
-							'enrl_ind', 
+							# 'enrl_ind', 
 							# 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -4027,50 +4027,50 @@ univr_current_outcome['model_id'] = 1
 
 #%%
 # Pullman to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv'):
-	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_outcome.csv'):
+	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_outcome.csv', encoding='utf-8', index=False)
 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', low_memory=False)
-	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_backup.csv', encoding='utf-8', index=False)
+	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
+	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_backup.csv', encoding='utf-8', index=False)
 	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
-	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm_student_outcome.csv', encoding='utf-8', index=False)
+	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_outcome.csv', encoding='utf-8', index=False)
 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Vancouver to csv and to sql
-# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_student_outcome.csv'):
-# 	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_student_outcome.csv', encoding='utf-8', index=False)
+# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv'):
+# 	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', index=False)
 # 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 # else:
-# 	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_student_outcome.csv', encoding='utf-8', low_memory=False)
-# 	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_student_backup.csv', encoding='utf-8', index=False)
+# 	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
+# 	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_backup.csv', encoding='utf-8', index=False)
 # 	vanco_student_outcome = pd.concat([vanco_prior_outcome, vanco_current_outcome])
-# 	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco_student_outcome.csv', encoding='utf-8', index=False)
+# 	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', index=False)
 # 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Tri-Cities to csv and to sql
-# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_student_outcome.csv'):
-# 	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_student_outcome.csv', encoding='utf-8', index=False)
+# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv'):
+# 	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', index=False)
 # 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 # else:
-# 	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_student_outcome.csv', encoding='utf-8', low_memory=False)
-# 	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_student_backup.csv', encoding='utf-8', index=False)
+# 	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
+# 	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_backup.csv', encoding='utf-8', index=False)
 # 	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
-# 	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici_student_outcome.csv', encoding='utf-8', index=False)
+# 	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', index=False)
 # 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # University to csv and to sql
-# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr_student_outcome.csv'):
-# 	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr_student_outcome.csv', encoding='utf-8', index=False)
+# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv'):
+# 	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', index=False)
 # 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 # else:
-# 	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr_student_outcome.csv', encoding='utf-8', low_memory=False)
-# 	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr_student_backup.csv', encoding='utf-8', index=False)
+# 	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
+# 	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_backup.csv', encoding='utf-8', index=False)
 # 	univr_student_outcome = pd.concat([univr_prior_outcome, univr_current_outcome])
-# 	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr_student_outcome.csv', encoding='utf-8', index=False)
+# 	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', index=False)
 # 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%

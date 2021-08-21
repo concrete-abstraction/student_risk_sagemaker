@@ -18,7 +18,6 @@ libname dir "\\ad.wsu.edu\POIS\IR\Nathan\Models\student_risk\supplemental_files"
 %let curlib = WSUNCPRD;
 /*%let curlib = WSUNCT1T;*/
 
-
 proc sql;
 	select strm
 	into: strm 
@@ -26,13 +25,6 @@ proc sql;
 	where term_year = year(today()) 
 		and acad_career = 'UGRD' 
 		and term_type = (case when today() lt input(catx('/','07','01',put(year(today()),z4.)), mmddyy10.) then 'SPR' else 'FAL' end)
-;quit;
-
-proc sql;
-	select aid_year into: aid_year 
-	from census.xw_term 
-	where strm = "&strm." 
-		and acad_career = 'UGRD'
 ;quit;
 
 proc sql;
@@ -58,6 +50,31 @@ proc sql noprint;
 	strm into: list_of_strms
 	separated by "','"
 	from strms
+;quit;
+
+proc sql;
+	create table aid_years as
+	select aid_year
+	from census.xw_term 
+	where acad_career = 'UGRD'
+				and substr(strm,4,1) in ('7','3')
+		and strm between (select max(strm)  
+							from census.xw_term 
+							where strm < "&strm." 
+								and acad_career = 'UGRD' 
+								and substr(strm,4,1) in ('7','3')) 
+		and (select min(strm) 
+				from census.xw_term 
+				where strm > "&strm."  
+					and acad_career = 'UGRD' 
+					and substr(strm,4,1) in ('7','3'))
+;quit;
+
+proc sql noprint;
+	select distinct 
+	aid_year into: list_of_aid_years
+	separated by "','"
+	from aid_years
 ;quit;
 
 %macro passthrulib;
@@ -96,13 +113,13 @@ proc sql;
 create table dir.finaid_data as 
 select * from connection to oracle 
 (
-SELECT  A.EMPLID, A.AWARD_PERIOD, A.INSTITUTION, A.AID_YEAR, A.ACAD_CAREER, SUM(A.OFFER_AMOUNT) AS TOTAL_OFFER, b.FED_NEED, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
+SELECT  A.EMPLID, A.INSTITUTION, A.AID_YEAR,A.AWARD_PERIOD, A.ACAD_CAREER, SUM(A.OFFER_AMOUNT) AS TOTAL_OFFER, B.FED_NEED, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
 
 
 FROM PS_STDNT_AWARDS A 
 LEFT OUTER JOIN  PS_STDNT_AWD_PER B ON  A.EMPLID = B.EMPLID AND A.INSTITUTION = B.INSTITUTION AND A.AID_YEAR = B.AID_YEAR AND B.AWARD_PERIOD = A.AWARD_PERIOD
-WHERE (A.AID_YEAR = %bquote('&aid_year.')  AND A.AWARD_STATUS in ('O','A')  AND A.AWARD_PERIOD in ('A') AND A.ACAD_CAREER = 'UGRD' )
-GROUP BY  A.EMPLID,  A.INSTITUTION,  A.AID_YEAR,  A.ACAD_CAREER, A.AWARD_PERIOD
+WHERE (A.AID_YEAR in %bquote(('&list_of_aid_years.'))  AND A.AWARD_STATUS in ('O','A') AND A.AWARD_PERIOD in ('A','B') AND A.ACAD_CAREER = 'UGRD' )
+GROUP BY  A.EMPLID,  A.INSTITUTION,  A.AID_YEAR, A.AWARD_PERIOD, A.ACAD_CAREER
 ,  B.FED_NEED
 , sysdate
 

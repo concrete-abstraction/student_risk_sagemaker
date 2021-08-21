@@ -37,8 +37,8 @@ proc sql;
 ;quit;
 
 /* Note: This is a test date. Revert to 4 in production. */
-%let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 1);
+%let end_cohort = %eval(2021 - &lag_year.);
+%let start_cohort = %eval(&end_cohort. - 4);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -379,7 +379,7 @@ run;
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."	
-			and a.award_period in ('A','B')
+			and a.award_period = 'A'
 			and a.efc_status = 'O'
 	;quit;
 	
@@ -399,7 +399,8 @@ run;
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."
 			and a.award_period in ('A','B')
-			and a.award_status = 'A'
+			and a.award_status in ('A','O')
+			and a.acad_career = 'UGRD'
 		group by a.emplid;
 	;quit;
 	
@@ -1244,6 +1245,28 @@ run;
 	;quit;
 	
 	proc sql;
+		create table need_&cohort_year. as
+		select distinct
+			emplid,
+			aid_year,
+			max(fed_need) as fed_need
+		from acs.finaid_data
+ 			where aid_year = "&cohort_year."
+ 		group by emplid, aid_year
+	;quit;
+	
+	proc sql;
+		create table aid_&cohort_year. as
+		select distinct
+			emplid,
+			aid_year,
+			sum(total_offer) as total_offer
+		from acs.finaid_data
+ 			where aid_year = "&cohort_year."
+ 		group by emplid, aid_year
+	;quit;
+	
+	proc sql;
 		create table date_&cohort_year. as
 		select distinct
 			min(emplid) as emplid,
@@ -1689,12 +1712,12 @@ run;
 /* 			u.total_spring_units, */
  			r.fall_lec_contact_hrs,
  			r.fall_lab_contact_hrs,
-/*  			r.spring_lec_contact_hrs, */
-/*  			r.spring_lab_contact_hrs, */
+/* 			r.spring_lec_contact_hrs, */
+/* 			r.spring_lab_contact_hrs, */
 			r.total_fall_contact_hrs,
 /* 			r.total_spring_contact_hrs, */
 			s.fed_need,
-			s.total_offer,
+			x.total_offer,
 			t.sat_mss,
 			t.sat_erws,
 			v.race_american_indian,
@@ -1736,12 +1759,19 @@ run;
  			on a.emplid = q.emplid
  		left join term_contact_hrs_&cohort_year. as r
  			on a.emplid = r.emplid
- 		left join (select distinct emplid, 
- 								fed_need, 
- 								total_offer 
- 						from acs.finaid_data
- 						where aid_year = "&cohort_year.") as s
+ 		left join need_&cohort_year. as s
  			on a.emplid = s.emplid
+ 				and s.aid_year = "&cohort_year."
+ 		left join aid_&cohort_year. as x
+ 			on a.emplid = x.emplid
+ 				and  x.aid_year = "&cohort_year."
+/*  		left join (select distinct emplid,  */
+/*  								max(fed_need) as fed_need,  */
+/*  								sum(total_offer) as total_offer */
+/*  						from acs.finaid_data */
+/*  						where aid_year = "&cohort_year." */
+/*  						group by emplid) as s */
+/*  			on a.emplid = s.emplid */
  		left join exams_&cohort_year. as t
  			on a.emplid = t.emplid
  		left join class_count_&cohort_year. as u
@@ -1761,94 +1791,6 @@ run;
 %mend loop;
 
 %loop;
-
-data full_set;
-	set dataset_&start_cohort.-dataset_%eval(&end_cohort. + &lag_year.);
-	if enrl_ind = . then enrl_ind = 0;
-	if distance = . then acs_mi = 1; else acs_mi = 0;
-	if distance =. then distance = 0;
-	if pop_dens = . then pop_dens = 0;
-	if educ_rate = . then educ_rate = 0;	
-	if pct_blk = . then pct_blk = 0;	
-	if pct_ai = . then pct_ai = 0;	
-	if pct_hawi = . then pct_hawi = 0;
-	if pct_two = . then pct_two = 0;
-	if pct_hisp = . then pct_hisp = 0;
-	if median_inc = . then median_inc = 0;
-	if gini_indx = . then gini_indx = 0;
-	if pvrt_rate = . then pvrt_rate = 0;
-	if educ_rate = . then educ_rate = 0;
-	if ad_dta = . then ad_dta = 0;
-	if ad_ast = . then ad_ast = 0;
-	if ap = . then ap = 0;
-	if rs = . then rs = 0;
-	if chs = . then chs = 0;
-	if ib = . then ib = 0;
-	if aice = . then aice = 0;
-	if ib_aice = . then ib_aice = 0;
-	if athlete = . then athlete = 0;
-	if remedial = . then remedial = 0;
-	if sat_mss = . then sat_mss = 0;
-	if sat_erws = . then sat_erws = 0;
-	if high_school_gpa = . then high_school_gpa_mi = 1; else high_school_gpa_mi = 0;
-	if high_school_gpa = . then high_school_gpa = 0;
-	if transfer_gpa = . then transfer_gpa_mi = 1; else transfer_gpa_mi = 0;
-	if transfer_gpa = . then transfer_gpa = 0;
-	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
-	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
-	if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
-	if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
-	if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
-	if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
-	if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
-	if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
-	if fall_avg_difficulty = . then fall_avg_difficulty = 0;
-/* 	if spring_avg_pct_withdrawn = . then spring_avg_pct_withdrawn = 0; */
-/* 	if spring_avg_pct_CDFW = . then spring_avg_pct_CDFW = 0; */
-/* 	if spring_avg_pct_CDF = . then spring_avg_pct_CDF = 0; */
-/* 	if spring_avg_pct_DFW = . then spring_avg_pct_DFW = 0; */
-/* 	if spring_avg_pct_DF = . then spring_avg_pct_DF = 0; */
-/* 	if spring_avg_difficulty = . then spring_avg_difficulty = 0; */
-/* 	if fall_lec_count = . then fall_crse_count_mi = 1; else fall_crse_count_mi = 0; */
-	if fall_lec_count = . then fall_lec_count = 0;
-	if fall_lab_count = . then fall_lab_count = 0;
-/* 	if spring_lec_count = . then spring_lec_count_mi = 1; else spring_lec_count_mi = 0; */
-/* 	if spring_lec_count = . then spring_lec_count = 0; */
-/* 	if spring_lab_count = . then spring_lab_count_mi = 1; else spring_lab_count_mi = 0; */
-/* 	if spring_lab_count = . then spring_lab_count = 0; */
-	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
- 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
-	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
-/* 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0; */
-/* 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0; */
-/* 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0; */
-	if first_gen_flag = '' then first_gen_flag_mi = 1; else first_gen_flag_mi = 0;
-	if first_gen_flag = '' then first_gen_flag = 'N';
-	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
-	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
-	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
-	if housing_family_indicator ^= 'Y' then housing_family_indicator = 'N';
-	if afl_reshall_indicator ^= 'Y' then afl_reshall_indicator = 'N';
-	if afl_ssa_indicator ^= 'Y' then afl_ssa_indicator = 'N';
-	if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
-	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
-	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
-	unmet_need_disb = fed_need - total_disb;
-	unmet_need_acpt = fed_need - total_accept;
-	unmet_need_ofr = fed_need - total_offer;
-	if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
-	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
-	if fed_efc = . then fed_efc = 0;
-	if fed_need = . then fed_need = 0;
-	if total_disb = . then total_disb = 0;
-	if total_offer = . then total_offer = 0;
-	if total_accept = . then total_accept = 0;
-run;
-
-/* Note: There should be no duplicates */
-proc sort data=full_set nodupkey dupout=dups;
-	by emplid;
-run;
 
 /* proc means data=full_set median q1 q3; */
 /* 	var age; */
@@ -1938,7 +1880,7 @@ data training_set;
 run;
 
 data testing_set;
-	set dataset_2022;
+	set dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
 	if distance =. then distance = 0;
@@ -2018,11 +1960,6 @@ data testing_set;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
-run;
-
-filename full "Z:\Nathan\Models\student_risk\datasets\full_set.csv" encoding="utf-8";
-
-proc export data=full_set outfile=full dbms=csv replace;
 run;
 
 filename training "Z:\Nathan\Models\student_risk\datasets\training_set.csv" encoding="utf-8";

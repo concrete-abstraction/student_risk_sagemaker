@@ -40,9 +40,9 @@ proc sql;
 		and acad_career = 'UGRD'
 ;quit;
 
-/* Note: This is a test date. Revert to 5 in production. */
+/* Note: This is a test date. Revert to 4 in production. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 1);
+%let start_cohort = %eval(&end_cohort. - 4);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -393,7 +393,7 @@ run;
 				and a.aid_year = b.aid_year
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."	
-			and a.award_period in ('A','B')
+			and a.award_period = 'A'
 			and a.efc_status = 'O'
 	;quit;
 	
@@ -413,7 +413,8 @@ run;
 				and a.snapshot = b.snapshot
 		where a.aid_year = "&cohort_year."
 			and a.award_period in ('A','B')
-			and a.award_status = 'A'
+			and a.award_status in ('A','O')
+			and a.acad_career = 'UGRD'
 		group by a.emplid;
 	;quit;
 	
@@ -3499,15 +3500,15 @@ run;
 /* 	set training_set_anon; */
 /* run; */
 
-proc means data=training_set;
-	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count;
-	title 'AY2020 Data';
-run;
+/* proc means data=training_set; */
+/* 	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count; */
+/* 	title 'AY2020 Data'; */
+/* run; */
 
-proc means data=testing_set;
-	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count;
-	title 'AY2021 Data';
-run;
+/* proc means data=testing_set; */
+/* 	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count; */
+/* 	title 'AY2021 Data'; */
+/* run; */
 
 filename full "Z:\Nathan\Models\student_risk\datasets\full_set.csv" encoding="utf-8";
 
