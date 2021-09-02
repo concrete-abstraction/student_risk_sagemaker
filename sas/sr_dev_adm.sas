@@ -5,13 +5,11 @@
 * ------------------------------------------------------------------------------- ;
 
 %let dsn = census;
-%let dev = cendev;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
-libname &dev. odbc dsn=&dev. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
 
 libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
@@ -19,11 +17,13 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 /* Note: Review this and streamline the code so that it isn't so long. Maybe rework the macros to limit redundant code. */
 
 /* proc sql; */
-/* 	select min(term_type) into: term_type  */
+/* 	select term_type into: term_type  */
 /* 	from &dsn..xw_term  */
 /* 	where term_year = year(today()) */
 /* 		and month(datepart(term_begin_dt)) <= month(today())  */
 /* 		and month(datepart(term_end_dt)) >= month(today())  */
+/* 		and week(datepart(term_begin_dt)) <= week(today()) */
+/* 		and week(datepart(term_end_dt)) >= week(today()) */
 /* 		and acad_career = 'UGRD' */
 /* ;quit; */
 
@@ -32,7 +32,9 @@ proc sql;
 	from &dsn..xw_term 
 	where term_year = year(today())
 		and month(datepart(term_begin_dt)) <= month(today()) 
-		and month(datepart(term_end_dt)) >= month(today()) 
+		and month(datepart(term_end_dt)) >= month(today())
+/* 		and week(datepart(term_begin_dt)) <= week(today()) */
+/* 		and week(datepart(term_end_dt)) >= week(today()) */
 		and acad_career = 'UGRD'
 ;quit;
 
@@ -48,7 +50,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 4);
+%let start_cohort = %eval(&end_cohort. - 0);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"

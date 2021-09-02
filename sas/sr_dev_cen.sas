@@ -4,7 +4,7 @@
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
-%let dsn = cendev;
+%let dsn = census;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
@@ -28,7 +28,7 @@ proc sql;
 ;quit;
 
 proc sql;
-	select full_acad_year into: full_acad_year 
+	select distinct full_acad_year into: full_acad_year 
 	from &dsn..xw_term 
 	where term_year = year(today())
 		and month(datepart(term_begin_dt)) <= month(today()) 
@@ -36,6 +36,16 @@ proc sql;
 /* 		and week(datepart(term_begin_dt)) <= week(today()) */
 /* 		and week(datepart(term_end_dt)) >= week(today()) */
 		and acad_career = 'UGRD'
+;quit;
+
+proc sql;
+	select distinct a.snapshot into: snapshot
+	from &dsn..fa_award_aid_year_vw as a
+	inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&full_acad_year."	) as b
+		on a.emplid = b.emplid
+			and a.aid_year = b.aid_year
+			and a.snapshot = b.snapshot
+	where a.aid_year = "&full_acad_year."	
 ;quit;
 
 /* Note: This is a test date. Revert to 4 in production. */
@@ -380,40 +390,34 @@ run;
 	proc sql;
 		create table need_&cohort_year. as
 		select distinct
-			a.emplid,
-			b.snapshot as need_snap,
-			a.aid_year,
-			a.fed_efc,
-			a.fed_need
-		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
-			on a.emplid = b.emplid
-				and a.aid_year = b.aid_year
-				and a.snapshot = b.snapshot
-		where a.aid_year = "&cohort_year."	
-			and a.award_period = 'A'
-			and a.efc_status = 'O'
+			emplid,
+			snapshot as need_snap,
+			aid_year,
+			fed_efc,
+			fed_need
+		from &dsn..fa_award_period
+		where snapshot = "&snapshot."
+			and aid_year = "&cohort_year."	
+			and award_period = 'A'
+			and efc_status = 'O'
 	;quit;
 	
 	proc sql;
 		create table aid_&cohort_year. as
 		select distinct
-			a.emplid,
-			b.snapshot as aid_snap,
-			a.aid_year,
-			sum(a.disbursed_amt) as total_disb,
-			sum(a.offer_amt) as total_offer,
-			sum(a.accept_amt) as total_accept
-		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
-			on a.emplid = b.emplid
-				and a.aid_year = b.aid_year
-				and a.snapshot = b.snapshot
-		where a.aid_year = "&cohort_year."
-			and a.award_period in ('A','B')
-			and a.award_status in ('A','O')
-			and a.acad_career = 'UGRD'
-		group by a.emplid;
+			emplid,
+			snapshot as aid_snap,
+			aid_year,
+			sum(disbursed_amt) as total_disb,
+			sum(offer_amt) as total_offer,
+			sum(accept_amt) as total_accept
+		from &dsn..fa_award_aid_year_vw
+		where snapshot = "&snapshot."
+			and aid_year = "&cohort_year."
+			and award_period in ('A','B')
+			and award_status in ('A','O')
+			and acad_career = 'UGRD'
+		group by emplid
 	;quit;
 	
 	proc sql;
@@ -1633,60 +1637,6 @@ run;
 			and a.full_acad_year = "&cohort_year."
 			and a.ipeds_full_part_time = 'F'
 	;quit;
-	
-/* 	proc sql; */
-/* 		create table enrolled_&cohort_year. as */
-/* 		select distinct  */
-/* 			emplid,  */
-/* 			max(strm) as strm, */
-/* 			case when max(strm) >= substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' 	then 1 */
-/* 																																								else 0 */
-/* 																																								end as fall_enrl, */
-/* 			case when max(strm) >= substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3' 	then 1 */
-/* 																														else 0 */
-/* 																														end as spring_enrl */
-/* 		from acs.enrl_data */
-/* 		group by emplid */
-/* 		order by emplid */
-/* 	;quit; */
-	
-/* 	proc sql; */
-/* 		create table need_&cohort_year. as */
-/* 		select distinct */
-/* 			a.emplid, */
-/* 			b.snapshot as need_snap, */
-/* 			a.aid_year, */
-/* 			a.fed_efc, */
-/* 			a.fed_need */
-/* 		from &dsn..fa_award_period as a */
-/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b */
-/* 			on a.emplid = b.emplid */
-/* 				and a.aid_year = b.aid_year */
-/* 				and a.snapshot = b.snapshot */
-/* 		where a.aid_year = "&cohort_year."	 */
-/* 			and a.award_period in ('A','B') */
-/* 			and a.efc_status = 'O' */
-/* 	;quit; */
-	
-/* 	proc sql; */
-/* 		create table aid_&cohort_year. as */
-/* 		select distinct */
-/* 			a.emplid, */
-/* 			b.snapshot as aid_snap, */
-/* 			a.aid_year, */
-/* 			sum(a.disbursed_amt) as total_disb, */
-/* 			sum(a.offer_amt) as total_offer, */
-/* 			sum(a.accept_amt) as total_accept */
-/* 		from &dsn..fa_award_aid_year_vw as a */
-/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b */
-/* 			on a.emplid = b.emplid */
-/* 				and a.aid_year = b.aid_year */
-/* 				and a.snapshot = b.snapshot */
-/* 		where a.aid_year = "&cohort_year." */
-/* 			and a.award_period in ('A','B') */
-/* 			and a.award_status = 'A' */
-/* 		group by a.emplid; */
-/* 	;quit; */
 	
 	proc sql;
 		create table race_detail_&cohort_year. as

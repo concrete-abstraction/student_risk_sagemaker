@@ -19,13 +19,11 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		%let dsn = census;
-		%let dev = cendev;
 		%let adm = adm;
 		""")
 
 		sas.submit("""
 		libname &dsn. odbc dsn=&dsn. schema=dbo;
-		libname &dev. odbc dsn=&dev. schema=dbo;
 		libname &adm. odbc dsn=&adm. schema=dbo;
 		libname acs \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\\";
 		""")
@@ -37,11 +35,11 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		proc sql;
-			select full_acad_year into: full_acad_year 
+			select distinct full_acad_year into: full_acad_year 
 			from &dsn..xw_term 
 			where term_year = year(today())
 				and month(datepart(term_begin_dt)) <= month(today()) 
-				and month(datepart(term_end_dt)) >= month(today()) 
+				and month(datepart(term_end_dt)) >= month(today())
 				and acad_career = 'UGRD'
 		;quit;
 
@@ -1576,7 +1574,7 @@ class DatasetBuilderProd:
 						and s.aid_year = "&cohort_year."
 				left join aid_&cohort_year. as x
 					on a.emplid = x.emplid
-						and  x.aid_year = "&cohort_year."
+						and x.aid_year = "&cohort_year."
 				left join exams_&cohort_year. as t
 					on a.emplid = t.emplid
 				left join class_count_&cohort_year. as u
@@ -1790,13 +1788,11 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		%let dsn = census;
-		%let dev = cendev;
 		%let adm = adm;
 		""")
 
 		sas.submit("""
 		libname &dsn. odbc dsn=&dsn. schema=dbo;
-		libname &dev. odbc dsn=&dev. schema=dbo;
 		libname &adm. odbc dsn=&adm. schema=dbo;
 		libname acs \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\\";
 		""")
@@ -1813,9 +1809,28 @@ class DatasetBuilderProd:
 			where term_year = year(today())
 				and month(datepart(term_begin_dt)) <= month(today()) 
 				and month(datepart(term_end_dt)) >= month(today()) 
+				and acad_career = 'UGRD'
+		;quit;
+
+		proc sql;
+			select term_type into: term_type 
+			from &dsn..xw_term 
+			where term_year = year(today())
+				and month(datepart(term_begin_dt)) <= month(today()) 
+				and month(datepart(term_end_dt)) >= month(today()) 
 				and week(datepart(term_begin_dt)) <= week(today())
 				and week(datepart(term_end_dt)) >= week(today())
 				and acad_career = 'UGRD'
+		;quit;
+
+		proc sql;
+			select distinct a.snapshot into: snapshot
+			from &dsn..fa_award_aid_year_vw as a
+			inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&full_acad_year."	) as b
+				on a.emplid = b.emplid
+					and a.aid_year = b.aid_year
+					and a.snapshot = b.snapshot
+			where a.aid_year = "&full_acad_year."	
 		;quit;
 		""")
 
@@ -1863,21 +1878,8 @@ class DatasetBuilderProd:
 		print('Create SAS macro...')
 
 		sas.submit("""
-		proc sql;
-			select term_type into: term_type 
-			from &dsn..xw_term 
-			where term_year = year(today())
-				and month(datepart(term_begin_dt)) <= month(today()) 
-				and month(datepart(term_end_dt)) >= month(today()) 
-				and week(datepart(term_begin_dt)) <= week(today())
-				and week(datepart(term_end_dt)) >= week(today())
-				and acad_career = 'UGRD'
-		;quit;
-		""")
-
-		sas.submit("""
 		%macro loop;
-	
+			
 			%do cohort_year=&start_cohort. %to &end_cohort.;
 			
 			proc sql;
@@ -1984,7 +1986,7 @@ class DatasetBuilderProd:
 				select distinct
 					emplid,
 					pell_recipient_ind
-				from &dev..new_student_profile_ugrd_cs
+				from &dsn..new_student_profile_ugrd_cs
 				where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 					and adj_admit_type_cat in ('FRSH','TRAN')
 					and ipeds_full_part_time = 'F'
@@ -2193,39 +2195,34 @@ class DatasetBuilderProd:
 			proc sql;
 				create table need_&cohort_year. as
 				select distinct
-					a.emplid,
-					b.snapshot as need_snap,
-					a.aid_year,
-					a.fed_efc,
-					a.fed_need
-				from &dsn..fa_award_period as a
-				inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
-					on a.emplid = b.emplid
-						and a.aid_year = b.aid_year
-						and a.snapshot = b.snapshot
-				where a.aid_year = "&cohort_year."	
-					and a.award_period in ('A','B')
-					and a.efc_status = 'O'
+					emplid,
+					snapshot as need_snap,
+					aid_year,
+					fed_efc,
+					fed_need
+				from &dsn..fa_award_period
+				where snapshot = "&snapshot."
+					and aid_year = "&cohort_year."	
+					and award_period = 'A'
+					and efc_status = 'O'
 			;quit;
 			
 			proc sql;
 				create table aid_&cohort_year. as
 				select distinct
-					a.emplid,
-					b.snapshot as aid_snap,
-					a.aid_year,
-					sum(a.disbursed_amt) as total_disb,
-					sum(a.offer_amt) as total_offer,
-					sum(a.accept_amt) as total_accept
-				from &dsn..fa_award_aid_year_vw as a
-				inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
-					on a.emplid = b.emplid
-						and a.aid_year = b.aid_year
-						and a.snapshot = b.snapshot
-				where a.aid_year = "&cohort_year."
-					and a.award_period in ('A','B')
-					and a.award_status = 'A'
-				group by a.emplid;
+					emplid,
+					snapshot as aid_snap,
+					aid_year,
+					sum(disbursed_amt) as total_disb,
+					sum(offer_amt) as total_offer,
+					sum(accept_amt) as total_accept
+				from &dsn..fa_award_aid_year_vw
+				where snapshot = "&snapshot."
+					and aid_year = "&cohort_year."
+					and award_period in ('A','B')
+					and award_status in ('A','O')
+					and acad_career = 'UGRD'
+				group by emplid
 			;quit;
 			
 			proc sql;
@@ -3589,6 +3586,28 @@ class DatasetBuilderProd:
 			;quit;
 			
 			proc sql;
+				create table need_&cohort_year. as
+				select distinct
+					emplid,
+					aid_year,
+					max(fed_need) as fed_need
+				from acs.finaid_data
+					where aid_year = "&cohort_year."
+				group by emplid, aid_year
+			;quit;
+			
+			proc sql;
+				create table aid_&cohort_year. as
+				select distinct
+					emplid,
+					aid_year,
+					sum(total_offer) as total_offer
+				from acs.finaid_data
+					where aid_year = "&cohort_year."
+				group by emplid, aid_year
+			;quit;
+			
+			proc sql;
 				create table dependent_&cohort_year. as
 				select distinct
 					a.emplid,
@@ -3956,8 +3975,8 @@ class DatasetBuilderProd:
 						unt_taken,
 						grading_basis_enrl,
 						enrl_status_reason,
-						class_grade_points as grade_points,
-						class_grade_points_per_unit as grd_pts_per_unit,
+						grade_points,
+						grd_pts_per_unit,
 						strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 						ssr_component,
 						crse_grade_input_fin as crse_grade,
@@ -4572,14 +4591,14 @@ class DatasetBuilderProd:
 					c.vet_med,
 					c.lsamp_stem_flag,
 					c.anywhere_stem_flag,
-					s.fed_need,
-					s.total_offer,
 					v.dependent_snap,
 					v.num_in_family,
 					v.stdnt_have_dependents,
 					v.stdnt_have_children_to_support,
 					v.stdnt_agi,
 					v.stdnt_agi_blank,
+					d.fed_need,
+					e.total_offer,
 					f.best,
 					f.bestr,
 					f.qvalue,
@@ -4695,12 +4714,12 @@ class DatasetBuilderProd:
 					on a.emplid = b.emplid
 				left join plan_&cohort_year. as c
 					on a.emplid = c.emplid
-				left join (select distinct emplid, 
-									fed_need, 
-									total_offer 
-								from acs.finaid_data
-								where aid_year = "&cohort_year.") as s
-					on a.emplid = s.emplid
+				left join need_&cohort_year. as d
+					on a.emplid = d.emplid
+						and d.aid_year = "&cohort_year."
+				left join aid_&cohort_year. as e
+					on a.emplid = e.emplid
+						and e.aid_year = "&cohort_year."
 				left join exams_&cohort_year. as f
 					on a.emplid = f.emplid
 				left join degrees_&cohort_year. as g
