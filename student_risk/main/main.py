@@ -85,7 +85,7 @@ if __name__ == '__main__':
         except config.DateError as eot_error:
             print(eot_error)
             config.eot_flag = True
-        
+
         except KeyError as key_error:
             print(key_error)
         except:
@@ -104,7 +104,7 @@ if __name__ == '__main__':
         except config.DateError as mid_error:
             print(mid_error)
             config.mid_flag = True
-            
+
             try: 
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_mid.py').read())
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_mid.py').read())
@@ -136,7 +136,46 @@ if __name__ == '__main__':
                                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_eot.py').read())
                             except config.DataError as eot_snap_error:
                                 print(eot_snap_error)
-        
+                            except KeyError as key_error:
+                                print(key_error)
+                            except:
+                                traceback.print_exc(file=sys.stdout)
+                            else:
+                                stop = time.perf_counter()
+                                print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
+                        except KeyError as key_error:
+                            print(key_error)
+                        except:
+                            traceback.print_exc(file=sys.stdout)
+                        else:
+                            stop = time.perf_counter()
+                            print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
+                    except KeyError as key_error:
+                        print(key_error)
+                    except:
+                        traceback.print_exc(file=sys.stdout)
+                    else:
+                        stop = time.perf_counter()
+                        print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
+                except KeyError as key_error:
+                    print(key_error)
+                except:
+                    traceback.print_exc(file=sys.stdout)
+                else:
+                    stop = time.perf_counter()
+                    print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
+            except KeyError as key_error:
+                print(key_error)
+            except:
+                traceback.print_exc(file=sys.stdout)
+            else:
+                stop = time.perf_counter()
+                print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
         except KeyError as key_error:
             print(key_error)
         except:
@@ -186,7 +225,39 @@ if __name__ == '__main__':
                             #     exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_adm.py').read())
                             # except config.DataError as adm_snap_error:
                             #     print(adm_snap_error)
-        
+
+                        except KeyError as key_error:
+                            print(key_error)
+                        except:
+                            traceback.print_exc(file=sys.stdout)
+                        else:
+                            stop = time.perf_counter()
+                            print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
+                    except KeyError as key_error:
+                        print(key_error)
+                    except:
+                        traceback.print_exc(file=sys.stdout)
+                    else:
+                        stop = time.perf_counter()
+                        print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
+                except KeyError as key_error:
+                    print(key_error)
+                except:
+                    traceback.print_exc(file=sys.stdout)
+                else:
+                    stop = time.perf_counter()
+                    print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
+            except KeyError as key_error:
+                print(key_error)
+            except:
+                traceback.print_exc(file=sys.stdout)
+            else:
+                stop = time.perf_counter()
+                print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+
         except KeyError as key_error:
             print(key_error)
         except:

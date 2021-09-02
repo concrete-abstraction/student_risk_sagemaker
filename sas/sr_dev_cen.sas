@@ -4,14 +4,12 @@
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
-%let dsn = census;
-%let dev = cendev;
+%let dsn = cendev;
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
-libname &dev. odbc dsn=&dev. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
 
 libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
@@ -24,8 +22,8 @@ proc sql;
 	where term_year = year(today())
 		and month(datepart(term_begin_dt)) <= month(today()) 
 		and month(datepart(term_end_dt)) >= month(today()) 
-/* 		and week(datepart(term_begin_dt)) <= week(today()) */
-/* 		and week(datepart(term_end_dt)) >= week(today()) */
+		and week(datepart(term_begin_dt)) <= week(today())
+		and week(datepart(term_end_dt)) >= week(today())
 		and acad_career = 'UGRD'
 ;quit;
 
@@ -42,7 +40,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 4);
+%let start_cohort = %eval(&end_cohort. - 0);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -171,7 +169,7 @@ run;
 		select distinct
 			emplid,
 			pell_recipient_ind
-		from &dev..new_student_profile_ugrd_cs
+		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 /* 			and adj_admit_campus in ('PULLM','VANCO','TRICI') */
 			and adj_admit_type_cat in ('FRSH','TRAN')
@@ -1846,52 +1844,27 @@ run;
 			and calculated split_plan = 0
 	;quit;
 	
-/* 	proc sql; */
-/* 		create table need_&cohort_year. as */
-/* 		select distinct */
-/* 			a.emplid, */
-/* 			b.snapshot as need_snap, */
-/* 			a.aid_year, */
-/* 			a.fed_efc, */
-/* 			a.fed_need */
-/* 		from &dsn..fa_award_period as a */
-/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b */
-/* 			on a.emplid = b.emplid */
-/* 				and a.aid_year = b.aid_year */
-/* 				and a.snapshot = b.snapshot */
-/* 		where a.aid_year = "&cohort_year."	 */
-/* 			and a.award_period in ('A') */
-/* 			and a.efc_status = 'O' */
-/* 	;quit; */
+	proc sql;
+		create table need_&cohort_year. as
+		select distinct
+			emplid,
+			aid_year,
+			max(fed_need) as fed_need
+		from acs.finaid_data
+ 			where aid_year = "&cohort_year."
+ 		group by emplid, aid_year
+	;quit;
 	
-/* 	proc sql; */
-/* 		create table aid_&cohort_year. as */
-/* 		select distinct */
-/* 			a.emplid, */
-/* 			b.snapshot as aid_snap, */
-/* 			a.aid_year, */
-/* 			sum(a.disbursed_amt) as total_disb, */
-/* 			sum(a.offer_amt) as total_offer, */
-/* 			sum(a.accept_amt) as total_accept */
-/* 		from &dsn..fa_award_aid_year_vw as a */
-/* 		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b */
-/* 			on a.emplid = b.emplid */
-/* 				and a.aid_year = b.aid_year */
-/* 				and a.snapshot = b.snapshot */
-/* 		where a.aid_year = "&cohort_year." */
-/* 			and a.award_period in ('A','B') */
-/* 			and a.award_status = 'A' */
-/* 		group by a.emplid; */
-/* 	;quit; */
-	
-/* 	proc sql; */
-/* 		select distinct  */
-/* 			emplid,  */
-/* 			fed_need,  */
-/* 		 	total_offer  */
-/* 		from acs.finaid_data */
-/* 		where aid_year = "&cohort_year." */
-/* 	;quit; */
+	proc sql;
+		create table aid_&cohort_year. as
+		select distinct
+			emplid,
+			aid_year,
+			sum(total_offer) as total_offer
+		from acs.finaid_data
+ 			where aid_year = "&cohort_year."
+ 		group by emplid, aid_year
+	;quit;
 	
 	proc sql;
 		create table dependent_&cohort_year. as
@@ -2261,8 +2234,8 @@ run;
 				unt_taken,
 				grading_basis_enrl,
 				enrl_status_reason,
-				class_grade_points as grade_points,
-				class_grade_points_per_unit as grd_pts_per_unit,
+				grade_points,
+				grd_pts_per_unit,
 				strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
 				ssr_component,
 				crse_grade_input_fin as crse_grade,
@@ -2886,21 +2859,16 @@ run;
 			c.vet_med,
 			c.lsamp_stem_flag,
 			c.anywhere_stem_flag,
-			s.fed_need,
-			s.total_offer,
+/* 			s.fed_need, */
+/* 			s.total_offer, */
 			v.dependent_snap,
 			v.num_in_family,
 			v.stdnt_have_dependents,
       		v.stdnt_have_children_to_support,
       		v.stdnt_agi,
       		v.stdnt_agi_blank,
-/* 			d.need_snap, */
-/* 			d.fed_efc, */
-/* 			d.fed_need, */
-/* 			e.aid_snap, */
-/* 			e.total_disb, */
-/* 			e.total_offer, */
-/* 			e.total_accept, */
+			d.fed_need,
+			e.total_offer,
 			f.best,
 			f.bestr,
 			f.qvalue,
@@ -3018,18 +2986,18 @@ run;
 /* 			on a.emplid = x.emplid */
  		left join plan_&cohort_year. as c
  			on a.emplid = c.emplid
- 		left join (select distinct emplid, 
-							fed_need, 
-	 						total_offer 
-	 					from acs.finaid_data
-	 					where aid_year = "&cohort_year.") as s
- 			on a.emplid = s.emplid
-/*  		left join need_&cohort_year. as d */
-/*  			on a.emplid = d.emplid */
-/*  				and a.aid_year = d.aid_year */
-/*  		left join aid_&cohort_year. as e */
-/*  			on a.emplid = e.emplid */
-/*  				and a.aid_year = e.aid_year */
+ 		left join need_&cohort_year. as d
+ 			on a.emplid = d.emplid
+ 				and d.aid_year = "&cohort_year."
+ 		left join aid_&cohort_year. as e
+ 			on a.emplid = e.emplid
+ 				and e.aid_year = "&cohort_year."
+/* 		left join (select distinct emplid,  */
+/* 							fed_need,  */
+/* 							total_offer  */
+/* 						from acs.finaid_data */
+/* 						where aid_year = "&cohort_year.") as s */
+/* 			on a.emplid = s.emplid */
  		left join exams_&cohort_year. as f
  			on a.emplid = f.emplid
  		left join degrees_&cohort_year. as g

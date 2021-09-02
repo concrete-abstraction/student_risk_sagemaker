@@ -41,6 +41,8 @@ student_shap = Table('student_shap', metadata, autoload=True)
 # Global variable intialization
 strm = None
 top_N = 5
+model_id = 1
+day_of_week = 5
 
 #%%
 # Precensus date check
@@ -108,7 +110,6 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
 						'pell_eligibility_ind',
-						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
 						'first_gen_flag',
 						'first_gen_flag_mi', 
@@ -268,7 +269,6 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind',
-							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
 							'first_gen_flag',
 							'first_gen_flag_mi', 
@@ -401,6 +401,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fed_efc',
 							# 'fed_need',
 							'unmet_need_ofr',
+
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
@@ -428,7 +429,6 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind',
-							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
 							'first_gen_flag',
 							'first_gen_flag_mi', 
@@ -561,6 +561,7 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							# 'fed_efc',
 							# 'fed_need',
 							'unmet_need_ofr',
+
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
@@ -612,7 +613,6 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
 						'pell_eligibility_ind',
-						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
 						'first_gen_flag',
 						'first_gen_flag_mi', 
@@ -772,7 +772,6 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind',
-							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
 							'first_gen_flag',
 							'first_gen_flag_mi', 
@@ -932,7 +931,6 @@ vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_se
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind',
-							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
 							'first_gen_flag',
 							'first_gen_flag_mi', 
@@ -1116,7 +1114,6 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
 						'pell_eligibility_ind',
-						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
 						'first_gen_flag',
 						'first_gen_flag_mi', 
@@ -1276,7 +1273,6 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind',
-							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
 							'first_gen_flag',
 							'first_gen_flag_mi', 
@@ -1436,7 +1432,6 @@ trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_se
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind',
-							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
 							'first_gen_flag',
 							'first_gen_flag_mi', 
@@ -1620,7 +1615,6 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
 						'pell_eligibility_ind',
-						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
 						'first_gen_flag',
 						'first_gen_flag_mi', 
@@ -1779,8 +1773,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							'pop_dens',
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
-							'pell_eligibility_ind',
-							# 'pell_eligibility_ind_mi', 
+							'pell_eligibility_ind', 
 							# 'pell_recipient_ind',
 							'first_gen_flag',
 							'first_gen_flag_mi', 
@@ -1940,7 +1933,6 @@ univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_s
 							'underrep_minority', 
 							# 'ipeds_ethnic_group_descrshort',
 							'pell_eligibility_ind',
-							# 'pell_eligibility_ind_mi', 
 							# 'pell_recipient_ind',
 							'first_gen_flag',
 							'first_gen_flag_mi', 
@@ -2292,7 +2284,6 @@ pullm_x_test = pullm_testing_set[[
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
 						'pell_eligibility_ind',
-						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
 						'first_gen_flag',
 						'first_gen_flag_mi', 
@@ -2425,6 +2416,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'fed_efc',
 						# 'fed_need',
 						'unmet_need_ofr',
+
 						'unmet_need_ofr_mi'
                         ]]
 
@@ -2559,7 +2551,6 @@ vanco_x_test = vanco_testing_set[[
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
 						'pell_eligibility_ind',
-						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
 						'first_gen_flag',
 						'first_gen_flag_mi', 
@@ -2692,6 +2683,7 @@ vanco_x_test = vanco_testing_set[[
 						# 'fed_efc',
 						# 'fed_need',
 						'unmet_need_ofr',
+
 						'unmet_need_ofr_mi'
                         ]]
 
@@ -2824,7 +2816,6 @@ trici_x_test = trici_testing_set[[
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
 						'pell_eligibility_ind',
-						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
 						'first_gen_flag',
 						'first_gen_flag_mi', 
@@ -2957,6 +2948,7 @@ trici_x_test = trici_testing_set[[
 						# 'fed_efc',
 						# 'fed_need',
 						'unmet_need_ofr',
+
 						'unmet_need_ofr_mi'
                         ]]
 
@@ -3089,7 +3081,6 @@ univr_x_test = univr_testing_set[[
 						'underrep_minority', 
 						# 'ipeds_ethnic_group_descrshort',
 						'pell_eligibility_ind',
-						# 'pell_eligibility_ind_mi', 
 						# 'pell_recipient_ind',
 						'first_gen_flag',
 						'first_gen_flag_mi', 
@@ -3222,6 +3213,7 @@ univr_x_test = univr_testing_set[[
 						# 'fed_efc',
 						# 'fed_need',
 						'unmet_need_ofr',
+
 						'unmet_need_ofr_mi'
                         ]]
 
@@ -3426,7 +3418,7 @@ print('VIF for Pullman...\n')
 pullm_vif = pd.DataFrame()
 pullm_vif['vif factor'] = [variance_inflation_factor(pullm_x.values, i) for i in range(pullm_x.shape[1])]
 pullm_vif['features'] = pullm_x.columns
-pullm_vif = pullm_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+pullm_vif.sort_values(by='vif factor', ascending=False, ignore_index=True, inplace=True)
 print(pullm_vif.round(1).to_string())
 print('\n')
 
@@ -3436,7 +3428,7 @@ print('VIF for Vancouver...\n')
 vanco_vif = pd.DataFrame()
 vanco_vif['vif factor'] = [variance_inflation_factor(vanco_x.values, i) for i in range(vanco_x.shape[1])]
 vanco_vif['features'] = vanco_x.columns
-vanco_vif = vanco_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+vanco_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(vanco_vif.round(1).to_string())
 print('\n')
 
@@ -3446,7 +3438,7 @@ print('VIF for Tri-Cities...\n')
 trici_vif = pd.DataFrame()
 trici_vif['vif factor'] = [variance_inflation_factor(trici_x.values, i) for i in range(trici_x.shape[1])]
 trici_vif['features'] = trici_x.columns
-trici_vif = trici_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+trici_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(trici_vif.round(1).to_string())
 print('\n')
 
@@ -3456,7 +3448,7 @@ print('VIF for University...\n')
 univr_vif = pd.DataFrame()
 univr_vif['vif factor'] = [variance_inflation_factor(univr_x.values, i) for i in range(univr_x.shape[1])]
 univr_vif['features'] = univr_x.columns
-univr_vif = univr_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+univr_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
 print(univr_vif.round(1).to_string())
 print('\n')
 
@@ -3679,13 +3671,13 @@ print(f'ROC AUC for University ensemble model (training): {univr_vcf_auc:.4f}\n'
 univr_vcf_fpr, univr_vcf_tpr, univr_thresholds = roc_curve(univr_y_train, univr_vcf_probs, drop_intermediate=False)
 
 #%%
-if datetime.datetime.today().weekday() == 5:
+if datetime.datetime.today().weekday() == day_of_week:
 
 	print('Calculate SHAP values...')
 
 #%%
 # Pullman SHAP undersample
-	pullm_under_shap = NearMiss(sampling_strategy={0:750, 1:3000}, version=2, n_jobs=-1)
+	pullm_under_shap = NearMiss(sampling_strategy={0:(pullm_y_train[pullm_y_train == 0].count()//5), 1:(pullm_y_train[pullm_y_train == 1].count()//5)}, version=3, n_jobs=-1)
 	pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
 
 #%%
@@ -3694,7 +3686,7 @@ if datetime.datetime.today().weekday() == 5:
 
 #%%
 # Pullman SHAP prediction
-	pullm_shap_values = pullm_explainer.shap_values(X=pullm_x_test, nsamples=1500)
+	pullm_shap_values = pullm_explainer.shap_values(X=pullm_x_test, nsamples=(pullm_y_train[pullm_y_train == 1].count()//5))
 
 #%%
 # Pullman SHAP plots
@@ -3711,16 +3703,16 @@ if datetime.datetime.today().weekday() == 5:
 
 #%%
 # Vancouver SHAP undersample
-# 	vanco_under_shap = NearMiss(sampling_strategy={0:250, 1:1000}, version=2, n_jobs=-1)
-# 	vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
+	vanco_under_shap = NearMiss(sampling_strategy={0:(vanco_y_train[vanco_y_train == 0].count()//2), 1:(vanco_y_train[vanco_y_train == 1].count()//2)}, version=3, n_jobs=-1)
+	vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
 
 #%%
 # Vancouver SHAP training (see: https://github.com/slundberg/shap)
-# 	vanco_explainer = shap.KernelExplainer(model=vanco_vcf.predict_proba, data=vanco_x_shap)
+	vanco_explainer = shap.KernelExplainer(model=vanco_vcf.predict_proba, data=vanco_x_shap)
 
 #%%
 # Vancouver SHAP prediction
-# 	vanco_shap_values = vanco_explainer.shap_values(X=vanco_x_test, nsamples=500)
+	vanco_shap_values = vanco_explainer.shap_values(X=vanco_x_test, nsamples=(vanco_y_train[vanco_y_train == 1].count()//2))
 
 #%%
 # Vancouver SHAP plots
@@ -3728,64 +3720,64 @@ if datetime.datetime.today().weekday() == 5:
 # 		shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=vanco_feat_names, max_display=4)
 
 #%%
-#	vanco_shap_results = []
+	vanco_shap_results = []
 
-#	for index in range(len(vanco_shap_values[0])):
-#		vanco_shap_results.extend(pd.DataFrame(data=vanco_shap_values[0][index].reshape(1, len(vanco_feat_names)), columns=vanco_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+	for index in range(len(vanco_shap_values[0])):
+		vanco_shap_results.extend(pd.DataFrame(data=vanco_shap_values[0][index].reshape(1, len(vanco_feat_names)), columns=vanco_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-#	vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
+	vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
 
 #%%
 # Tri-Cities SHAP undersample
-#	trici_under_shap = NearMiss(sampling_strategy={0:100, 1:400}, version=2, n_jobs=-1)
-#	trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
+	trici_under_shap = NearMiss(sampling_strategy={0:(trici_y_train[trici_y_train == 0].count()//2), 1:(trici_y_train[trici_y_train == 1].count()//2)}, version=3, n_jobs=-1)
+	trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
 
 #%%
 # Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
-#	trici_explainer = shap.KernelExplainer(model=trici_vcf.predict_proba, data=trici_x_shap)
+	trici_explainer = shap.KernelExplainer(model=trici_vcf.predict_proba, data=trici_x_shap)
 
 #%%
 # Tri-Cities SHAP prediction
-# trici_shap_values = trici_explainer.shap_values(X=trici_x_test, nsamples=200)
+	trici_shap_values = trici_explainer.shap_values(X=trici_x_test, nsamples=(trici_y_train[trici_y_train == 1].count()//2))
 
 #%%
 # Tri-Cities SHAP plots
-# for index in range(len(trici_shap_values[0])):
-# 	shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=trici_feat_names, max_display=4)
+# 	for index in range(len(trici_shap_values[0])):
+# 		shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=trici_feat_names, max_display=4)
 
 #%%
-#	trici_shap_results = []
+	trici_shap_results = []
 
-#	for index in range(len(trici_shap_values[0])):
-#		trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, len(trici_feat_names)), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+	for index in range(len(trici_shap_values[0])):
+		trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, len(trici_feat_names)), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-#	trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
+	trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
 
 #%%
 # University SHAP undersample
-#	univr_under_shap = NearMiss(sampling_strategy={0:100, 1:400}, version=2, n_jobs=-1)
-#	univr_x_shap, univr_y_shap = univr_under_shap.fit_resample(univr_x_train, univr_y_train)
+	univr_under_shap = NearMiss(sampling_strategy={0:(univr_y_train[univr_y_train == 0].count()//2), 1:(univr_y_train[univr_y_train == 1].count()//2)}, version=3, n_jobs=-1)
+	univr_x_shap, univr_y_shap = univr_under_shap.fit_resample(univr_x_train, univr_y_train)
 
 #%%
 # University SHAP training (see: https://github.com/slundberg/shap)
-#	univr_explainer = shap.KernelExplainer(model=univr_vcf.predict_proba, data=univr_x_shap)
+	univr_explainer = shap.KernelExplainer(model=univr_vcf.predict_proba, data=univr_x_shap)
 
 #%%
 # University SHAP prediction
-# univr_shap_values = univr_explainer.shap_values(X=univr_x_test, nsamples=200)
+	univr_shap_values = univr_explainer.shap_values(X=univr_x_test, nsamples=(univr_y_train[univr_y_train == 1].count()//2))
 
 #%%
 # University SHAP plots
-# for index in range(len(univr_shap_values[0])):
-# 	shap.plots._waterfall.waterfall_legacy(univr_explainer.expected_value[0], univr_shap_values[0][index], univr_x_test[index], feature_names=univr_feat_names, max_display=4)
+# 	for index in range(len(univr_shap_values[0])):
+# 		shap.plots._waterfall.waterfall_legacy(univr_explainer.expected_value[0], univr_shap_values[0][index], univr_x_test[index], feature_names=univr_feat_names, max_display=4)
 
 #%%
-#	univr_shap_results = []
+	univr_shap_results = []
 
-#	for index in range(len(univr_shap_values[0])):
-#		univr_shap_results.extend(pd.DataFrame(data=univr_shap_values[0][index].reshape(1, len(univr_feat_names)), columns=univr_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+	for index in range(len(univr_shap_values[0])):
+		univr_shap_results.extend(pd.DataFrame(data=univr_shap_values[0][index].reshape(1, len(univr_feat_names)), columns=univr_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-#	univr_shap_zip = dict(zip(univr_shap_outcome, univr_shap_results))
+	univr_shap_zip = dict(zip(univr_shap_outcome, univr_shap_results))
 
 	print('Done\n')
 
@@ -3999,7 +3991,7 @@ pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).st
 pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_vcf_pred_probs).round(4)
 
 pullm_current_outcome['date'] = date.today()
-pullm_current_outcome['model_id'] = 1
+pullm_current_outcome['model_id'] = model_id
 
 #%%
 # Vancouver current outcome
@@ -4007,7 +3999,7 @@ vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).st
 vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_vcf_pred_probs).round(4)
 
 vanco_current_outcome['date'] = date.today()
-vanco_current_outcome['model_id'] = 1
+vanco_current_outcome['model_id'] = model_id
 
 #%%
 # Tri-Cities current outcome
@@ -4015,7 +4007,7 @@ trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).st
 trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_vcf_pred_probs).round(4)
 
 trici_current_outcome['date'] = date.today()
-trici_current_outcome['model_id'] = 1
+trici_current_outcome['model_id'] = model_id
 
 #%%
 # University current outcome
@@ -4023,7 +4015,7 @@ univr_current_outcome['emplid'] = univr_current_outcome['emplid'].astype(str).st
 univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_vcf_pred_probs).round(4)
 
 univr_current_outcome['date'] = date.today()
-univr_current_outcome['model_id'] = 1
+univr_current_outcome['model_id'] = model_id
 
 #%%
 # Pullman to csv and to sql
@@ -4039,44 +4031,43 @@ else:
 
 #%%
 # Vancouver to csv and to sql
-# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv'):
-# 	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', index=False)
-# 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-# else:
-# 	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
-# 	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_backup.csv', encoding='utf-8', index=False)
-# 	vanco_student_outcome = pd.concat([vanco_prior_outcome, vanco_current_outcome])
-# 	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', index=False)
-# 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv'):
+	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+else:
+	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
+	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_backup.csv', encoding='utf-8', index=False)
+	vanco_student_outcome = pd.concat([vanco_prior_outcome, vanco_current_outcome])
+	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Tri-Cities to csv and to sql
-# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv'):
-# 	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', index=False)
-# 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-# else:
-# 	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
-# 	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_backup.csv', encoding='utf-8', index=False)
-# 	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
-# 	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', index=False)
-# 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv'):
+	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+else:
+	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
+	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_backup.csv', encoding='utf-8', index=False)
+	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
+	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # University to csv and to sql
-# if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv'):
-# 	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', index=False)
-# 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-# else:
-# 	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
-# 	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_backup.csv', encoding='utf-8', index=False)
-# 	univr_student_outcome = pd.concat([univr_prior_outcome, univr_current_outcome])
-# 	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', index=False)
-# 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv'):
+	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+else:
+	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
+	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_backup.csv', encoding='utf-8', index=False)
+	univr_student_outcome = pd.concat([univr_prior_outcome, univr_current_outcome])
+	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Pullman top-N SHAP values to csv and to sql
-
-if datetime.datetime.today().weekday() == 5:
+if datetime.datetime.today().weekday() == day_of_week:
 
 	pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_frsh_shap.csv', 'w', newline='')
 	pullm_shap_writer = csv.writer(pullm_shap_file)
@@ -4104,89 +4095,101 @@ if datetime.datetime.today().weekday() == 5:
 											shap_descr_3=pullm_shap_insert.pop(0), shap_value_3=pullm_shap_insert.pop(0), 
 											shap_descr_4=pullm_shap_insert.pop(0), shap_value_4=pullm_shap_insert.pop(0), 
 											shap_descr_5=pullm_shap_insert.pop(0), shap_value_5=pullm_shap_insert.pop(0), 
-											date=date.today(), model_id=7)
+											date=date.today(), model_id=model_id)
 		engine.execute(ins)
 
 #%%
 # Vancouver top-N SHAP values to csv and to sql
-# 	vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_frsh_shap.csv', 'w', newline='')
-# 	vanco_shap_writer = csv.writer(vanco_shap_file)
-# 	vanco_shap_insert = []
+	vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_frsh_shap.csv', 'w', newline='')
+	vanco_shap_writer = csv.writer(vanco_shap_file)
+	vanco_shap_insert = []
 
-# 	vanco_shap_writer.writerow(['emplid','shap_values'])
+	vanco_shap_writer.writerow(['emplid','shap_values'])
 
-# 	for emplid in vanco_shap_zip:
-# 		vanco_shap_writer.writerow([emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))])
-# 		vanco_shap_sql = [emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))]
+	for emplid in vanco_shap_zip:
+		vanco_shap_writer.writerow([emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))])
+		vanco_shap_sql = [emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))]
 		
-# 		vanco_shap_insert.append(str(vanco_shap_sql[0]).zfill(9))
+		vanco_shap_insert.append(str(vanco_shap_sql[0]).zfill(9))
 
-# 		for index in range(top_N):
-# 			shap_str, shap_float = vanco_shap_sql[1][index]
-# 			vanco_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
+		for index in range(top_N):
+			shap_str, shap_float = vanco_shap_sql[1][index]
+			vanco_shap_insert.append(shap_str) 
+			vanco_shap_insert.append(round(shap_float, 4))
 
-# 	vanco_shap_file.close()
+	vanco_shap_file.close()
 
-# 	while vanco_shap_insert:
-# 		ins = student_shap.insert().values(EMPLID=vanco_shap_insert.pop(0), shap_value_1=vanco_shap_insert.pop(0),
-# 											shap_value_2=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
-# 											shap_value_4=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
-# 											DATE=date.today(), model_id=7)
-# 		engine.execute(ins)
+	while vanco_shap_insert:
+		ins = student_shap.insert().values(emplid=vanco_shap_insert.pop(0), 
+											shap_descr_1=vanco_shap_insert.pop(0), shap_value_1=vanco_shap_insert.pop(0), 
+											shap_descr_2=vanco_shap_insert.pop(0), shap_value_2=vanco_shap_insert.pop(0), 
+											shap_descr_3=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
+											shap_descr_4=vanco_shap_insert.pop(0), shap_value_4=vanco_shap_insert.pop(0), 
+											shap_descr_5=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
+											date=date.today(), model_id=model_id)
+		engine.execute(ins)
 
 #%%
 # Tri-Cities top-N SHAP values to csv and to sql
-# 	trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_frsh_shap.csv', 'w', newline='')
-# 	trici_shap_writer = csv.writer(trici_shap_file)
-# 	trici_shap_insert = []
+	trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_frsh_shap.csv', 'w', newline='')
+	trici_shap_writer = csv.writer(trici_shap_file)
+	trici_shap_insert = []
 
-# 	trici_shap_writer.writerow(['emplid','shap_values'])
+	trici_shap_writer.writerow(['emplid','shap_values'])
 
-# 	for emplid in trici_shap_zip:
-# 		trici_shap_writer.writerow([emplid, list(islice(trici_shap_zip[emplid].items(), top_N))])
-# 		trici_shap_sql = [emplid, list(islice(trici_shap_zip[emplid].items(), top_N))]
+	for emplid in trici_shap_zip:
+		trici_shap_writer.writerow([emplid, list(islice(trici_shap_zip[emplid].items(), top_N))])
+		trici_shap_sql = [emplid, list(islice(trici_shap_zip[emplid].items(), top_N))]
 		
-# 		trici_shap_insert.append(str(trici_shap_sql[0]).zfill(9))
+		trici_shap_insert.append(str(trici_shap_sql[0]).zfill(9))
 
-# 		for index in range(top_N):
-# 			shap_str, shap_float = trici_shap_sql[1][index]
-# 			trici_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
+		for index in range(top_N):
+			shap_str, shap_float = trici_shap_sql[1][index]
+			trici_shap_insert.append(shap_str) 
+			trici_shap_insert.append(round(shap_float, 4))
 
-# 	trici_shap_file.close()
+	trici_shap_file.close()
 
-# 	while trici_shap_insert:
-# 		ins = student_shap.insert().values(EMPLID=trici_shap_insert.pop(0), shap_value_1=trici_shap_insert.pop(0), 
-# 											shap_value_2=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
-# 											shap_value_4=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
-# 											DATE=date.today(), model_id=7)
-# 		engine.execute(ins)
+	while trici_shap_insert:
+		ins = student_shap.insert().values(emplid=trici_shap_insert.pop(0), 
+											shap_descr_1=trici_shap_insert.pop(0), shap_value_1=trici_shap_insert.pop(0), 
+											shap_descr_2=trici_shap_insert.pop(0), shap_value_2=trici_shap_insert.pop(0), 
+											shap_descr_3=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
+											shap_descr_4=trici_shap_insert.pop(0), shap_value_4=trici_shap_insert.pop(0), 
+											shap_descr_5=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
+											date=date.today(), model_id=model_id)
+		engine.execute(ins)
 
 #%%
 # University top-N SHAP values to csv and to sql
-# 	univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\univr_frsh_shap.csv', 'w', newline='')
-# 	univr_shap_writer = csv.writer(univr_shap_file)
-# 	univr_shap_insert = []
+	univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\univr_frsh_shap.csv', 'w', newline='')
+	univr_shap_writer = csv.writer(univr_shap_file)
+	univr_shap_insert = []
 
-# 	univr_shap_writer.writerow(['emplid','shap_values'])
+	univr_shap_writer.writerow(['emplid','shap_values'])
 
-# 	for emplid in univr_shap_zip:
-# 		univr_shap_writer.writerow([emplid, list(islice(univr_shap_zip[emplid].items(), top_N))])
-# 		univr_shap_sql = [emplid, list(islice(univr_shap_zip[emplid].items(), top_N))]
+	for emplid in univr_shap_zip:
+		univr_shap_writer.writerow([emplid, list(islice(univr_shap_zip[emplid].items(), top_N))])
+		univr_shap_sql = [emplid, list(islice(univr_shap_zip[emplid].items(), top_N))]
 		
-# 		univr_shap_insert.append(str(univr_shap_sql[0]).zfill(9))
+		univr_shap_insert.append(str(univr_shap_sql[0]).zfill(9))
 
-# 		for index in range(top_N):
-# 			shap_str, shap_float = univr_shap_sql[1][index]
-# 			univr_shap_insert.append(shap_str + ': ' + str(round(shap_float * 100, 1)) + "%")
+		for index in range(top_N):
+			shap_str, shap_float = univr_shap_sql[1][index]
+			univr_shap_insert.append(shap_str) 
+			univr_shap_insert.append(round(shap_float, 4))
 
-# 	univr_shap_file.close()
+	univr_shap_file.close()
 
-# 	while univr_shap_insert:
-# 		ins = student_shap.insert().values(EMPLID=univr_shap_insert.pop(0), shap_value_1=univr_shap_insert.pop(0), 
-# 											shap_value_2=univr_shap_insert.pop(0), shap_value_3=univr_shap_insert.pop(0), 
-# 											shap_value_4=univr_shap_insert.pop(0), shap_value_5=univr_shap_insert.pop(0), 
-# 											DATE=date.today(), model_id=7)
-# 		engine.execute(ins)
+	while univr_shap_insert:
+		ins = student_shap.insert().values(emplid=univr_shap_insert.pop(0), 
+											shap_descr_1=univr_shap_insert.pop(0), shap_value_1=univr_shap_insert.pop(0), 
+											shap_descr_2=univr_shap_insert.pop(0), shap_value_2=univr_shap_insert.pop(0), 
+											shap_descr_3=univr_shap_insert.pop(0), shap_value_3=univr_shap_insert.pop(0), 
+											shap_descr_4=univr_shap_insert.pop(0), shap_value_4=univr_shap_insert.pop(0), 
+											shap_descr_5=univr_shap_insert.pop(0), shap_value_5=univr_shap_insert.pop(0), 
+											date=date.today(), model_id=model_id)
+		engine.execute(ins)
 
 #%%
 # Output model

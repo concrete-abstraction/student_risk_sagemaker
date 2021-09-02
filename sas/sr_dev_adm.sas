@@ -28,7 +28,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 /* ;quit; */
 
 proc sql;
-	select full_acad_year into: full_acad_year 
+	select distinct full_acad_year into: full_acad_year 
 	from &dsn..xw_term 
 	where term_year = year(today())
 		and month(datepart(term_begin_dt)) <= month(today()) 
@@ -36,8 +36,18 @@ proc sql;
 		and acad_career = 'UGRD'
 ;quit;
 
+proc sql;
+	select distinct a.snapshot into: snapshot
+	from &dsn..fa_award_aid_year_vw as a
+	inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&full_acad_year."	) as b
+		on a.emplid = b.emplid
+			and a.aid_year = b.aid_year
+			and a.snapshot = b.snapshot
+	where a.aid_year = "&full_acad_year."	
+;quit;
+
 /* Note: This is a test date. Revert to 4 in production. */
-%let end_cohort = %eval(2021 - &lag_year.);
+%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 %let start_cohort = %eval(&end_cohort. - 4);
 
 proc import out=act_to_sat_engl_read
@@ -368,40 +378,34 @@ run;
 	proc sql;
 		create table need_&cohort_year. as
 		select distinct
-			a.emplid,
-			b.snapshot as need_snap,
-			a.aid_year,
-			a.fed_efc,
-			a.fed_need
-		from &dsn..fa_award_period as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_period where aid_year = "&cohort_year.") as b
-			on a.emplid = b.emplid
-				and a.aid_year = b.aid_year
-				and a.snapshot = b.snapshot
-		where a.aid_year = "&cohort_year."	
-			and a.award_period = 'A'
-			and a.efc_status = 'O'
+			emplid,
+			snapshot as need_snap,
+			aid_year,
+			fed_efc,
+			fed_need
+		from &dsn..fa_award_period
+		where snapshot = "&snapshot."
+			and aid_year = "&cohort_year."	
+			and award_period = 'A'
+			and efc_status = 'O'
 	;quit;
 	
 	proc sql;
 		create table aid_&cohort_year. as
 		select distinct
-			a.emplid,
-			b.snapshot as aid_snap,
-			a.aid_year,
-			sum(a.disbursed_amt) as total_disb,
-			sum(a.offer_amt) as total_offer,
-			sum(a.accept_amt) as total_accept
-		from &dsn..fa_award_aid_year_vw as a
-		inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&cohort_year.") as b
-			on a.emplid = b.emplid
-				and a.aid_year = b.aid_year
-				and a.snapshot = b.snapshot
-		where a.aid_year = "&cohort_year."
-			and a.award_period in ('A','B')
-			and a.award_status in ('A','O')
-			and a.acad_career = 'UGRD'
-		group by a.emplid;
+			emplid,
+			snapshot as aid_snap,
+			aid_year,
+			sum(disbursed_amt) as total_disb,
+			sum(offer_amt) as total_offer,
+			sum(accept_amt) as total_accept
+		from &dsn..fa_award_aid_year_vw
+		where snapshot = "&snapshot."
+			and aid_year = "&cohort_year."
+			and award_period in ('A','B')
+			and award_status in ('A','O')
+			and acad_career = 'UGRD'
+		group by emplid
 	;quit;
 	
 	proc sql;
@@ -609,7 +613,8 @@ run;
 		from &dsn..class_registration_vw
 		where snapshot = 'eot'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and enrl_ind = 1
+			and subject_catalog_nbr ^= 'NURS 399'
+			and stdnt_enrl_status = 'E'
 	;quit;
 	
 	proc sql;
@@ -1078,8 +1083,8 @@ run;
 /* 			s.total_spring_units, */
 			o.fall_lec_contact_hrs,
  			o.fall_lab_contact_hrs,
-/*  			o.spring_lec_contact_hrs, */
-/*  			o.spring_lab_contact_hrs, */
+/* 			o.spring_lec_contact_hrs, */
+/* 			o.spring_lab_contact_hrs, */
 			o.total_fall_contact_hrs,
 /* 			o.total_spring_contact_hrs, */
 			p.sat_sup_rwc,
@@ -1764,14 +1769,14 @@ run;
  				and s.aid_year = "&cohort_year."
  		left join aid_&cohort_year. as x
  			on a.emplid = x.emplid
- 				and  x.aid_year = "&cohort_year."
-/*  		left join (select distinct emplid,  */
-/*  								max(fed_need) as fed_need,  */
-/*  								sum(total_offer) as total_offer */
-/*  						from acs.finaid_data */
-/*  						where aid_year = "&cohort_year." */
-/*  						group by emplid) as s */
-/*  			on a.emplid = s.emplid */
+ 				and x.aid_year = "&cohort_year."
+/* 		left join (select distinct emplid,  */
+/* 							max(fed_need) as fed_need,  */
+/* 							sum(total_offer) as total_offer */
+/* 						from acs.finaid_data */
+/* 						where aid_year = "&cohort_year." */
+/* 						group by emplid) as s */
+ 			on a.emplid = s.emplid
  		left join exams_&cohort_year. as t
  			on a.emplid = t.emplid
  		left join class_count_&cohort_year. as u
@@ -1879,6 +1884,10 @@ data training_set;
 	if total_accept = . then total_accept = 0;
 run;
 
+proc sort data=training_set nodupkey dupout=training_dups;
+	by emplid;
+run;
+
 data testing_set;
 	set dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
@@ -1960,6 +1969,10 @@ data testing_set;
 	if total_disb = . then total_disb = 0;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
+run;
+
+proc sort data=testing_set nodupkey dupout=testing_dups;
+	by emplid;
 run;
 
 filename training "Z:\Nathan\Models\student_risk\datasets\training_set.csv" encoding="utf-8";

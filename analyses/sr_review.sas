@@ -76,7 +76,7 @@ proc sql;
 
 /* Freshman models */
 
-	from pullm_frsh_pred_outcome as a
+/* 	from pullm_frsh_pred_outcome as a */
 /* 	from vanco_frsh_pred_outcome as a */
 /* 	from trici_frsh_pred_outcome as a */
 /* 	from onlin_frsh_pred_outcome as a */
