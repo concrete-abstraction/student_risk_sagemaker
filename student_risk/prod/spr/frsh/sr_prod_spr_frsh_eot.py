@@ -32,40 +32,28 @@ engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
 auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
 
 #%%
-# End of term date check 
-if config.eot_flag == False:
+# End of term date and snapshot check 
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
+now = datetime.datetime.now()
 
-	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
-	now = datetime.datetime.now()
+now_day = now.day
+now_month = now.month
+now_year = now.year
 
-	now_day = now.day
-	now_month = now.month
-	now_year = now.year
+eot_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
+eot_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
+eot_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
 
-	eot_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
-	eot_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
-	eot_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
+if now_year < eot_year:
+	raise config.EOTError(f'{date.today()}: End of term year exception, outside of date range.')
 
-	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
-	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
-	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
+elif (now_year == eot_year and now_month < eot_month):
+	raise config.EOTError(f'{date.today()}: End of term month exception, outside of date range.')
 
-	if now_year < eot_year or now_year > census_year:
-		raise config.DateError(f'{date.today()}: End of term year exception, outside of date range.')
+elif (now_year == eot_year and now_month == eot_month and now_day < eot_day):
+	raise config.EOTError(f'{date.today()}: End of term day exception, outside of date range.')
 
-	elif (now_year == eot_year and now_month < eot_month) or (now_year == census_year and now_month > census_month):
-		raise config.DateError(f'{date.today()}: End of term month exception, outside of date range.')
-
-	elif (now_year == eot_year and now_month == eot_month and now_day < eot_day) or (now_year == census_year and now_month == census_month and now_day >= census_day):
-		raise config.DateError(f'{date.today()}: End of term day exception, outside of date range.')
-
-	else:
-		print(f'{date.today()}: No end of term exceptions, running from eot.')
-
-#%%
-# End of term snapshot check
-if config.eot_flag == True:
-
+else:
 	sas = saspy.SASsession()
 
 	sas.submit("""
@@ -94,11 +82,11 @@ if config.eot_flag == True:
 
 	sas.endsas()
 
-	if snap_check == 0:
-		raise config.DataError(f'{date.today()}: End of term snapshot exception, data not available.')
+	if snap_check != 3:
+		raise config.EOTError(f'{date.today()}: No end of term date exception but snapshot exception, data not available.')
 
 	else:
-		print(f'{date.today()}: No end of term snapshot exceptions, running from eot.')
+		print(f'{date.today()}: No end of term date or snapshot exceptions, running from eot.')
 
 #%%
 # SAS dataset builder

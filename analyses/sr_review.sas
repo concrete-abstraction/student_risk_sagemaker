@@ -24,6 +24,18 @@ proc import out=trici_frsh_pred_outcome
 	getnames=YES;
 run;
 
+proc import out=univr_frsh_pred_outcome
+	datafile="Z:\Nathan\Models\student_risk\analyses\univr_frsh_pred_outcome.csv"
+	dbms=CSV REPLACE;
+	getnames=YES;
+run;
+
+proc import out=pullm_tran_pred_outcome
+	datafile="Z:\Nathan\Models\student_risk\analyses\pullm_tran_pred_outcome.csv"
+	dbms=CSV REPLACE;
+	getnames=YES;
+run;
+
 proc import out=vanco_tran_pred_outcome
 	datafile="Z:\Nathan\Models\student_risk\analyses\vanco_tran_pred_outcome.csv"
 	dbms=CSV REPLACE;
@@ -32,12 +44,6 @@ run;
 
 proc import out=trici_tran_pred_outcome
 	datafile="Z:\Nathan\Models\student_risk\analyses\trici_tran_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
-
-proc import out=onlin_tran_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\analyses\onlin_tran_pred_outcome.csv"
 	dbms=CSV REPLACE;
 	getnames=YES;
 run;
@@ -76,10 +82,9 @@ proc sql;
 
 /* Freshman models */
 
-/* 	from pullm_frsh_pred_outcome as a */
+	from pullm_frsh_pred_outcome as a
 /* 	from vanco_frsh_pred_outcome as a */
 /* 	from trici_frsh_pred_outcome as a */
-/* 	from onlin_frsh_pred_outcome as a */
 /* 	from univr_frsh_pred_outcome as a */
 
 /* Transfer models */
@@ -87,7 +92,6 @@ proc sql;
 /* 	from pullm_tran_pred_outcome as a */
 /* 	from vanco_tran_pred_outcome as a */
 /* 	from trici_tran_pred_outcome as a */
-/* 	from onlin_tran_pred_outcome as a */
 /* 	from univr_tran_pred_outcome as a */
 
 	left join enrollment as b
@@ -97,8 +101,9 @@ proc sql;
 proc sql;
 	create table stats as
 	select distinct
-		sum(enroll_match)/count(enroll_match) as enroll_accuracy,
-		1 - (sum(nonenroll_match)/count(nonenroll_match)) as nonenroll_accuracy
+	 	(sum(enroll_match) + sum(nonenroll_match))/(sum(enroll_match) + sum(enroll_nonmatch) + sum(nonenroll_match) + sum(nonenroll_nonmatch)) as overall_accuracy,
+		sum(enroll_match)/(sum(enroll_match) + sum(enroll_nonmatch)) as enroll_accuracy,
+		sum(nonenroll_match)/(sum(nonenroll_match) + sum(nonenroll_nonmatch)) as nonenroll_accuracy
 	from return
 ;quit;
 

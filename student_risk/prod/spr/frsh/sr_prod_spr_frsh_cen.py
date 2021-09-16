@@ -36,42 +36,30 @@ auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOM
 strm = None
 
 #%%
-# Census date check 
-if config.cen_flag == False:
+# Census date and snapshot check 
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
+now = datetime.datetime.now()
 
-	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
-	now = datetime.datetime.now()
+now_day = now.day
+now_month = now.month
+now_year = now.year
 
-	now_day = now.day
-	now_month = now.month
-	now_year = now.year
+strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
 
-	strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
+census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
+census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
+census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
 
-	census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
-	census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
-	census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
+if now_year < census_year:
+	raise config.CenError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
 
-	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
-	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
-	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
+elif (now_year == census_year and now_month < census_month):
+	raise config.CenError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
 
-	if now_year < census_year or now_year > midterm_year:
-		raise config.DateError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
+elif (now_year == census_year and now_month == census_month and now_day < census_day):
+	raise config.CenError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
 
-	elif (now_year == census_year and now_month < census_month) or (now_year == midterm_year and now_month > midterm_month):
-		raise config.DateError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
-
-	elif (now_year == census_year and now_month == census_month and now_day < census_day) or (now_year == midterm_year and now_month == midterm_month and now_day > midterm_day):
-		raise config.DateError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
-
-	else:
-		print(f'{date.today()}: No census date exceptions, running from census.')
-
-#%%
-# Census snapshot check
-if config.cen_flag == True:
-
+else:
 	sas = saspy.SASsession()
 
 	sas.symput('strm', strm)
@@ -103,10 +91,10 @@ if config.cen_flag == True:
 	sas.endsas()
 
 	if snap_check != 1:
-		raise config.DataError(f'{date.today()}: Census snapshot exception, attempting to run from precensus.')
+		raise config.CenError(f'{date.today()}: No census date exception but snapshot exception, attempting to run from precensus.')
 
 	else:
-		print(f'{date.today()}: No census snapshot exceptions, running from census.')
+		print(f'{date.today()}: No census date or snapshot exceptions, running from census.')
 
 #%%
 # SAS dataset builder

@@ -1,13 +1,15 @@
-cen_flag = False
-mid_flag = False
-eot_flag = False
-adm_flag = False
-
-
-class DateError(Exception):
+class AdmError(Exception):
     pass
 
 
-class DataError(Exception):
+class CenError(Exception):
+    pass
+
+
+class EOTError(Exception):
+    pass
+
+
+class MidError(Exception):
     pass
 

@@ -36,42 +36,30 @@ auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOM
 strm = None
 
 #%%
-# Midterm date check
-if config.mid_flag == False:
+# Midterm date and snapshot check
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
+now = datetime.datetime.now()
 
-	calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
-	now = datetime.datetime.now()
+now_day = now.day
+now_month = now.month
+now_year = now.year
 
-	now_day = now.day
-	now_month = now.month
-	now_year = now.year
+strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
 
-	strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
+midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
+midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
+midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
 
-	midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
-	midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
-	midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
+if now_year < midterm_year:
+	raise config.MidError(f'{date.today()}: Midterm year exception, attempting to run if midterm newest snapshot.')
 
-	end_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_day'].values[0]
-	end_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_month'].values[0]
-	end_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['end_year'].values[0]
+elif (now_year == midterm_year and now_month < midterm_month):
+	raise config.MidError(f'{date.today()}: Midterm month exception, attempting to run if midterm newest snapshot.')
 
-	if now_year < midterm_year or now_year > end_year:
-		raise config.DateError(f'{date.today()}: Midterm year exception, attempting to run if midterm newest snapshot.')
+elif (now_year == midterm_year and now_month == midterm_month and now_day < midterm_day):
+	raise config.MidError(f'{date.today()}: Midterm day exception, attempting to run if midterm newest snapshot.')
 
-	elif (now_year == midterm_year and now_month < midterm_month) or (now_year == end_year and now_month > end_month):
-		raise config.DateError(f'{date.today()}: Midterm month exception, attempting to run if midterm newest snapshot.')
-
-	elif (now_year == midterm_year and now_month == midterm_month and now_day < midterm_day) or (now_year == end_year and now_month == end_month and now_day > end_day):
-		raise config.DateError(f'{date.today()}: Midterm day exception, attempting to run if midterm newest snapshot.')
-
-	else:
-		print(f'{date.today()}: No midterm date exceptions, running from midterm.')
-
-#%%
-# Midterm snapshot check
-if config.mid_flag == True:
-
+else:
 	sas = saspy.SASsession()
 
 	sas.symput('strm', strm)
@@ -103,10 +91,10 @@ if config.mid_flag == True:
 	sas.endsas()
 
 	if snap_check != 2:
-		raise config.DataError(f'{date.today()}: Midterm snapshot exception, attempting to run from census.')
+		raise config.MidError(f'{date.today()}: No midterm date exception but snapshot exception, attempting to run from census.')
 
 	else:
-		print(f'{date.today()}: No midterm snapshot exceptions, running from midterm.')
+		print(f'{date.today()}: No midterm date or snapshot exceptions, running from midterm.')
 
 #%%
 # SAS dataset builder
