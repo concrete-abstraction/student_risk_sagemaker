@@ -2386,7 +2386,7 @@ class DatasetBuilderProd:
 																'Education','Med Sci','Medicine','Nursing',
 																'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
 					end as groupless,
-					case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595') then 1 else 0
+					case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595','31_8434') then 1 else 0
 					end as split_plan,
 					lsamp_stem_flag,
 					anywhere_stem_flag
@@ -4179,7 +4179,7 @@ class DatasetBuilderProd:
 																'Education','Med Sci','Medicine','Nursing',
 																'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
 					end as groupless,
-					case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595') then 1 else 0
+					case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595','31_8434') then 1 else 0
 					end as split_plan,
 					lsamp_stem_flag,
 					anywhere_stem_flag

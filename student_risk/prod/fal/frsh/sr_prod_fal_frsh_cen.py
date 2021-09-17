@@ -224,7 +224,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'plan_owner_org',
 						'business',
 						'cahnrs_anml',
-						'cahnrs_envr',
+						# 'cahnrs_envr',
 						'cahnrs_econ',
 						'cahnrext',
 						'cas_chem',
@@ -239,7 +239,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'education',
 						'medicine',
 						'nursing',
-						'pharmacy',
+						# 'pharmacy',
 						# 'provost',
 						'vcea_bioe',
 						'vcea_cive',
@@ -391,7 +391,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'plan_owner_org',
 							'business',
 							'cahnrs_anml',
-							'cahnrs_envr',
+							# 'cahnrs_envr',
 							'cahnrs_econ',
 							'cahnrext',
 							'cas_chem',
@@ -406,7 +406,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'education',
 							'medicine',
 							'nursing',
-							'pharmacy',
+							# 'pharmacy',
 							# 'provost',
 							'vcea_bioe',
 							'vcea_cive',
@@ -454,7 +454,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 
 pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'FRSH')][[
                             'emplid',
-							# 'enrl_ind', 
+                            # 'enrl_ind', 
 	                        # 'acad_year',
 							# 'age_group', 
 							# 'age',
@@ -558,7 +558,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'plan_owner_org',
 							'business',
 							'cahnrs_anml',
-							'cahnrs_envr',
+							# 'cahnrs_envr',
 							'cahnrs_econ',
 							'cahnrext',
 							'cas_chem',
@@ -573,7 +573,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'education',
 							'medicine',
 							'nursing',
-							'pharmacy',
+							# 'pharmacy',
 							# 'provost',
 							'vcea_bioe',
 							'vcea_cive',
@@ -619,7 +619,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-pullm_testing_set = testing_set.reset_index()
+pullm_testing_set = pullm_testing_set.reset_index()
 
 pullm_shap_outcome = pullm_testing_set['emplid'].copy(deep=True).values.tolist()
 
@@ -1144,7 +1144,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-vanco_testing_set = testing_set.reset_index()
+vanco_testing_set = vanco_testing_set.reset_index()
 
 vanco_shap_outcome = vanco_testing_set['emplid'].copy(deep=True).values.tolist()
 
@@ -1669,7 +1669,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-trici_testing_set = testing_set.reset_index()
+trici_testing_set = trici_testing_set.reset_index()
 
 trici_shap_outcome = trici_testing_set['emplid'].copy(deep=True).values.tolist()
 
@@ -2194,7 +2194,7 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-univr_testing_set = testing_set.reset_index()
+univr_testing_set = univr_testing_set.reset_index()
 
 univr_shap_outcome = univr_testing_set['emplid'].copy(deep=True).values.tolist()
 
@@ -2413,7 +2413,7 @@ pullm_x_test = pullm_testing_set[[
 						'first_gen_flag_mi', 
 						# 'LSAMP_STEM_Flag',
 						# 'anywhere_STEM_Flag',
-						# 'honors_program_ind',
+						'honors_program_ind',
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
@@ -2473,14 +2473,14 @@ pullm_x_test = pullm_testing_set[[
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
-						# 'IB_AICE', 
+						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
 						# 'term_withdrawn_hours',
@@ -2488,32 +2488,32 @@ pullm_x_test = pullm_testing_set[[
 						'remedial',
 						# 'ACAD_PLAN',
 						# 'plan_owner_org',
-						# 'business',
-						# 'cahnrs_anml',
+						'business',
+						'cahnrs_anml',
 						# 'cahnrs_envr',
-						# 'cahnrs_econ',
-						# 'cahnrext',
-						# 'cas_chem',
-						# 'cas_crim',
-						# 'cas_math',
-						# 'cas_psyc',
-						# 'cas_biol',
-						# 'cas_engl',
-						# 'cas_phys',
-						# 'cas',
-						# 'comm',
-						# 'education',
-						# 'medicine',
-						# 'nursing',
+						'cahnrs_econ',
+						'cahnrext',
+						'cas_chem',
+						'cas_crim',
+						'cas_math',
+						'cas_psyc',
+						'cas_biol',
+						'cas_engl',
+						'cas_phys',
+						'cas',
+						'comm',
+						'education',
+						'medicine',
+						'nursing',
 						# 'pharmacy',
 						# 'provost',
-						# 'vcea_bioe',
-						# 'vcea_cive',
-						# 'vcea_desn',
-						# 'vcea_eecs',
-						# 'vcea_mech',
-						# 'vcea',
-						# 'vet_med',
+						'vcea_bioe',
+						'vcea_cive',
+						'vcea_desn',
+						'vcea_eecs',
+						'vcea_mech',
+						'vcea',
+						'vet_med',
 						# 'last_sch_proprietorship',
 						# 'sat_erws',
 						# 'sat_mss',
