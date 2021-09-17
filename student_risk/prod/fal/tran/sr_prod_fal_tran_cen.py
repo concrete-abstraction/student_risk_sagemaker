@@ -141,14 +141,14 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
-						# 'IB_AICE', 
+						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
 						# 'term_withdrawn_hours',
@@ -308,14 +308,14 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
-							# 'IB_AICE', 
+							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
 							# 'term_withdrawn_hours',
@@ -386,7 +386,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
+pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             # 'enrl_ind', 
 							# 'acad_year',
@@ -475,14 +475,14 @@ pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') & (testing_se
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
-							# 'IB_AICE', 
+							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
 							# 'term_withdrawn_hours',
@@ -666,14 +666,14 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
-						# 'IB_AICE', 
+						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
 						# 'term_withdrawn_hours',
@@ -833,14 +833,14 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
-							# 'IB_AICE', 
+							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
 							# 'term_withdrawn_hours',
@@ -911,7 +911,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
+vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             # 'enrl_ind', 
 							# 'acad_year',
@@ -1000,14 +1000,14 @@ vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') & (testing_se
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
-							# 'IB_AICE', 
+							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
 							# 'term_withdrawn_hours',
@@ -1191,11 +1191,11 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
 						# 'IB_AICE', 
@@ -1358,11 +1358,11 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
 							# 'IB_AICE', 
@@ -1436,7 +1436,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
+trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') & (testing_set['adj_admit_type_cat'] == 'TRAN')][[
                             'emplid',
                             # 'enrl_ind', 
 							# 'acad_year',
@@ -1525,11 +1525,11 @@ trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') & (testing_se
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
 							# 'IB_AICE', 
@@ -1716,14 +1716,14 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][[
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
-						# 'IB_AICE', 
+						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
 						# 'term_withdrawn_hours',
@@ -1883,14 +1883,14 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')
 							# 'rural_fringe',
 							# 'rural_distant',
 							# 'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
-							# 'IB_AICE', 
+							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
 							# 'term_withdrawn_hours',
@@ -1961,7 +1961,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_set['adj_admit_type_cat'] == 'TRAN')) | ((testing_set['campus'] == 'SPOKA') & (testing_set['adj_admit_type_cat'] == 'TRAN')) | ((testing_set['campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'TRAN'))][[
+univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE') & (testing_set['adj_admit_type_cat'] == 'TRAN')) | ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') & (testing_set['adj_admit_type_cat'] == 'TRAN')) | ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'TRAN'))][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -2038,26 +2038,26 @@ univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_s
 							'pct_two',
 							# 'pct_non',
 							'pct_hisp',
-							'city_large',
-							'city_mid',
-							'city_small',
-							'suburb_large',
-							'suburb_mid',
-							'suburb_small',
+							# 'city_large',
+							# 'city_mid',
+							# 'city_small',
+							# 'suburb_large',
+							# 'suburb_mid',
+							# 'suburb_small',
 							# 'town_fringe',
 							# 'town_distant',
 							# 'town_remote',
-							'rural_fringe',
-							'rural_distant',
-							'rural_remote',
-							# 'AD_DTA',
-							# 'AD_AST',
-							# 'AP',
-							# 'RS',
-							# 'CHS',
+							# 'rural_fringe',
+							# 'rural_distant',
+							# 'rural_remote',
+							'AD_DTA',
+							'AD_AST',
+							'AP',
+							'RS',
+							'CHS',
 							# 'IB',
 							# 'AICE',
-							# 'IB_AICE', 
+							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
 							# 'term_withdrawn_hours',
@@ -2409,14 +2409,14 @@ pullm_x_test = pullm_testing_set[[
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
-						# 'IB_AICE', 
+						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
 						# 'term_withdrawn_hours',
@@ -2687,14 +2687,14 @@ vanco_x_test = vanco_testing_set[[
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
-						# 'IB_AICE', 
+						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
 						# 'term_withdrawn_hours',
@@ -2963,11 +2963,11 @@ trici_x_test = trici_testing_set[[
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
 						# 'IB_AICE', 
@@ -3239,14 +3239,14 @@ univr_x_test = univr_testing_set[[
 						# 'rural_fringe',
 						# 'rural_distant',
 						# 'rural_remote',
-						# 'AD_DTA',
-						# 'AD_AST',
-						# 'AP',
-						# 'RS',
-						# 'CHS',
+						'AD_DTA',
+						'AD_AST',
+						'AP',
+						'RS',
+						'CHS',
 						# 'IB',
 						# 'AICE',
-						# 'IB_AICE', 
+						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
 						# 'term_withdrawn_hours',
@@ -3435,8 +3435,9 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ gini_indx + median_inc + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
-                + honors_program_ind \
+				+ fall_lec_count + fall_lab_count \
+				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
+				+ total_fall_units \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
@@ -3461,7 +3462,9 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ gini_indx + median_inc + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
+				+ fall_lec_count + fall_lab_count \
+				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
+				+ total_fall_units \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
@@ -3486,8 +3489,10 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ gini_indx + median_inc + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
-				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
+				+ fall_lec_count + fall_lab_count \
+				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
+				+ total_fall_units \
+				+ AD_DTA + AD_AST + AP + RS + CHS \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
                 + remedial \
@@ -3511,7 +3516,9 @@ univr_y, univr_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ gini_indx + median_inc + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-				+ fall_lec_count + fall_lab_count + total_fall_contact_hrs + fall_crse_mi \
+				+ fall_lec_count + fall_lab_count \
+				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
+				+ total_fall_units \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \

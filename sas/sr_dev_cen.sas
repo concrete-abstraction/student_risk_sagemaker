@@ -74,11 +74,9 @@ proc sql;
 	from snap_check
 ;quit;
 
-%let snapshot = 'census';
-
 /* Note: This is a test date. Revert to 4 in production. */
-%let end_cohort = %eval(2021 - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let end_cohort = %eval(&full_acad_year. - &lag_year.);
+%let start_cohort = %eval(&end_cohort. - 0);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -646,7 +644,7 @@ run;
 																	else 0
 																	end as remedial
 		from &dsn..class_registration_vw
-		where snapshot = 'census'
+		where snapshot = "&snapshot."
 			and aid_year = "&cohort_year."
 			and grading_basis_enrl in ('REM','RMS','RMP')
 		order by emplid
@@ -687,7 +685,8 @@ run;
 	;quit;
 	
 	proc sql;
-		create table class_registration_&cohort_year. as
+/* 		create table class_registration_&cohort_year. as */
+		create table class_registration_2021 as
 		select distinct
 			strm,
 			emplid,
@@ -737,8 +736,9 @@ run;
 												else 0
 												end as Z_grade_ind
 		from &dsn..class_registration_vw
-		where snapshot = &snapshot.
-			and full_acad_year = "&cohort_year."
+		where snapshot = "&snapshot."
+/* 			and full_acad_year = "&cohort_year." */
+			and full_acad_year = "2021"
 			and subject_catalog_nbr ^= 'NURS 399'
 			and stdnt_enrl_status = 'E'
 	;quit;

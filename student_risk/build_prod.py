@@ -2635,7 +2635,7 @@ class DatasetBuilderProd:
 																			else 0
 																			end as remedial
 				from &dsn..class_registration_vw
-				where snapshot = 'census'
+				where snapshot = "&snapshot."
 					and aid_year = "&cohort_year."
 					and grading_basis_enrl in ('REM','RMS','RMP')
 				order by emplid
@@ -2726,7 +2726,7 @@ class DatasetBuilderProd:
 														else 0
 														end as Z_grade_ind
 				from &dsn..class_registration_vw
-				where snapshot = &snapshot.
+				where snapshot = "&snapshot."
 					and full_acad_year = "&cohort_year."
 					and subject_catalog_nbr ^= 'NURS 399'
 					and stdnt_enrl_status = 'E'

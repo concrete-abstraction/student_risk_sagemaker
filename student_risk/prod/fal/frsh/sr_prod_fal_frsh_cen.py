@@ -2027,7 +2027,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							'unmet_need_ofr_mi'
                             ]].dropna()
 
-univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE') & (testing_set['adj_admit_type_cat'] == 'FRSH')) | ((testing_set['campus'] == 'SPOKA') & (testing_set['adj_admit_type_cat'] == 'FRSH')) | ((testing_set['campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'FRSH'))][[
+univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE') & (testing_set['adj_admit_type_cat'] == 'FRSH')) | ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') & (testing_set['adj_admit_type_cat'] == 'FRSH')) | ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') & (testing_set['adj_admit_type_cat'] == 'FRSH'))][[
                             'emplid',
 							# 'enrl_ind', 
 							# 'acad_year',
@@ -2431,15 +2431,15 @@ pullm_x_test = pullm_testing_set[[
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
-						# 'fall_stu_count',
+						'fall_stu_count',
 						# 'fall_sem_count',
-						# 'fall_oth_count',
+						'fall_oth_count',
 						'fall_lec_contact_hrs',
 						'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
+						'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
+						'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'cum_adj_transfer_hours',
 						'resident',
@@ -3502,8 +3502,8 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ total_fall_units \
                 + honors_program_ind \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
-				+ business + comm + education + medicine + nursing + pharmacy + vet_med \
-				+ cahnrs_anml + cahnrs_envr + cahnrs_econ + cahnrext \
+				+ business + comm + education + medicine + nursing + vet_med \
+				+ cahnrs_anml + cahnrs_econ + cahnrext \
 				+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
                 + vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
 				+ remedial \
@@ -3574,7 +3574,7 @@ print('\n')
 
 #%%
 # University standard model
-print('\nStandard logistic model for Tri-Cities freshmen...\n')
+print('\nStandard logistic model for University freshmen...\n')
 
 univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
