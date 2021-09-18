@@ -76,7 +76,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 0);
+%let start_cohort = %eval(&end_cohort. - 4);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -395,7 +395,7 @@ run;
 														'Education','Med Sci','Medicine','Nursing',
 														'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
 			end as groupless,
-			case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595') then 1 else 0
+			case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595','31_8434') then 1 else 0
 			end as split_plan,
 			lsamp_stem_flag,
 			anywhere_stem_flag
@@ -686,8 +686,7 @@ run;
 	;quit;
 	
 	proc sql;
-/* 		create table class_registration_&cohort_year. as */
-		create table class_registration_2021 as
+		create table class_registration_&cohort_year. as
 		select distinct
 			strm,
 			emplid,
@@ -738,8 +737,7 @@ run;
 												end as Z_grade_ind
 		from &dsn..class_registration_vw
 		where snapshot = "&snapshot."
-/* 			and full_acad_year = "&cohort_year." */
-			and full_acad_year = "2021"
+			and full_acad_year = "&cohort_year."
 			and subject_catalog_nbr ^= 'NURS 399'
 			and stdnt_enrl_status = 'E'
 	;quit;
@@ -2201,7 +2199,7 @@ run;
 														'Education','Med Sci','Medicine','Nursing',
 														'Pharmacy','Provost','VCEA','Vet Med') then 1 else 0
 			end as groupless,
-			case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595') then 1 else 0
+			case when plan_owner_percent_owned = 50 and plan_owner_org in ('05_1770','03_1990','12_8595','31_8434') then 1 else 0
 			end as split_plan,
 			lsamp_stem_flag,
 			anywhere_stem_flag
@@ -3879,6 +3877,12 @@ data training_set;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
+	if fall_lec_count = . then fall_lec_count = 0;
+	if fall_lab_count = . then fall_lab_count = 0;
+	if fall_int_count = . then fall_int_count = 0;
+	if fall_stu_count = . then fall_stu_count = 0;
+	if fall_sem_count = . then fall_sem_count = 0;
+	if fall_oth_count = . then fall_oth_count = 0;
 	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 	if fall_int_contact_hrs = . then fall_int_contact_hrs = 0;
@@ -3899,6 +3903,12 @@ data training_set;
 	if spring_avg_pct_DF = . then spring_avg_pct_DF = 0;
 	if spring_avg_difficulty = . then spring_crse_mi = 1; else spring_crse_mi = 0; 
 	if spring_avg_difficulty = . then spring_avg_difficulty = 0;
+	if spring_lec_count = . then spring_lec_count = 0;
+	if spring_lab_count = . then spring_lab_count = 0;
+	if spring_int_count = . then spring_int_count = 0;
+	if spring_stu_count = . then spring_stu_count = 0;
+	if spring_sem_count = . then spring_sem_count = 0;
+	if spring_oth_count = . then spring_oth_count = 0;
 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if spring_int_contact_hrs = . then spring_int_contact_hrs = 0;
@@ -4025,6 +4035,12 @@ data testing_set;
 	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 	if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
+	if fall_lec_count = . then fall_lec_count = 0;
+	if fall_lab_count = . then fall_lab_count = 0;
+	if fall_int_count = . then fall_int_count = 0;
+	if fall_stu_count = . then fall_stu_count = 0;
+	if fall_sem_count = . then fall_sem_count = 0;
+	if fall_oth_count = . then fall_oth_count = 0;
 	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 	if fall_int_contact_hrs = . then fall_int_contact_hrs = 0;
@@ -4045,6 +4061,12 @@ data testing_set;
 	if spring_avg_pct_DF = . then spring_avg_pct_DF = 0;
 	if spring_avg_difficulty = . then spring_crse_mi = 1; else spring_crse_mi = 0; 
 	if spring_avg_difficulty = . then spring_avg_difficulty = 0;
+	if spring_lec_count = . then spring_lec_count = 0;
+	if spring_lab_count = . then spring_lab_count = 0;
+	if spring_int_count = . then spring_int_count = 0;
+	if spring_stu_count = . then spring_stu_count = 0;
+	if spring_sem_count = . then spring_sem_count = 0;
+	if spring_oth_count = . then spring_oth_count = 0;
 	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
 	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
 	if spring_int_contact_hrs = . then spring_int_contact_hrs = 0;
