@@ -43,6 +43,7 @@ strm = None
 top_N = 5
 model_id = 2
 day_of_week = 5
+run_date = date.today()
 
 #%%
 # Census date and snapshot check 
@@ -60,13 +61,13 @@ census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_m
 census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
 
 if now_year < census_year:
-	raise config.CenError(f'{date.today()}: Census year exception, attempting to run if census newest snapshot.')
+	raise config.CenError(f'{run_date}: Census year exception, attempting to run if census newest snapshot.')
 
 elif (now_year == census_year and now_month < census_month):
-	raise config.CenError(f'{date.today()}: Census month exception, attempting to run if census newest snapshot.')
+	raise config.CenError(f'{run_date}: Census month exception, attempting to run if census newest snapshot.')
 
 elif (now_year == census_year and now_month == census_month and now_day < census_day):
-	raise config.CenError(f'{date.today()}: Census day exception, attempting to run if census newest snapshot.')
+	raise config.CenError(f'{run_date}: Census day exception, attempting to run if census newest snapshot.')
 
 else:
 	sas = saspy.SASsession()
@@ -100,10 +101,10 @@ else:
 	sas.endsas()
 
 	if snap_check != 1:
-		raise config.CenError(f'{date.today()}: No census date exception but snapshot exception, attempting to run from admissions.')
+		raise config.CenError(f'{run_date}: No census date exception but snapshot exception, attempting to run from admissions.')
 
 	else:
-		print(f'{date.today()}: No census date or snapshot exceptions, running from census.')
+		print(f'{run_date}: No census date or snapshot exceptions, running from census.')
 
 #%%
 # SAS dataset builder
@@ -4178,7 +4179,7 @@ univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\u
 pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).str.zfill(9)
 pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_vcf_pred_probs).round(4)
 
-pullm_current_outcome['date'] = date.today()
+pullm_current_outcome['date'] = run_date
 pullm_current_outcome['model_id'] = model_id
 
 #%%
@@ -4186,7 +4187,7 @@ pullm_current_outcome['model_id'] = model_id
 vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).str.zfill(9)
 vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_vcf_pred_probs).round(4)
 
-vanco_current_outcome['date'] = date.today()
+vanco_current_outcome['date'] = run_date
 vanco_current_outcome['model_id'] = model_id
 
 #%%
@@ -4194,7 +4195,7 @@ vanco_current_outcome['model_id'] = model_id
 trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).str.zfill(9)
 trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_vcf_pred_probs).round(4)
 
-trici_current_outcome['date'] = date.today()
+trici_current_outcome['date'] = run_date
 trici_current_outcome['model_id'] = model_id
 
 #%%
@@ -4202,7 +4203,7 @@ trici_current_outcome['model_id'] = model_id
 univr_current_outcome['emplid'] = univr_current_outcome['emplid'].astype(str).str.zfill(9)
 univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_vcf_pred_probs).round(4)
 
-univr_current_outcome['date'] = date.today()
+univr_current_outcome['date'] = run_date
 univr_current_outcome['model_id'] = model_id
 
 #%%
@@ -4283,7 +4284,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 											shap_descr_3=pullm_shap_insert.pop(0), shap_value_3=pullm_shap_insert.pop(0), 
 											shap_descr_4=pullm_shap_insert.pop(0), shap_value_4=pullm_shap_insert.pop(0), 
 											shap_descr_5=pullm_shap_insert.pop(0), shap_value_5=pullm_shap_insert.pop(0), 
-											date=date.today(), model_id=model_id)
+											date=run_date, model_id=model_id)
 		engine.execute(ins)
 
 #%%
@@ -4314,7 +4315,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 											shap_descr_3=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
 											shap_descr_4=vanco_shap_insert.pop(0), shap_value_4=vanco_shap_insert.pop(0), 
 											shap_descr_5=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
-											date=date.today(), model_id=model_id)
+											date=run_date, model_id=model_id)
 		engine.execute(ins)
 
 #%%
@@ -4345,7 +4346,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 											shap_descr_3=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
 											shap_descr_4=trici_shap_insert.pop(0), shap_value_4=trici_shap_insert.pop(0), 
 											shap_descr_5=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
-											date=date.today(), model_id=model_id)
+											date=run_date, model_id=model_id)
 		engine.execute(ins)
 
 #%%
@@ -4376,7 +4377,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 											shap_descr_3=univr_shap_insert.pop(0), shap_value_3=univr_shap_insert.pop(0), 
 											shap_descr_4=univr_shap_insert.pop(0), shap_value_4=univr_shap_insert.pop(0), 
 											shap_descr_5=univr_shap_insert.pop(0), shap_value_5=univr_shap_insert.pop(0), 
-											date=date.today(), model_id=model_id)
+											date=run_date, model_id=model_id)
 		engine.execute(ins)
 
 #%%

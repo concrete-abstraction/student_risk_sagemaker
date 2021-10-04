@@ -42,6 +42,7 @@ strm = None
 top_N = 5
 model_id = 2
 day_of_week = 6
+run_date = date.today()
 
 #%%
 # Import pre-split data
@@ -3432,7 +3433,7 @@ print('\nStandard logistic model for Pullman transfers...\n')
 
 pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-				+ gini_indx + median_inc + acs_mi \
+				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
@@ -3459,7 +3460,7 @@ print('\nStandard logistic model for Vancouver transfers...\n')
 
 vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-				+ gini_indx + median_inc + acs_mi \
+				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
@@ -3486,7 +3487,7 @@ print('\nStandard logistic model for Tri-Cities transfers...\n')
 
 trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-				+ gini_indx + median_inc + acs_mi \
+				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
@@ -3513,7 +3514,7 @@ print('\nStandard logistic model for University transfers...\n')
 
 univr_y, univr_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-				+ gini_indx + median_inc + acs_mi \
+				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
@@ -4114,7 +4115,7 @@ univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\u
 pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).str.zfill(9)
 pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_vcf_pred_probs).round(4)
 
-pullm_current_outcome['date'] = date.today()
+pullm_current_outcome['date'] = run_date
 pullm_current_outcome['model_id'] = model_id
 
 #%%
@@ -4122,7 +4123,7 @@ pullm_current_outcome['model_id'] = model_id
 vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).str.zfill(9)
 vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_vcf_pred_probs).round(4)
 
-vanco_current_outcome['date'] = date.today()
+vanco_current_outcome['date'] = run_date
 vanco_current_outcome['model_id'] = model_id
 
 #%%
@@ -4130,7 +4131,7 @@ vanco_current_outcome['model_id'] = model_id
 trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).str.zfill(9)
 trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_vcf_pred_probs).round(4)
 
-trici_current_outcome['date'] = date.today()
+trici_current_outcome['date'] = run_date
 trici_current_outcome['model_id'] = model_id
 
 #%%
@@ -4138,7 +4139,7 @@ trici_current_outcome['model_id'] = model_id
 univr_current_outcome['emplid'] = univr_current_outcome['emplid'].astype(str).str.zfill(9)
 univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_vcf_pred_probs).round(4)
 
-univr_current_outcome['date'] = date.today()
+univr_current_outcome['date'] = run_date
 univr_current_outcome['model_id'] = model_id
 
 #%%
@@ -4219,7 +4220,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 											shap_descr_3=pullm_shap_insert.pop(0), shap_value_3=pullm_shap_insert.pop(0), 
 											shap_descr_4=pullm_shap_insert.pop(0), shap_value_4=pullm_shap_insert.pop(0), 
 											shap_descr_5=pullm_shap_insert.pop(0), shap_value_5=pullm_shap_insert.pop(0), 
-											date=date.today(), model_id=model_id)
+											date=run_date, model_id=model_id)
 		engine.execute(ins)
 
 #%%
@@ -4250,7 +4251,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 											shap_descr_3=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
 											shap_descr_4=vanco_shap_insert.pop(0), shap_value_4=vanco_shap_insert.pop(0), 
 											shap_descr_5=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
-											date=date.today(), model_id=model_id)
+											date=run_date, model_id=model_id)
 		engine.execute(ins)
 
 #%%
@@ -4281,7 +4282,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 											shap_descr_3=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
 											shap_descr_4=trici_shap_insert.pop(0), shap_value_4=trici_shap_insert.pop(0), 
 											shap_descr_5=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
-											date=date.today(), model_id=model_id)
+											date=run_date, model_id=model_id)
 		engine.execute(ins)
 
 #%%
@@ -4312,7 +4313,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 											shap_descr_3=univr_shap_insert.pop(0), shap_value_3=univr_shap_insert.pop(0), 
 											shap_descr_4=univr_shap_insert.pop(0), shap_value_4=univr_shap_insert.pop(0), 
 											shap_descr_5=univr_shap_insert.pop(0), shap_value_5=univr_shap_insert.pop(0), 
-											date=date.today(), model_id=model_id)
+											date=run_date, model_id=model_id)
 		engine.execute(ins)
 
 #%%

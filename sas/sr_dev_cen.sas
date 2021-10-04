@@ -76,7 +76,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 4);
+%let start_cohort = %eval(&end_cohort. - 0);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -3004,7 +3004,7 @@ run;
 					group by subject_catalog_nbr) as g
 			on a.subject_catalog_nbr = g.subject_catalog_nbr
 				and a.ssr_component = g.ssr_component
-		where a.snapshot = 'eot'
+		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.grading_basis = 'GRD'
 		order by a.subject_catalog_nbr

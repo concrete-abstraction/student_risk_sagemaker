@@ -1450,7 +1450,7 @@ class DatasetBuilderProd:
 							group by subject_catalog_nbr) as g
 					on a.subject_catalog_nbr = g.subject_catalog_nbr
 						and a.ssr_component = g.ssr_component
-				where a.snapshot = 'eot'
+				where a.snapshot = 'census'
 					and a.full_acad_year = "&cohort_year."
 					and a.grading_basis = 'GRD'
 				order by a.subject_catalog_nbr
