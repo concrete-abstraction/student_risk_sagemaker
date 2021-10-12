@@ -17,6 +17,7 @@ reference_files/*.sas
 *.pyc
 *.zip
 *.png
+*.svg
 *.yml
 documentation/resources/Thumbs.db
 student_risk/dev/.ipynb_checkpoints/sr_dev_frsh_cen-checkpoint.ipynb
