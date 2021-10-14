@@ -3491,7 +3491,6 @@ univr_training_set = univr_training_set.reset_index(drop=True)
 univr_tomek_set = univr_training_set.drop(univr_tomek_index)
 univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_tomek_set.csv', encoding='utf-8', index=False)
 
-
 #%%
 # Standard logistic model
 
@@ -3642,7 +3641,7 @@ print('\n')
 
 #%%
 # University VIF
-print('VIF for Tri-Cities...\n')
+print('VIF for University...\n')
 univr_vif = pd.DataFrame()
 univr_vif['vif factor'] = [variance_inflation_factor(univr_x.values, i) for i in range(univr_x.shape[1])]
 univr_vif['features'] = univr_x.columns
