@@ -6086,8 +6086,8 @@ class DatasetBuilderDev:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
-			fall_withdrawn_hours = total_fall_units - fall_credit_hours;
-			spring_withdrawn_hours = total_spring_units - spring_credit_hours;
+			fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
+			spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
@@ -6240,8 +6240,8 @@ class DatasetBuilderDev:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
-			fall_withdrawn_hours = total_fall_units - fall_credit_hours;
-			spring_withdrawn_hours = total_spring_units - spring_credit_hours;
+			fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
+			spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
