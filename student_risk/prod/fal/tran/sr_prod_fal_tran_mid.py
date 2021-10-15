@@ -152,7 +152,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_withdrawn_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -319,7 +319,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -486,7 +486,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -677,7 +677,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_withdrawn_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -844,7 +844,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1011,7 +1011,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1202,7 +1202,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_withdrawn_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -1369,7 +1369,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1536,7 +1536,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1727,7 +1727,7 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][[
 						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_withdrawn_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -1894,7 +1894,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')
 							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -2061,7 +2061,7 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							'IB_AICE', 
 							# 'term_credit_hours',
 							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_withdrawn_hours',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -2420,7 +2420,7 @@ pullm_x_test = pullm_testing_set[[
 						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_withdrawn_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2540,6 +2540,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'total_fall_units',
+						'fall_withdrawn_hours',
 						'cum_adj_transfer_hours',
 						# 'term_credit_hours',
 						# 'fed_efc',
@@ -2699,7 +2700,7 @@ vanco_x_test = vanco_testing_set[[
 						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_withdrawn_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2819,6 +2820,7 @@ vanco_tomek_prep = make_column_transformer(
 						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'total_fall_units',
+						'fall_withdrawn_hours',
 						'cum_adj_transfer_hours',
 						# 'term_credit_hours',
 						# 'fed_efc',
@@ -2976,7 +2978,7 @@ trici_x_test = trici_testing_set[[
 						# 'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_withdrawn_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -3096,6 +3098,7 @@ trici_tomek_prep = make_column_transformer(
 						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'total_fall_units',
+						'fall_withdrawn_hours',
 						'cum_adj_transfer_hours',
 						# 'term_credit_hours',
 						# 'fed_efc',
@@ -3253,7 +3256,7 @@ univr_x_test = univr_testing_set[[
 						'IB_AICE', 
 						# 'term_credit_hours',
 						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_withdrawn_hours',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -3373,6 +3376,7 @@ univr_tomek_prep = make_column_transformer(
 						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'total_fall_units',
+						'fall_withdrawn_hours',
 						'cum_adj_transfer_hours',
 						# 'term_credit_hours',
 						# 'fed_efc',
@@ -3443,6 +3447,7 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
 				+ total_fall_units \
+				+ fall_withdrawn_hours \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
@@ -3471,6 +3476,7 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
 				+ total_fall_units \
+				+ fall_withdrawn_hours \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
@@ -3499,6 +3505,7 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
 				+ total_fall_units \
+				+ fall_withdrawn_hours \
 				+ AD_DTA + AD_AST + AP + RS + CHS \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
@@ -3527,6 +3534,7 @@ univr_y, univr_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
 				+ total_fall_units \
+				+ fall_withdrawn_hours \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
