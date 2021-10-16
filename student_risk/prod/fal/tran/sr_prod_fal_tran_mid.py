@@ -41,7 +41,7 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 strm = None
 top_N = 5
 model_id = 2
-day_of_week = 6
+day_of_week = 5
 run_date = date.today()
 
 #%%
@@ -87,7 +87,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'transfer_gpa',
 						'transfer_gpa_mi',
 						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_ind',
+						'fall_midterm_gpa_avg_mi',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -254,7 +254,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'transfer_gpa',
 							'transfer_gpa_mi',
 							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_ind',
+							'fall_midterm_gpa_avg_mi',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -421,7 +421,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'transfer_gpa',
 							'transfer_gpa_mi',
 							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_ind',
+							'fall_midterm_gpa_avg_mi',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -612,7 +612,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'transfer_gpa',
 						'transfer_gpa_mi',
 						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_ind',
+						'fall_midterm_gpa_avg_mi',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -779,7 +779,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'transfer_gpa',
 							'transfer_gpa_mi',
 							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_ind',
+							'fall_midterm_gpa_avg_mi',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -946,7 +946,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'transfer_gpa',
 							'transfer_gpa_mi',
 							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_ind',
+							'fall_midterm_gpa_avg_mi',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1137,7 +1137,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'transfer_gpa',
 						'transfer_gpa_mi',
 						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_ind',
+						'fall_midterm_gpa_avg_mi',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -1304,7 +1304,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'transfer_gpa',
 							'transfer_gpa_mi',
 							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_ind',
+							'fall_midterm_gpa_avg_mi',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1471,7 +1471,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'transfer_gpa',
 							'transfer_gpa_mi',
 							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_ind',
+							'fall_midterm_gpa_avg_mi',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1662,7 +1662,7 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][[
 						'transfer_gpa',
 						'transfer_gpa_mi',
 						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_ind',
+						'fall_midterm_gpa_avg_mi',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -1829,7 +1829,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')
 							'transfer_gpa',
 							'transfer_gpa_mi',
 							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_ind',
+							'fall_midterm_gpa_avg_mi',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1996,7 +1996,7 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							'transfer_gpa',
 							'transfer_gpa_mi',
 							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_ind',
+							'fall_midterm_gpa_avg_mi',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -2355,7 +2355,7 @@ pullm_x_test = pullm_testing_set[[
 						'transfer_gpa',
 						'transfer_gpa_mi',
 						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_ind',
+						'fall_midterm_gpa_avg_mi',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2635,7 +2635,7 @@ vanco_x_test = vanco_testing_set[[
 						'transfer_gpa',
 						'transfer_gpa_mi',
 						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_ind',
+						'fall_midterm_gpa_avg_mi',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2913,7 +2913,7 @@ trici_x_test = trici_testing_set[[
 						'transfer_gpa',
 						'transfer_gpa_mi',
 						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_ind',
+						'fall_midterm_gpa_avg_mi',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3191,7 +3191,7 @@ univr_x_test = univr_testing_set[[
 						'transfer_gpa',
 						'transfer_gpa_mi',
 						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_ind',
+						'fall_midterm_gpa_avg_mi',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3451,7 +3451,7 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
-				+ fall_midterm_gpa_avg + fall_midterm_gpa_ind \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3480,7 +3480,7 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
-				+ fall_midterm_gpa_avg + fall_midterm_gpa_ind \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3509,7 +3509,7 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ AD_DTA + AD_AST + AP + RS + CHS \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
-				+ fall_midterm_gpa_avg + fall_midterm_gpa_ind \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3538,7 +3538,7 @@ univr_y, univr_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
-				+ fall_midterm_gpa_avg + fall_midterm_gpa_ind \
+				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
