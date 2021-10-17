@@ -3553,9 +3553,9 @@ class DatasetBuilderProd:
 						when crse_grade_input = 'F'		then 0.0
 														else .
 														end as fall_midterm_grade,
-					case when calculated unt_taken		then 1
-														else 0
-														end as fall_midterm_grade_ind,
+					case when calculated unt_taken is not null		then 1
+																	else 0
+																	end as fall_midterm_grade_ind,
 					case when crse_grade_input = 'S'	then 1
 														else 0
 														end as fall_midterm_S_grade_ind,
@@ -3608,9 +3608,9 @@ class DatasetBuilderProd:
 						when crse_grade_input = 'F'		then 0.0
 														else .
 														end as spring_midterm_grade,
-					case when calculated unt_taken		then 1
-														else 0
-														end as spring_midterm_grade_ind,
+					case when calculated unt_taken is not null		then 1
+																	else 0
+																	end as spring_midterm_grade_ind,
 					case when crse_grade_input = 'S'	then 1
 														else 0
 														end as spring_midterm_S_grade_ind,
@@ -3633,20 +3633,17 @@ class DatasetBuilderProd:
 				create table midterm_grades_&cohort_year. as
 				select distinct
 					a.emplid,
-					sum(a.fall_midterm_grade * a.unt_taken) / sum(a.unt_taken) as fall_midterm_gpa_avg,
-					sum(a.fall_midterm_grade_ind) as fall_midterm_grade_count,
-					sum(a.fall_midterm_S_grade_ind) as fall_midterm_S_grade_count,
-					sum(a.fall_midterm_X_grade_ind) as fall_midterm_X_grade_count,
-					sum(a.fall_midterm_Z_grade_ind) as fall_midterm_Z_grade_count,
-					sum(b.spring_midterm_grade * b.unt_taken) / sum(b.unt_taken) as spring_midterm_gpa_avg,
-					sum(b.spring_midterm_grade_ind) as spring_midterm_grade_count,
-					sum(b.spring_midterm_S_grade_ind) as spring_midterm_S_grade_count,
-					sum(b.spring_midterm_X_grade_ind) as spring_midterm_X_grade_count,
-					sum(b.spring_midterm_Z_grade_ind) as spring_midterm_Z_grade_count
-				from fall_midterm_&cohort_year. as a  
-				left join spring_midterm_&cohort_year. as b
-					on a.emplid = b.emplid
-				group by a.emplid
+					(select distinct sum(b.fall_midterm_grade * b.unt_taken) / sum(b.unt_taken) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_gpa_avg,
+					(select distinct sum(b.fall_midterm_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_grade_count,
+					(select distinct sum(b.fall_midterm_S_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_S_grade_count,
+					(select distinct sum(b.fall_midterm_X_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_X_grade_count,
+					(select distinct sum(b.fall_midterm_Z_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_Z_grade_count,
+					(select distinct sum(c.spring_midterm_grade * c.unt_taken) / sum(c.unt_taken) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_gpa_avg,
+					(select distinct sum(c.spring_midterm_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_grade_count,
+					(select distinct sum(c.spring_midterm_S_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_S_grade_count,
+					(select distinct sum(c.spring_midterm_X_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_X_grade_count,
+					(select distinct sum(c.spring_midterm_Z_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_Z_grade_count
+				from cohort_&cohort_year. as a
 			;quit;
 			
 			proc sql;
@@ -5496,9 +5493,9 @@ class DatasetBuilderProd:
 						when crse_grade_input = 'F'		then 0.0
 														else .
 														end as fall_midterm_grade,
-					case when calculated unt_taken		then 1
-														else 0
-														end as fall_midterm_grade_ind,
+					case when calculated unt_taken is not null	then 1
+																else 0
+																end as fall_midterm_grade_ind,
 					case when crse_grade_input = 'S'	then 1
 														else 0
 														end as fall_midterm_S_grade_ind,									
@@ -5551,9 +5548,9 @@ class DatasetBuilderProd:
 						when crse_grade_input = 'F'		then 0.0
 														else .
 														end as spring_midterm_grade,
-					case when calculated unt_taken		then 1
-														else 0
-														end as spring_midterm_grade_ind,
+					case when calculated unt_taken is not null		then 1
+																	else 0
+																	end as spring_midterm_grade_ind,
 					case when crse_grade_input = 'S'	then 1
 														else 0
 														end as spring_midterm_S_grade_ind,									
@@ -5576,20 +5573,17 @@ class DatasetBuilderProd:
 				create table midterm_grades_&cohort_year. as
 				select distinct
 					a.emplid,
-					sum(a.fall_midterm_grade * a.unt_taken) / sum(a.unt_taken) as fall_midterm_gpa_avg,
-					sum(a.fall_midterm_grade_ind) as fall_midterm_grade_count,
-					sum(a.fall_midterm_S_grade_ind) as fall_midterm_S_grade_count,
-					sum(a.fall_midterm_X_grade_ind) as fall_midterm_X_grade_count,
-					sum(a.fall_midterm_Z_grade_ind) as fall_midterm_Z_grade_count,
-					sum(b.spring_midterm_grade * b.unt_taken) / sum(b.unt_taken) as spring_midterm_gpa_avg,
-					sum(b.spring_midterm_grade_ind) as spring_midterm_grade_count,
-					sum(b.spring_midterm_S_grade_ind) as spring_midterm_S_grade_count,
-					sum(b.spring_midterm_X_grade_ind) as spring_midterm_X_grade_count,
-					sum(b.spring_midterm_Z_grade_ind) as spring_midterm_Z_grade_count
-				from fall_midterm_&cohort_year. as a  
-				left join spring_midterm_&cohort_year. as b
-					on a.emplid = b.emplid
-				group by a.emplid
+					(select distinct sum(b.fall_midterm_grade * b.unt_taken) / sum(b.unt_taken) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_gpa_avg,
+					(select distinct sum(b.fall_midterm_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_grade_count,
+					(select distinct sum(b.fall_midterm_S_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_S_grade_count,
+					(select distinct sum(b.fall_midterm_X_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_X_grade_count,
+					(select distinct sum(b.fall_midterm_Z_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid group by a.emplid) as fall_midterm_Z_grade_count,
+					(select distinct sum(c.spring_midterm_grade * c.unt_taken) / sum(c.unt_taken) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_gpa_avg,
+					(select distinct sum(c.spring_midterm_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_grade_count,
+					(select distinct sum(c.spring_midterm_S_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_S_grade_count,
+					(select distinct sum(c.spring_midterm_X_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_X_grade_count,
+					(select distinct sum(c.spring_midterm_Z_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid group by a.emplid) as spring_midterm_Z_grade_count
+				from cohort_&cohort_year. as a
 			;quit;
 			
 			proc sql;
