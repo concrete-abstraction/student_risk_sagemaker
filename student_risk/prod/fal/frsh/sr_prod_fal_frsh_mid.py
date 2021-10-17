@@ -42,7 +42,7 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 strm = None
 top_N = 5
 model_id = 2
-day_of_week = 6
+day_of_week = 5
 run_date = date.today()
 
 #%%
