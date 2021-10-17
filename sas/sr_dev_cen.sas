@@ -1536,7 +1536,19 @@ run;
 			class_nbr,
 			crse_id,
 			subject_catalog_nbr,
-			unt_taken,
+			case when crse_grade_input = 'A' 	then unt_taken
+				when crse_grade_input = 'A-'	then unt_taken
+				when crse_grade_input = 'B+'	then unt_taken
+				when crse_grade_input = 'B'		then unt_taken
+				when crse_grade_input = 'B-'	then unt_taken
+				when crse_grade_input = 'C+'	then unt_taken
+				when crse_grade_input = 'C'		then unt_taken
+				when crse_grade_input = 'C-'	then unt_taken
+				when crse_grade_input = 'D+'	then unt_taken
+				when crse_grade_input = 'D'		then unt_taken
+				when crse_grade_input = 'F'		then unt_taken
+												else .
+												end as unt_taken,
 			case when crse_grade_input = 'A' 	then 4.0
 				when crse_grade_input = 'A-'	then 3.7
 				when crse_grade_input = 'B+'	then 3.3
@@ -1550,12 +1562,18 @@ run;
 				when crse_grade_input = 'F'		then 0.0
 												else .
 												end as fall_midterm_grade,
+			case when calculated unt_taken		then 1
+												else 0
+												end as fall_midterm_grade_ind,
+			case when crse_grade_input = 'S'	then 1
+												else 0
+												end as fall_midterm_S_grade_ind,
 			case when crse_grade_input = 'X'	then 1
 												else 0
-												end as fall_X_grade_ind,
+												end as fall_midterm_X_grade_ind,
 			case when crse_grade_input = 'Z'	then 1
 												else 0
-												end as fall_Z_grade_ind
+												end as fall_midterm_Z_grade_ind
 		from &dsn..class_registration_vw
 		where snapshot = 'midterm'
 			and substr(strm,4,1) = '7'
@@ -1573,7 +1591,19 @@ run;
 			class_nbr,
 			crse_id,
 			subject_catalog_nbr,
-			unt_taken,
+			case when crse_grade_input = 'A' 	then unt_taken
+				when crse_grade_input = 'A-'	then unt_taken
+				when crse_grade_input = 'B+'	then unt_taken
+				when crse_grade_input = 'B'		then unt_taken
+				when crse_grade_input = 'B-'	then unt_taken
+				when crse_grade_input = 'C+'	then unt_taken
+				when crse_grade_input = 'C'		then unt_taken
+				when crse_grade_input = 'C-'	then unt_taken
+				when crse_grade_input = 'D+'	then unt_taken
+				when crse_grade_input = 'D'		then unt_taken
+				when crse_grade_input = 'F'		then unt_taken
+												else .
+												end as unt_taken,
 			case when crse_grade_input = 'A' 	then 4.0
 				when crse_grade_input = 'A-'	then 3.7
 				when crse_grade_input = 'B+'	then 3.3
@@ -1587,12 +1617,18 @@ run;
 				when crse_grade_input = 'F'		then 0.0
 												else .
 												end as spring_midterm_grade,
+			case when calculated unt_taken		then 1
+												else 0
+												end as spring_midterm_grade_ind,
+			case when crse_grade_input = 'S'	then 1
+												else 0
+												end as spring_midterm_S_grade_ind,
 			case when crse_grade_input = 'X'	then 1
 												else 0
-												end as spring_X_grade_ind,
+												end as spring_midterm_X_grade_ind,
 			case when crse_grade_input = 'Z'	then 1
 												else 0
-												end as spring_Z_grade_ind
+												end as spring_midterm_Z_grade_ind
 		from &dsn..class_registration_vw
 		where snapshot = 'midterm'
 			and substr(strm,4,1) = '3'
@@ -1607,11 +1643,15 @@ run;
 		select distinct
 			a.emplid,
 			sum(a.fall_midterm_grade * a.unt_taken) / sum(a.unt_taken) as fall_midterm_gpa_avg,
-			sum(a.fall_X_grade_ind) as fall_X_grade_count,
-			sum(a.fall_Z_grade_ind) as fall_Z_grade_count,
+			sum(a.fall_midterm_grade_ind) as fall_midterm_grade_count,
+			sum(a.fall_midterm_S_grade_ind) as fall_midterm_S_grade_count,
+			sum(a.fall_midterm_X_grade_ind) as fall_midterm_X_grade_count,
+			sum(a.fall_midterm_Z_grade_ind) as fall_midterm_Z_grade_count,
 			sum(b.spring_midterm_grade * b.unt_taken) / sum(b.unt_taken) as spring_midterm_gpa_avg,
-			sum(b.spring_X_grade_ind) as spring_X_grade_count,
-			sum(b.spring_Z_grade_ind) as spring_Z_grade_count
+			sum(b.spring_midterm_grade_ind) as spring_midterm_grade_count,
+			sum(b.spring_midterm_S_grade_ind) as spring_midterm_S_grade_count,
+			sum(b.spring_midterm_X_grade_ind) as spring_midterm_X_grade_count,
+			sum(b.spring_midterm_Z_grade_ind) as spring_midterm_Z_grade_count
 		from fall_midterm_&cohort_year. as a  
 		left join spring_midterm_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -1864,7 +1904,11 @@ run;
 			t.race_native_hawaiian,
 			t.race_white,
 			u.fall_midterm_gpa_avg,
-			u.spring_midterm_gpa_avg
+			u.fall_midterm_grade_count,
+			u.fall_midterm_S_grade_count,
+			u.spring_midterm_gpa_avg,
+			u.spring_midterm_grade_count,
+			u.spring_midterm_S_grade_count
 		from cohort_&cohort_year. as a
 		left join pell_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -3445,7 +3489,19 @@ run;
 			class_nbr,
 			crse_id,
 			subject_catalog_nbr,
-			unt_taken,
+			case when crse_grade_input = 'A' 	then unt_taken
+				when crse_grade_input = 'A-'	then unt_taken
+				when crse_grade_input = 'B+'	then unt_taken
+				when crse_grade_input = 'B'		then unt_taken
+				when crse_grade_input = 'B-'	then unt_taken
+				when crse_grade_input = 'C+'	then unt_taken
+				when crse_grade_input = 'C'		then unt_taken
+				when crse_grade_input = 'C-'	then unt_taken
+				when crse_grade_input = 'D+'	then unt_taken
+				when crse_grade_input = 'D'		then unt_taken
+				when crse_grade_input = 'F'		then unt_taken
+												else .
+												end as unt_taken,
 			case when crse_grade_input = 'A' 	then 4.0
 				when crse_grade_input = 'A-'	then 3.7
 				when crse_grade_input = 'B+'	then 3.3
@@ -3459,12 +3515,18 @@ run;
 				when crse_grade_input = 'F'		then 0.0
 												else .
 												end as fall_midterm_grade,
+			case when calculated unt_taken		then 1
+												else 0
+												end as fall_midterm_grade_ind,
+			case when crse_grade_input = 'S'	then 1
+												else 0
+												end as fall_midterm_S_grade_ind,									
 			case when crse_grade_input = 'X'	then 1
 												else 0
-												end as fall_X_grade_ind,
+												end as fall_midterm_X_grade_ind,
 			case when crse_grade_input = 'Z'	then 1
 												else 0
-												end as fall_Z_grade_ind
+												end as fall_midterm_Z_grade_ind
 		from &dsn..class_registration_vw
 		where snapshot = 'midterm'
 			and substr(strm,4,1) = '7'
@@ -3482,7 +3544,19 @@ run;
 			class_nbr,
 			crse_id,
 			subject_catalog_nbr,
-			unt_taken,
+			case when crse_grade_input = 'A' 	then unt_taken
+				when crse_grade_input = 'A-'	then unt_taken
+				when crse_grade_input = 'B+'	then unt_taken
+				when crse_grade_input = 'B'		then unt_taken
+				when crse_grade_input = 'B-'	then unt_taken
+				when crse_grade_input = 'C+'	then unt_taken
+				when crse_grade_input = 'C'		then unt_taken
+				when crse_grade_input = 'C-'	then unt_taken
+				when crse_grade_input = 'D+'	then unt_taken
+				when crse_grade_input = 'D'		then unt_taken
+				when crse_grade_input = 'F'		then unt_taken
+												else .
+												end as unt_taken,
 			case when crse_grade_input = 'A' 	then 4.0
 				when crse_grade_input = 'A-'	then 3.7
 				when crse_grade_input = 'B+'	then 3.3
@@ -3496,12 +3570,18 @@ run;
 				when crse_grade_input = 'F'		then 0.0
 												else .
 												end as spring_midterm_grade,
+			case when calculated unt_taken		then 1
+												else 0
+												end as spring_midterm_grade_ind,
+			case when crse_grade_input = 'S'	then 1
+												else 0
+												end as spring_midterm_S_grade_ind,									
 			case when crse_grade_input = 'X'	then 1
 												else 0
-												end as spring_X_grade_ind,
+												end as spring_midterm_X_grade_ind,
 			case when crse_grade_input = 'Z'	then 1
 												else 0
-												end as spring_Z_grade_ind
+												end as spring_midterm_Z_grade_ind
 		from &dsn..class_registration_vw
 		where snapshot = 'midterm'
 			and substr(strm,4,1) = '3'
@@ -3516,11 +3596,15 @@ run;
 		select distinct
 			a.emplid,
 			sum(a.fall_midterm_grade * a.unt_taken) / sum(a.unt_taken) as fall_midterm_gpa_avg,
-			sum(a.fall_X_grade_ind) as fall_X_grade_count,
-			sum(a.fall_Z_grade_ind) as fall_Z_grade_count,
+			sum(a.fall_midterm_grade_ind) as fall_midterm_grade_count,
+			sum(a.fall_midterm_S_grade_ind) as fall_midterm_S_grade_count,
+			sum(a.fall_midterm_X_grade_ind) as fall_midterm_X_grade_count,
+			sum(a.fall_midterm_Z_grade_ind) as fall_midterm_Z_grade_count,
 			sum(b.spring_midterm_grade * b.unt_taken) / sum(b.unt_taken) as spring_midterm_gpa_avg,
-			sum(b.spring_X_grade_ind) as spring_X_grade_count,
-			sum(b.spring_Z_grade_ind) as spring_Z_grade_count
+			sum(b.spring_midterm_grade_ind) as spring_midterm_grade_count,
+			sum(b.spring_midterm_S_grade_ind) as spring_midterm_S_grade_count,
+			sum(b.spring_midterm_X_grade_ind) as spring_midterm_X_grade_count,
+			sum(b.spring_midterm_Z_grade_ind) as spring_midterm_Z_grade_count
 		from fall_midterm_&cohort_year. as a  
 		left join spring_midterm_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -3768,7 +3852,11 @@ run;
 			t.race_native_hawaiian,
 			t.race_white,
 			u.fall_midterm_gpa_avg,
-			u.spring_midterm_gpa_avg
+			u.fall_midterm_grade_count,
+			u.fall_midterm_S_grade_count,
+			u.spring_midterm_gpa_avg,
+			u.spring_midterm_grade_count,
+			u.spring_midterm_S_grade_count
 		from cohort_&cohort_year. as a
 		left join pell_&cohort_year. as b
 			on a.emplid = b.emplid
@@ -3928,8 +4016,12 @@ data training_set;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 0; else fall_midterm_gpa_avg_mi = 1;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
+	if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
+	if fall_midterm_S_grade_count = . then fall_midterm_S_grade_count = 0;
 	if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg_mi = 0; else spring_midterm_gpa_avg_mi = 1;
 	if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg = 0;
+	if spring_midterm_grade_count = . then spring_midterm_grade_count = 0;
+	if spring_midterm_S_grade_count = . then spring_midterm_S_grade_count = 0;
 	if fall_term_gpa = . then fall_term_gpa_mi = 0; else fall_term_gpa_mi = 1;
 	if fall_term_gpa = . then fall_term_gpa = 0;
 	if spring_term_gpa = . then spring_term_gpa_mi = 0; else spring_term_gpa_mi = 1;
@@ -4086,8 +4178,12 @@ data testing_set;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 0; else fall_midterm_gpa_avg_mi = 1;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
+	if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
+	if fall_midterm_S_grade_count = . then fall_midterm_S_grade_count = 0;
 	if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg_mi = 0; else spring_midterm_gpa_avg_mi = 1;
 	if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg = 0;
+	if spring_midterm_grade_count = . then spring_midterm_grade_count = 0;
+	if spring_midterm_S_grade_count = . then spring_midterm_S_grade_count = 0;
 	if fall_term_gpa = . then fall_term_gpa_mi = 0; else fall_term_gpa_mi = 1;
 	if fall_term_gpa = . then fall_term_gpa = 0;
 	if spring_term_gpa = . then spring_term_gpa_mi = 0; else spring_term_gpa_mi = 1;
