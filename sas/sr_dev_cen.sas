@@ -1359,12 +1359,12 @@ run;
 			sum(g.oth_contact_hrs) as fall_oth_contact_hrs,
 			coalesce(calculated fall_lec_contact_hrs, 0) + coalesce(calculated fall_lab_contact_hrs, 0) + coalesce(calculated fall_int_contact_hrs, 0) 
 				+ coalesce(calculated fall_stu_contact_hrs, 0) + coalesce(calculated fall_sem_contact_hrs, 0) + coalesce(calculated fall_oth_contact_hrs, 0) as total_fall_contact_hrs,
-			sum(b.lec_contact_hrs) as spring_lec_contact_hrs,
-			sum(c.lab_contact_hrs) as spring_lab_contact_hrs,
-			sum(d.int_contact_hrs) as spring_int_contact_hrs,
-			sum(e.stu_contact_hrs) as spring_stu_contact_hrs,
-			sum(f.sem_contact_hrs) as spring_sem_contact_hrs,
-			sum(g.oth_contact_hrs) as spring_oth_contact_hrs,
+			sum(h.lec_contact_hrs) as spring_lec_contact_hrs,
+			sum(i.lab_contact_hrs) as spring_lab_contact_hrs,
+			sum(j.int_contact_hrs) as spring_int_contact_hrs,
+			sum(k.stu_contact_hrs) as spring_stu_contact_hrs,
+			sum(l.sem_contact_hrs) as spring_sem_contact_hrs,
+			sum(m.oth_contact_hrs) as spring_oth_contact_hrs,
 			coalesce(calculated spring_lec_contact_hrs, 0) + coalesce(calculated spring_lab_contact_hrs, 0) + coalesce(calculated spring_int_contact_hrs, 0) 
 				+ coalesce(calculated spring_stu_contact_hrs, 0) + coalesce(calculated spring_sem_contact_hrs, 0) + coalesce(calculated spring_oth_contact_hrs, 0) as total_spring_contact_hrs
 		from class_registration_&cohort_year. as a
@@ -1373,7 +1373,7 @@ run;
 						max(term_contact_hrs) as lec_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LEC'
@@ -1386,7 +1386,7 @@ run;
 						max(term_contact_hrs) as lab_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
@@ -1399,7 +1399,7 @@ run;
 						max(term_contact_hrs) as int_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'INT'
@@ -1412,7 +1412,7 @@ run;
 						max(term_contact_hrs) as stu_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'STU'
@@ -1425,7 +1425,7 @@ run;
 						max(term_contact_hrs) as sem_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'SEM'
@@ -1438,7 +1438,7 @@ run;
 						max(term_contact_hrs) as oth_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM')
@@ -1451,7 +1451,7 @@ run;
 						max(term_contact_hrs) as lec_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LEC'
@@ -1464,7 +1464,7 @@ run;
 						max(term_contact_hrs) as lab_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
@@ -1477,7 +1477,7 @@ run;
 						max(term_contact_hrs) as int_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'INT'
@@ -1490,7 +1490,7 @@ run;
 						max(term_contact_hrs) as stu_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'STU'
@@ -1503,7 +1503,7 @@ run;
 						max(term_contact_hrs) as sem_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'SEM'
@@ -1516,7 +1516,7 @@ run;
 						max(term_contact_hrs) as oth_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM')
@@ -3309,12 +3309,12 @@ run;
 			sum(g.oth_contact_hrs) as fall_oth_contact_hrs,
 			coalesce(calculated fall_lec_contact_hrs, 0) + coalesce(calculated fall_lab_contact_hrs, 0) + coalesce(calculated fall_int_contact_hrs, 0) 
 				+ coalesce(calculated fall_stu_contact_hrs, 0) + coalesce(calculated fall_sem_contact_hrs, 0) + coalesce(calculated fall_oth_contact_hrs, 0) as total_fall_contact_hrs,
-			sum(b.lec_contact_hrs) as spring_lec_contact_hrs,
-			sum(c.lab_contact_hrs) as spring_lab_contact_hrs,
-			sum(d.int_contact_hrs) as spring_int_contact_hrs,
-			sum(e.stu_contact_hrs) as spring_stu_contact_hrs,
-			sum(f.sem_contact_hrs) as spring_sem_contact_hrs,
-			sum(g.oth_contact_hrs) as spring_oth_contact_hrs,
+			sum(h.lec_contact_hrs) as spring_lec_contact_hrs,
+			sum(i.lab_contact_hrs) as spring_lab_contact_hrs,
+			sum(j.int_contact_hrs) as spring_int_contact_hrs,
+			sum(k.stu_contact_hrs) as spring_stu_contact_hrs,
+			sum(l.sem_contact_hrs) as spring_sem_contact_hrs,
+			sum(m.oth_contact_hrs) as spring_oth_contact_hrs,
 			coalesce(calculated spring_lec_contact_hrs, 0) + coalesce(calculated spring_lab_contact_hrs, 0) + coalesce(calculated spring_int_contact_hrs, 0) 
 				+ coalesce(calculated spring_stu_contact_hrs, 0) + coalesce(calculated spring_sem_contact_hrs, 0) + coalesce(calculated spring_oth_contact_hrs, 0) as total_spring_contact_hrs
 		from class_registration_&cohort_year. as a
@@ -3323,7 +3323,7 @@ run;
 						max(term_contact_hrs) as lec_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LEC'
@@ -3336,7 +3336,7 @@ run;
 						max(term_contact_hrs) as lab_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'LAB'
@@ -3349,7 +3349,7 @@ run;
 						max(term_contact_hrs) as int_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'INT'
@@ -3362,7 +3362,7 @@ run;
 						max(term_contact_hrs) as stu_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'STU'
@@ -3375,7 +3375,7 @@ run;
 						max(term_contact_hrs) as sem_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component = 'SEM'
@@ -3388,7 +3388,7 @@ run;
 						max(term_contact_hrs) as oth_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '7' 
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM')
@@ -3401,7 +3401,7 @@ run;
 						max(term_contact_hrs) as lec_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LEC'
@@ -3414,7 +3414,7 @@ run;
 						max(term_contact_hrs) as lab_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'LAB'
@@ -3427,7 +3427,7 @@ run;
 						max(term_contact_hrs) as int_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'INT'
@@ -3440,7 +3440,7 @@ run;
 						max(term_contact_hrs) as stu_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'STU'
@@ -3453,7 +3453,7 @@ run;
 						max(term_contact_hrs) as sem_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component = 'SEM'
@@ -3466,7 +3466,7 @@ run;
 						max(term_contact_hrs) as oth_contact_hrs,
 						ssr_component
 					from &dsn..class_vw
-					where snapshot = 'eot'
+					where snapshot = "&snapshot."
 						and full_acad_year = put(&cohort_year., 4.)
 						and substr(strm,4,1) = '3' 
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM')
@@ -4060,7 +4060,9 @@ data training_set;
 	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
 	fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
+	if total_fall_units = 0 then fall_withdrawn = 1; else fall_withdrawn = 0;
 	spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
+	if total_spring_units = 0 then spring_withdrawn = 1; else spring_withdrawn = 0;
 	spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
@@ -4222,7 +4224,9 @@ data testing_set;
 	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
 	fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
+	if total_fall_units = 0 then fall_withdrawn = 1; else fall_withdrawn = 0;
 	spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
+	if total_spring_units = 0 then spring_withdrawn = 1; else spring_withdrawn = 0;
 	spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
