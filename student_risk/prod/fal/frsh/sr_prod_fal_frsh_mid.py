@@ -156,6 +156,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_midterm_gpa_avg_mi',
 						'fall_midterm_grade_count',
 						'fall_midterm_S_grade_count',
+						'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -171,12 +172,12 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_stu_count',
 						# 'fall_sem_count',
 						'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
-						'fall_stu_contact_hrs',
+						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
-						'fall_oth_contact_hrs',
+						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'cum_adj_transfer_hours',
 						'resident',
@@ -221,7 +222,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_credit_hours',
 						# 'total_fall_units',
 						'fall_withdrawn_hours',
-						'fall_withdrawn_ind',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -326,6 +327,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_midterm_gpa_avg_mi',
 							'fall_midterm_grade_count',
 							'fall_midterm_S_grade_count',
+							'fall_midterm_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -341,12 +343,12 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_stu_count',
 							# 'fall_sem_count',
 							'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
-							'fall_stu_contact_hrs',
+							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
-							'fall_oth_contact_hrs',
+							# 'fall_oth_contact_hrs',
 							# 'total_fall_contact_hrs',
 							'cum_adj_transfer_hours',
 							'resident',
@@ -391,7 +393,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_credit_hours',
 							# 'total_fall_units',
 							'fall_withdrawn_hours',
-							'fall_withdrawn_ind',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -496,6 +498,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_midterm_gpa_avg_mi',
 							'fall_midterm_grade_count',
 							'fall_midterm_S_grade_count',
+							'fall_midterm_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -511,12 +514,12 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_stu_count',
 							# 'fall_sem_count',
 							'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
-							'fall_stu_contact_hrs',
+							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
-							'fall_oth_contact_hrs',
+							# 'fall_oth_contact_hrs',
 							# 'total_fall_contact_hrs',
 							'cum_adj_transfer_hours',
 							'resident',
@@ -561,7 +564,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_credit_hours',
 							# 'total_fall_units',
 							'fall_withdrawn_hours',
-							'fall_withdrawn_ind',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -689,7 +692,8 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_mi',
 						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -705,8 +709,8 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -755,7 +759,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_credit_hours',
 						# 'total_fall_units',
 						'fall_withdrawn_hours',
-						'fall_withdrawn_ind',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -859,7 +863,8 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_mi',
 							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -875,8 +880,8 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -925,7 +930,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_credit_hours',
 							# 'total_fall_units',
 							'fall_withdrawn_hours',
-							'fall_withdrawn_ind',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1029,7 +1034,8 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_mi',
 							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1045,8 +1051,8 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -1095,7 +1101,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_credit_hours',
 							# 'total_fall_units',
 							'fall_withdrawn_hours',
-							'fall_withdrawn_ind',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1223,7 +1229,8 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_mi',
 						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -1239,8 +1246,8 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -1289,7 +1296,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_credit_hours',
 						# 'total_fall_units',
 						'fall_withdrawn_hours',
-						'fall_withdrawn_ind',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -1393,7 +1400,8 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_mi',
 							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1409,8 +1417,8 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -1459,7 +1467,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_credit_hours',
 							# 'total_fall_units',
 							'fall_withdrawn_hours',
-							'fall_withdrawn_ind',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1563,7 +1571,8 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_midterm_gpa_avg',
 							'fall_midterm_gpa_avg_mi',
 							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1579,8 +1588,8 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -1629,7 +1638,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_credit_hours',
 							# 'total_fall_units',
 							'fall_withdrawn_hours',
-							'fall_withdrawn_ind',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1758,6 +1767,7 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						'fall_midterm_gpa_avg_mi',
 						'fall_midterm_grade_count',
 						'fall_midterm_S_grade_count',
+						'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -1773,8 +1783,8 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -1823,7 +1833,7 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						'fall_credit_hours',
 						# 'total_fall_units',
 						'fall_withdrawn_hours',
-						'fall_withdrawn_ind',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -1928,6 +1938,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							'fall_midterm_gpa_avg_mi',
 							'fall_midterm_grade_count',
 							'fall_midterm_S_grade_count',
+							'fall_midterm_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1943,8 +1954,8 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -1993,7 +2004,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							'fall_credit_hours',
 							# 'total_fall_units',
 							'fall_withdrawn_hours',
-							'fall_withdrawn_ind',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -2098,6 +2109,7 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							'fall_midterm_gpa_avg_mi',
 							'fall_midterm_grade_count',
 							'fall_midterm_S_grade_count',
+							'fall_midterm_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -2113,8 +2125,8 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -2163,7 +2175,7 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							'fall_credit_hours',
 							# 'total_fall_units',
 							'fall_withdrawn_hours',
-							'fall_withdrawn_ind',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -2458,6 +2470,7 @@ pullm_x_test = pullm_testing_set[[
 						'fall_midterm_gpa_avg_mi',
 						'fall_midterm_grade_count',
 						'fall_midterm_S_grade_count',
+						'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2473,12 +2486,12 @@ pullm_x_test = pullm_testing_set[[
 						'fall_stu_count',
 						# 'fall_sem_count',
 						'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
-						'fall_stu_contact_hrs',
+						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
-						'fall_oth_contact_hrs',
+						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'cum_adj_transfer_hours',
 						'resident',
@@ -2523,7 +2536,7 @@ pullm_x_test = pullm_testing_set[[
 						'fall_credit_hours',
 						# 'total_fall_units',
 						'fall_withdrawn_hours',
-						'fall_withdrawn_ind',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2624,6 +2637,7 @@ pullm_tomek_prep = make_column_transformer(
 						'fall_midterm_gpa_avg',
 						'fall_midterm_grade_count',
 						'fall_midterm_S_grade_count',
+						'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2636,12 +2650,12 @@ pullm_tomek_prep = make_column_transformer(
 						'fall_stu_count',
 						# 'fall_sem_count',
 						'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
-						'fall_stu_contact_hrs',
+						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
-						'fall_oth_contact_hrs',
+						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						# 'total_fall_units',
 						'fall_credit_hours',
@@ -2739,7 +2753,8 @@ vanco_x_test = vanco_testing_set[[
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_mi',
 						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2755,8 +2770,8 @@ vanco_x_test = vanco_testing_set[[
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -2805,7 +2820,7 @@ vanco_x_test = vanco_testing_set[[
 						'fall_credit_hours',
 						# 'total_fall_units',
 						'fall_withdrawn_hours',
-						'fall_withdrawn_ind',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2905,7 +2920,8 @@ vanco_tomek_prep = make_column_transformer(
 						'high_school_gpa',
 						'fall_midterm_gpa_avg',
 						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2918,8 +2934,8 @@ vanco_tomek_prep = make_column_transformer(
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -3021,7 +3037,8 @@ trici_x_test = trici_testing_set[[
 						'fall_midterm_gpa_avg',
 						'fall_midterm_gpa_avg_mi',
 						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3037,8 +3054,8 @@ trici_x_test = trici_testing_set[[
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -3087,7 +3104,7 @@ trici_x_test = trici_testing_set[[
 						'fall_credit_hours',
 						# 'total_fall_units',
 						'fall_withdrawn_hours',
-						'fall_withdrawn_ind',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -3187,7 +3204,8 @@ trici_tomek_prep = make_column_transformer(
 						'high_school_gpa',
 						'fall_midterm_gpa_avg',
 						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3200,8 +3218,8 @@ trici_tomek_prep = make_column_transformer(
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -3304,6 +3322,7 @@ univr_x_test = univr_testing_set[[
 						'fall_midterm_gpa_avg_mi',
 						'fall_midterm_grade_count',
 						'fall_midterm_S_grade_count',
+						'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3319,8 +3338,8 @@ univr_x_test = univr_testing_set[[
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -3369,7 +3388,7 @@ univr_x_test = univr_testing_set[[
 						'fall_credit_hours',
 						# 'total_fall_units',
 						'fall_withdrawn_hours',
-						'fall_withdrawn_ind',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -3470,6 +3489,7 @@ univr_tomek_prep = make_column_transformer(
 						'fall_midterm_gpa_avg',
 						'fall_midterm_grade_count',
 						'fall_midterm_S_grade_count',
+						'fall_midterm_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3482,8 +3502,8 @@ univr_tomek_prep = make_column_transformer(
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -3559,9 +3579,8 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count + fall_stu_count + fall_oth_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs + fall_stu_contact_hrs + fall_oth_contact_hrs \
 				+ fall_credit_hours \
-				+ fall_withdrawn_hours + fall_withdrawn_ind \
+				+ fall_withdrawn_hours \
                 + honors_program_ind \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
 				+ business + comm + education + medicine + nursing + vet_med \
@@ -3573,7 +3592,7 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
-				+ fall_midterm_grade_count + fall_midterm_S_grade_count \
+				+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
@@ -3594,15 +3613,14 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
 				+ fall_credit_hours \
-				+ fall_withdrawn_hours + fall_withdrawn_ind \
+				+ fall_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
-				+ fall_midterm_grade_count + fall_midterm_S_grade_count \
+				+ fall_midterm_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
@@ -3623,15 +3641,14 @@ trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
 				+ fall_credit_hours \
-				+ fall_withdrawn_hours + fall_withdrawn_ind \
+				+ fall_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
-				+ fall_midterm_grade_count + fall_midterm_S_grade_count \
+				+ fall_midterm_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
@@ -3652,15 +3669,14 @@ univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
 				+ fall_credit_hours \
-				+ fall_withdrawn_hours + fall_withdrawn_ind \
+				+ fall_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
-				+ fall_midterm_grade_count + fall_midterm_S_grade_count \
+				+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=univr_logit_df, return_type='dataframe')

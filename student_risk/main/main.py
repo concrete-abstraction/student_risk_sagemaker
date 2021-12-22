@@ -49,7 +49,6 @@ proc sql;
         and month(datepart(term_begin_dt)) <= month(today()) 
         and month(datepart(term_end_dt)) >= month(today()) 
         and week(datepart(term_begin_dt)) <= week(today())
-        and week(datepart(term_end_dt)) >= week(today())
         and acad_career = 'UGRD'
 ;quit;
 """)
