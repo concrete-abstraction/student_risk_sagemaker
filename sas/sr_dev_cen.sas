@@ -3591,7 +3591,6 @@ run;
 			and stdnt_enrl_status = 'E'
 			and crse_grade_input_mid ^= ''
 	;quit;
-/* 	%end; */
 
 	proc sql;
 		create table midterm_grades_&cohort_year. as
@@ -4071,7 +4070,7 @@ data training_set;
 	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
 	fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
-	if total_fall_units = 0 then fall_withdrawn = 1; else fall_withdrawn = 0;
+	if total_fall_units = 0 then fall_withdrawn_ind = 1; else fall_withdrawn_ind = 0;
 	spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
 	if total_spring_units = 0 then spring_withdrawn = 1; else spring_withdrawn = 0;
 	spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
@@ -4237,7 +4236,7 @@ data testing_set;
 	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
 	fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
-	if total_fall_units = 0 then fall_withdrawn = 1; else fall_withdrawn = 0;
+	if total_fall_units = 0 then fall_withdrawn_ind = 1; else fall_withdrawn_ind = 0;
 	spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
 	if total_spring_units = 0 then spring_withdrawn = 1; else spring_withdrawn = 0;
 	spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
