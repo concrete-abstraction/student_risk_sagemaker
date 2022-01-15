@@ -26,6 +26,7 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sqlalchemy import MetaData, Table
+from xgboost import XGBClassifier
 
 #%%
 # Database connection
@@ -2629,7 +2630,7 @@ pullm_tomek_prep = make_column_transformer(
 )
 
 pullm_x_train = pullm_tomek_prep.fit_transform(pullm_x_train)
-pullm_x_test = pullm_tomek_prep.fit_transform(pullm_x_test)
+pullm_x_test = pullm_tomek_prep.transform(pullm_x_test)
 
 pullm_feat_names = []
 
@@ -2913,7 +2914,7 @@ vanco_tomek_prep = make_column_transformer(
 )
 
 vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
-vanco_x_test = vanco_tomek_prep.fit_transform(vanco_x_test)
+vanco_x_test = vanco_tomek_prep.transform(vanco_x_test)
 
 vanco_feat_names = []
 
@@ -3197,7 +3198,7 @@ trici_tomek_prep = make_column_transformer(
 )
 
 trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
-trici_x_test = trici_tomek_prep.fit_transform(trici_x_test)
+trici_x_test = trici_tomek_prep.transform(trici_x_test)
 
 trici_feat_names = []
 
@@ -3481,7 +3482,7 @@ univr_tomek_prep = make_column_transformer(
 )
 
 univr_x_train = univr_tomek_prep.fit_transform(univr_x_train)
-univr_x_test = univr_tomek_prep.fit_transform(univr_x_test)
+univr_x_test = univr_tomek_prep.transform(univr_x_test)
 
 univr_feat_names = []
 
@@ -3776,6 +3777,64 @@ print(f'ROC AUC for University SGD model (training): {univr_sgd_auc:.4f}\n')
 univr_sgd_fpr, univr_sgd_tpr, univr_thresholds = roc_curve(univr_y_train, univr_sgd_probs, drop_intermediate=False)
 
 #%%
+# XGBoost model
+
+# Pullman XGB
+class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
+
+pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
+pullm_xgb_probs = pullm_xgb_probs[:, 1]
+pullm_xgb_auc = roc_auc_score(pullm_y_train, pullm_xgb_probs)
+
+print(f'\nOverall accuracy for Pullman XGB model (training): {pullm_xgb.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
+
+pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgb_probs, drop_intermediate=False)
+
+#%%
+# Vancouver XGB
+class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
+
+vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
+vanco_xgb_probs = vanco_xgb_probs[:, 1]
+vanco_xgb_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
+
+print(f'\nOverall accuracy for Vancouver XGB model (training): {vanco_xgb.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
+
+vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgb_probs, drop_intermediate=False)
+
+#%%
+# Tri-Cities XGB
+class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(trici_x_train, trici_y_train)
+
+trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
+trici_xgb_probs = trici_xgb_probs[:, 1]
+trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
+
+print(f'\nOverall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
+
+trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgb_probs, drop_intermediate=False)
+
+#%%
+# Univeristy XGB
+class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(univr_x_train, univr_y_train)
+
+univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
+univr_xgb_probs = univr_xgb_probs[:, 1]
+univr_xgb_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
+
+print(f'\nOverall accuracy for Univeristy XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for Univeristy XGB model (training): {univr_xgb_auc:.4f}\n')
+
+univr_xgb_fpr, univr_xgb_tpr, univr_thresholds = roc_curve(univr_y_train, univr_xgb_probs, drop_intermediate=False)
+
+#%%
 # Multi-layer perceptron model
 
 # Pullman MLP
@@ -4003,6 +4062,8 @@ pullm_lreg_pred_probs = pullm_lreg.predict_proba(pullm_x_test)
 pullm_lreg_pred_probs = pullm_lreg_pred_probs[:, 1]
 pullm_sgd_pred_probs = pullm_sgd.predict_proba(pullm_x_test)
 pullm_sgd_pred_probs = pullm_sgd_pred_probs[:, 1]
+pullm_xgb_pred_probs = pullm_xgb.predict_proba(pullm_x_test)
+pullm_xgb_pred_probs = pullm_xgb_pred_probs[:, 1]
 # pullm_mlp_pred_probs = pullm_mlp.predict_proba(pullm_x_test)
 # pullm_mlp_pred_probs = pullm_mlp_pred_probs[:, 1]
 pullm_vcf_pred_probs = pullm_vcf.predict_proba(pullm_x_test)
@@ -4014,6 +4075,8 @@ vanco_lreg_pred_probs = vanco_lreg.predict_proba(vanco_x_test)
 vanco_lreg_pred_probs = vanco_lreg_pred_probs[:, 1]
 vanco_sgd_pred_probs = vanco_sgd.predict_proba(vanco_x_test)
 vanco_sgd_pred_probs = vanco_sgd_pred_probs[:, 1]
+vanco_xgb_pred_probs = vanco_xgb.predict_proba(vanco_x_test)
+vanco_xgb_pred_probs = vanco_xgb_pred_probs[:, 1]
 # vanco_mlp_pred_probs = vanco_mlp.predict_proba(vanco_x_test)
 # vanco_mlp_pred_probs = vanco_mlp_pred_probs[:, 1]
 vanco_vcf_pred_probs = vanco_vcf.predict_proba(vanco_x_test)
@@ -4025,6 +4088,8 @@ trici_lreg_pred_probs = trici_lreg.predict_proba(trici_x_test)
 trici_lreg_pred_probs = trici_lreg_pred_probs[:, 1]
 trici_sgd_pred_probs = trici_sgd.predict_proba(trici_x_test)
 trici_sgd_pred_probs = trici_sgd_pred_probs[:, 1]
+trici_xgb_pred_probs = trici_xgb.predict_proba(trici_x_test)
+trici_xgb_pred_probs = trici_xgb_pred_probs[:, 1]
 # trici_mlp_pred_probs = trici_mlp.predict_proba(trici_x_test)
 # trici_mlp_pred_probs = trici_mlp_pred_probs[:, 1]
 trici_vcf_pred_probs = trici_vcf.predict_proba(trici_x_test)
@@ -4036,6 +4101,8 @@ univr_lreg_pred_probs = univr_lreg.predict_proba(univr_x_test)
 univr_lreg_pred_probs = univr_lreg_pred_probs[:, 1]
 univr_sgd_pred_probs = univr_sgd.predict_proba(univr_x_test)
 univr_sgd_pred_probs = univr_sgd_pred_probs[:, 1]
+univr_xgb_pred_probs = univr_xgb.predict_proba(univr_x_test)
+univr_xgb_pred_probs = univr_xgb_pred_probs[:, 1]
 # univr_mlp_pred_probs = univr_mlp.predict_proba(univr_x_test)
 # univr_mlp_pred_probs = univr_mlp_pred_probs[:, 1]
 univr_vcf_pred_probs = univr_vcf.predict_proba(univr_x_test)
@@ -4052,6 +4119,8 @@ pullm_pred_outcome['lr_prob'] = pd.DataFrame(pullm_lreg_pred_probs)
 pullm_pred_outcome['lr_pred'] = pullm_lreg.predict(pullm_x_test)
 pullm_pred_outcome['sgd_prob'] = pd.DataFrame(pullm_sgd_pred_probs)
 pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
+pullm_pred_outcome['xgb_prob'] = pd.DataFrame(pullm_xgb_pred_probs)
+pullm_pred_outcome['xgb_pred'] = pullm_xgb.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_prob'] = pd.DataFrame(pullm_mlp_pred_probs)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
@@ -4064,6 +4133,8 @@ vanco_pred_outcome['lr_prob'] = pd.DataFrame(vanco_lreg_pred_probs)
 vanco_pred_outcome['lr_pred'] = vanco_lreg.predict(vanco_x_test)
 vanco_pred_outcome['sgd_prob'] = pd.DataFrame(vanco_sgd_pred_probs)
 vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
+vanco_pred_outcome['xgb_prob'] = pd.DataFrame(vanco_xgb_pred_probs)
+vanco_pred_outcome['xgb_pred'] = vanco_xgb.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_prob'] = pd.DataFrame(vanco_mlp_pred_probs)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
@@ -4076,6 +4147,8 @@ trici_pred_outcome['lr_prob'] = pd.DataFrame(trici_lreg_pred_probs)
 trici_pred_outcome['lr_pred'] = trici_lreg.predict(trici_x_test)
 trici_pred_outcome['sgd_prob'] = pd.DataFrame(trici_sgd_pred_probs)
 trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
+trici_pred_outcome['xgb_prob'] = pd.DataFrame(trici_xgb_pred_probs)
+trici_pred_outcome['xgb_pred'] = trici_xgb.predict(trici_x_test)
 # trici_pred_outcome['mlp_prob'] = pd.DataFrame(trici_mlp_pred_probs)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
@@ -4088,6 +4161,8 @@ univr_pred_outcome['lr_prob'] = pd.DataFrame(univr_lreg_pred_probs)
 univr_pred_outcome['lr_pred'] = univr_lreg.predict(univr_x_test)
 univr_pred_outcome['sgd_prob'] = pd.DataFrame(univr_sgd_pred_probs)
 univr_pred_outcome['sgd_pred'] = univr_sgd.predict(univr_x_test)
+univr_pred_outcome['xgb_prob'] = pd.DataFrame(univr_xgb_pred_probs)
+univr_pred_outcome['xgb_pred'] = univr_xgb.predict(univr_x_test)
 # univr_pred_outcome['mlp_prob'] = pd.DataFrame(univr_mlp_pred_probs)
 # univr_pred_outcome['mlp_pred'] = univr_mlp.predict(univr_x_test)
 univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)

@@ -19,6 +19,7 @@ from sklearn.model_selection import GridSearchCV
 from statsmodels.api import OLS
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+from xgboost import XGBClassifier
 
 #%%
 # Global variables
@@ -2141,7 +2142,7 @@ pullm_tomek_prep = make_column_transformer(
 )
 
 pullm_x_train = pullm_tomek_prep.fit_transform(pullm_x_train)
-pullm_x_test = pullm_tomek_prep.fit_transform(pullm_x_test)
+pullm_x_test = pullm_tomek_prep.transform(pullm_x_test)
 
 pullm_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 pullm_x_train, pullm_y_train = pullm_under.fit_resample(pullm_x_train, pullm_y_train)
@@ -2402,7 +2403,7 @@ vanco_tomek_prep = make_column_transformer(
 )
 
 vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
-vanco_x_test = vanco_tomek_prep.fit_transform(vanco_x_test)
+vanco_x_test = vanco_tomek_prep.transform(vanco_x_test)
 
 vanco_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 vanco_x_train, vanco_y_train = vanco_under.fit_resample(vanco_x_train, vanco_y_train)
@@ -2663,7 +2664,7 @@ trici_tomek_prep = make_column_transformer(
 )
 
 trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
-trici_x_test = trici_tomek_prep.fit_transform(trici_x_test)
+trici_x_test = trici_tomek_prep.transform(trici_x_test)
 
 trici_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
 trici_x_train, trici_y_train = trici_under.fit_resample(trici_x_train, trici_y_train)
@@ -3027,6 +3028,50 @@ sns.heatmap(trici_sgd_df, annot=True, fmt='d', cbar=None, cmap='Blues')
 plt.title('SGD CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
+
+#%%
+# XGBoost model
+
+# Pullman XGB
+class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
+
+pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
+pullm_xgb_probs = pullm_xgb_probs[:, 1]
+pullm_xgb_auc = roc_auc_score(pullm_y_train, pullm_xgb_probs)
+
+print(f'\nOverall accuracy for Pullman XGB model (training): {pullm_xgb.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
+
+pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgb_probs, drop_intermediate=False)
+
+#%%
+# Vancouver XGB
+class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
+
+vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
+vanco_xgb_probs = vanco_xgb_probs[:, 1]
+vanco_xgb_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
+
+print(f'\nOverall accuracy for Vancouver XGB model (training): {vanco_xgb.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
+
+vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgb_probs, drop_intermediate=False)
+
+#%%
+# Tri-Cities XGB
+class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(trici_x_train, trici_y_train)
+
+trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
+trici_xgb_probs = trici_xgb_probs[:, 1]
+trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
+
+print(f'\nOverall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
+
+trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgb_probs, drop_intermediate=False)
 
 #%%
 # Multi-layer perceptron model

@@ -135,7 +135,7 @@ run;
 				when a.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
 					else 'missing'
 			end as parent2_highest_educ_lvl,
-			b.distance as distance,
+			coalesce(b.PULLM_distance_km, b2.VANCO_distance_km, b3.TRICI_distance_km, b4.EVERE_distance_km, b5.SPOKA_distance_km, b6.PULLM_distance_km) as distance,
 			l.cpi_adj,
 			c.median_inc as median_inc_wo_cpi,
 			c.median_inc*l.cpi_adj as median_inc,
@@ -166,8 +166,24 @@ run;
 			case when k.locale = '42' then 1 else 0 end as rural_distant,
 			case when k.locale = '43' then 1 else 0 end as rural_remote
 		from &dsn..new_student_enrolled_vw as a
-		left join acs.distance as b
-			on substr(a.last_sch_postal,1,5) = b.targetid
+		left join acs.distance_km as b
+			on substr(a.last_sch_postal,1,5) = b.inputid
+				and a.adj_acad_prog_primary_campus = 'PULLM'
+		left join acs.distance_km as b2
+			on substr(a.last_sch_postal,1,5) = b2.inputid
+				and a.adj_acad_prog_primary_campus = 'VANCO'
+		left join acs.distance_km as b3
+			on substr(a.last_sch_postal,1,5) = b3.inputid
+				and a.adj_acad_prog_primary_campus = 'TRICI'
+		left join acs.distance_km as b4
+			on substr(a.last_sch_postal,1,5) = b4.inputid
+				and a.adj_acad_prog_primary_campus = 'EVERE'
+		left join acs.distance_km as b5
+			on substr(a.last_sch_postal,1,5) = b5.inputid
+				and a.adj_acad_prog_primary_campus = 'SPOKA'
+		left join acs.distance_km as b6
+			on substr(a.last_sch_postal,1,5) = b6.inputid
+				and a.adj_acad_prog_primary_campus = 'ONLIN'
 		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
 			on substr(a.last_sch_postal,1,5) = c.geoid
 		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
@@ -2007,7 +2023,7 @@ run;
 				when a.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
 					else 'missing'
 			end as parent2_highest_educ_lvl,
-			b.distance as distance,
+			coalesce(b.PULLM_distance_km, b2.VANCO_distance_km, b3.TRICI_distance_km, b4.EVERE_distance_km, b5.SPOKA_distance_km, b6.PULLM_distance_km) as distance,
 			c.median_inc,
 			c.gini_indx,
 			d.pvrt_total/d.pvrt_base as pvrt_rate,
@@ -2035,8 +2051,24 @@ run;
 			case when k.locale = '42' then 1 else 0 end as rural_distant,
 			case when k.locale = '43' then 1 else 0 end as rural_remote
 		from &dsn..new_student_enrolled_vw as a
-		left join acs.distance as b
-			on substr(a.last_sch_postal,1,5) = b.targetid
+		left join acs.distance_km as b
+			on substr(a.last_sch_postal,1,5) = b.inputid
+				and a.adj_acad_prog_primary_campus = 'PULLM'
+		left join acs.distance_km as b2
+			on substr(a.last_sch_postal,1,5) = b2.inputid
+				and a.adj_acad_prog_primary_campus = 'VANCO'
+		left join acs.distance_km as b3
+			on substr(a.last_sch_postal,1,5) = b3.inputid
+				and a.adj_acad_prog_primary_campus = 'TRICI'
+		left join acs.distance_km as b4
+			on substr(a.last_sch_postal,1,5) = b4.inputid
+				and a.adj_acad_prog_primary_campus = 'EVERE'
+		left join acs.distance_km as b5
+			on substr(a.last_sch_postal,1,5) = b5.inputid
+				and a.adj_acad_prog_primary_campus = 'SPOKA'
+		left join acs.distance_km as b6
+			on substr(a.last_sch_postal,1,5) = b6.inputid
+				and a.adj_acad_prog_primary_campus = 'ONLIN'
 		left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
 			on substr(a.last_sch_postal,1,5) = c.geoid
 		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
