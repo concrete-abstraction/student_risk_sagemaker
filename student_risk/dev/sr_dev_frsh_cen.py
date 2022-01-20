@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import statsmodels.graphics.api as smg
-from imblearn.under_sampling import TomekLinks
+import shap
+from imblearn.under_sampling import TomekLinks, NearMiss
 from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
 from sklearn.compose import make_column_transformer
@@ -15,7 +15,8 @@ from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassi
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, cross_val_predict
+from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from statsmodels.api import OLS
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
@@ -252,14 +253,22 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
-						# 'fall_cum_gpa',
-						# 'spring_midterm_gpa_change',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -269,12 +278,12 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						'fall_stu_count',
 						# 'fall_sem_count',
 						'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
-						'fall_stu_contact_hrs',
+						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
-						'fall_oth_contact_hrs',
+						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'cum_adj_transfer_hours',
 						'resident',
@@ -316,9 +325,10 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'IB',
 						# 'AICE',
 						'IB_AICE', 
-						# 'term_credit_hours',
-						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_credit_hours',
+						# 'total_fall_units',
+						'fall_withdrawn_hours',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -419,14 +429,22 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							'high_school_gpa_mi',
-							# 'fall_cum_gpa',
-							# 'spring_midterm_gpa_change',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -436,12 +454,12 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							'fall_stu_count',
 							# 'fall_sem_count',
 							'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
-							'fall_stu_contact_hrs',
+							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
-							'fall_oth_contact_hrs',
+							# 'fall_oth_contact_hrs',
 							# 'total_fall_contact_hrs',
 							'cum_adj_transfer_hours',
 							'resident',
@@ -483,9 +501,10 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'IB',
 							# 'AICE',
 							'IB_AICE', 
-							# 'term_credit_hours',
-							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_credit_hours',
+							# 'total_fall_units',
+							'fall_withdrawn_hours',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -586,14 +605,22 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							'high_school_gpa_mi',
-							# 'fall_cum_gpa',
-							# 'spring_midterm_gpa_change',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -603,12 +630,12 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							'fall_stu_count',
 							# 'fall_sem_count',
 							'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
-							'fall_stu_contact_hrs',
+							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
-							'fall_oth_contact_hrs',
+							# 'fall_oth_contact_hrs',
 							# 'total_fall_contact_hrs',
 							'cum_adj_transfer_hours',
 							'resident',
@@ -650,9 +677,10 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'IB',
 							# 'AICE',
 							'IB_AICE', 
-							# 'term_credit_hours',
-							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_credit_hours',
+							# 'total_fall_units',
+							'fall_withdrawn_hours',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -763,8 +791,16 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
-						# 'fall_cum_gpa',
-						# 'spring_midterm_gpa_change',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -780,8 +816,8 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -827,9 +863,10 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'IB',
 						# 'AICE',
 						# 'IB_AICE', 
-						# 'term_credit_hours',
-						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_credit_hours',
+						# 'total_fall_units',
+						'fall_withdrawn_hours',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -930,8 +967,16 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							'high_school_gpa_mi',
-							# 'fall_cum_gpa',
-							# 'spring_midterm_gpa_change',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							# 'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -947,8 +992,8 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -994,9 +1039,10 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'IB',
 							# 'AICE',
 							# 'IB_AICE', 
-							# 'term_credit_hours',
-							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_credit_hours',
+							# 'total_fall_units',
+							'fall_withdrawn_hours',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1097,8 +1143,16 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							'high_school_gpa_mi',
-							# 'fall_cum_gpa',
-							# 'spring_midterm_gpa_change',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							# 'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1114,8 +1168,8 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -1161,9 +1215,10 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'IB',
 							# 'AICE',
 							# 'IB_AICE', 
-							# 'term_credit_hours',
-							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_credit_hours',
+							# 'total_fall_units',
+							'fall_withdrawn_hours',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1274,8 +1329,16 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
-						# 'fall_cum_gpa',
-						# 'spring_midterm_gpa_change',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -1291,8 +1354,8 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -1338,9 +1401,10 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'IB',
 						# 'AICE',
 						# 'IB_AICE', 
-						# 'term_credit_hours',
-						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_credit_hours',
+						# 'total_fall_units',
+						'fall_withdrawn_hours',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -1441,8 +1505,16 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							'high_school_gpa_mi',
-							# 'fall_cum_gpa',
-							# 'spring_midterm_gpa_change',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							# 'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1458,8 +1530,8 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -1505,9 +1577,10 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'IB',
 							# 'AICE',
 							# 'IB_AICE', 
-							# 'term_credit_hours',
-							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_credit_hours',
+							# 'total_fall_units',
+							'fall_withdrawn_hours',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1608,8 +1681,16 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							'high_school_gpa_mi',
-							# 'fall_cum_gpa',
-							# 'spring_midterm_gpa_change',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							# 'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1625,8 +1706,8 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -1672,9 +1753,10 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'IB',
 							# 'AICE',
 							# 'IB_AICE', 
-							# 'term_credit_hours',
-							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_credit_hours',
+							# 'total_fall_units',
+							'fall_withdrawn_hours',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -1785,8 +1867,16 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
-						# 'fall_cum_gpa',
-						# 'spring_midterm_gpa_change',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -1802,8 +1892,8 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -1849,9 +1939,10 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						# 'IB',
 						# 'AICE',
 						# 'IB_AICE', 
-						# 'term_credit_hours',
-						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_credit_hours',
+						# 'total_fall_units',
+						'fall_withdrawn_hours',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -1952,8 +2043,16 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							'high_school_gpa_mi',
-							# 'fall_cum_gpa',
-							# 'spring_midterm_gpa_change',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							# 'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -1969,8 +2068,8 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -2016,9 +2115,10 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							# 'IB',
 							# 'AICE',
 							# 'IB_AICE', 
-							# 'term_credit_hours',
-							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_credit_hours',
+							# 'total_fall_units',
+							'fall_withdrawn_hours',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -2119,8 +2219,16 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							# 'afl_greek_indicator',
 							'high_school_gpa',
 							'high_school_gpa_mi',
-							# 'fall_cum_gpa',
-							# 'spring_midterm_gpa_change',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							# 'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
 							'fall_avg_difficulty',
@@ -2136,8 +2244,8 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							# 'fall_stu_count',
 							# 'fall_sem_count',
 							# 'fall_oth_count',
-							'fall_lec_contact_hrs',
-							'fall_lab_contact_hrs',
+							# 'fall_lec_contact_hrs',
+							# 'fall_lab_contact_hrs',
 							# 'fall_int_contact_hrs',
 							# 'fall_stu_contact_hrs',
 							# 'fall_sem_contact_hrs',
@@ -2183,9 +2291,10 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							# 'IB',
 							# 'AICE',
 							# 'IB_AICE', 
-							# 'term_credit_hours',
-							'total_fall_units',
-							# 'term_withdrawn_hours',
+							'fall_credit_hours',
+							# 'total_fall_units',
+							'fall_withdrawn_hours',
+							# 'fall_withdrawn_ind',
 							# 'athlete',
 							'remedial',
 							# 'ACAD_PLAN',
@@ -2462,14 +2571,22 @@ pullm_x_test = pullm_testing_set[[
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
-						# 'fall_cum_gpa',
-						# 'spring_midterm_gpa_change',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -2479,12 +2596,12 @@ pullm_x_test = pullm_testing_set[[
 						'fall_stu_count',
 						# 'fall_sem_count',
 						'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
-						'fall_stu_contact_hrs',
+						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
-						'fall_oth_contact_hrs',
+						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
 						'cum_adj_transfer_hours',
 						'resident',
@@ -2526,9 +2643,10 @@ pullm_x_test = pullm_testing_set[[
 						# 'IB',
 						# 'AICE',
 						'IB_AICE', 
-						# 'term_credit_hours',
-						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_credit_hours',
+						# 'total_fall_units',
+						'fall_withdrawn_hours',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2625,11 +2743,20 @@ pullm_tomek_prep = make_column_transformer(
 						# 'pct_two',
 						# 'pct_non',
 						# 'pct_hisp',
-						# 'term_credit_hours',
 						'high_school_gpa',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
+						# 'fall_avg_difficulty',
 						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
 						# 'fall_avg_pct_CDF',
@@ -2639,16 +2766,17 @@ pullm_tomek_prep = make_column_transformer(
 						'fall_stu_count',
 						# 'fall_sem_count',
 						'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
-						'fall_stu_contact_hrs',
+						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
-						'fall_oth_contact_hrs',
+						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
-						'total_fall_units',
+						# 'total_fall_units',
+						'fall_credit_hours',
+						'fall_withdrawn_hours',
 						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -2738,8 +2866,16 @@ vanco_x_test = vanco_testing_set[[
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
-						# 'fall_cum_gpa',
-						# 'spring_midterm_gpa_change',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2755,8 +2891,8 @@ vanco_x_test = vanco_testing_set[[
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -2802,9 +2938,10 @@ vanco_x_test = vanco_testing_set[[
 						# 'IB',
 						# 'AICE',
 						# 'IB_AICE', 
-						# 'term_credit_hours',
-						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_credit_hours',
+						# 'total_fall_units',
+						'fall_withdrawn_hours',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -2901,8 +3038,17 @@ vanco_tomek_prep = make_column_transformer(
 						# 'pct_two',
 						# 'pct_non',
 						# 'pct_hisp',
-						# 'term_credit_hours',
 						'high_school_gpa',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -2915,16 +3061,17 @@ vanco_tomek_prep = make_column_transformer(
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
 						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
-						'total_fall_units',
+						# 'total_fall_units',
+						'fall_credit_hours',
+						'fall_withdrawn_hours',
 						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -3014,8 +3161,16 @@ trici_x_test = trici_testing_set[[
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
-						# 'fall_cum_gpa',
-						# 'spring_midterm_gpa_change',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3031,8 +3186,8 @@ trici_x_test = trici_testing_set[[
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -3078,9 +3233,10 @@ trici_x_test = trici_testing_set[[
 						# 'IB',
 						# 'AICE',
 						# 'IB_AICE', 
-						# 'term_credit_hours',
-						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_credit_hours',
+						# 'total_fall_units',
+						'fall_withdrawn_hours',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -3177,8 +3333,17 @@ trici_tomek_prep = make_column_transformer(
 						# 'pct_two',
 						# 'pct_non',
 						# 'pct_hisp',
-						# 'term_credit_hours',
 						'high_school_gpa',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3191,16 +3356,17 @@ trici_tomek_prep = make_column_transformer(
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
 						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
-						'total_fall_units',
+						# 'total_fall_units',
+						'fall_credit_hours',
+						'fall_withdrawn_hours',
 						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -3290,8 +3456,16 @@ univr_x_test = univr_testing_set[[
 						# 'afl_greek_indicator',
 						'high_school_gpa',
 						'high_school_gpa_mi',
-						# 'fall_cum_gpa',
-						# 'spring_midterm_gpa_change',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3307,8 +3481,8 @@ univr_x_test = univr_testing_set[[
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
@@ -3354,9 +3528,10 @@ univr_x_test = univr_testing_set[[
 						# 'IB',
 						# 'AICE',
 						# 'IB_AICE', 
-						# 'term_credit_hours',
-						'total_fall_units',
-						# 'term_withdrawn_hours',
+						'fall_credit_hours',
+						# 'total_fall_units',
+						'fall_withdrawn_hours',
+						# 'fall_withdrawn_ind',
 						# 'athlete',
 						'remedial',
 						# 'ACAD_PLAN',
@@ -3453,8 +3628,17 @@ univr_tomek_prep = make_column_transformer(
 						# 'pct_two',
 						# 'pct_non',
 						# 'pct_hisp',
-						# 'term_credit_hours',
 						'high_school_gpa',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						'fall_avg_difficulty',
@@ -3467,16 +3651,17 @@ univr_tomek_prep = make_column_transformer(
 						# 'fall_stu_count',
 						# 'fall_sem_count',
 						# 'fall_oth_count',
-						'fall_lec_contact_hrs',
-						'fall_lab_contact_hrs',
+						# 'fall_lec_contact_hrs',
+						# 'fall_lab_contact_hrs',
 						# 'fall_int_contact_hrs',
 						# 'fall_stu_contact_hrs',
 						# 'fall_sem_contact_hrs',
 						# 'fall_oth_contact_hrs',
 						# 'total_fall_contact_hrs',
-						'total_fall_units',
+						# 'total_fall_units',
+						'fall_credit_hours',
+						'fall_withdrawn_hours',
 						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
 						# 'fed_efc',
 						# 'fed_need', 
 						'unmet_need_ofr'
@@ -3541,10 +3726,9 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
 				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count + fall_stu_count + fall_oth_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs + fall_stu_contact_hrs + fall_oth_contact_hrs \
-				+ total_fall_units \
+				+ fall_credit_hours \
+				+ fall_withdrawn_hours \
                 + honors_program_ind \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
 				+ business + comm + education + medicine + nursing + vet_med \
@@ -3555,6 +3739,8 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ cum_adj_transfer_hours \
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
+				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_grade_count + fall_term_S_grade_count + fall_term_W_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
@@ -3575,12 +3761,14 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
-				+ total_fall_units \
+				+ fall_credit_hours \
+				+ fall_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
+				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
@@ -3601,12 +3789,14 @@ trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
-				+ total_fall_units \
+				+ fall_credit_hours \
+				+ fall_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
+				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
@@ -3627,12 +3817,14 @@ univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
                 + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
-				+ fall_lec_contact_hrs + fall_lab_contact_hrs \
-				+ total_fall_units \
+				+ fall_credit_hours \
+				+ fall_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
+				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=univr_logit_df, return_type='dataframe')
@@ -3700,15 +3892,19 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 
 #%%
 # Pullman logistic
-pullm_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
+pullm_lreg_ccv = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
 
-pullm_lreg_probs = pullm_lreg.predict_proba(pullm_x_train)
+# Pullman logistic calibration
+# pullm_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False)
+# pullm_lreg_ccv = CalibratedClassifierCV(pullm_lreg, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
+
+pullm_lreg_probs = pullm_lreg_ccv.predict_proba(pullm_x_train)
 pullm_lreg_probs = pullm_lreg_probs[:, 1]
 pullm_lreg_auc = roc_auc_score(pullm_y_train, pullm_lreg_probs)
 
-print(f'Overall accuracy for Pullman logistic model (training): {pullm_lreg.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'Overall accuracy for Pullman logistic model (training): {pullm_lreg_ccv.score(pullm_x_train, pullm_y_train):.4f}')
 print(f'ROC AUC for Pullman logistic model (training): {pullm_lreg_auc:.4f}')
-print(f'Overall accuracy for Pullman logistic model (testing): {pullm_lreg.score(pullm_x_test, pullm_y_test):.4f}')
+print(f'Overall accuracy for Pullman logistic model (testing): {pullm_lreg_ccv.score(pullm_x_test, pullm_y_test):.4f}')
 
 pullm_lreg_fpr, pullm_lreg_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_lreg_probs, drop_intermediate=False)
 
@@ -3719,12 +3915,23 @@ plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('LOGISTIC ROC CURVE (TRAINING)')
 plt.show()
 
+pullm_lreg_y, pullm_lreg_x = calibration_curve(pullm_y_train, pullm_lreg_probs, n_bins=10)
+
+plt.plot(pullm_lreg_y, pullm_lreg_x, marker = '.', color='red', lw=2, label = 'Logistic Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('LOGISTIC CALIBRATION PLOT (TRAINING)')
+plt.show()
+
 #%%
 # Pullman confusion matrix
-pullm_lreg_matrix = confusion_matrix(pullm_y_test, pullm_lreg.predict(pullm_x_test))
+pullm_lreg_matrix = confusion_matrix(pullm_y_test, pullm_lreg_ccv.predict(pullm_x_test))
 pullm_lreg_df = pd.DataFrame(pullm_lreg_matrix)
 
-sns.heatmap(pullm_lreg_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(pullm_lreg_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('LOGISTIC CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
@@ -3742,15 +3949,19 @@ print(f'Best parameters: {vanco_gridsearch.best_params_}')
 
 #%%
 # Vancouver logistic
-vanco_lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
+vanco_lreg_ccv = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
 
-vanco_lreg_probs = vanco_lreg.predict_proba(vanco_x_train)
+# Vancouver logistic calibration
+# vanco_lreg_ccv = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False)
+# vanco_lreg_ccv = CalibratedClassifierCV(vanco_lreg, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
+
+vanco_lreg_probs = vanco_lreg_ccv.predict_proba(vanco_x_train)
 vanco_lreg_probs = vanco_lreg_probs[:, 1]
 vanco_lreg_auc = roc_auc_score(vanco_y_train, vanco_lreg_probs)
 
-print(f'Overall accuracy for Vancouver logistic model (training): {vanco_lreg.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'Overall accuracy for Vancouver logistic model (training): {vanco_lreg_ccv.score(vanco_x_train, vanco_y_train):.4f}')
 print(f'ROC AUC for Vancouver logistic model (training): {vanco_lreg_auc:.4f}')
-print(f'Overall accuracy for Vancouver logistic model (testing): {vanco_lreg.score(vanco_x_test, vanco_y_test):.4f}')
+print(f'Overall accuracy for Vancouver logistic model (testing): {vanco_lreg_ccv.score(vanco_x_test, vanco_y_test):.4f}')
 
 vanco_lreg_fpr, vanco_lreg_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_lreg_probs, drop_intermediate=False)
 
@@ -3761,12 +3972,23 @@ plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('LOGISTIC ROC CURVE (TRAINING)')
 plt.show()
 
+vanco_lreg_y, vanco_lreg_x = calibration_curve(vanco_y_train, vanco_lreg_probs, n_bins=10)
+
+plt.plot(vanco_lreg_y, vanco_lreg_x, marker = '.', color='red', lw=2, label = 'Logistic Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('LOGISTIC CALIBRATION PLOT')
+plt.show()
+
 #%%
 # Vancouver confusion matrix
-vanco_lreg_matrix = confusion_matrix(vanco_y_test, vanco_lreg.predict(vanco_x_test))
+vanco_lreg_matrix = confusion_matrix(vanco_y_test, vanco_lreg_ccv.predict(vanco_x_test))
 vanco_lreg_df = pd.DataFrame(vanco_lreg_matrix)
 
-sns.heatmap(vanco_lreg_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(vanco_lreg_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('LOGISTIC CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
@@ -3784,15 +4006,19 @@ print(f'Best parameters: {trici_gridsearch.best_params_}')
 
 #%%
 # Tri-Cities logistic
-trici_lreg = LogisticRegression(penalty='elasticnet', solver='saga', class_weight='balanced', max_iter=1000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
+trici_lreg_ccv = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
 
-trici_lreg_probs = trici_lreg.predict_proba(trici_x_train)
+# Tri-Cities logistic calibration
+# trici_lreg_ccv = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False)
+# trici_lreg_ccv = CalibratedClassifierCV(trici_lreg, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
+
+trici_lreg_probs = trici_lreg_ccv.predict_proba(trici_x_train)
 trici_lreg_probs = trici_lreg_probs[:, 1]
 trici_lreg_auc = roc_auc_score(trici_y_train, trici_lreg_probs)
 
-print(f'Overall accuracy for Tri-Cities logistic model (training): {trici_lreg.score(trici_x_train, trici_y_train):.4f}')
+print(f'Overall accuracy for Tri-Cities logistic model (training): {trici_lreg_ccv.score(trici_x_train, trici_y_train):.4f}')
 print(f'ROC AUC for Tri-Cities logistic model (training): {trici_lreg_auc:.4f}')
-print(f'Overall accuracy for Tri-Cities logistic model (testing): {trici_lreg.score(trici_x_test, trici_y_test):.4f}')
+print(f'Overall accuracy for Tri-Cities logistic model (testing): {trici_lreg_ccv.score(trici_x_test, trici_y_test):.4f}')
 
 trici_lreg_fpr, trici_lreg_tpr, trici_thresholds = roc_curve(trici_y_train, trici_lreg_probs, drop_intermediate=False)
 
@@ -3803,12 +4029,23 @@ plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('LOGISTIC ROC CURVE (TRAINING)')
 plt.show()
 
+trici_lreg_y, trici_lreg_x = calibration_curve(trici_y_train, trici_lreg_probs, n_bins=10)
+
+plt.plot(trici_lreg_y, trici_lreg_x, marker = '.', color='red', lw=2, label = 'Logistic Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('LOGISTIC CALIBRATION PLOT')
+plt.show()
+
 #%%
 # Tri-Cities confusion matrix
-trici_lreg_matrix = confusion_matrix(trici_y_test, trici_lreg.predict(trici_x_test))
+trici_lreg_matrix = confusion_matrix(trici_y_test, trici_lreg_ccv.predict(trici_x_test))
 trici_lreg_df = pd.DataFrame(trici_lreg_matrix)
 
-sns.heatmap(trici_lreg_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(trici_lreg_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('LOGISTIC CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
@@ -3817,15 +4054,19 @@ plt.show()
 # Stochastic gradient descent model
 
 # Pullman SGD
-pullm_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(pullm_x_train, pullm_y_train)
+pullm_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(pullm_x_train, pullm_y_train)
 
-pullm_sgd_probs = pullm_sgd.predict_proba(pullm_x_train)
+# Pullman SGD calibration
+# pullm_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(pullm_x_train, pullm_y_train)
+# pullm_sgd_ccv = CalibratedClassifierCV(pullm_sgd, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
+
+pullm_sgd_probs = pullm_sgd_ccv.predict_proba(pullm_x_train)
 pullm_sgd_probs = pullm_sgd_probs[:, 1]
 pullm_sgd_auc = roc_auc_score(pullm_y_train, pullm_sgd_probs)
 
-print(f'\nOverall accuracy for Pullman SGD model (training): {pullm_sgd.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'\nOverall accuracy for Pullman SGD model (training): {pullm_sgd_ccv.score(pullm_x_train, pullm_y_train):.4f}')
 print(f'ROC AUC for Pullman SGD model (training): {pullm_sgd_auc:.4f}')
-print(f'Overall accuracy for Pullman SGD model (testing): {pullm_sgd.score(pullm_x_test, pullm_y_test):.4f}')
+print(f'Overall accuracy for Pullman SGD model (testing): {pullm_sgd_ccv.score(pullm_x_test, pullm_y_test):.4f}')
 
 pullm_sgd_fpr, pullm_sgd_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_sgd_probs, drop_intermediate=False)
 
@@ -3836,27 +4077,42 @@ plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('SGD ROC CURVE (TRAINING)')
 plt.show()
 
+pullm_sgd_y, pullm_sgd_x = calibration_curve(pullm_y_train, pullm_sgd_probs, n_bins=10)
+
+plt.plot(pullm_sgd_y, pullm_sgd_x, marker = '.', color='red', lw=2, label = 'SGD Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('SGD CALIBRATION PLOT')
+plt.show()
+
 #%%
 # Pullman SGD confusion matrix
-pullm_sgd_matrix = confusion_matrix(pullm_y_test, pullm_sgd.predict(pullm_x_test))
+pullm_sgd_matrix = confusion_matrix(pullm_y_test, pullm_sgd_ccv.predict(pullm_x_test))
 pullm_sgd_df = pd.DataFrame(pullm_sgd_matrix)
 
-sns.heatmap(pullm_sgd_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(pullm_sgd_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('SGD CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 #%%
 # Vancouver SGD
-vanco_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
+vanco_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
 
-vanco_sgd_probs = vanco_sgd.predict_proba(vanco_x_train)
+# Vancouver SGD calibration
+# vanco_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
+# vanco_sgd_ccv = CalibratedClassifierCV(vanco_sgd, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
+
+vanco_sgd_probs = vanco_sgd_ccv.predict_proba(vanco_x_train)
 vanco_sgd_probs = vanco_sgd_probs[:, 1]
 vanco_sgd_auc = roc_auc_score(vanco_y_train, vanco_sgd_probs)
 
-print(f'\nOverall accuracy for Vancouver SGD model (training): {vanco_sgd.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'\nOverall accuracy for Vancouver SGD model (training): {vanco_sgd_ccv.score(vanco_x_train, vanco_y_train):.4f}')
 print(f'ROC AUC for Vancouver SGD model (training): {vanco_sgd_auc:.4f}')
-print(f'Overall accuracy for Vancouver SGD model (testing): {vanco_sgd.score(vanco_x_test, vanco_y_test):.4f}')
+print(f'Overall accuracy for Vancouver SGD model (testing): {vanco_sgd_ccv.score(vanco_x_test, vanco_y_test):.4f}')
 
 vanco_sgd_fpr, vanco_sgd_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_sgd_probs, drop_intermediate=False)
 
@@ -3867,27 +4123,42 @@ plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('SGD ROC CURVE (TRAINING)')
 plt.show()
 
+vanco_sgd_y, vanco_sgd_x = calibration_curve(vanco_y_train, vanco_sgd_probs, n_bins=10)
+
+plt.plot(vanco_sgd_y, vanco_sgd_x, marker = '.', color='red', lw=2, label = 'SGD Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('SGD CALIBRATION PLOT')
+plt.show()
+
 #%%
 # Vancouver SGD confusion matrix
-vanco_sgd_matrix = confusion_matrix(vanco_y_test, vanco_sgd.predict(vanco_x_test))
+vanco_sgd_matrix = confusion_matrix(vanco_y_test, vanco_sgd_ccv.predict(vanco_x_test))
 vanco_sgd_df = pd.DataFrame(vanco_sgd_matrix)
 
-sns.heatmap(vanco_sgd_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(vanco_sgd_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('SGD CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 #%%
 # Tri-Cities SGD
-trici_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
+trici_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
 
-trici_sgd_probs = trici_sgd.predict_proba(trici_x_train)
+# Tri-Cities SGD calibration
+# trici_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
+# trici_sgd_ccv = CalibratedClassifierCV(trici_sgd, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
+
+trici_sgd_probs = trici_sgd_ccv.predict_proba(trici_x_train)
 trici_sgd_probs = trici_sgd_probs[:, 1]
 trici_sgd_auc = roc_auc_score(trici_y_train, trici_sgd_probs)
 
-print(f'\nOverall accuracy for Tri-Cities SGD model (training): {trici_sgd.score(trici_x_train, trici_y_train):.4f}')
+print(f'\nOverall accuracy for Tri-Cities SGD model (training): {trici_sgd_ccv.score(trici_x_train, trici_y_train):.4f}')
 print(f'ROC AUC for Tri-Cities SGD model (training): {trici_sgd_auc:.4f}')
-print(f'Overall accuracy for Tri-Cities SGD model (testing): {trici_sgd.score(trici_x_test, trici_y_test):.4f}')
+print(f'Overall accuracy for Tri-Cities SGD model (testing): {trici_sgd_ccv.score(trici_x_test, trici_y_test):.4f}')
 
 trici_sgd_fpr, trici_sgd_tpr, trici_thresholds = roc_curve(trici_y_train, trici_sgd_probs, drop_intermediate=False)
 
@@ -3898,12 +4169,23 @@ plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('SGD ROC CURVE (TRAINING)')
 plt.show()
 
+trici_sgd_y, trici_sgd_x = calibration_curve(trici_y_train, trici_sgd_probs, n_bins=10)
+
+plt.plot(trici_sgd_y, trici_sgd_x, marker = '.', color='red', lw=2, label = 'SGD Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('SGD CALIBRATION PLOT')
+plt.show()
+
 #%%
 # Tri-Cities SGD confusion matrix
-trici_sgd_matrix = confusion_matrix(trici_y_test, trici_sgd.predict(trici_x_test))
+trici_sgd_matrix = confusion_matrix(trici_y_test, trici_sgd_ccv.predict(trici_x_test))
 trici_sgd_df = pd.DataFrame(trici_sgd_matrix)
 
-sns.heatmap(trici_sgd_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(trici_sgd_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('SGD CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
@@ -3912,15 +4194,19 @@ plt.show()
 # Multi-layer perceptron model
 
 # Pullman MLP
-pullm_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=True).fit(pullm_x_train, pullm_y_train)
+pullm_mlp_ccv = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=True).fit(pullm_x_train, pullm_y_train)
 
-pullm_mlp_probs = pullm_mlp.predict_proba(pullm_x_train)
+# Pullman MLP calibration
+# pullm_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=True)
+# pullm_mlp_ccv = CalibratedClassifierCV(pullm_mlp, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
+
+pullm_mlp_probs = pullm_mlp_ccv.predict_proba(pullm_x_train)
 pullm_mlp_probs = pullm_mlp_probs[:, 1]
 pullm_mlp_auc = roc_auc_score(pullm_y_train, pullm_mlp_probs)
 
-print(f'\nOverall accuracy for Pullman multi-layer perceptron model (training): {pullm_mlp.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'\nOverall accuracy for Pullman multi-layer perceptron model (training): {pullm_mlp_ccv.score(pullm_x_train, pullm_y_train):.4f}')
 print(f'ROC AUC for Pullman multi-layer perceptron model (training): {pullm_mlp_auc:.4f}')
-print(f'Overall accuracy for Pullman multi-layer perceptron model (testing): {pullm_mlp.score(pullm_x_test, pullm_y_test):.4f}')
+print(f'Overall accuracy for Pullman multi-layer perceptron model (testing): {pullm_mlp_ccv.score(pullm_x_test, pullm_y_test):.4f}')
 
 pullm_mlp_fpr, pullm_mlp_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_mlp_probs, drop_intermediate=False)
 
@@ -3931,70 +4217,23 @@ plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('NEURAL NETWORK ROC CURVE (TRAINING)')
 plt.show()
 
-#%%
-# XGBoost model
+pullm_mlp_y, pullm_mlp_x = calibration_curve(pullm_y_train, pullm_mlp_probs, n_bins=10)
 
-# Pullman XGB
-class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
+plt.plot(pullm_mlp_y, pullm_mlp_x, marker = '.', color='red', lw=2, label = 'MLP Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
 
-pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
-pullm_xgb_probs = pullm_xgb_probs[:, 1]
-pullm_xgb_auc = roc_auc_score(pullm_y_train, pullm_xgb_probs)
-
-print(f'\nOverall accuracy for Pullman XGB model (training): {pullm_xgb.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
-
-pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgb_probs, drop_intermediate=False)
-
-#%%
-# Vancouver XGB
-class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
-
-vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
-vanco_xgb_probs = vanco_xgb_probs[:, 1]
-vanco_xgb_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
-
-print(f'\nOverall accuracy for Vancouver XGB model (training): {vanco_xgb.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
-
-vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgb_probs, drop_intermediate=False)
-
-#%%
-# Tri-Cities XGB
-class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(trici_x_train, trici_y_train)
-
-trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
-trici_xgb_probs = trici_xgb_probs[:, 1]
-trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
-
-print(f'\nOverall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
-
-trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgb_probs, drop_intermediate=False)
-
-#%%
-# Univeristy XGB
-class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(univr_x_train, univr_y_train)
-
-univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
-univr_xgb_probs = univr_xgb_probs[:, 1]
-univr_xgb_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
-
-print(f'\nOverall accuracy for Univeristy XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for Univeristy XGB model (training): {univr_xgb_auc:.4f}\n')
-
-univr_xgb_fpr, univr_xgb_tpr, univr_thresholds = roc_curve(univr_y_train, univr_xgb_probs, drop_intermediate=False)
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('MLP CALIBRATION PLOT')
+plt.show()
 
 #%%
 # Pullman MLP confusion matrix
-pullm_mlp_matrix = confusion_matrix(pullm_y_test, pullm_mlp.predict(pullm_x_test))
+pullm_mlp_matrix = confusion_matrix(pullm_y_test, pullm_mlp_ccv.predict(pullm_x_test))
 pullm_mlp_df = pd.DataFrame(pullm_mlp_matrix)
 
-sns.heatmap(pullm_mlp_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(pullm_mlp_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('NEURAL NETWORK CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
@@ -4025,7 +4264,7 @@ plt.show()
 vanco_mlp_matrix = confusion_matrix(vanco_y_test, vanco_mlp.predict(vanco_x_test))
 vanco_mlp_df = pd.DataFrame(vanco_mlp_matrix)
 
-sns.heatmap(vanco_mlp_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(vanco_mlp_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('NEURAL NETWORK CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
@@ -4056,8 +4295,241 @@ plt.show()
 trici_mlp_matrix = confusion_matrix(trici_y_test, trici_mlp.predict(trici_x_test))
 trici_mlp_df = pd.DataFrame(trici_mlp_matrix)
 
-sns.heatmap(trici_mlp_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(trici_mlp_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('NEURAL NETWORK CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# XGBoost model
+
+# Pullman XGBoost tuning
+class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
+
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_test, pullm_y_test)
+
+print(f'Best parameters: {pullm_gridsearch.best_params_}')
+
+#%%
+pullm_hyperparameters = [{'max_depth': [13],
+						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
+
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+
+print(f'Best parameters: {pullm_gridsearch.best_params_}')
+
+#%%
+pullm_hyperparameters = [{'max_depth': [14],
+						'gamma': [10],
+						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
+
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+
+print(f'Best parameters: {pullm_gridsearch.best_params_}')
+
+#%%
+# Pullman XGB
+class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+
+pullm_xgb_ccv = XGBClassifier(n_estimators=150, max_depth=13, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
+
+# Pullman XGB calibration
+# pullm_xgb = XGBClassifier(n_estimators=150, max_depth=11, use_label_encoder=False, gamma=8, scale_pos_weight=class_weight, eval_metric='logloss')
+# pullm_xgb_ccv = CalibratedClassifierCV(pullm_xgb, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
+
+pullm_xgb_probs = pullm_xgb_ccv.predict_proba(pullm_x_train)
+pullm_xgb_probs = pullm_xgb_probs[:, 1]
+pullm_xgb_auc = roc_auc_score(pullm_y_train, pullm_xgb_probs)
+
+print(f'\nOverall accuracy for Pullman XGB model (training): {pullm_xgb_ccv.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}')
+print(f'Overall accuracy for Pullman XGB model (testing): {pullm_xgb_ccv.score(pullm_x_test, pullm_y_test):.4f}')
+
+pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgb_probs, drop_intermediate=False)
+
+plt.plot(pullm_xgb_fpr, pullm_xgb_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('XGBOOST ROC CURVE (TRAINING)')
+plt.show()
+
+pullm_xgb_y, pullm_xgb_x = calibration_curve(pullm_y_train, pullm_xgb_probs, n_bins=10)
+
+plt.plot(pullm_xgb_y, pullm_xgb_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('XGBOOST CALIBRATION PLOT (TRAINING)')
+plt.show()
+
+#%%
+# Pullman confusion matrix
+pullm_xgb_matrix = confusion_matrix(pullm_y_test, pullm_xgb_ccv.predict_proba(pullm_x_test)[:, 1] > 0.5)
+pullm_xgb_df = pd.DataFrame(pullm_xgb_matrix)
+
+sns.heatmap(pullm_xgb_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
+plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# Vancouver XGBoost tuning
+class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
+
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_test, vanco_y_test)
+
+print(f'Best parameters: {vanco_gridsearch.best_params_}')
+
+#%%
+vanco_hyperparameters = [{'max_depth': [9],
+						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
+
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+
+print(f'Best parameters: {vanco_gridsearch.best_params_}')
+
+#%%
+vanco_hyperparameters = [{'max_depth': [9],
+						'gamma': [10],
+						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
+
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+
+print(f'Best parameters: {vanco_gridsearch.best_params_}')
+
+#%%
+# Vancouver XGB
+class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+
+vanco_xgb_ccv = XGBClassifier(n_estimators=150, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss').fit(vanco_x_train, vanco_y_train)
+
+# Vancouver XGB calibration
+# vanco_xgb = XGBClassifier(n_estimators=150, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
+# vanco_xgb_ccv = CalibratedClassifierCV(vanco_xgb, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
+
+vanco_xgb_probs = vanco_xgb_ccv.predict_proba(vanco_x_train)
+vanco_xgb_probs = vanco_xgb_probs[:, 1]
+vanco_xgb_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
+
+print(f'\nOverall accuracy for Vancouver XGB model (training): {vanco_xgb_ccv.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}')
+print(f'Overall accuracy for Vancouver XGB model (testing): {vanco_xgb_ccv.score(vanco_x_test, vanco_y_test):.4f}')
+
+vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgb_probs, drop_intermediate=False)
+
+plt.plot(vanco_xgb_fpr, vanco_xgb_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('XGBOOST ROC CURVE (TRAINING)')
+plt.show()
+
+vanco_xgb_y, vanco_xgb_x = calibration_curve(vanco_y_train, vanco_xgb_probs, n_bins=10)
+
+plt.plot(vanco_xgb_y, vanco_xgb_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('XGBOOST CALIBRATION PLOT (TRAINING)')
+plt.show()
+
+#%%
+# Vancouver confusion matrix
+vanco_xgb_matrix = confusion_matrix(vanco_y_test, vanco_xgb_ccv.predict_proba(vanco_x_test)[:, 1] > 0.5)
+vanco_xgb_df = pd.DataFrame(vanco_xgb_matrix)
+
+sns.heatmap(vanco_xgb_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
+plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# Tri-Cities XGBoost tuning
+class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
+
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_best_model = trici_gridsearch.fit(trici_x_test, trici_y_test)
+
+print(f'Best parameters: {trici_gridsearch.best_params_}')
+
+#%%
+trici_hyperparameters = [{'max_depth': [7],
+						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
+
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+
+print(f'Best parameters: {trici_gridsearch.best_params_}')
+
+#%%
+trici_hyperparameters = [{'max_depth': [7],
+						'gamma': [10],
+						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
+
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=150, scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+
+print(f'Best parameters: {trici_gridsearch.best_params_}')
+
+#%%
+# Tri-Cities XGB
+class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+
+trici_xgb_ccv = XGBClassifier(n_estimators=150, max_depth=7, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss').fit(trici_x_train, trici_y_train)
+
+# Tri-Cities XGB calibration
+# trici_xgb = XGBClassifier(n_estimators=150, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
+# trici_xgb_ccv = CalibratedClassifierCV(trici_xgb, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
+
+trici_xgb_probs = trici_xgb_ccv.predict_proba(trici_x_train)
+trici_xgb_probs = trici_xgb_probs[:, 1]
+trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
+
+print(f'\nOverall accuracy for Tri-Cities XGB model (training): {trici_xgb_ccv.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}')
+print(f'Overall accuracy for Tri-Cities XGB model (testing): {trici_xgb_ccv.score(trici_x_test, trici_y_test):.4f}')
+
+trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgb_probs, drop_intermediate=False)
+
+plt.plot(trici_xgb_fpr, trici_xgb_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('XGBOOST ROC CURVE (TRAINING)')
+plt.show()
+
+trici_xgb_y, trici_xgb_x = calibration_curve(trici_y_train, trici_xgb_probs, n_bins=10)
+
+plt.plot(trici_xgb_y, trici_xgb_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('XGBOOST CALIBRATION PLOT (TRAINING)')
+plt.show()
+
+#%%
+# Tri-Cities confusion matrix
+trici_xgb_matrix = confusion_matrix(trici_y_test, trici_xgb_ccv.predict_proba(trici_x_test)[:, 1] > 0.5)
+trici_xgb_df = pd.DataFrame(trici_xgb_matrix)
+
+sns.heatmap(trici_xgb_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
+plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
@@ -4065,7 +4537,7 @@ plt.show()
 # Ensemble model
 
 # Pullman VCF
-pullm_vcf = VotingClassifier(estimators=[('lreg', pullm_lreg), ('sgd', pullm_sgd)], voting='soft', weights=[1, 1]).fit(pullm_x_train, pullm_y_train)
+pullm_vcf = VotingClassifier(estimators=[('lreg', pullm_lreg_ccv), ('sgd', pullm_sgd_ccv)], voting='soft', weights=[1, 1]).fit(pullm_x_train, pullm_y_train)
 
 pullm_vcf_probs_train = pullm_vcf.predict_proba(pullm_x_train)
 pullm_vcf_probs_train = pullm_vcf_probs_train[:, 1]
@@ -4111,7 +4583,7 @@ plt.show()
 
 #%%
 # Vancouver VCF
-vanco_vcf = VotingClassifier(estimators=[('lreg', vanco_lreg), ('sgd', vanco_sgd)], voting='soft', weights=[1, 1]).fit(vanco_x_train, vanco_y_train)
+vanco_vcf = VotingClassifier(estimators=[('lreg', vanco_lreg_ccv), ('sgd', vanco_sgd_ccv)], voting='soft', weights=[1, 1]).fit(vanco_x_train, vanco_y_train)
 
 vanco_vcf_probs = vanco_vcf.predict_proba(vanco_x_train)
 vanco_vcf_probs = vanco_vcf_probs[:, 1]
@@ -4135,14 +4607,14 @@ plt.show()
 vanco_vcf_matrix = confusion_matrix(vanco_y_test, vanco_vcf.predict(vanco_x_test))
 vanco_vcf_df = pd.DataFrame(vanco_vcf_matrix)
 
-sns.heatmap(vanco_vcf_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(vanco_vcf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('ENSEMBLE CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 #%%
 # Tri-Cities VCF
-trici_vcf = VotingClassifier(estimators=[('lreg', trici_lreg), ('sgd', trici_sgd)], voting='soft', weights=[1, 1]).fit(trici_x_train, trici_y_train)
+trici_vcf = VotingClassifier(estimators=[('lreg', trici_lreg_ccv), ('sgd', trici_sgd_ccv)], voting='soft', weights=[1, 1]).fit(trici_x_train, trici_y_train)
 
 trici_vcf_probs = trici_vcf.predict_proba(trici_x_train)
 trici_vcf_probs = trici_vcf_probs[:, 1]
@@ -4166,33 +4638,111 @@ plt.show()
 trici_vcf_matrix = confusion_matrix(trici_y_test, trici_vcf.predict(trici_x_test))
 trici_vcf_df = pd.DataFrame(trici_vcf_matrix)
 
-sns.heatmap(trici_vcf_df, annot=True, fmt='d', cbar=None, cmap='Blues')
+sns.heatmap(trici_vcf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('ENSEMBLE CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 #%%
+# Pullman SHAP undersample
+# pullm_under_shap = NearMiss(sampling_strategy={0:(pullm_y_train[pullm_y_train == 0].count()//5), 1:(pullm_y_train[pullm_y_train == 1].count()//5)}, version=3, n_jobs=-1)
+# pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
+
+#%%
+# Pullman SHAP training (see: https://github.com/slundberg/shap)
+pullm_explainer = shap.TreeExplainer(model=pullm_xgb_ccv, data=pullm_x_train, model_output='predict_proba')
+
+#%%
+# Pullman SHAP prediction
+pullm_shap_values = pullm_explainer.shap_values(X=pullm_x_test)
+
+#%%
+# Pullman SHAP plots
+# for index in range(len(pullm_shap_values[0])):
+# 	shap.plots._waterfall.waterfall_legacy(pullm_explainer.expected_value[0], pullm_shap_values[0][index], pullm_x_test[index], feature_names=pullm_feat_names, max_display=4)
+
+#%%
+pullm_shap_results = []
+
+for index in range(len(pullm_shap_values[0])):
+	pullm_shap_results.extend(pd.DataFrame(data=pullm_shap_values[0][index].reshape(1, len(pullm_feat_names)), columns=pullm_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+
+pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
+
+#%%
+# Vancouver SHAP undersample
+# vanco_under_shap = NearMiss(sampling_strategy={0:(vanco_y_train[vanco_y_train == 0].count()//2), 1:(vanco_y_train[vanco_y_train == 1].count()//2)}, version=3, n_jobs=-1)
+# vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
+
+#%%
+# Vancouver SHAP training (see: https://github.com/slundberg/shap)
+vanco_explainer = shap.TreeExplainer(model=vanco_xgb_ccv, data=vanco_x_train, model_output='predict_proba')
+
+#%%
+# Vancouver SHAP prediction
+vanco_shap_values = vanco_explainer.shap_values(X=vanco_x_test)
+
+#%%
+# Vancouver SHAP plots
+# for index in range(len(vanco_shap_values[0])):
+# 	shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=vanco_feat_names, max_display=4)
+
+#%%
+vanco_shap_results = []
+
+for index in range(len(vanco_shap_values[0])):
+	vanco_shap_results.extend(pd.DataFrame(data=vanco_shap_values[0][index].reshape(1, len(vanco_feat_names)), columns=vanco_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+
+vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
+
+#%%
+# Tri-Cities SHAP undersample
+# trici_under_shap = NearMiss(sampling_strategy={0:(trici_y_train[trici_y_train == 0].count()//2), 1:(trici_y_train[trici_y_train == 1].count()//2)}, version=3, n_jobs=-1)
+# trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
+
+#%%
+# Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
+trici_explainer = shap.TreeExplainer(model=trici_xgb_ccv, data=trici_x_train, model_output='predict_proba')
+
+#%%
+# Tri-Cities SHAP prediction
+trici_shap_values = trici_explainer.shap_values(X=trici_x_test)
+
+#%%
+# Tri-Cities SHAP plots
+# for index in range(len(trici_shap_values[0])):
+# 	shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=trici_feat_names, max_display=4)
+
+#%%
+trici_shap_results = []
+
+for index in range(len(trici_shap_values[0])):
+	trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, len(trici_feat_names)), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+
+trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
+
+#%%
 # Prepare model predictions
 
 # Pullman probabilites
-pullm_lreg_pred_probs = pullm_lreg.predict_proba(pullm_x_test)
+pullm_lreg_pred_probs = pullm_lreg_ccv.predict_proba(pullm_x_test)
 pullm_lreg_pred_probs = pullm_lreg_pred_probs[:, 1]
-pullm_sgd_pred_probs = pullm_sgd.predict_proba(pullm_x_test)
+pullm_sgd_pred_probs = pullm_sgd_ccv.predict_proba(pullm_x_test)
 pullm_sgd_pred_probs = pullm_sgd_pred_probs[:, 1]
-pullm_xgb_pred_probs = pullm_xgb.predict_proba(pullm_x_test)
+pullm_xgb_pred_probs = pullm_xgb_ccv.predict_proba(pullm_x_test)
 pullm_xgb_pred_probs = pullm_xgb_pred_probs[:, 1]
-pullm_mlp_pred_probs = pullm_mlp.predict_proba(pullm_x_test)
+pullm_mlp_pred_probs = pullm_mlp_ccv.predict_proba(pullm_x_test)
 pullm_mlp_pred_probs = pullm_mlp_pred_probs[:, 1]
 pullm_vcf_pred_probs = pullm_vcf.predict_proba(pullm_x_test)
 pullm_vcf_pred_probs = pullm_vcf_pred_probs[:, 1]
 
 #%%
 # Vancouver probabilites
-vanco_lreg_pred_probs = vanco_lreg.predict_proba(vanco_x_test)
+vanco_lreg_pred_probs = vanco_lreg_ccv.predict_proba(vanco_x_test)
 vanco_lreg_pred_probs = vanco_lreg_pred_probs[:, 1]
-vanco_sgd_pred_probs = vanco_sgd.predict_proba(vanco_x_test)
+vanco_sgd_pred_probs = vanco_sgd_ccv.predict_proba(vanco_x_test)
 vanco_sgd_pred_probs = vanco_sgd_pred_probs[:, 1]
-vanco_xgb_pred_probs = vanco_xgb.predict_proba(vanco_x_test)
+vanco_xgb_pred_probs = vanco_xgb_ccv.predict_proba(vanco_x_test)
 vanco_xgb_pred_probs = vanco_xgb_pred_probs[:, 1]
 vanco_mlp_pred_probs = vanco_mlp.predict_proba(vanco_x_test)
 vanco_mlp_pred_probs = vanco_mlp_pred_probs[:, 1]
@@ -4201,11 +4751,11 @@ vanco_vcf_pred_probs = vanco_vcf_pred_probs[:, 1]
 
 #%%
 # Tri-Cities probabilities
-trici_lreg_pred_probs = trici_lreg.predict_proba(trici_x_test)
+trici_lreg_pred_probs = trici_lreg_ccv.predict_proba(trici_x_test)
 trici_lreg_pred_probs = trici_lreg_pred_probs[:, 1]
-trici_sgd_pred_probs = trici_sgd.predict_proba(trici_x_test)
+trici_sgd_pred_probs = trici_sgd_ccv.predict_proba(trici_x_test)
 trici_sgd_pred_probs = trici_sgd_pred_probs[:, 1]
-trici_xgb_pred_probs = trici_xgb.predict_proba(trici_x_test)
+trici_xgb_pred_probs = trici_xgb_ccv.predict_proba(trici_x_test)
 trici_xgb_pred_probs = trici_xgb_pred_probs[:, 1]
 trici_mlp_pred_probs = trici_mlp.predict_proba(trici_x_test)
 trici_mlp_pred_probs = trici_mlp_pred_probs[:, 1]
@@ -4217,24 +4767,24 @@ trici_vcf_pred_probs = trici_vcf_pred_probs[:, 1]
 
 # Pullman predicted outcome
 pullm_pred_outcome['lr_prob'] = pd.DataFrame(pullm_lreg_pred_probs)
-pullm_pred_outcome['lr_pred'] = pullm_lreg.predict(pullm_x_test)
+pullm_pred_outcome['lr_pred'] = pullm_lreg_ccv.predict(pullm_x_test)
 pullm_pred_outcome['sgd_prob'] = pd.DataFrame(pullm_sgd_pred_probs)
-pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
+pullm_pred_outcome['sgd_pred'] = pullm_sgd_ccv.predict(pullm_x_test)
 pullm_pred_outcome['xgb_prob'] = pd.DataFrame(pullm_xgb_pred_probs)
-pullm_pred_outcome['xgb_pred'] = pullm_xgb.predict(pullm_x_test)
+pullm_pred_outcome['xgb_pred'] = pullm_xgb_ccv.predict(pullm_x_test)
 pullm_pred_outcome['mlp_prob'] = pd.DataFrame(pullm_mlp_pred_probs)
-pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
+pullm_pred_outcome['mlp_pred'] = pullm_mlp_ccv.predict(pullm_x_test)
 pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
 
 #%%
 # Vancouver predicted outcome
 vanco_pred_outcome['lr_prob'] = pd.DataFrame(vanco_lreg_pred_probs)
-vanco_pred_outcome['lr_pred'] = vanco_lreg.predict(vanco_x_test)
+vanco_pred_outcome['lr_pred'] = vanco_lreg_ccv.predict(vanco_x_test)
 vanco_pred_outcome['sgd_prob'] = pd.DataFrame(vanco_sgd_pred_probs)
-vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
+vanco_pred_outcome['sgd_pred'] = vanco_sgd_ccv.predict(vanco_x_test)
 vanco_pred_outcome['xgb_prob'] = pd.DataFrame(vanco_xgb_pred_probs)
-vanco_pred_outcome['xgb_pred'] = vanco_xgb.predict(vanco_x_test)
+vanco_pred_outcome['xgb_pred'] = vanco_xgb_ccv.predict(vanco_x_test)
 vanco_pred_outcome['mlp_prob'] = pd.DataFrame(vanco_mlp_pred_probs)
 vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
@@ -4243,11 +4793,11 @@ vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
 #%%
 # Tri-Cities predicted outcome
 trici_pred_outcome['lr_prob'] = pd.DataFrame(trici_lreg_pred_probs)
-trici_pred_outcome['lr_pred'] = trici_lreg.predict(trici_x_test)
+trici_pred_outcome['lr_pred'] = trici_lreg_ccv.predict(trici_x_test)
 trici_pred_outcome['sgd_prob'] = pd.DataFrame(trici_sgd_pred_probs)
-trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
+trici_pred_outcome['sgd_pred'] = trici_sgd_ccv.predict(trici_x_test)
 trici_pred_outcome['xgb_prob'] = pd.DataFrame(trici_xgb_pred_probs)
-trici_pred_outcome['xgb_pred'] = trici_xgb.predict(trici_x_test)
+trici_pred_outcome['xgb_pred'] = trici_xgb_ccv.predict(trici_x_test)
 trici_pred_outcome['mlp_prob'] = pd.DataFrame(trici_mlp_pred_probs)
 trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)

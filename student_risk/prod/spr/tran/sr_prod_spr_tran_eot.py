@@ -87,17 +87,22 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'transfer_gpa_mi',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_avg_mi',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
-						'fall_midterm_W_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -258,17 +263,22 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'transfer_gpa_mi',
-							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_avg_mi',
-							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
-							'fall_midterm_W_grade_count',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -429,17 +439,22 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'transfer_gpa_mi',
-							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_avg_mi',
-							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
-							'fall_midterm_W_grade_count',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
+							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -572,7 +587,7 @@ pullm_testing_set = pullm_testing_set.reset_index()
 pullm_shap_outcome = pullm_testing_set['emplid'].copy(deep=True).values.tolist()
 
 pullm_pred_outcome = pullm_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -586,7 +601,7 @@ pullm_aggregate_outcome = pullm_testing_set[[
                             ]].copy(deep=True)
 
 pullm_current_outcome = pullm_testing_set[[ 
-                            'emplid'
+                            'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
 
@@ -624,17 +639,22 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'transfer_gpa_mi',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_avg_mi',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -795,17 +815,22 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'transfer_gpa_mi',
-							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_avg_mi',
-							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
 							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -966,17 +991,22 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'transfer_gpa_mi',
-							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_avg_mi',
-							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
 							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -1161,17 +1191,22 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'transfer_gpa_mi',
-						'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg',
 						# 'fall_midterm_gpa_avg_mi',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -1332,17 +1367,22 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'transfer_gpa_mi',
-							'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg',
 							# 'fall_midterm_gpa_avg_mi',
-							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
 							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -1503,17 +1543,22 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'transfer_gpa_mi',
-							'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg',
 							# 'fall_midterm_gpa_avg_mi',
-							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
 							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -1698,17 +1743,22 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][[
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'transfer_gpa_mi',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_avg_mi',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -1869,17 +1919,22 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'transfer_gpa_mi',
-							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_avg_mi',
-							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
 							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -2040,17 +2095,22 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							# 'afl_greek_indicator',
 							'transfer_gpa',
 							'transfer_gpa_mi',
-							'fall_midterm_gpa_avg',
-							'fall_midterm_gpa_avg_mi',
-							'fall_midterm_grade_count',
-							'fall_midterm_S_grade_count',
+							# 'fall_midterm_gpa_avg',
+							# 'fall_midterm_gpa_avg_mi',
+							# 'fall_midterm_grade_count',
+							# 'fall_midterm_S_grade_count',
 							# 'fall_midterm_W_grade_count',
+							'fall_term_gpa',
+							'fall_term_gpa_mi',
+							'fall_term_grade_count',
+							'fall_term_S_grade_count',
+							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -2403,17 +2463,22 @@ pullm_x_test = pullm_testing_set[[
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'transfer_gpa_mi',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_avg_mi',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
-						'fall_midterm_W_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -2571,16 +2636,22 @@ pullm_tomek_prep = make_column_transformer(
 						# 'pct_non',
 						# 'pct_hisp',
 						'transfer_gpa',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
-						'fall_midterm_W_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
+						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# # 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
+						# # 'fall_avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
@@ -2689,17 +2760,22 @@ vanco_x_test = vanco_testing_set[[
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'transfer_gpa_mi',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_avg_mi',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -2857,16 +2933,22 @@ vanco_tomek_prep = make_column_transformer(
 						# 'pct_non',
 						# 'pct_hisp',
 						'transfer_gpa',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# # 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
+						# # 'fall_avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
@@ -2973,17 +3055,22 @@ trici_x_test = trici_testing_set[[
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'transfer_gpa_mi',
-						'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg',
 						# 'fall_midterm_gpa_avg_mi',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -3141,16 +3228,22 @@ trici_tomek_prep = make_column_transformer(
 						# 'pct_non',
 						# 'pct_hisp',
 						'transfer_gpa',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# # 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
+						# # 'fall_avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
@@ -3257,17 +3350,22 @@ univr_x_test = univr_testing_set[[
 						# 'afl_greek_indicator',
 						'transfer_gpa',
 						'transfer_gpa_mi',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_gpa_avg_mi',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -3425,16 +3523,22 @@ univr_tomek_prep = make_column_transformer(
 						# 'pct_non',
 						# 'pct_hisp',
 						'transfer_gpa',
-						'fall_midterm_gpa_avg',
-						'fall_midterm_grade_count',
-						'fall_midterm_S_grade_count',
+						# 'fall_midterm_gpa_avg',
+						# 'fall_midterm_gpa_avg_mi',
+						# 'fall_midterm_grade_count',
+						# 'fall_midterm_S_grade_count',
 						# 'fall_midterm_W_grade_count',
+						'fall_term_gpa',
+						'fall_term_gpa_mi',
+						'fall_term_grade_count',
+						'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# # 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
+						# # 'fall_avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
@@ -3516,15 +3620,14 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
 				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
 				+ fall_withdrawn_hours \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
-				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
-				+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
+				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_grade_count + fall_term_S_grade_count + fall_term_W_grade_count \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3545,15 +3648,14 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
 				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
 				+ fall_withdrawn_hours \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
-				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
-				+ fall_midterm_grade_count + fall_midterm_S_grade_count \
+				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_grade_count + fall_term_S_grade_count \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3574,15 +3676,14 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
 				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
 				+ fall_withdrawn_hours \
 				+ AD_DTA + AD_AST + AP + RS + CHS \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
-				+ fall_midterm_gpa_avg \
-				+ fall_midterm_grade_count + fall_midterm_S_grade_count \
+				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_grade_count + fall_term_S_grade_count \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3603,15 +3704,14 @@ univr_y, univr_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
 				+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
 				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-				+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
 				+ fall_withdrawn_hours \
 				+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
-				+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
-				+ fall_midterm_grade_count + fall_midterm_S_grade_count \
+				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_grade_count + fall_term_S_grade_count \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3777,64 +3877,6 @@ print(f'ROC AUC for University SGD model (training): {univr_sgd_auc:.4f}\n')
 univr_sgd_fpr, univr_sgd_tpr, univr_thresholds = roc_curve(univr_y_train, univr_sgd_probs, drop_intermediate=False)
 
 #%%
-# XGBoost model
-
-# Pullman XGB
-class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
-
-pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
-pullm_xgb_probs = pullm_xgb_probs[:, 1]
-pullm_xgb_auc = roc_auc_score(pullm_y_train, pullm_xgb_probs)
-
-print(f'\nOverall accuracy for Pullman XGB model (training): {pullm_xgb.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
-
-pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgb_probs, drop_intermediate=False)
-
-#%%
-# Vancouver XGB
-class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
-
-vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
-vanco_xgb_probs = vanco_xgb_probs[:, 1]
-vanco_xgb_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
-
-print(f'\nOverall accuracy for Vancouver XGB model (training): {vanco_xgb.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
-
-vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgb_probs, drop_intermediate=False)
-
-#%%
-# Tri-Cities XGB
-class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(trici_x_train, trici_y_train)
-
-trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
-trici_xgb_probs = trici_xgb_probs[:, 1]
-trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
-
-print(f'\nOverall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
-
-trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgb_probs, drop_intermediate=False)
-
-#%%
-# Univeristy XGB
-class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgb = XGBClassifier(scale_pos_weight=class_weight, eval_metric='logloss', use_label_encoder=False).fit(univr_x_train, univr_y_train)
-
-univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
-univr_xgb_probs = univr_xgb_probs[:, 1]
-univr_xgb_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
-
-print(f'\nOverall accuracy for Univeristy XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for Univeristy XGB model (training): {univr_xgb_auc:.4f}\n')
-
-univr_xgb_fpr, univr_xgb_tpr, univr_thresholds = roc_curve(univr_y_train, univr_xgb_probs, drop_intermediate=False)
-
-#%%
 # Multi-layer perceptron model
 
 # Pullman MLP
@@ -3876,76 +3918,126 @@ univr_xgb_fpr, univr_xgb_tpr, univr_thresholds = roc_curve(univr_y_train, univr_
 # mlp_fpr, mlp_tpr, thresholds = roc_curve(trici_y_train, trici_mlp_probs, drop_intermediate=False)
 
 #%%
+# XGBoost model
+
+# Pullman XGB
+class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_xgb = XGBClassifier(n_estimators=150, max_depth=14, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
+
+pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
+pullm_xgb_probs = pullm_xgb_probs[:, 1]
+pullm_xgb_auc = roc_auc_score(pullm_y_train, pullm_xgb_probs)
+
+print(f'\nOverall accuracy for Pullman XGB model (training): {pullm_xgb.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
+
+pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgb_probs, drop_intermediate=False)
+
+#%%
+# Vancouver XGB
+class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_xgb = XGBClassifier(n_estimators=150, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss').fit(vanco_x_train, vanco_y_train)
+
+vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
+vanco_xgb_probs = vanco_xgb_probs[:, 1]
+vanco_xgb_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
+
+print(f'\nOverall accuracy for Vancouver XGB model (training): {vanco_xgb.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
+
+vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgb_probs, drop_intermediate=False)
+
+#%%
+# Tri-Cities XGB
+class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_xgb = XGBClassifier(n_estimators=150, max_depth=7, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss').fit(trici_x_train, trici_y_train)
+
+trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
+trici_xgb_probs = trici_xgb_probs[:, 1]
+trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
+
+print(f'\nOverall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
+
+trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgb_probs, drop_intermediate=False)
+
+#%%
+# Univeristy XGB
+class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_xgb = XGBClassifier(n_estimators=150, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss').fit(univr_x_train, univr_y_train)
+
+univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
+univr_xgb_probs = univr_xgb_probs[:, 1]
+univr_xgb_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
+
+print(f'\nOverall accuracy for Univeristy XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for Univeristy XGB model (training): {univr_xgb_auc:.4f}\n')
+
+univr_xgb_fpr, univr_xgb_tpr, univr_thresholds = roc_curve(univr_y_train, univr_xgb_probs, drop_intermediate=False)
+
+#%%
 # Ensemble model
 
 # Pullman VCF
-pullm_vcf = VotingClassifier(estimators=[('lreg', pullm_lreg), ('sgd', pullm_sgd)], voting='soft', weights=[1, 1]).fit(pullm_x_train, pullm_y_train)
+# pullm_vcf = VotingClassifier(estimators=[('lreg', pullm_lreg), ('sgd', pullm_sgd)], voting='soft', weights=[1, 1]).fit(pullm_x_train, pullm_y_train)
 
-pullm_vcf_probs = pullm_vcf.predict_proba(pullm_x_train)
-pullm_vcf_probs = pullm_vcf_probs[:, 1]
-pullm_vcf_auc = roc_auc_score(pullm_y_train, pullm_vcf_probs)
+# pullm_vcf_probs = pullm_vcf.predict_proba(pullm_x_train)
+# pullm_vcf_probs = pullm_vcf_probs[:, 1]
+# pullm_vcf_auc = roc_auc_score(pullm_y_train, pullm_vcf_probs)
 
-print(f'\nOverall accuracy for Pullman ensemble model (training): {pullm_vcf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman ensemble model (training): {pullm_vcf_auc:.4f}\n')
+# print(f'\nOverall accuracy for Pullman ensemble model (training): {pullm_vcf.score(pullm_x_train, pullm_y_train):.4f}')
+# print(f'ROC AUC for Pullman ensemble model (training): {pullm_vcf_auc:.4f}\n')
 
-pullm_vcf_fpr, pullm_vcf_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_vcf_probs, drop_intermediate=False)
+# pullm_vcf_fpr, pullm_vcf_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_vcf_probs, drop_intermediate=False)
 
 #%%
 # Vancouver VCF
-vanco_vcf = VotingClassifier(estimators=[('lreg', vanco_lreg), ('sgd', vanco_sgd)], voting='soft', weights=[1, 1]).fit(vanco_x_train, vanco_y_train)
+# vanco_vcf = VotingClassifier(estimators=[('lreg', vanco_lreg), ('sgd', vanco_sgd)], voting='soft', weights=[1, 1]).fit(vanco_x_train, vanco_y_train)
 
-vanco_vcf_probs = vanco_vcf.predict_proba(vanco_x_train)
-vanco_vcf_probs = vanco_vcf_probs[:, 1]
-vanco_vcf_auc = roc_auc_score(vanco_y_train, vanco_vcf_probs)
+# vanco_vcf_probs = vanco_vcf.predict_proba(vanco_x_train)
+# vanco_vcf_probs = vanco_vcf_probs[:, 1]
+# vanco_vcf_auc = roc_auc_score(vanco_y_train, vanco_vcf_probs)
 
-print(f'\nOverall accuracy for Vancouver ensemble model (training): {vanco_vcf.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver ensemble model (training): {vanco_vcf_auc:.4f}\n')
+# print(f'\nOverall accuracy for Vancouver ensemble model (training): {vanco_vcf.score(vanco_x_train, vanco_y_train):.4f}')
+# print(f'ROC AUC for Vancouver ensemble model (training): {vanco_vcf_auc:.4f}\n')
 
-vanco_vcf_fpr, vanco_vcf_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_vcf_probs, drop_intermediate=False)
+# vanco_vcf_fpr, vanco_vcf_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_vcf_probs, drop_intermediate=False)
 
 #%%
 # Tri-Cities VCF
-trici_vcf = VotingClassifier(estimators=[('lreg', trici_lreg), ('sgd', trici_sgd)], voting='soft', weights=[1, 1]).fit(trici_x_train, trici_y_train)
+# trici_vcf = VotingClassifier(estimators=[('lreg', trici_lreg), ('sgd', trici_sgd)], voting='soft', weights=[1, 1]).fit(trici_x_train, trici_y_train)
 
-trici_vcf_probs = trici_vcf.predict_proba(trici_x_train)
-trici_vcf_probs = trici_vcf_probs[:, 1]
-trici_vcf_auc = roc_auc_score(trici_y_train, trici_vcf_probs)
+# trici_vcf_probs = trici_vcf.predict_proba(trici_x_train)
+# trici_vcf_probs = trici_vcf_probs[:, 1]
+# trici_vcf_auc = roc_auc_score(trici_y_train, trici_vcf_probs)
 
-print(f'\nOverall accuracy for Tri-Cities ensemble model (training): {trici_vcf.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities ensemble model (training): {trici_vcf_auc:.4f}\n')
+# print(f'\nOverall accuracy for Tri-Cities ensemble model (training): {trici_vcf.score(trici_x_train, trici_y_train):.4f}')
+# print(f'ROC AUC for Tri-Cities ensemble model (training): {trici_vcf_auc:.4f}\n')
 
-trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_vcf_probs, drop_intermediate=False)
+# trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_vcf_probs, drop_intermediate=False)
 
 #%%
 # University VCF
-univr_vcf = VotingClassifier(estimators=[('lreg', univr_lreg), ('sgd', univr_sgd)], voting='soft', weights=[1, 1]).fit(univr_x_train, univr_y_train)
+# univr_vcf = VotingClassifier(estimators=[('lreg', univr_lreg), ('sgd', univr_sgd)], voting='soft', weights=[1, 1]).fit(univr_x_train, univr_y_train)
 
-univr_vcf_probs = univr_vcf.predict_proba(univr_x_train)
-univr_vcf_probs = univr_vcf_probs[:, 1]
-univr_vcf_auc = roc_auc_score(univr_y_train, univr_vcf_probs)
+# univr_vcf_probs = univr_vcf.predict_proba(univr_x_train)
+# univr_vcf_probs = univr_vcf_probs[:, 1]
+# univr_vcf_auc = roc_auc_score(univr_y_train, univr_vcf_probs)
 
-print(f'\nOverall accuracy for University ensemble model (training): {univr_vcf.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University ensemble model (training): {univr_vcf_auc:.4f}\n')
+# print(f'\nOverall accuracy for University ensemble model (training): {univr_vcf.score(univr_x_train, univr_y_train):.4f}')
+# print(f'ROC AUC for University ensemble model (training): {univr_vcf_auc:.4f}\n')
 
-univr_vcf_fpr, univr_vcf_tpr, univr_thresholds = roc_curve(univr_y_train, univr_vcf_probs, drop_intermediate=False)
-
-#%%
-if datetime.datetime.today().weekday() == day_of_week:
-
-	print('Calculate SHAP values...')
+# univr_vcf_fpr, univr_vcf_tpr, univr_thresholds = roc_curve(univr_y_train, univr_vcf_probs, drop_intermediate=False)
 
 #%%
-# Pullman SHAP undersample
-	pullm_under_shap = NearMiss(sampling_strategy={0:(pullm_y_train[pullm_y_train == 0].count()//2), 1:(pullm_y_train[pullm_y_train == 1].count()//2)}, version=3, n_jobs=-1)
-	pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
+print('Calculate SHAP values...')
 
-#%%
 # Pullman SHAP training (see: https://github.com/slundberg/shap)
-	pullm_explainer = shap.KernelExplainer(model=pullm_vcf.predict_proba, data=pullm_x_shap)
+pullm_explainer = shap.TreeExplainer(model=pullm_xgb, data=pullm_x_train, model_output='predict_proba')
 
 #%%
 # Pullman SHAP prediction
-	pullm_shap_values = pullm_explainer.shap_values(X=pullm_x_test, nsamples=(pullm_y_train[pullm_y_train == 1].count()//4))
+pullm_shap_values = pullm_explainer.shap_values(X=pullm_x_test)
 
 #%%
 # Pullman SHAP plots
@@ -3953,25 +4045,20 @@ if datetime.datetime.today().weekday() == day_of_week:
 # 		shap.plots._waterfall.waterfall_legacy(pullm_explainer.expected_value[0], pullm_shap_values[0][index], pullm_x_test[index], feature_names=pullm_feat_names, max_display=4)
 
 #%%
-	pullm_shap_results = []
+pullm_shap_results = []
 
-	for index in range(len(pullm_shap_values[0])):
-		pullm_shap_results.extend(pd.DataFrame(data=pullm_shap_values[0][index].reshape(1, len(pullm_feat_names)), columns=pullm_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+for index in range(len(pullm_shap_values[0])):
+	pullm_shap_results.extend(pd.DataFrame(data=pullm_shap_values[0][index].reshape(1, len(pullm_feat_names)), columns=pullm_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-	pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
-
-#%%
-# Vancouver SHAP undersample
-	vanco_under_shap = NearMiss(sampling_strategy={0:(vanco_y_train[vanco_y_train == 0].count()//2), 1:(vanco_y_train[vanco_y_train == 1].count()//2)}, version=3, n_jobs=-1)
-	vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
+pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 
 #%%
 # Vancouver SHAP training (see: https://github.com/slundberg/shap)
-	vanco_explainer = shap.KernelExplainer(model=vanco_vcf.predict_proba, data=vanco_x_shap)
+vanco_explainer = shap.TreeExplainer(model=vanco_xgb, data=vanco_x_train, model_output='predict_proba')
 
 #%%
 # Vancouver SHAP prediction
-	vanco_shap_values = vanco_explainer.shap_values(X=vanco_x_test, nsamples=(vanco_y_train[vanco_y_train == 1].count()//2))
+vanco_shap_values = vanco_explainer.shap_values(X=vanco_x_test)
 
 #%%
 # Vancouver SHAP plots
@@ -3979,25 +4066,20 @@ if datetime.datetime.today().weekday() == day_of_week:
 # 		shap.plots._waterfall.waterfall_legacy(vanco_explainer.expected_value[0], vanco_shap_values[0][index], vanco_x_test[index], feature_names=vanco_feat_names, max_display=4)
 
 #%%
-	vanco_shap_results = []
+vanco_shap_results = []
 
-	for index in range(len(vanco_shap_values[0])):
-		vanco_shap_results.extend(pd.DataFrame(data=vanco_shap_values[0][index].reshape(1, len(vanco_feat_names)), columns=vanco_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+for index in range(len(vanco_shap_values[0])):
+	vanco_shap_results.extend(pd.DataFrame(data=vanco_shap_values[0][index].reshape(1, len(vanco_feat_names)), columns=vanco_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-	vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
-
-#%%
-# Tri-Cities SHAP undersample
-	trici_under_shap = NearMiss(sampling_strategy={0:(trici_y_train[trici_y_train == 0].count()//2), 1:(trici_y_train[trici_y_train == 1].count()//2)}, version=3, n_jobs=-1)
-	trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
+vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
 
 #%%
 # Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
-	trici_explainer = shap.KernelExplainer(model=trici_vcf.predict_proba, data=trici_x_shap)
+trici_explainer = shap.TreeExplainer(model=trici_xgb, data=trici_x_train, model_output='predict_proba')
 
 #%%
 # Tri-Cities SHAP prediction
-	trici_shap_values = trici_explainer.shap_values(X=trici_x_test, nsamples=(trici_y_train[trici_y_train == 1].count()//2))
+trici_shap_values = trici_explainer.shap_values(X=trici_x_test)
 
 #%%
 # Tri-Cities SHAP plots
@@ -4005,25 +4087,20 @@ if datetime.datetime.today().weekday() == day_of_week:
 # 		shap.plots._waterfall.waterfall_legacy(trici_explainer.expected_value[0], trici_shap_values[0][index], trici_x_test[index], feature_names=trici_feat_names, max_display=4)
 
 #%%
-	trici_shap_results = []
+trici_shap_results = []
 
-	for index in range(len(trici_shap_values[0])):
-		trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, len(trici_feat_names)), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+for index in range(len(trici_shap_values[0])):
+	trici_shap_results.extend(pd.DataFrame(data=trici_shap_values[0][index].reshape(1, len(trici_feat_names)), columns=trici_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-	trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
-
-#%%
-# University SHAP undersample
-	univr_under_shap = NearMiss(sampling_strategy={0:(univr_y_train[univr_y_train == 0].count()//2), 1:(univr_y_train[univr_y_train == 1].count()//2)}, version=3, n_jobs=-1)
-	univr_x_shap, univr_y_shap = univr_under_shap.fit_resample(univr_x_train, univr_y_train)
+trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
 
 #%%
 # University SHAP training (see: https://github.com/slundberg/shap)
-	univr_explainer = shap.KernelExplainer(model=univr_vcf.predict_proba, data=univr_x_shap)
+univr_explainer = shap.TreeExplainer(model=univr_xgb, data=univr_x_train, model_output='predict_proba')
 
 #%%
 # University SHAP prediction
-	univr_shap_values = univr_explainer.shap_values(X=univr_x_test, nsamples=(univr_y_train[univr_y_train == 1].count()//2))
+univr_shap_values = univr_explainer.shap_values(X=univr_x_test)
 
 #%%
 # University SHAP plots
@@ -4031,14 +4108,14 @@ if datetime.datetime.today().weekday() == day_of_week:
 # 		shap.plots._waterfall.waterfall_legacy(univr_explainer.expected_value[0], univr_shap_values[0][index], univr_x_test[index], feature_names=univr_feat_names, max_display=4)
 
 #%%
-	univr_shap_results = []
+univr_shap_results = []
 
-	for index in range(len(univr_shap_values[0])):
-		univr_shap_results.extend(pd.DataFrame(data=univr_shap_values[0][index].reshape(1, len(univr_feat_names)), columns=univr_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
+for index in range(len(univr_shap_values[0])):
+	univr_shap_results.extend(pd.DataFrame(data=univr_shap_values[0][index].reshape(1, len(univr_feat_names)), columns=univr_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
 
-	univr_shap_zip = dict(zip(univr_shap_outcome, univr_shap_results))
+univr_shap_zip = dict(zip(univr_shap_outcome, univr_shap_results))
 
-	print('Done\n')
+print('Done\n')
 
 #%%
 # Prepare model predictions
@@ -4053,8 +4130,8 @@ pullm_xgb_pred_probs = pullm_xgb.predict_proba(pullm_x_test)
 pullm_xgb_pred_probs = pullm_xgb_pred_probs[:, 1]
 # pullm_mlp_pred_probs = pullm_mlp.predict_proba(pullm_x_test)
 # pullm_mlp_pred_probs = pullm_mlp_pred_probs[:, 1]
-pullm_vcf_pred_probs = pullm_vcf.predict_proba(pullm_x_test)
-pullm_vcf_pred_probs = pullm_vcf_pred_probs[:, 1]
+# pullm_vcf_pred_probs = pullm_vcf.predict_proba(pullm_x_test)
+# pullm_vcf_pred_probs = pullm_vcf_pred_probs[:, 1]
 
 #%%
 # Vancouver probabilites
@@ -4066,8 +4143,8 @@ vanco_xgb_pred_probs = vanco_xgb.predict_proba(vanco_x_test)
 vanco_xgb_pred_probs = vanco_xgb_pred_probs[:, 1]
 # vanco_mlp_pred_probs = vanco_mlp.predict_proba(vanco_x_test)
 # vanco_mlp_pred_probs = vanco_mlp_pred_probs[:, 1]
-vanco_vcf_pred_probs = vanco_vcf.predict_proba(vanco_x_test)
-vanco_vcf_pred_probs = vanco_vcf_pred_probs[:, 1]
+# vanco_vcf_pred_probs = vanco_vcf.predict_proba(vanco_x_test)
+# vanco_vcf_pred_probs = vanco_vcf_pred_probs[:, 1]
 
 #%%
 # Tri-Cities probabilities
@@ -4079,8 +4156,8 @@ trici_xgb_pred_probs = trici_xgb.predict_proba(trici_x_test)
 trici_xgb_pred_probs = trici_xgb_pred_probs[:, 1]
 # trici_mlp_pred_probs = trici_mlp.predict_proba(trici_x_test)
 # trici_mlp_pred_probs = trici_mlp_pred_probs[:, 1]
-trici_vcf_pred_probs = trici_vcf.predict_proba(trici_x_test)
-trici_vcf_pred_probs = trici_vcf_pred_probs[:, 1]
+# trici_vcf_pred_probs = trici_vcf.predict_proba(trici_x_test)
+# trici_vcf_pred_probs = trici_vcf_pred_probs[:, 1]
 
 #%%
 # University probabilities
@@ -4092,8 +4169,8 @@ univr_xgb_pred_probs = univr_xgb.predict_proba(univr_x_test)
 univr_xgb_pred_probs = univr_xgb_pred_probs[:, 1]
 # univr_mlp_pred_probs = univr_mlp.predict_proba(univr_x_test)
 # univr_mlp_pred_probs = univr_mlp_pred_probs[:, 1]
-univr_vcf_pred_probs = univr_vcf.predict_proba(univr_x_test)
-univr_vcf_pred_probs = univr_vcf_pred_probs[:, 1]
+# univr_vcf_pred_probs = univr_vcf.predict_proba(univr_x_test)
+# univr_vcf_pred_probs = univr_vcf_pred_probs[:, 1]
 
 print('Done\n')
 
@@ -4110,8 +4187,8 @@ pullm_pred_outcome['xgb_prob'] = pd.DataFrame(pullm_xgb_pred_probs)
 pullm_pred_outcome['xgb_pred'] = pullm_xgb.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_prob'] = pd.DataFrame(pullm_mlp_pred_probs)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
-pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
-pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
+# pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
+# pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
 pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
@@ -4124,8 +4201,8 @@ vanco_pred_outcome['xgb_prob'] = pd.DataFrame(vanco_xgb_pred_probs)
 vanco_pred_outcome['xgb_pred'] = vanco_xgb.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_prob'] = pd.DataFrame(vanco_mlp_pred_probs)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
-vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
-vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
+# vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
+# vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
 vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
@@ -4138,8 +4215,8 @@ trici_pred_outcome['xgb_prob'] = pd.DataFrame(trici_xgb_pred_probs)
 trici_pred_outcome['xgb_pred'] = trici_xgb.predict(trici_x_test)
 # trici_pred_outcome['mlp_prob'] = pd.DataFrame(trici_mlp_pred_probs)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
-trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
-trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
+# trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
+# trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
 trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
@@ -4152,14 +4229,14 @@ univr_pred_outcome['xgb_prob'] = pd.DataFrame(univr_xgb_pred_probs)
 univr_pred_outcome['xgb_pred'] = univr_xgb.predict(univr_x_test)
 # univr_pred_outcome['mlp_prob'] = pd.DataFrame(univr_mlp_pred_probs)
 # univr_pred_outcome['mlp_pred'] = univr_mlp.predict(univr_x_test)
-univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)
-univr_pred_outcome['vcf_pred'] = univr_vcf.predict(univr_x_test)
+# univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)
+# univr_pred_outcome['vcf_pred'] = univr_vcf.predict(univr_x_test)
 univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome
 pullm_aggregate_outcome['emplid'] = pullm_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-pullm_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_vcf_pred_probs).round(4)
+pullm_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_xgb_pred_probs).round(4)
 
 pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"male": "sex_ind"})
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -4185,7 +4262,7 @@ pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\p
 #%%
 # Vancouver aggregate outcome
 vanco_aggregate_outcome['emplid'] = vanco_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-vanco_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_vcf_pred_probs).round(4)
+vanco_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_xgb_pred_probs).round(4)
 
 vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"male": "sex_ind"})
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -4211,7 +4288,7 @@ vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\v
 #%%
 # Tri-Cities aggregate outcome
 trici_aggregate_outcome['emplid'] = trici_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-trici_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(trici_vcf_pred_probs).round(4)
+trici_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(trici_xgb_pred_probs).round(4)
 
 trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"male": "sex_ind"})
 trici_aggregate_outcome.loc[trici_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -4237,7 +4314,7 @@ trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\t
 #%%
 # University aggregate outcome
 univr_aggregate_outcome['emplid'] = univr_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-univr_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(univr_vcf_pred_probs).round(4)
+univr_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgb_pred_probs).round(4)
 
 univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"male": "sex_ind"})
 univr_aggregate_outcome.loc[univr_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -4263,7 +4340,7 @@ univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\u
 #%%
 # Pullman current outcome
 pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).str.zfill(9)
-pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_vcf_pred_probs).round(4)
+pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_xgb_pred_probs).round(4)
 
 pullm_current_outcome['date'] = run_date
 pullm_current_outcome['model_id'] = model_id
@@ -4271,7 +4348,7 @@ pullm_current_outcome['model_id'] = model_id
 #%%
 # Vancouver current outcome
 vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).str.zfill(9)
-vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_vcf_pred_probs).round(4)
+vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_xgb_pred_probs).round(4)
 
 vanco_current_outcome['date'] = run_date
 vanco_current_outcome['model_id'] = model_id
@@ -4279,7 +4356,7 @@ vanco_current_outcome['model_id'] = model_id
 #%%
 # Tri-Cities current outcome
 trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).str.zfill(9)
-trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_vcf_pred_probs).round(4)
+trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_xgb_pred_probs).round(4)
 
 trici_current_outcome['date'] = run_date
 trici_current_outcome['model_id'] = model_id
@@ -4287,7 +4364,7 @@ trici_current_outcome['model_id'] = model_id
 #%%
 # University current outcome
 univr_current_outcome['emplid'] = univr_current_outcome['emplid'].astype(str).str.zfill(9)
-univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_vcf_pred_probs).round(4)
+univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgb_pred_probs).round(4)
 
 univr_current_outcome['date'] = run_date
 univr_current_outcome['model_id'] = model_id
@@ -4342,146 +4419,144 @@ else:
 
 #%%
 # Pullman top-N SHAP values to csv and to sql
-if datetime.datetime.today().weekday() == day_of_week:
+pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_tran_shap.csv', 'w', newline='')
+pullm_shap_writer = csv.writer(pullm_shap_file)
+pullm_shap_insert = []
 
-	pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_tran_shap.csv', 'w', newline='')
-	pullm_shap_writer = csv.writer(pullm_shap_file)
-	pullm_shap_insert = []
+pullm_shap_writer.writerow(['emplid','shap_values'])
 
-	pullm_shap_writer.writerow(['emplid','shap_values'])
+for emplid in pullm_shap_zip:
+	pullm_shap_writer.writerow([emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))])
+	pullm_shap_sql = [emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))]
+	
+	pullm_shap_insert.append(str(pullm_shap_sql[0]).zfill(9))
 
-	for emplid in pullm_shap_zip:
-		pullm_shap_writer.writerow([emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))])
-		pullm_shap_sql = [emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))]
-		
-		pullm_shap_insert.append(str(pullm_shap_sql[0]).zfill(9))
+	for index in range(top_N):
+		shap_str, shap_float = pullm_shap_sql[1][index]
+		pullm_shap_insert.append(shap_str) 
+		pullm_shap_insert.append(round(shap_float, 4))
 
-		for index in range(top_N):
-			shap_str, shap_float = pullm_shap_sql[1][index]
-			pullm_shap_insert.append(shap_str) 
-			pullm_shap_insert.append(round(shap_float, 4))
+pullm_shap_file.close()
 
-	pullm_shap_file.close()
-
-	while pullm_shap_insert:
-		ins = student_shap.insert().values(emplid=pullm_shap_insert.pop(0), 
-											shap_descr_1=pullm_shap_insert.pop(0), shap_value_1=pullm_shap_insert.pop(0), 
-											shap_descr_2=pullm_shap_insert.pop(0), shap_value_2=pullm_shap_insert.pop(0), 
-											shap_descr_3=pullm_shap_insert.pop(0), shap_value_3=pullm_shap_insert.pop(0), 
-											shap_descr_4=pullm_shap_insert.pop(0), shap_value_4=pullm_shap_insert.pop(0), 
-											shap_descr_5=pullm_shap_insert.pop(0), shap_value_5=pullm_shap_insert.pop(0), 
-											date=run_date, model_id=model_id)
-		engine.execute(ins)
+while pullm_shap_insert:
+	ins = student_shap.insert().values(emplid=pullm_shap_insert.pop(0), 
+										shap_descr_1=pullm_shap_insert.pop(0), shap_value_1=pullm_shap_insert.pop(0), 
+										shap_descr_2=pullm_shap_insert.pop(0), shap_value_2=pullm_shap_insert.pop(0), 
+										shap_descr_3=pullm_shap_insert.pop(0), shap_value_3=pullm_shap_insert.pop(0), 
+										shap_descr_4=pullm_shap_insert.pop(0), shap_value_4=pullm_shap_insert.pop(0), 
+										shap_descr_5=pullm_shap_insert.pop(0), shap_value_5=pullm_shap_insert.pop(0), 
+										date=run_date, model_id=model_id)
+	engine.execute(ins)
 
 #%%
 # Vancouver top-N SHAP values to csv and to sql
-	vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_tran_shap.csv', 'w', newline='')
-	vanco_shap_writer = csv.writer(vanco_shap_file)
-	vanco_shap_insert = []
+vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_tran_shap.csv', 'w', newline='')
+vanco_shap_writer = csv.writer(vanco_shap_file)
+vanco_shap_insert = []
 
-	vanco_shap_writer.writerow(['emplid','shap_values'])
+vanco_shap_writer.writerow(['emplid','shap_values'])
 
-	for emplid in vanco_shap_zip:
-		vanco_shap_writer.writerow([emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))])
-		vanco_shap_sql = [emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))]
-		
-		vanco_shap_insert.append(str(vanco_shap_sql[0]).zfill(9))
+for emplid in vanco_shap_zip:
+	vanco_shap_writer.writerow([emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))])
+	vanco_shap_sql = [emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))]
+	
+	vanco_shap_insert.append(str(vanco_shap_sql[0]).zfill(9))
 
-		for index in range(top_N):
-			shap_str, shap_float = vanco_shap_sql[1][index]
-			vanco_shap_insert.append(shap_str) 
-			vanco_shap_insert.append(round(shap_float, 4))
+	for index in range(top_N):
+		shap_str, shap_float = vanco_shap_sql[1][index]
+		vanco_shap_insert.append(shap_str) 
+		vanco_shap_insert.append(round(shap_float, 4))
 
-	vanco_shap_file.close()
+vanco_shap_file.close()
 
-	while vanco_shap_insert:
-		ins = student_shap.insert().values(emplid=vanco_shap_insert.pop(0), 
-											shap_descr_1=vanco_shap_insert.pop(0), shap_value_1=vanco_shap_insert.pop(0), 
-											shap_descr_2=vanco_shap_insert.pop(0), shap_value_2=vanco_shap_insert.pop(0), 
-											shap_descr_3=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
-											shap_descr_4=vanco_shap_insert.pop(0), shap_value_4=vanco_shap_insert.pop(0), 
-											shap_descr_5=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
-											date=run_date, model_id=model_id)
-		engine.execute(ins)
+while vanco_shap_insert:
+	ins = student_shap.insert().values(emplid=vanco_shap_insert.pop(0), 
+										shap_descr_1=vanco_shap_insert.pop(0), shap_value_1=vanco_shap_insert.pop(0), 
+										shap_descr_2=vanco_shap_insert.pop(0), shap_value_2=vanco_shap_insert.pop(0), 
+										shap_descr_3=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
+										shap_descr_4=vanco_shap_insert.pop(0), shap_value_4=vanco_shap_insert.pop(0), 
+										shap_descr_5=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
+										date=run_date, model_id=model_id)
+	engine.execute(ins)
 
 #%%
 # Tri-Cities top-N SHAP values to csv and to sql
-	trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_tran_shap.csv', 'w', newline='')
-	trici_shap_writer = csv.writer(trici_shap_file)
-	trici_shap_insert = []
+trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_tran_shap.csv', 'w', newline='')
+trici_shap_writer = csv.writer(trici_shap_file)
+trici_shap_insert = []
 
-	trici_shap_writer.writerow(['emplid','shap_values'])
+trici_shap_writer.writerow(['emplid','shap_values'])
 
-	for emplid in trici_shap_zip:
-		trici_shap_writer.writerow([emplid, list(islice(trici_shap_zip[emplid].items(), top_N))])
-		trici_shap_sql = [emplid, list(islice(trici_shap_zip[emplid].items(), top_N))]
-		
-		trici_shap_insert.append(str(trici_shap_sql[0]).zfill(9))
+for emplid in trici_shap_zip:
+	trici_shap_writer.writerow([emplid, list(islice(trici_shap_zip[emplid].items(), top_N))])
+	trici_shap_sql = [emplid, list(islice(trici_shap_zip[emplid].items(), top_N))]
+	
+	trici_shap_insert.append(str(trici_shap_sql[0]).zfill(9))
 
-		for index in range(top_N):
-			shap_str, shap_float = trici_shap_sql[1][index]
-			trici_shap_insert.append(shap_str) 
-			trici_shap_insert.append(round(shap_float, 4))
+	for index in range(top_N):
+		shap_str, shap_float = trici_shap_sql[1][index]
+		trici_shap_insert.append(shap_str) 
+		trici_shap_insert.append(round(shap_float, 4))
 
-	trici_shap_file.close()
+trici_shap_file.close()
 
-	while trici_shap_insert:
-		ins = student_shap.insert().values(emplid=trici_shap_insert.pop(0), 
-											shap_descr_1=trici_shap_insert.pop(0), shap_value_1=trici_shap_insert.pop(0), 
-											shap_descr_2=trici_shap_insert.pop(0), shap_value_2=trici_shap_insert.pop(0), 
-											shap_descr_3=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
-											shap_descr_4=trici_shap_insert.pop(0), shap_value_4=trici_shap_insert.pop(0), 
-											shap_descr_5=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
-											date=run_date, model_id=model_id)
-		engine.execute(ins)
+while trici_shap_insert:
+	ins = student_shap.insert().values(emplid=trici_shap_insert.pop(0), 
+										shap_descr_1=trici_shap_insert.pop(0), shap_value_1=trici_shap_insert.pop(0), 
+										shap_descr_2=trici_shap_insert.pop(0), shap_value_2=trici_shap_insert.pop(0), 
+										shap_descr_3=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
+										shap_descr_4=trici_shap_insert.pop(0), shap_value_4=trici_shap_insert.pop(0), 
+										shap_descr_5=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
+										date=run_date, model_id=model_id)
+	engine.execute(ins)
 
 #%%
 # University top-N SHAP values to csv and to sql
-	univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\univr\\univr_tran_shap.csv', 'w', newline='')
-	univr_shap_writer = csv.writer(univr_shap_file)
-	univr_shap_insert = []
+univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\univr\\univr_tran_shap.csv', 'w', newline='')
+univr_shap_writer = csv.writer(univr_shap_file)
+univr_shap_insert = []
 
-	univr_shap_writer.writerow(['emplid','shap_values'])
+univr_shap_writer.writerow(['emplid','shap_values'])
 
-	for emplid in univr_shap_zip:
-		univr_shap_writer.writerow([emplid, list(islice(univr_shap_zip[emplid].items(), top_N))])
-		univr_shap_sql = [emplid, list(islice(univr_shap_zip[emplid].items(), top_N))]
-		
-		univr_shap_insert.append(str(univr_shap_sql[0]).zfill(9))
+for emplid in univr_shap_zip:
+	univr_shap_writer.writerow([emplid, list(islice(univr_shap_zip[emplid].items(), top_N))])
+	univr_shap_sql = [emplid, list(islice(univr_shap_zip[emplid].items(), top_N))]
+	
+	univr_shap_insert.append(str(univr_shap_sql[0]).zfill(9))
 
-		for index in range(top_N):
-			shap_str, shap_float = univr_shap_sql[1][index]
-			univr_shap_insert.append(shap_str) 
-			univr_shap_insert.append(round(shap_float, 4))
+	for index in range(top_N):
+		shap_str, shap_float = univr_shap_sql[1][index]
+		univr_shap_insert.append(shap_str) 
+		univr_shap_insert.append(round(shap_float, 4))
 
-	univr_shap_file.close()
+univr_shap_file.close()
 
-	while univr_shap_insert:
-		ins = student_shap.insert().values(emplid=univr_shap_insert.pop(0), 
-											shap_descr_1=univr_shap_insert.pop(0), shap_value_1=univr_shap_insert.pop(0), 
-											shap_descr_2=univr_shap_insert.pop(0), shap_value_2=univr_shap_insert.pop(0), 
-											shap_descr_3=univr_shap_insert.pop(0), shap_value_3=univr_shap_insert.pop(0), 
-											shap_descr_4=univr_shap_insert.pop(0), shap_value_4=univr_shap_insert.pop(0), 
-											shap_descr_5=univr_shap_insert.pop(0), shap_value_5=univr_shap_insert.pop(0), 
-											date=run_date, model_id=model_id)
-		engine.execute(ins)
+while univr_shap_insert:
+	ins = student_shap.insert().values(emplid=univr_shap_insert.pop(0), 
+										shap_descr_1=univr_shap_insert.pop(0), shap_value_1=univr_shap_insert.pop(0), 
+										shap_descr_2=univr_shap_insert.pop(0), shap_value_2=univr_shap_insert.pop(0), 
+										shap_descr_3=univr_shap_insert.pop(0), shap_value_3=univr_shap_insert.pop(0), 
+										shap_descr_4=univr_shap_insert.pop(0), shap_value_4=univr_shap_insert.pop(0), 
+										shap_descr_5=univr_shap_insert.pop(0), shap_value_5=univr_shap_insert.pop(0), 
+										date=run_date, model_id=model_id)
+	engine.execute(ins)
 
 #%%
 # Output model
 
 # Pullman model output
-joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_tran_model_v{sklearn.__version__}.pkl')
+joblib.dump(pullm_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_tran_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver model output
-joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_tran_model_v{sklearn.__version__}.pkl')
+joblib.dump(vanco_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_tran_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities model output
-joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_tran_model_v{sklearn.__version__}.pkl')
+joblib.dump(trici_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_tran_model_v{sklearn.__version__}.pkl')
 
 #%%
 # University model output
-joblib.dump(univr_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_tran_model_v{sklearn.__version__}.pkl')
+joblib.dump(univr_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_tran_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')

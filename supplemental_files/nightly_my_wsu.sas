@@ -30,16 +30,16 @@ proc sql;
 proc sql;
 	create table strms as
 	select strm 
-	from census.xw_term 
+	from &curlib..ps_term_tbl 
 	where acad_career = 'UGRD' 
 		and substr(strm,4,1) in ('7','3')
 		and strm between (select max(strm)  
-							from census.xw_term 
+							from &curlib..ps_term_tbl 
 							where strm < "&strm." 
 								and acad_career = 'UGRD' 
 								and substr(strm,4,1) in ('7','3')) 
 		and (select min(strm) 
-				from census.xw_term 
+				from &curlib..ps_term_tbl
 				where strm > "&strm."  
 					and acad_career = 'UGRD' 
 					and substr(strm,4,1) in ('7','3'))
@@ -52,19 +52,21 @@ proc sql noprint;
 	from strms
 ;quit;
 
+%put &list_of_strms.;
+
 proc sql;
 	create table aid_years as
-	select aid_year
-	from census.xw_term 
-	where acad_career = 'UGRD'
+	select distinct a.aid_year
+	from &curlib..ps_aid_yr_car_term a
+	where a.acad_career = 'UGRD'
 				and substr(strm,4,1) in ('7','3')
 		and strm between (select max(strm)  
-							from census.xw_term 
+							from &curlib..ps_aid_yr_car_term 
 							where strm < "&strm." 
 								and acad_career = 'UGRD' 
 								and substr(strm,4,1) in ('7','3')) 
 		and (select min(strm) 
-				from census.xw_term 
+				from  &curlib..ps_aid_yr_car_term 
 				where strm > "&strm."  
 					and acad_career = 'UGRD' 
 					and substr(strm,4,1) in ('7','3'))
@@ -76,6 +78,7 @@ proc sql noprint;
 	separated by "','"
 	from aid_years
 ;quit;
+
 
 %macro passthrulib;
 %if &curlib. = WSUNCPRD %then %do;

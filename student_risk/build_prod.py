@@ -1760,7 +1760,7 @@ class DatasetBuilderProd:
 			set dataset_&start_cohort.-dataset_&end_cohort.;
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
-			if distance =. then distance = 0;
+			if distance = . then distance = 0;
 			if pop_dens = . then pop_dens = 0;
 			if educ_rate = . then educ_rate = 0;	
 			if pct_blk = . then pct_blk = 0;	
@@ -1776,20 +1776,12 @@ class DatasetBuilderProd:
 			if gini_indx = . then gini_indx = 0;
 			if pvrt_rate = . then pvrt_rate = 0;
 			if educ_rate = . then educ_rate = 0;
-			if city_large = . then city_large = 0;
-			if city_mid = . then city_mid = 0;
-			if city_small = . then city_small = 0;
-			if suburb_large = . then suburb_large = 0;
-			if suburb_mid = . then suburb_mid = 0;
-			if suburb_small = . then suburb_small = 0;
-			if town_fringe = . then town_fringe = 0;
-			if town_distant = . then town_distant = 0;
-			if town_remote = . then town_remote = 0;
-			if rural_fringe = . then rural_fringe = 0;
-			if rural_distant = . then rural_distant = 0;
-			if rural_remote = . then rural_remote = 0;
 			if ad_dta = . then ad_dta = 0;
 			if ad_ast = . then ad_ast = 0;
+			if ad_hsdip = . then ad_hsdip = 0;
+			if ad_ged = . then ad_ged = 0;
+			if ad_ger = . then ad_ger = 0;
+			if ad_gens = . then ad_gens = 0;
 			if ap = . then ap = 0;
 			if rs = . then rs = 0;
 			if chs = . then chs = 0;
@@ -1807,12 +1799,12 @@ class DatasetBuilderProd:
 			if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 			if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 			if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
-			if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
-			if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
-			if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
-			if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
-			if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
-			if fall_avg_difficulty = . then fall_avg_difficulty = 0;
+			if fall_lec_count = . then fall_lec_count = 0;
+			if fall_lab_count = . then fall_lab_count = 0;
+			if fall_int_count = . then fall_int_count = 0;
+			if fall_stu_count = . then fall_stu_count = 0;
+			if fall_sem_count = . then fall_sem_count = 0;
+			if fall_oth_count = . then fall_oth_count = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if fall_int_contact_hrs = . then fall_int_contact_hrs = 0;
@@ -1820,6 +1812,88 @@ class DatasetBuilderProd:
 			if fall_sem_contact_hrs = . then fall_sem_contact_hrs = 0;
 			if fall_oth_contact_hrs = . then fall_oth_contact_hrs = 0;
 			if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+			if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+			if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+			if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+			if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+			if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
+			if fall_avg_difficulty = . then fall_avg_difficulty = 0;
+			if spring_avg_pct_withdrawn = . then spring_avg_pct_withdrawn = 0;
+			if spring_avg_pct_CDFW = . then spring_avg_pct_CDFW = 0;
+			if spring_avg_pct_CDF = . then spring_avg_pct_CDF = 0;
+			if spring_avg_pct_DFW = . then spring_avg_pct_DFW = 0;
+			if spring_avg_pct_DF = . then spring_avg_pct_DF = 0;
+			if spring_avg_difficulty = . then spring_crse_mi = 1; else spring_crse_mi = 0; 
+			if spring_avg_difficulty = . then spring_avg_difficulty = 0;
+			if spring_lec_count = . then spring_lec_count = 0;
+			if spring_lab_count = . then spring_lab_count = 0;
+			if spring_int_count = . then spring_int_count = 0;
+			if spring_stu_count = . then spring_stu_count = 0;
+			if spring_sem_count = . then spring_sem_count = 0;
+			if spring_oth_count = . then spring_oth_count = 0;
+			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+			if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+			if spring_int_contact_hrs = . then spring_int_contact_hrs = 0;
+			if spring_stu_contact_hrs = . then spring_stu_contact_hrs = 0;
+			if spring_sem_contact_hrs = . then spring_sem_contact_hrs = 0;
+			if spring_oth_contact_hrs = . then spring_oth_contact_hrs = 0;
+			if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+			if total_fall_units = . then total_fall_units = 0;
+			if total_spring_units = . then total_spring_units = 0;
+			if fall_credit_hours = . then fall_credit_hours = 0;
+			if spring_credit_hours = . then spring_credit_hours = 0;
+			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+			if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+			if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+			if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+			if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 1; else fall_midterm_gpa_avg_mi = 0;
+			if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
+			if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
+			if fall_midterm_S_grade_count = . then fall_midterm_S_grade_count = 0;
+			if fall_midterm_W_grade_count = . then fall_midterm_W_grade_count = 0;
+			if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg_mi = 1; else spring_midterm_gpa_avg_mi = 0;
+			if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg = 0;
+			if spring_midterm_grade_count = . then spring_midterm_grade_count = 0;
+			if spring_midterm_S_grade_count = . then spring_midterm_S_grade_count = 0;
+			if spring_midterm_W_grade_count = . then spring_midterm_W_grade_count = 0;
+			if fall_term_gpa = . then fall_term_gpa_mi = 1; else fall_term_gpa_mi = 0;
+			if fall_term_gpa = . then fall_term_gpa = 0;
+			if spring_term_gpa = . then spring_term_gpa_mi = 1; else spring_term_gpa_mi = 0;
+			if spring_term_gpa = . then spring_term_gpa = 0;
+			if fall_term_W_grade_count = . then fall_term_W_grade_count_mi = 1; else fall_term_W_grade_count_mi = 0;
+			if fall_term_W_grade_count = . then fall_term_W_grade_count = 0;
+			if fall_term_I_grade_count = . then fall_term_I_grade_count_mi = 1; else fall_term_I_grade_count_mi = 0;
+			if fall_term_I_grade_count = . then fall_term_I_grade_count = 0;
+			if fall_term_X_grade_count = . then fall_term_X_grade_count_mi = 1; else fall_term_X_grade_count_mi = 0;
+			if fall_term_X_grade_count = . then fall_term_X_grade_count = 0;
+			if fall_term_U_grade_count = . then fall_term_U_grade_count_mi = 1; else fall_term_U_grade_count_mi = 0;
+			if fall_term_U_grade_count = . then fall_term_U_grade_count = 0;
+			if fall_term_S_grade_count = . then fall_term_S_grade_count_mi = 1; else fall_term_S_grade_count_mi = 0;
+			if fall_term_S_grade_count = . then fall_term_S_grade_count = 0;
+			if fall_term_P_grade_count = . then fall_term_P_grade_count_mi = 1; else fall_term_P_grade_count_mi = 0;
+			if fall_term_P_grade_count = . then fall_term_P_grade_count = 0;
+			if fall_term_Z_grade_count = . then fall_term_Z_grade_count_mi = 1; else fall_term_Z_grade_count_mi = 0;
+			if fall_term_Z_grade_count = . then fall_term_Z_grade_count = 0;
+			if fall_term_grade_count = . then fall_term_grade_count_mi = 1; else fall_term_grade_count_mi = 0;
+			if fall_term_grade_count = . then fall_term_grade_count = 0;
+			if spring_term_W_grade_count = . then spring_term_W_grade_count_mi = 1; else spring_term_W_grade_count_mi = 0;
+			if spring_term_W_grade_count = . then spring_term_W_grade_count = 0;
+			if spring_term_I_grade_count = . then spring_term_I_grade_count_mi = 1; else spring_term_I_grade_count_mi = 0;
+			if spring_term_I_grade_count = . then spring_term_I_grade_count = 0;
+			if spring_term_X_grade_count = . then spring_term_X_grade_count_mi = 1; else spring_term_X_grade_count_mi = 0;
+			if spring_term_X_grade_count = . then spring_term_X_grade_count = 0;
+			if spring_term_U_grade_count = . then spring_term_U_grade_count_mi = 1; else spring_term_U_grade_count_mi = 0;
+			if spring_term_U_grade_count = . then spring_term_U_grade_count = 0;
+			if spring_term_S_grade_count = . then spring_term_S_grade_count_mi = 1; else spring_term_S_grade_count_mi = 0;
+			if spring_term_S_grade_count = . then spring_term_S_grade_count = 0;
+			if spring_term_P_grade_count = . then spring_term_P_grade_count_mi = 1; else spring_term_P_grade_count_mi = 0;
+			if spring_term_P_grade_count = . then spring_term_P_grade_count = 0;
+			if spring_term_Z_grade_count = . then spring_term_Z_grade_count_mi = 1; else spring_term_Z_grade_count_mi = 0;
+			if spring_term_Z_grade_count = . then spring_term_Z_grade_count = 0;
+			if spring_term_grade_count = . then spring_term_grade_count_mi = 1; else spring_term_grade_count_mi = 0;
+			if spring_term_grade_count = . then spring_term_grade_count = 0;
 			if first_gen_flag = '' then first_gen_flag_mi = 1; else first_gen_flag_mi = 0;
 			if first_gen_flag = '' then first_gen_flag = 'N';
 			if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
@@ -1831,6 +1905,11 @@ class DatasetBuilderProd:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+			fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
+			if total_fall_units = 0 then fall_withdrawn_ind = 1; else fall_withdrawn_ind = 0;
+			spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
+			if total_spring_units = 0 then spring_withdrawn = 1; else spring_withdrawn = 0;
+			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
 			unmet_need_ofr = fed_need - total_offer;
@@ -1847,11 +1926,11 @@ class DatasetBuilderProd:
 			set dataset_%eval(&end_cohort. + &lag_year.);
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
-			if distance =. then distance = 0;
+			if distance = . then distance = 0;
 			if pop_dens = . then pop_dens = 0;
 			if educ_rate = . then educ_rate = 0;	
 			if pct_blk = . then pct_blk = 0;	
-			if pct_ai = . then pct_ai = 0;
+			if pct_ai = . then pct_ai = 0;	
 			if pct_asn = .	then pct_asn = 0;
 			if pct_hawi = . then pct_hawi = 0;
 			if pct_two = . then pct_two = 0;
@@ -1863,20 +1942,12 @@ class DatasetBuilderProd:
 			if gini_indx = . then gini_indx = 0;
 			if pvrt_rate = . then pvrt_rate = 0;
 			if educ_rate = . then educ_rate = 0;
-			if city_large = . then city_large = 0;
-			if city_mid = . then city_mid = 0;
-			if city_small = . then city_small = 0;
-			if suburb_large = . then suburb_large = 0;
-			if suburb_mid = . then suburb_mid = 0;
-			if suburb_small = . then suburb_small = 0;
-			if town_fringe = . then town_fringe = 0;
-			if town_distant = . then town_distant = 0;
-			if town_remote = . then town_remote = 0;
-			if rural_fringe = . then rural_fringe = 0;
-			if rural_distant = . then rural_distant = 0;
-			if rural_remote = . then rural_remote = 0;
 			if ad_dta = . then ad_dta = 0;
 			if ad_ast = . then ad_ast = 0;
+			if ad_hsdip = . then ad_hsdip = 0;
+			if ad_ged = . then ad_ged = 0;
+			if ad_ger = . then ad_ger = 0;
+			if ad_gens = . then ad_gens = 0;
 			if ap = . then ap = 0;
 			if rs = . then rs = 0;
 			if chs = . then chs = 0;
@@ -1894,12 +1965,12 @@ class DatasetBuilderProd:
 			if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 			if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 			if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
-			if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
-			if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
-			if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
-			if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
-			if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
-			if fall_avg_difficulty = . then fall_avg_difficulty = 0;
+			if fall_lec_count = . then fall_lec_count = 0;
+			if fall_lab_count = . then fall_lab_count = 0;
+			if fall_int_count = . then fall_int_count = 0;
+			if fall_stu_count = . then fall_stu_count = 0;
+			if fall_sem_count = . then fall_sem_count = 0;
+			if fall_oth_count = . then fall_oth_count = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if fall_int_contact_hrs = . then fall_int_contact_hrs = 0;
@@ -1907,6 +1978,88 @@ class DatasetBuilderProd:
 			if fall_sem_contact_hrs = . then fall_sem_contact_hrs = 0;
 			if fall_oth_contact_hrs = . then fall_oth_contact_hrs = 0;
 			if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+			if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+			if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+			if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+			if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+			if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
+			if fall_avg_difficulty = . then fall_avg_difficulty = 0;
+			if spring_avg_pct_withdrawn = . then spring_avg_pct_withdrawn = 0;
+			if spring_avg_pct_CDFW = . then spring_avg_pct_CDFW = 0;
+			if spring_avg_pct_CDF = . then spring_avg_pct_CDF = 0;
+			if spring_avg_pct_DFW = . then spring_avg_pct_DFW = 0;
+			if spring_avg_pct_DF = . then spring_avg_pct_DF = 0;
+			if spring_avg_difficulty = . then spring_crse_mi = 1; else spring_crse_mi = 0; 
+			if spring_avg_difficulty = . then spring_avg_difficulty = 0;
+			if spring_lec_count = . then spring_lec_count = 0;
+			if spring_lab_count = . then spring_lab_count = 0;
+			if spring_int_count = . then spring_int_count = 0;
+			if spring_stu_count = . then spring_stu_count = 0;
+			if spring_sem_count = . then spring_sem_count = 0;
+			if spring_oth_count = . then spring_oth_count = 0;
+			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+			if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+			if spring_int_contact_hrs = . then spring_int_contact_hrs = 0;
+			if spring_stu_contact_hrs = . then spring_stu_contact_hrs = 0;
+			if spring_sem_contact_hrs = . then spring_sem_contact_hrs = 0;
+			if spring_oth_contact_hrs = . then spring_oth_contact_hrs = 0;
+			if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+			if total_fall_units = . then total_fall_units = 0;
+			if total_spring_units = . then total_spring_units = 0;
+			if fall_credit_hours = . then fall_credit_hours = 0;
+			if spring_credit_hours = . then spring_credit_hours = 0;
+			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+			if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
+			if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
+			if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+			if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+			if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 1; else fall_midterm_gpa_avg_mi = 0;
+			if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
+			if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
+			if fall_midterm_S_grade_count = . then fall_midterm_S_grade_count = 0;
+			if fall_midterm_W_grade_count = . then fall_midterm_W_grade_count = 0;
+			if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg_mi = 1; else spring_midterm_gpa_avg_mi = 0;
+			if spring_midterm_gpa_avg = . then spring_midterm_gpa_avg = 0;
+			if spring_midterm_grade_count = . then spring_midterm_grade_count = 0;
+			if spring_midterm_S_grade_count = . then spring_midterm_S_grade_count = 0;
+			if spring_midterm_W_grade_count = . then spring_midterm_W_grade_count = 0;
+			if fall_term_gpa = . then fall_term_gpa_mi = 1; else fall_term_gpa_mi = 0;
+			if fall_term_gpa = . then fall_term_gpa = 0;
+			if spring_term_gpa = . then spring_term_gpa_mi = 1; else spring_term_gpa_mi = 0;
+			if spring_term_gpa = . then spring_term_gpa = 0;
+			if fall_term_W_grade_count = . then fall_term_W_grade_count_mi = 1; else fall_term_W_grade_count_mi = 0;
+			if fall_term_W_grade_count = . then fall_term_W_grade_count = 0;
+			if fall_term_I_grade_count = . then fall_term_I_grade_count_mi = 1; else fall_term_I_grade_count_mi = 0;
+			if fall_term_I_grade_count = . then fall_term_I_grade_count = 0;
+			if fall_term_X_grade_count = . then fall_term_X_grade_count_mi = 1; else fall_term_X_grade_count_mi = 0;
+			if fall_term_X_grade_count = . then fall_term_X_grade_count = 0;
+			if fall_term_U_grade_count = . then fall_term_U_grade_count_mi = 1; else fall_term_U_grade_count_mi = 0;
+			if fall_term_U_grade_count = . then fall_term_U_grade_count = 0;
+			if fall_term_S_grade_count = . then fall_term_S_grade_count_mi = 1; else fall_term_S_grade_count_mi = 0;
+			if fall_term_S_grade_count = . then fall_term_S_grade_count = 0;
+			if fall_term_P_grade_count = . then fall_term_P_grade_count_mi = 1; else fall_term_P_grade_count_mi = 0;
+			if fall_term_P_grade_count = . then fall_term_P_grade_count = 0;
+			if fall_term_Z_grade_count = . then fall_term_Z_grade_count_mi = 1; else fall_term_Z_grade_count_mi = 0;
+			if fall_term_Z_grade_count = . then fall_term_Z_grade_count = 0;
+			if fall_term_grade_count = . then fall_term_grade_count_mi = 1; else fall_term_grade_count_mi = 0;
+			if fall_term_grade_count = . then fall_term_grade_count = 0;
+			if spring_term_W_grade_count = . then spring_term_W_grade_count_mi = 1; else spring_term_W_grade_count_mi = 0;
+			if spring_term_W_grade_count = . then spring_term_W_grade_count = 0;
+			if spring_term_I_grade_count = . then spring_term_I_grade_count_mi = 1; else spring_term_I_grade_count_mi = 0;
+			if spring_term_I_grade_count = . then spring_term_I_grade_count = 0;
+			if spring_term_X_grade_count = . then spring_term_X_grade_count_mi = 1; else spring_term_X_grade_count_mi = 0;
+			if spring_term_X_grade_count = . then spring_term_X_grade_count = 0;
+			if spring_term_U_grade_count = . then spring_term_U_grade_count_mi = 1; else spring_term_U_grade_count_mi = 0;
+			if spring_term_U_grade_count = . then spring_term_U_grade_count = 0;
+			if spring_term_S_grade_count = . then spring_term_S_grade_count_mi = 1; else spring_term_S_grade_count_mi = 0;
+			if spring_term_S_grade_count = . then spring_term_S_grade_count = 0;
+			if spring_term_P_grade_count = . then spring_term_P_grade_count_mi = 1; else spring_term_P_grade_count_mi = 0;
+			if spring_term_P_grade_count = . then spring_term_P_grade_count = 0;
+			if spring_term_Z_grade_count = . then spring_term_Z_grade_count_mi = 1; else spring_term_Z_grade_count_mi = 0;
+			if spring_term_Z_grade_count = . then spring_term_Z_grade_count = 0;
+			if spring_term_grade_count = . then spring_term_grade_count_mi = 1; else spring_term_grade_count_mi = 0;
+			if spring_term_grade_count = . then spring_term_grade_count = 0;
 			if first_gen_flag = '' then first_gen_flag_mi = 1; else first_gen_flag_mi = 0;
 			if first_gen_flag = '' then first_gen_flag = 'N';
 			if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
@@ -1918,6 +2071,11 @@ class DatasetBuilderProd:
 			if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
 			if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
 			if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+			fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
+			if total_fall_units = 0 then fall_withdrawn_ind = 1; else fall_withdrawn_ind = 0;
+			spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
+			if total_spring_units = 0 then spring_withdrawn = 1; else spring_withdrawn = 0;
+			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
 			unmet_need_ofr = fed_need - total_offer;
@@ -2738,7 +2896,10 @@ class DatasetBuilderProd:
 													end as P_grade_ind,
 					case when crse_grade_input = 'Z'	then 1
 														else 0
-														end as Z_grade_ind
+														end as Z_grade_ind,
+					case when unt_taken is not null and enrl_status_reason ^= 'WDRW'	then 1
+																						else 0
+																						end as term_grade_ind
 				from &dsn..class_registration_vw
 				where snapshot = "&snapshot."
 					and full_acad_year = "&cohort_year."
@@ -2752,13 +2913,14 @@ class DatasetBuilderProd:
 					a.emplid,
 					b.fall_term_gpa_hours,
 					b.fall_term_gpa,
-					c.fall_W_grade_count,
-					c.fall_I_grade_count,
-					c.fall_X_grade_count,
-					c.fall_U_grade_count,
-					c.fall_S_grade_count,
-					c.fall_P_grade_count,
-					c.fall_Z_grade_count
+					c.fall_term_W_grade_count,
+					c.fall_term_I_grade_count,
+					c.fall_term_X_grade_count,
+					c.fall_term_U_grade_count,
+					c.fall_term_S_grade_count,
+					c.fall_term_P_grade_count,
+					c.fall_term_Z_grade_count,
+					c.fall_term_grade_count
 				from class_registration_&cohort_year. as a
 				left join (select distinct
 								emplid,
@@ -2772,13 +2934,14 @@ class DatasetBuilderProd:
 					on a.emplid = b.emplid
 				left join (select distinct 
 								emplid,
-								sum(W_grade_ind) as fall_W_grade_count,
-								sum(I_grade_ind) as fall_I_grade_count,
-								sum(X_grade_ind) as fall_X_grade_count,
-								sum(U_grade_ind) as fall_U_grade_count,
-								sum(S_grade_ind) as fall_S_grade_count,
-								sum(P_grade_ind) as fall_P_grade_count,
-								sum(Z_grade_ind) as fall_Z_grade_count
+								sum(W_grade_ind) as fall_term_W_grade_count,
+								sum(I_grade_ind) as fall_term_I_grade_count,
+								sum(X_grade_ind) as fall_term_X_grade_count,
+								sum(U_grade_ind) as fall_term_U_grade_count,
+								sum(S_grade_ind) as fall_term_S_grade_count,
+								sum(P_grade_ind) as fall_term_P_grade_count,
+								sum(Z_grade_ind) as fall_term_Z_grade_count,
+								sum(term_grade_ind) as fall_term_grade_count
 							from class_registration_&cohort_year.
 							where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 							group by emplid) as c
@@ -2792,13 +2955,14 @@ class DatasetBuilderProd:
 					a.emplid,
 					b.spring_term_gpa_hours,
 					b.spring_term_gpa,
-					c.spring_W_grade_count,
-					c.spring_I_grade_count,
-					c.spring_X_grade_count,
-					c.spring_U_grade_count,
-					c.spring_S_grade_count,
-					c.spring_P_grade_count,
-					c.spring_Z_grade_count
+					c.spring_term_W_grade_count,
+					c.spring_term_I_grade_count,
+					c.spring_term_X_grade_count,
+					c.spring_term_U_grade_count,
+					c.spring_term_S_grade_count,
+					c.spring_term_P_grade_count,
+					c.spring_term_Z_grade_count,
+					c.spring_term_grade_count
 				from class_registration_&cohort_year. as a
 				left join (select distinct
 								emplid,
@@ -2812,13 +2976,14 @@ class DatasetBuilderProd:
 					on a.emplid = b.emplid
 				left join (select distinct
 								emplid,
-								sum(W_grade_ind) as spring_W_grade_count,
-								sum(I_grade_ind) as spring_I_grade_count,
-								sum(X_grade_ind) as spring_X_grade_count,
-								sum(U_grade_ind) as spring_U_grade_count,
-								sum(S_grade_ind) as spring_S_grade_count,
-								sum(P_grade_ind) as spring_P_grade_count,
-								sum(Z_grade_ind) as spring_Z_grade_count
+								sum(W_grade_ind) as spring_term_W_grade_count,
+								sum(I_grade_ind) as spring_term_I_grade_count,
+								sum(X_grade_ind) as spring_term_X_grade_count,
+								sum(U_grade_ind) as spring_term_U_grade_count,
+								sum(S_grade_ind) as spring_term_S_grade_count,
+								sum(P_grade_ind) as spring_term_P_grade_count,
+								sum(Z_grade_ind) as spring_term_Z_grade_count,
+								sum(term_grade_ind) as spring_term_grade_count
 							from class_registration_&cohort_year.
 							where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 							group by emplid) as c
@@ -3716,22 +3881,24 @@ class DatasetBuilderProd:
 					b.pell_recipient_ind,
 					y.fall_term_gpa,
 					y.fall_term_gpa_hours,
-					y.fall_W_grade_count,
-					y.fall_I_grade_count,
-					y.fall_X_grade_count,
-					y.fall_U_grade_count,
-					y.fall_S_grade_count,
-					y.fall_P_grade_count,
-					y.fall_Z_grade_count,
+					y.fall_term_W_grade_count,
+					y.fall_term_I_grade_count,
+					y.fall_term_X_grade_count,
+					y.fall_term_U_grade_count,
+					y.fall_term_S_grade_count,
+					y.fall_term_P_grade_count,
+					y.fall_term_Z_grade_count,
+					y.fall_term_grade_count,
 					z.spring_term_gpa,
 					z.spring_term_gpa_hours,
-					z.spring_W_grade_count,
-					z.spring_I_grade_count,
-					z.spring_X_grade_count,
-					z.spring_U_grade_count,
-					z.spring_S_grade_count,
-					z.spring_P_grade_count,
-					z.spring_Z_grade_count,
+					z.spring_term_W_grade_count,
+					z.spring_term_I_grade_count,
+					z.spring_term_X_grade_count,
+					z.spring_term_U_grade_count,
+					z.spring_term_S_grade_count,
+					z.spring_term_P_grade_count,
+					z.spring_term_Z_grade_count,
+					z.spring_term_grade_count,
 					aa.cum_gpa,
 					aa.cum_gpa_hours,
 					c.cont_term,
@@ -4584,7 +4751,10 @@ class DatasetBuilderProd:
 														end as P_grade_ind,
 						case when crse_grade_input_fin = 'Z'	then 1
 																else 0
-																end as Z_grade_ind
+																end as Z_grade_ind,
+						case when unt_taken is not null and enrl_status_reason ^= 'WDRW'	then 1
+																							else 0
+																							end as term_grade_ind
 					from acs.crse_grade_data
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and calculated subject_catalog_nbr ^= 'NURS 399'
@@ -4639,7 +4809,10 @@ class DatasetBuilderProd:
 														end as P_grade_ind,
 						case when crse_grade_input_fin = 'Z'	then 1
 																else 0
-																end as Z_grade_ind
+																end as Z_grade_ind,
+						case when unt_taken is not null and enrl_status_reason ^= 'WDRW'	then 1
+																							else 0
+																							end as term_grade_ind
 					from acs.crse_grade_data
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and calculated subject_catalog_nbr ^= 'NURS 399'
@@ -4700,7 +4873,10 @@ class DatasetBuilderProd:
 														end as P_grade_ind,
 						case when crse_grade_input_fin = 'Z'	then 1
 																else 0
-																end as Z_grade_ind
+																end as Z_grade_ind,
+						case when unt_taken is not null and enrl_status_reason ^= 'WDRW'	then 1
+																							else 0
+																							end as term_grade_ind
 					from acs.crse_grade_data
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and calculated subject_catalog_nbr ^= 'NURS 399'
@@ -4714,13 +4890,14 @@ class DatasetBuilderProd:
 					a.emplid,
 					b.fall_term_gpa_hours,
 					b.fall_term_gpa,
-					c.fall_W_grade_count,
-					c.fall_I_grade_count,
-					c.fall_X_grade_count,
-					c.fall_U_grade_count,
-					c.fall_S_grade_count,
-					c.fall_P_grade_count,
-					c.fall_Z_grade_count
+					c.fall_term_W_grade_count,
+					c.fall_term_I_grade_count,
+					c.fall_term_X_grade_count,
+					c.fall_term_U_grade_count,
+					c.fall_term_S_grade_count,
+					c.fall_term_P_grade_count,
+					c.fall_term_Z_grade_count,
+					c.fall_term_grade_count
 				from class_registration_&cohort_year. as a
 				left join (select distinct
 								emplid,
@@ -4734,13 +4911,14 @@ class DatasetBuilderProd:
 					on a.emplid = b.emplid
 				left join (select distinct 
 								emplid,
-								sum(W_grade_ind) as fall_W_grade_count,
-								sum(I_grade_ind) as fall_I_grade_count,
-								sum(X_grade_ind) as fall_X_grade_count,
-								sum(U_grade_ind) as fall_U_grade_count,
-								sum(S_grade_ind) as fall_S_grade_count,
-								sum(P_grade_ind) as fall_P_grade_count,
-								sum(Z_grade_ind) as fall_Z_grade_count
+								sum(W_grade_ind) as fall_term_W_grade_count,
+								sum(I_grade_ind) as fall_term_I_grade_count,
+								sum(X_grade_ind) as fall_term_X_grade_count,
+								sum(U_grade_ind) as fall_term_U_grade_count,
+								sum(S_grade_ind) as fall_term_S_grade_count,
+								sum(P_grade_ind) as fall_term_P_grade_count,
+								sum(Z_grade_ind) as fall_term_Z_grade_count,
+								sum(term_grade_ind) as fall_term_grade_count
 							from class_registration_&cohort_year.
 							where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 							group by emplid) as c
@@ -4754,13 +4932,14 @@ class DatasetBuilderProd:
 					a.emplid,
 					b.spring_term_gpa_hours,
 					b.spring_term_gpa,
-					c.spring_W_grade_count,
-					c.spring_I_grade_count,
-					c.spring_X_grade_count,
-					c.spring_U_grade_count,
-					c.spring_S_grade_count,
-					c.spring_P_grade_count,
-					c.spring_Z_grade_count
+					c.spring_term_W_grade_count,
+					c.spring_term_I_grade_count,
+					c.spring_term_X_grade_count,
+					c.spring_term_U_grade_count,
+					c.spring_term_S_grade_count,
+					c.spring_term_P_grade_count,
+					c.spring_term_Z_grade_count,
+					c.spring_term_grade_count
 				from class_registration_&cohort_year. as a
 				left join (select distinct
 								emplid,
@@ -4774,13 +4953,14 @@ class DatasetBuilderProd:
 					on a.emplid = b.emplid
 				left join (select distinct
 								emplid,
-								sum(W_grade_ind) as spring_W_grade_count,
-								sum(I_grade_ind) as spring_I_grade_count,
-								sum(X_grade_ind) as spring_X_grade_count,
-								sum(U_grade_ind) as spring_U_grade_count,
-								sum(S_grade_ind) as spring_S_grade_count,
-								sum(P_grade_ind) as spring_P_grade_count,
-								sum(Z_grade_ind) as spring_Z_grade_count
+								sum(W_grade_ind) as spring_term_W_grade_count,
+								sum(I_grade_ind) as spring_term_I_grade_count,
+								sum(X_grade_ind) as spring_term_X_grade_count,
+								sum(U_grade_ind) as spring_term_U_grade_count,
+								sum(S_grade_ind) as spring_term_S_grade_count,
+								sum(P_grade_ind) as spring_term_P_grade_count,
+								sum(Z_grade_ind) as spring_term_Z_grade_count,
+								sum(term_grade_ind) as spring_term_grade_count
 							from class_registration_&cohort_year.
 							where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 							group by emplid) as c
@@ -5674,22 +5854,24 @@ class DatasetBuilderProd:
 					b.pell_recipient_ind,
 					y.fall_term_gpa,
 					y.fall_term_gpa_hours,
-					y.fall_W_grade_count,
-					y.fall_I_grade_count,
-					y.fall_X_grade_count,
-					y.fall_U_grade_count,
-					y.fall_S_grade_count,
-					y.fall_P_grade_count,
-					y.fall_Z_grade_count,
+					y.fall_term_W_grade_count,
+					y.fall_term_I_grade_count,
+					y.fall_term_X_grade_count,
+					y.fall_term_U_grade_count,
+					y.fall_term_S_grade_count,
+					y.fall_term_P_grade_count,
+					y.fall_term_Z_grade_count,
+					y.fall_term_grade_count,
 					z.spring_term_gpa,
 					z.spring_term_gpa_hours,
-					z.spring_W_grade_count,
-					z.spring_I_grade_count,
-					z.spring_X_grade_count,
-					z.spring_U_grade_count,
-					z.spring_S_grade_count,
-					z.spring_P_grade_count,
-					z.spring_Z_grade_count,
+					z.spring_term_W_grade_count,
+					z.spring_term_I_grade_count,
+					z.spring_term_X_grade_count,
+					z.spring_term_U_grade_count,
+					z.spring_term_S_grade_count,
+					z.spring_term_P_grade_count,
+					z.spring_term_Z_grade_count,
+					z.spring_term_grade_count,
 					aa.cum_gpa,
 					aa.cum_gpa_hours,
 					c.acad_plan,
@@ -6040,34 +6222,38 @@ class DatasetBuilderProd:
 			if fall_term_gpa = . then fall_term_gpa = 0;
 			if spring_term_gpa = . then spring_term_gpa_mi = 1; else spring_term_gpa_mi = 0;
 			if spring_term_gpa = . then spring_term_gpa = 0;
-			if fall_W_grade_count = . then fall_W_grade_count_mi = 1; else fall_W_grade_count_mi = 0;
-			if fall_W_grade_count = . then fall_W_grade_count = 0;
-			if fall_I_grade_count = . then fall_I_grade_count_mi = 1; else fall_I_grade_count_mi = 0;
-			if fall_I_grade_count = . then fall_I_grade_count = 0;
-			if fall_X_grade_count = . then fall_X_grade_count_mi = 1; else fall_X_grade_count_mi = 0;
-			if fall_X_grade_count = . then fall_X_grade_count = 0;
-			if fall_U_grade_count = . then fall_U_grade_count_mi = 1; else fall_U_grade_count_mi = 0;
-			if fall_U_grade_count = . then fall_U_grade_count = 0;
-			if fall_S_grade_count = . then fall_S_grade_count_mi = 1; else fall_S_grade_count_mi = 0;
-			if fall_S_grade_count = . then fall_S_grade_count = 0;
-			if fall_P_grade_count = . then fall_P_grade_count_mi = 1; else fall_P_grade_count_mi = 0;
-			if fall_P_grade_count = . then fall_P_grade_count = 0;
-			if fall_Z_grade_count = . then fall_Z_grade_count_mi = 1; else fall_Z_grade_count_mi = 0;
-			if fall_Z_grade_count = . then fall_Z_grade_count = 0;
-			if spring_W_grade_count = . then spring_W_grade_count_mi = 1; else spring_W_grade_count_mi = 0;
-			if spring_W_grade_count = . then spring_W_grade_count = 0;
-			if spring_I_grade_count = . then spring_I_grade_count_mi = 1; else spring_I_grade_count_mi = 0;
-			if spring_I_grade_count = . then spring_I_grade_count = 0;
-			if spring_X_grade_count = . then spring_X_grade_count_mi = 1; else spring_X_grade_count_mi = 0;
-			if spring_X_grade_count = . then spring_X_grade_count = 0;
-			if spring_U_grade_count = . then spring_U_grade_count_mi = 1; else spring_U_grade_count_mi = 0;
-			if spring_U_grade_count = . then spring_U_grade_count = 0;
-			if spring_S_grade_count = . then spring_S_grade_count_mi = 1; else spring_S_grade_count_mi = 0;
-			if spring_S_grade_count = . then spring_S_grade_count = 0;
-			if spring_P_grade_count = . then spring_P_grade_count_mi = 1; else spring_P_grade_count_mi = 0;
-			if spring_P_grade_count = . then spring_P_grade_count = 0;
-			if spring_Z_grade_count = . then spring_Z_grade_count_mi = 1; else spring_Z_grade_count_mi = 0;
-			if spring_Z_grade_count = . then spring_Z_grade_count = 0;
+			if fall_term_W_grade_count = . then fall_term_W_grade_count_mi = 1; else fall_term_W_grade_count_mi = 0;
+			if fall_term_W_grade_count = . then fall_term_W_grade_count = 0;
+			if fall_term_I_grade_count = . then fall_term_I_grade_count_mi = 1; else fall_term_I_grade_count_mi = 0;
+			if fall_term_I_grade_count = . then fall_term_I_grade_count = 0;
+			if fall_term_X_grade_count = . then fall_term_X_grade_count_mi = 1; else fall_term_X_grade_count_mi = 0;
+			if fall_term_X_grade_count = . then fall_term_X_grade_count = 0;
+			if fall_term_U_grade_count = . then fall_term_U_grade_count_mi = 1; else fall_term_U_grade_count_mi = 0;
+			if fall_term_U_grade_count = . then fall_term_U_grade_count = 0;
+			if fall_term_S_grade_count = . then fall_term_S_grade_count_mi = 1; else fall_term_S_grade_count_mi = 0;
+			if fall_term_S_grade_count = . then fall_term_S_grade_count = 0;
+			if fall_term_P_grade_count = . then fall_term_P_grade_count_mi = 1; else fall_term_P_grade_count_mi = 0;
+			if fall_term_P_grade_count = . then fall_term_P_grade_count = 0;
+			if fall_term_Z_grade_count = . then fall_term_Z_grade_count_mi = 1; else fall_term_Z_grade_count_mi = 0;
+			if fall_term_Z_grade_count = . then fall_term_Z_grade_count = 0;
+			if fall_term_grade_count = . then fall_term_grade_count_mi = 1; else fall_term_grade_count_mi = 0;
+			if fall_term_grade_count = . then fall_term_grade_count = 0;
+			if spring_term_W_grade_count = . then spring_term_W_grade_count_mi = 1; else spring_term_W_grade_count_mi = 0;
+			if spring_term_W_grade_count = . then spring_term_W_grade_count = 0;
+			if spring_term_I_grade_count = . then spring_term_I_grade_count_mi = 1; else spring_term_I_grade_count_mi = 0;
+			if spring_term_I_grade_count = . then spring_term_I_grade_count = 0;
+			if spring_term_X_grade_count = . then spring_term_X_grade_count_mi = 1; else spring_term_X_grade_count_mi = 0;
+			if spring_term_X_grade_count = . then spring_term_X_grade_count = 0;
+			if spring_term_U_grade_count = . then spring_term_U_grade_count_mi = 1; else spring_term_U_grade_count_mi = 0;
+			if spring_term_U_grade_count = . then spring_term_U_grade_count = 0;
+			if spring_term_S_grade_count = . then spring_term_S_grade_count_mi = 1; else spring_term_S_grade_count_mi = 0;
+			if spring_term_S_grade_count = . then spring_term_S_grade_count = 0;
+			if spring_term_P_grade_count = . then spring_term_P_grade_count_mi = 1; else spring_term_P_grade_count_mi = 0;
+			if spring_term_P_grade_count = . then spring_term_P_grade_count = 0;
+			if spring_term_Z_grade_count = . then spring_term_Z_grade_count_mi = 1; else spring_term_Z_grade_count_mi = 0;
+			if spring_term_Z_grade_count = . then spring_term_Z_grade_count = 0;
+			if spring_term_grade_count = . then spring_term_grade_count_mi = 1; else spring_term_grade_count_mi = 0;
+			if spring_term_grade_count = . then spring_term_grade_count = 0;
 			if first_gen_flag = '' then first_gen_flag_mi = 1; else first_gen_flag_mi = 0;
 			if first_gen_flag = '' then first_gen_flag = 'N';
 			if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
@@ -6082,7 +6268,7 @@ class DatasetBuilderProd:
 			fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
 			if total_fall_units = 0 then fall_withdrawn_ind = 1; else fall_withdrawn_ind = 0;
 			spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
-			if total_spring_units = 0 then spring_withdrawn_ind = 1; else spring_withdrawn_ind = 0;
+			if total_spring_units = 0 then spring_withdrawn = 1; else spring_withdrawn = 0;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
@@ -6202,34 +6388,38 @@ class DatasetBuilderProd:
 			if fall_term_gpa = . then fall_term_gpa = 0;
 			if spring_term_gpa = . then spring_term_gpa_mi = 1; else spring_term_gpa_mi = 0;
 			if spring_term_gpa = . then spring_term_gpa = 0;
-			if fall_W_grade_count = . then fall_W_grade_count_mi = 1; else fall_W_grade_count_mi = 0;
-			if fall_W_grade_count = . then fall_W_grade_count = 0;
-			if fall_I_grade_count = . then fall_I_grade_count_mi = 1; else fall_I_grade_count_mi = 0;
-			if fall_I_grade_count = . then fall_I_grade_count = 0;
-			if fall_X_grade_count = . then fall_X_grade_count_mi = 1; else fall_X_grade_count_mi = 0;
-			if fall_X_grade_count = . then fall_X_grade_count = 0;
-			if fall_U_grade_count = . then fall_U_grade_count_mi = 1; else fall_U_grade_count_mi = 0;
-			if fall_U_grade_count = . then fall_U_grade_count = 0;
-			if fall_S_grade_count = . then fall_S_grade_count_mi = 1; else fall_S_grade_count_mi = 0;
-			if fall_S_grade_count = . then fall_S_grade_count = 0;
-			if fall_P_grade_count = . then fall_P_grade_count_mi = 1; else fall_P_grade_count_mi = 0;
-			if fall_P_grade_count = . then fall_P_grade_count = 0;
-			if fall_Z_grade_count = . then fall_Z_grade_count_mi = 1; else fall_Z_grade_count_mi = 0;
-			if fall_Z_grade_count = . then fall_Z_grade_count = 0;
-			if spring_W_grade_count = . then spring_W_grade_count_mi = 1; else spring_W_grade_count_mi = 0;
-			if spring_W_grade_count = . then spring_W_grade_count = 0;
-			if spring_I_grade_count = . then spring_I_grade_count_mi = 1; else spring_I_grade_count_mi = 0;
-			if spring_I_grade_count = . then spring_I_grade_count = 0;
-			if spring_X_grade_count = . then spring_X_grade_count_mi = 1; else spring_X_grade_count_mi = 0;
-			if spring_X_grade_count = . then spring_X_grade_count = 0;
-			if spring_U_grade_count = . then spring_U_grade_count_mi = 1; else spring_U_grade_count_mi = 0;
-			if spring_U_grade_count = . then spring_U_grade_count = 0;
-			if spring_S_grade_count = . then spring_S_grade_count_mi = 1; else spring_S_grade_count_mi = 0;
-			if spring_S_grade_count = . then spring_S_grade_count = 0;
-			if spring_P_grade_count = . then spring_P_grade_count_mi = 1; else spring_P_grade_count_mi = 0;
-			if spring_P_grade_count = . then spring_P_grade_count = 0;
-			if spring_Z_grade_count = . then spring_Z_grade_count_mi = 1; else spring_Z_grade_count_mi = 0;
-			if spring_Z_grade_count = . then spring_Z_grade_count = 0;
+			if fall_term_W_grade_count = . then fall_term_W_grade_count_mi = 1; else fall_term_W_grade_count_mi = 0;
+			if fall_term_W_grade_count = . then fall_term_W_grade_count = 0;
+			if fall_term_I_grade_count = . then fall_term_I_grade_count_mi = 1; else fall_term_I_grade_count_mi = 0;
+			if fall_term_I_grade_count = . then fall_term_I_grade_count = 0;
+			if fall_term_X_grade_count = . then fall_term_X_grade_count_mi = 1; else fall_term_X_grade_count_mi = 0;
+			if fall_term_X_grade_count = . then fall_term_X_grade_count = 0;
+			if fall_term_U_grade_count = . then fall_term_U_grade_count_mi = 1; else fall_term_U_grade_count_mi = 0;
+			if fall_term_U_grade_count = . then fall_term_U_grade_count = 0;
+			if fall_term_S_grade_count = . then fall_term_S_grade_count_mi = 1; else fall_term_S_grade_count_mi = 0;
+			if fall_term_S_grade_count = . then fall_term_S_grade_count = 0;
+			if fall_term_P_grade_count = . then fall_term_P_grade_count_mi = 1; else fall_term_P_grade_count_mi = 0;
+			if fall_term_P_grade_count = . then fall_term_P_grade_count = 0;
+			if fall_term_Z_grade_count = . then fall_term_Z_grade_count_mi = 1; else fall_term_Z_grade_count_mi = 0;
+			if fall_term_Z_grade_count = . then fall_term_Z_grade_count = 0;
+			if fall_term_grade_count = . then fall_term_grade_count_mi = 1; else fall_term_grade_count_mi = 0;
+			if fall_term_grade_count = . then fall_term_grade_count = 0;
+			if spring_term_W_grade_count = . then spring_term_W_grade_count_mi = 1; else spring_term_W_grade_count_mi = 0;
+			if spring_term_W_grade_count = . then spring_term_W_grade_count = 0;
+			if spring_term_I_grade_count = . then spring_term_I_grade_count_mi = 1; else spring_term_I_grade_count_mi = 0;
+			if spring_term_I_grade_count = . then spring_term_I_grade_count = 0;
+			if spring_term_X_grade_count = . then spring_term_X_grade_count_mi = 1; else spring_term_X_grade_count_mi = 0;
+			if spring_term_X_grade_count = . then spring_term_X_grade_count = 0;
+			if spring_term_U_grade_count = . then spring_term_U_grade_count_mi = 1; else spring_term_U_grade_count_mi = 0;
+			if spring_term_U_grade_count = . then spring_term_U_grade_count = 0;
+			if spring_term_S_grade_count = . then spring_term_S_grade_count_mi = 1; else spring_term_S_grade_count_mi = 0;
+			if spring_term_S_grade_count = . then spring_term_S_grade_count = 0;
+			if spring_term_P_grade_count = . then spring_term_P_grade_count_mi = 1; else spring_term_P_grade_count_mi = 0;
+			if spring_term_P_grade_count = . then spring_term_P_grade_count = 0;
+			if spring_term_Z_grade_count = . then spring_term_Z_grade_count_mi = 1; else spring_term_Z_grade_count_mi = 0;
+			if spring_term_Z_grade_count = . then spring_term_Z_grade_count = 0;
+			if spring_term_grade_count = . then spring_term_grade_count_mi = 1; else spring_term_grade_count_mi = 0;
+			if spring_term_grade_count = . then spring_term_grade_count = 0;
 			if first_gen_flag = '' then first_gen_flag_mi = 1; else first_gen_flag_mi = 0;
 			if first_gen_flag = '' then first_gen_flag = 'N';
 			if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
@@ -6244,7 +6434,7 @@ class DatasetBuilderProd:
 			fall_withdrawn_hours = (total_fall_units - fall_credit_hours) * -1;
 			if total_fall_units = 0 then fall_withdrawn_ind = 1; else fall_withdrawn_ind = 0;
 			spring_withdrawn_hours = (total_spring_units - spring_credit_hours) * -1;
-			if total_spring_units = 0 then spring_withdrawn_ind = 1; else spring_withdrawn_ind = 0;
+			if total_spring_units = 0 then spring_withdrawn = 1; else spring_withdrawn = 0;
 			spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 			unmet_need_disb = fed_need - total_disb;
 			unmet_need_acpt = fed_need - total_accept;
