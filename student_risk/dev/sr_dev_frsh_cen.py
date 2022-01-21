@@ -4307,7 +4307,7 @@ plt.show()
 class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_test, pullm_y_test)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -4316,17 +4316,17 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 pullm_hyperparameters = [{'max_depth': [15],
 						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
 
 #%%
 pullm_hyperparameters = [{'max_depth': [15],
-						'gamma': [8],
+						'gamma': [10],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -4338,7 +4338,7 @@ class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y
 pullm_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=15, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
 
 # Pullman XGB calibration
-# pullm_xgb = XGBClassifier(n_estimators=150, max_depth=11, use_label_encoder=False, gamma=8, scale_pos_weight=class_weight, eval_metric='logloss')
+# pullm_xgb = XGBClassifier(n_estimators=200, max_depth=11, use_label_encoder=False, gamma=8, scale_pos_weight=class_weight, eval_metric='logloss')
 # pullm_xgb_ccv = CalibratedClassifierCV(pullm_xgb, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgb_probs = pullm_xgb_ccv.predict_proba(pullm_x_train)
@@ -4384,7 +4384,7 @@ plt.show()
 class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_test, vanco_y_test)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -4393,7 +4393,7 @@ print(f'Best parameters: {vanco_gridsearch.best_params_}')
 vanco_hyperparameters = [{'max_depth': [5],
 						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -4403,7 +4403,7 @@ vanco_hyperparameters = [{'max_depth': [5],
 						'gamma': [12],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -4415,7 +4415,7 @@ class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y
 vanco_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=5, use_label_encoder=False, gamma=12, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(vanco_x_train, vanco_y_train)
 
 # Vancouver XGB calibration
-# vanco_xgb = XGBClassifier(n_estimators=150, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
+# vanco_xgb = XGBClassifier(n_estimators=200, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
 # vanco_xgb_ccv = CalibratedClassifierCV(vanco_xgb, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
 
 vanco_xgb_probs = vanco_xgb_ccv.predict_proba(vanco_x_train)
@@ -4461,7 +4461,7 @@ plt.show()
 class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_test, trici_y_test)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -4470,7 +4470,7 @@ print(f'Best parameters: {trici_gridsearch.best_params_}')
 trici_hyperparameters = [{'max_depth': [5],
 						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -4480,7 +4480,7 @@ trici_hyperparameters = [{'max_depth': [5],
 						'gamma': [8],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -4492,7 +4492,7 @@ class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y
 trici_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=5, use_label_encoder=False, gamma=8, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(trici_x_train, trici_y_train)
 
 # Tri-Cities XGB calibration
-# trici_xgb = XGBClassifier(n_estimators=150, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
+# trici_xgb = XGBClassifier(n_estimators=200, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
 # trici_xgb_ccv = CalibratedClassifierCV(trici_xgb, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
 
 trici_xgb_probs = trici_xgb_ccv.predict_proba(trici_x_train)
@@ -4538,7 +4538,7 @@ plt.show()
 class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_test, univr_y_test)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -4547,7 +4547,7 @@ print(f'Best parameters: {univr_gridsearch.best_params_}')
 univr_hyperparameters = [{'max_depth': [5],
 						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -4557,7 +4557,7 @@ univr_hyperparameters = [{'max_depth': [5],
 						'gamma': [10],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=1000, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -4569,7 +4569,7 @@ class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y
 univr_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=5, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(univr_x_train, univr_y_train)
 
 # University XGB calibration
-# univr_xgb = XGBClassifier(n_estimators=150, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
+# univr_xgb = XGBClassifier(n_estimators=200, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
 # univr_xgb_ccv = CalibratedClassifierCV(univr_xgb, method='isotonic', cv=5).fit(univr_x_train, univr_y_train)
 
 univr_xgb_probs = univr_xgb_ccv.predict_proba(univr_x_train)
