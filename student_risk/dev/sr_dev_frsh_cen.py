@@ -260,7 +260,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -436,7 +436,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -612,7 +612,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -798,15 +798,15 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -974,15 +974,15 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							# 'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -1150,15 +1150,15 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							# 'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -1336,15 +1336,15 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -1512,15 +1512,15 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							# 'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -1688,15 +1688,15 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							# 'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -1874,15 +1874,15 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -2050,15 +2050,15 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							# 'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -2226,15 +2226,15 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							# 'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
 							# 'cdi_instrument',
-							'fall_avg_difficulty',
-							'fall_avg_pct_withdrawn',
+							# 'fall_avg_difficulty',
+							# 'fall_avg_pct_withdrawn',
 							# 'fall_avg_pct_CDFW',
-							'fall_avg_pct_CDF',
+							# 'fall_avg_pct_CDF',
 							# 'fall_avg_pct_DFW',
 							# 'fall_avg_pct_DF',
 							# 'fall_crse_mi',
@@ -2578,7 +2578,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -2751,7 +2751,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -2873,15 +2873,15 @@ vanco_x_test = vanco_testing_set[[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -3046,12 +3046,12 @@ vanco_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
+						# 'fall_avg_difficulty',
 						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
 						# 'fall_avg_pct_CDF',
@@ -3168,15 +3168,15 @@ trici_x_test = trici_testing_set[[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -3341,12 +3341,12 @@ trici_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
+						# 'fall_avg_difficulty',
 						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
 						# 'fall_avg_pct_CDF',
@@ -3463,15 +3463,15 @@ univr_x_test = univr_testing_set[[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						'fall_avg_pct_withdrawn',
+						# 'fall_avg_difficulty',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						# 'fall_avg_pct_DFW',
 						# 'fall_avg_pct_DF',
 						# 'fall_crse_mi',
@@ -3636,12 +3636,12 @@ univr_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'fall_avg_difficulty',
+						# 'fall_avg_difficulty',
 						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
 						# 'fall_avg_pct_CDF',
@@ -3811,7 +3811,6 @@ univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
 				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
 				+ fall_withdrawn_hours \
@@ -3820,7 +3819,6 @@ univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=univr_logit_df, return_type='dataframe')
@@ -3865,7 +3863,7 @@ print('\n')
 
 #%%
 # University VIF
-print('VIF for Tri-Cities...\n')
+print('VIF for University...\n')
 univr_vif = pd.DataFrame()
 univr_vif['vif factor'] = [variance_inflation_factor(univr_x.values, i) for i in range(univr_x.shape[1])]
 univr_vif['features'] = univr_x.columns
@@ -4303,26 +4301,26 @@ plt.show()
 class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_test, pullm_y_test)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
 
 #%%
-pullm_hyperparameters = [{'max_depth': [12],
-						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
+pullm_hyperparameters = [{'max_depth': [5],
+						'gamma': np.linspace(0, 20, 21, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
 
 #%%
-pullm_hyperparameters = [{'max_depth': [12],
-						'gamma': [10],
+pullm_hyperparameters = [{'max_depth': [5],
+						'gamma': [14],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -4331,10 +4329,10 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 # Pullman XGB
 class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 
-pullm_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=12, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
+pullm_xgb_ccv = XGBClassifier(n_estimators=1000, eta=1, max_depth=8, use_label_encoder=False, gamma=14, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
 
 # Pullman XGB calibration
-# pullm_xgb = XGBClassifier(n_estimators=1000, max_depth=12, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss')
+# pullm_xgb = XGBClassifier(n_estimators=1000, eta=1, max_depth=8, use_label_encoder=False, gamma=14, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss')
 # pullm_xgb_ccv = CalibratedClassifierCV(pullm_xgb, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgb_probs = pullm_xgb_ccv.predict_proba(pullm_x_train)
@@ -4380,23 +4378,23 @@ plt.show()
 class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_test, vanco_y_test)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
 
 #%%
-vanco_hyperparameters = [{'max_depth': [5],
-						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
+vanco_hyperparameters = [{'max_depth': [8],
+						'gamma': np.linspace(0, 20, 21, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
 
 #%%
-vanco_hyperparameters = [{'max_depth': [5],
-						'gamma': [12],
+vanco_hyperparameters = [{'max_depth': [8],
+						'gamma': [9],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
 vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -4408,10 +4406,10 @@ print(f'Best parameters: {vanco_gridsearch.best_params_}')
 # Vancouver XGB
 class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 
-vanco_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=5, use_label_encoder=False, gamma=12, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(vanco_x_train, vanco_y_train)
+vanco_xgb_ccv = XGBClassifier(n_estimators=1000, eta=1, max_depth=8, use_label_encoder=False, gamma=9, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(vanco_x_train, vanco_y_train)
 
 # Vancouver XGB calibration
-# vanco_xgb = XGBClassifier(n_estimators=200, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
+# vanco_xgb = XGBClassifier(n_estimators=200, eta=1, max_depth=8, use_label_encoder=False, gamma=9, scale_pos_weight=class_weight, eval_metric='logloss')
 # vanco_xgb_ccv = CalibratedClassifierCV(vanco_xgb, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
 
 vanco_xgb_probs = vanco_xgb_ccv.predict_proba(vanco_x_train)
@@ -4457,26 +4455,26 @@ plt.show()
 class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_test, trici_y_test)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
 
 #%%
-trici_hyperparameters = [{'max_depth': [5],
-						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
+trici_hyperparameters = [{'max_depth': [6],
+						'gamma': np.linspace(0, 20, 21, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
 
 #%%
-trici_hyperparameters = [{'max_depth': [5],
-						'gamma': [8],
+trici_hyperparameters = [{'max_depth': [6],
+						'gamma': [5],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -4485,10 +4483,10 @@ print(f'Best parameters: {trici_gridsearch.best_params_}')
 # Tri-Cities XGB
 class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 
-trici_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=5, use_label_encoder=False, gamma=8, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(trici_x_train, trici_y_train)
+trici_xgb_ccv = XGBClassifier(n_estimators=1000, eta=1, max_depth=6, use_label_encoder=False, gamma=5, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(trici_x_train, trici_y_train)
 
 # Tri-Cities XGB calibration
-# trici_xgb = XGBClassifier(n_estimators=200, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
+# trici_xgb = XGBClassifier(n_estimators=200, eta=1, max_depth=6, use_label_encoder=False, gamma=5, scale_pos_weight=class_weight, eval_metric='logloss')
 # trici_xgb_ccv = CalibratedClassifierCV(trici_xgb, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
 
 trici_xgb_probs = trici_xgb_ccv.predict_proba(trici_x_train)
@@ -4534,26 +4532,26 @@ plt.show()
 class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_test, univr_y_test)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
 
 #%%
 univr_hyperparameters = [{'max_depth': [5],
-						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
+						'gamma': np.linspace(0, 20, 21, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
 
 #%%
 univr_hyperparameters = [{'max_depth': [5],
-						'gamma': [10],
+						'gamma': [13],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, eta=1, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -4562,10 +4560,10 @@ print(f'Best parameters: {univr_gridsearch.best_params_}')
 # University XGB
 class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 
-univr_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=5, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(univr_x_train, univr_y_train)
+univr_xgb_ccv = XGBClassifier(n_estimators=1000, eta=1, max_depth=5, use_label_encoder=False, gamma=13, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(univr_x_train, univr_y_train)
 
 # University XGB calibration
-# univr_xgb = XGBClassifier(n_estimators=200, max_depth=9, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, eval_metric='logloss')
+# univr_xgb = XGBClassifier(n_estimators=200, eta=1, max_depth=5, use_label_encoder=False, gamma=13, scale_pos_weight=class_weight, eval_metric='logloss')
 # univr_xgb_ccv = CalibratedClassifierCV(univr_xgb, method='isotonic', cv=5).fit(univr_x_train, univr_y_train)
 
 univr_xgb_probs = univr_xgb_ccv.predict_proba(univr_x_train)
