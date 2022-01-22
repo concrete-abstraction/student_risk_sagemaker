@@ -3740,7 +3740,7 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_grade_count + fall_term_S_grade_count + fall_term_W_grade_count \
+				+ fall_term_S_grade_count + fall_term_W_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
@@ -3759,7 +3759,6 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
 				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
 				+ fall_withdrawn_hours \
@@ -3768,7 +3767,6 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
@@ -3787,7 +3785,6 @@ trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
 				+ gini_indx + median_inc + median_value + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-                + fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
 				+ fall_withdrawn_hours \
@@ -3796,7 +3793,6 @@ trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ resident \
             	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
 				+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
@@ -4313,7 +4309,7 @@ pullm_best_model = pullm_gridsearch.fit(pullm_x_test, pullm_y_test)
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
 
 #%%
-pullm_hyperparameters = [{'max_depth': [15],
+pullm_hyperparameters = [{'max_depth': [12],
 						'gamma': np.linspace(0, 102, 52, endpoint=True)}]
 
 pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=200, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -4322,7 +4318,7 @@ pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
 
 #%%
-pullm_hyperparameters = [{'max_depth': [15],
+pullm_hyperparameters = [{'max_depth': [12],
 						'gamma': [10],
 						'alpha': np.linspace(0, 100, 11, endpoint=True)}]
 
@@ -4335,10 +4331,10 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 # Pullman XGB
 class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 
-pullm_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=15, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
+pullm_xgb_ccv = XGBClassifier(n_estimators=1000, max_depth=12, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
 
 # Pullman XGB calibration
-# pullm_xgb = XGBClassifier(n_estimators=200, max_depth=11, use_label_encoder=False, gamma=8, scale_pos_weight=class_weight, eval_metric='logloss')
+# pullm_xgb = XGBClassifier(n_estimators=1000, max_depth=12, use_label_encoder=False, gamma=10, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss')
 # pullm_xgb_ccv = CalibratedClassifierCV(pullm_xgb, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgb_probs = pullm_xgb_ccv.predict_proba(pullm_x_train)

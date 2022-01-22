@@ -94,7 +94,7 @@ pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -270,7 +270,7 @@ pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -446,7 +446,7 @@ pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -646,7 +646,7 @@ vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -822,7 +822,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -998,7 +998,7 @@ vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -1198,7 +1198,7 @@ trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == '
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -1374,7 +1374,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -1550,7 +1550,7 @@ trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -1750,7 +1750,7 @@ univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -1926,7 +1926,7 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -2102,7 +2102,7 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 							# 'fall_midterm_W_grade_count',
 							'fall_term_gpa',
 							'fall_term_gpa_mi',
-							'fall_term_grade_count',
+							# 'fall_term_grade_count',
 							'fall_term_S_grade_count',
 							# 'fall_term_W_grade_count',
 							# 'awe_instrument',
@@ -2470,7 +2470,7 @@ pullm_x_test = pullm_testing_set[[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -2643,7 +2643,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -2767,7 +2767,7 @@ vanco_x_test = vanco_testing_set[[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -2940,7 +2940,7 @@ vanco_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -3062,7 +3062,7 @@ trici_x_test = trici_testing_set[[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -3235,7 +3235,7 @@ trici_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -3357,7 +3357,7 @@ univr_x_test = univr_testing_set[[
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -3530,7 +3530,7 @@ univr_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						'fall_term_grade_count',
+						# 'fall_term_grade_count',
 						'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
@@ -3627,7 +3627,7 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_grade_count + fall_term_S_grade_count + fall_term_W_grade_count \
+				+ fall_term_S_grade_count + fall_term_W_grade_count \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3655,7 +3655,7 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_grade_count + fall_term_S_grade_count \
+				+ fall_term_S_grade_count \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3683,7 +3683,7 @@ trici_y, trici_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_grade_count + fall_term_S_grade_count \
+				+ fall_term_S_grade_count \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -3711,7 +3711,7 @@ univr_y, univr_x = dmatrices('enrl_ind ~ pop_dens + educ_rate \
                 + resident \
             	+ transfer_gpa + transfer_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_grade_count + fall_term_S_grade_count \
+				+ fall_term_S_grade_count \
                 + remedial \
                 + cum_adj_transfer_hours \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
