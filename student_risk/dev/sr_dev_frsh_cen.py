@@ -4329,7 +4329,7 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 # Pullman XGB
 class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 
-pullm_xgb_ccv = XGBClassifier(n_estimators=1000, eta=1, max_depth=8, use_label_encoder=False, gamma=14, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
+pullm_xgb_ccv = XGBClassifier(n_estimators=5000, random_state=np.random.randint(np.iinfo(np.int32).max), eta=1, max_depth=8, use_label_encoder=False, gamma=14, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
 
 # Pullman XGB calibration
 # pullm_xgb = XGBClassifier(n_estimators=1000, eta=1, max_depth=8, use_label_encoder=False, gamma=14, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss')
@@ -4406,7 +4406,7 @@ print(f'Best parameters: {vanco_gridsearch.best_params_}')
 # Vancouver XGB
 class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 
-vanco_xgb_ccv = XGBClassifier(n_estimators=1000, eta=1, max_depth=8, use_label_encoder=False, gamma=9, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(vanco_x_train, vanco_y_train)
+vanco_xgb_ccv = XGBClassifier(n_estimators=5000, random_state=np.random.randint(np.iinfo(np.int32).max), eta=1, max_depth=8, use_label_encoder=False, gamma=9, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(vanco_x_train, vanco_y_train)
 
 # Vancouver XGB calibration
 # vanco_xgb = XGBClassifier(n_estimators=200, eta=1, max_depth=8, use_label_encoder=False, gamma=9, scale_pos_weight=class_weight, eval_metric='logloss')
@@ -4483,7 +4483,7 @@ print(f'Best parameters: {trici_gridsearch.best_params_}')
 # Tri-Cities XGB
 class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 
-trici_xgb_ccv = XGBClassifier(n_estimators=1000, eta=1, max_depth=6, use_label_encoder=False, gamma=5, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(trici_x_train, trici_y_train)
+trici_xgb_ccv = XGBClassifier(n_estimators=5000, random_state=np.random.randint(np.iinfo(np.int32).max), eta=1, max_depth=6, use_label_encoder=False, gamma=5, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(trici_x_train, trici_y_train)
 
 # Tri-Cities XGB calibration
 # trici_xgb = XGBClassifier(n_estimators=200, eta=1, max_depth=6, use_label_encoder=False, gamma=5, scale_pos_weight=class_weight, eval_metric='logloss')
@@ -4560,7 +4560,7 @@ print(f'Best parameters: {univr_gridsearch.best_params_}')
 # University XGB
 class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 
-univr_xgb_ccv = XGBClassifier(n_estimators=1000, eta=1, max_depth=5, use_label_encoder=False, gamma=13, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(univr_x_train, univr_y_train)
+univr_xgb_ccv = XGBClassifier(n_estimators=5000, random_state=np.random.randint(np.iinfo(np.int32).max), eta=1, max_depth=5, use_label_encoder=False, gamma=13, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(univr_x_train, univr_y_train)
 
 # University XGB calibration
 # univr_xgb = XGBClassifier(n_estimators=200, eta=1, max_depth=5, use_label_encoder=False, gamma=13, scale_pos_weight=class_weight, eval_metric='logloss')
