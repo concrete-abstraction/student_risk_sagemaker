@@ -27,7 +27,7 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sqlalchemy import MetaData, Table
-from xgboost import XGBClassifier
+from xgboost import XGBRFClassifier
 
 #%%
 # Database connection
@@ -3993,8 +3993,8 @@ univr_sgd_fpr, univr_sgd_tpr, univr_thresholds = roc_curve(univr_y_train, univr_
 # XGBoost model
 
 # Pullman XGB
-class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgb = XGBClassifier(n_estimators=5000, random_state=np.random.randint(np.iinfo(np.int32).max), eta=1, max_depth=8, use_label_encoder=False, gamma=14, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(pullm_x_train, pullm_y_train)
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_xgb = XGBRFClassifier(n_estimators=500, max_depth=5, gamma=1, random_state=np.random.randint(np.iinfo(np.int32).max), scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
 pullm_xgb_probs = pullm_xgb_probs[:, 1]
@@ -4007,8 +4007,8 @@ pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_
 
 #%%
 # Vancouver XGB
-class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgb = XGBClassifier(n_estimators=5000, random_state=np.random.randint(np.iinfo(np.int32).max), eta=1, max_depth=8, use_label_encoder=False, gamma=9, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(vanco_x_train, vanco_y_train)
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_xgb = XGBRFClassifier(n_estimators=500, max_depth=5, gamma=7, random_state=np.random.randint(np.iinfo(np.int32).max), scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
 vanco_xgb_probs = vanco_xgb_probs[:, 1]
@@ -4021,8 +4021,8 @@ vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_
 
 #%%
 # Tri-Cities XGB
-class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgb = XGBClassifier(n_estimators=5000, random_state=np.random.randint(np.iinfo(np.int32).max), eta=1, max_depth=6, use_label_encoder=False, gamma=5, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(trici_x_train, trici_y_train)
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_xgb = XGBRFClassifier(n_estimators=500, max_depth=6, gamma=4, random_state=np.random.randint(np.iinfo(np.int32).max), scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False).fit(trici_x_train, trici_y_train)
 
 trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
 trici_xgb_probs = trici_xgb_probs[:, 1]
@@ -4035,8 +4035,8 @@ trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_
 
 #%%
 # Univeristy XGB
-class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgb = XGBClassifier(n_estimators=1000, random_state=np.random.randint(np.iinfo(np.int32).max), random_state=np.random.randint(np.iinfo(np.int32).max), eta=1, max_depth=5, use_label_encoder=False, gamma=13, scale_pos_weight=class_weight, subsample=0.8, colsample_bynode=0.8, eval_metric='logloss').fit(univr_x_train, univr_y_train)
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_xgb = XGBRFClassifier(n_estimators=500, max_depth=5, gamma=3, random_state=np.random.randint(np.iinfo(np.int32).max), scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False).fit(univr_x_train, univr_y_train)
 
 univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
 univr_xgb_probs = univr_xgb_probs[:, 1]
