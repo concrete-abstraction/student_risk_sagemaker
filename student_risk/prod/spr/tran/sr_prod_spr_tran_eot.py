@@ -23,10 +23,11 @@ from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.model_selection import GridSearchCV
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sqlalchemy import MetaData, Table
-from xgboost import XGBRFClassifier
+from xgboost import XGBClassifier
 
 #%%
 # Database connection
@@ -3920,9 +3921,21 @@ univr_sgd_fpr, univr_sgd_tpr, univr_thresholds = roc_curve(univr_y_train, univr_
 #%%
 # XGBoost model
 
+# Pullman XGBoost tuning
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+
+print(f'Best parameters: {pullm_gridsearch.best_params_}')
+
+#%%
 # Pullman XGB
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgb = XGBRFClassifier(n_estimators=500, max_depth=6, gamma=13, random_state=np.random.randint(np.iinfo(np.int32).max), scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
+pullm_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=pullm_class_weight, 
+								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
 pullm_xgb_probs = pullm_xgb_probs[:, 1]
@@ -3934,9 +3947,21 @@ print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
 pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgb_probs, drop_intermediate=False)
 
 #%%
+# Vancouver XGBoost tuning
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_hyperparameters = [{'max_depth': np.linspace(5, 15, 11, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+
+print(f'Best parameters: {vanco_gridsearch.best_params_}')
+
+#%%
 # Vancouver XGB
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgb = XGBRFClassifier(n_estimators=500, max_depth=6, gamma=8, random_state=np.random.randint(np.iinfo(np.int32).max), scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
+vanco_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=vanco_class_weight, 
+								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
 vanco_xgb_probs = vanco_xgb_probs[:, 1]
@@ -3948,9 +3973,21 @@ print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
 vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgb_probs, drop_intermediate=False)
 
 #%%
+# Tri-Cities XGBoost tuning
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+
+print(f'Best parameters: {trici_gridsearch.best_params_}')
+
+#%%
 # Tri-Cities XGB
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgb = XGBRFClassifier(n_estimators=500, max_depth=5, gamma=1, random_state=np.random.randint(np.iinfo(np.int32).max), scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False).fit(trici_x_train, trici_y_train)
+trici_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=trici_class_weight, 
+								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
 
 trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
 trici_xgb_probs = trici_xgb_probs[:, 1]
@@ -3962,9 +3999,21 @@ print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
 trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgb_probs, drop_intermediate=False)
 
 #%%
+# University XGBoost tuning
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
+
+print(f'Best parameters: {univr_gridsearch.best_params_}')
+
+#%%
 # Univeristy XGB
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgb = XGBRFClassifier(n_estimators=500, max_depth=8, gamma=0, random_state=np.random.randint(np.iinfo(np.int32).max), scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False).fit(univr_x_train, univr_y_train)
+univr_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=univr_class_weight, 
+								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
 
 univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
 univr_xgb_probs = univr_xgb_probs[:, 1]
