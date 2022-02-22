@@ -137,7 +137,7 @@ pullm_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 'acs_mi',
 'distance',
@@ -161,7 +161,8 @@ pullm_data_vars = [
 # 'fall_midterm_W_grade_count',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_grade_count',
+# 'fall_term_no_letter_count',
+'fall_term_F_grade_count',
 'fall_term_S_grade_count',
 'fall_term_W_grade_count',
 # 'awe_instrument',
@@ -350,7 +351,7 @@ vanco_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 'acs_mi',
 'distance',
@@ -374,7 +375,8 @@ vanco_data_vars = [
 # 'fall_midterm_W_grade_count',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_grade_count',
+# 'fall_term_no_letter_count',
+'fall_term_F_grade_count',
 # 'fall_term_S_grade_count',
 # 'fall_term_W_grade_count',
 # 'awe_instrument',
@@ -563,7 +565,7 @@ trici_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 'acs_mi',
 'distance',
@@ -587,7 +589,8 @@ trici_data_vars = [
 # 'fall_midterm_W_grade_count',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_grade_count',
+# 'fall_term_no_letter_count',
+'fall_term_F_grade_count',
 # 'fall_term_S_grade_count',
 # 'fall_term_W_grade_count',
 # 'awe_instrument',
@@ -776,7 +779,7 @@ univr_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 'acs_mi',
 'distance',
@@ -800,7 +803,8 @@ univr_data_vars = [
 # 'fall_midterm_W_grade_count',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_grade_count',
+# 'fall_term_no_letter_count',
+'fall_term_F_grade_count',
 # 'fall_term_S_grade_count',
 # 'fall_term_W_grade_count',
 # 'awe_instrument',
@@ -1153,7 +1157,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'age',
 						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						'count_week_from_term_begin_dt',
+						# 'count_week_from_term_begin_dt',
 						# 'sat_erws',
 						# 'sat_mss',
 						# 'sat_comp',
@@ -1181,15 +1185,16 @@ pullm_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						# 'fall_term_grade_count',
+						# 'fall_term_no_letter_count',
+						'fall_term_F_grade_count',
 						'fall_term_S_grade_count',
 						'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
-						# # 'fall_avg_pct_withdrawn',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# # 'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
@@ -1276,7 +1281,7 @@ vanco_tomek_prep = make_column_transformer(
 						# 'age',
 						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						'count_week_from_term_begin_dt',
+						# 'count_week_from_term_begin_dt',
 						# 'sat_erws',
 						# 'sat_mss',
 						# 'sat_comp',
@@ -1304,15 +1309,16 @@ vanco_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						# 'fall_term_grade_count',
+						# 'fall_term_no_letter_count',
+						'fall_term_F_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
-						# # 'fall_avg_pct_withdrawn',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# # 'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
@@ -1399,7 +1405,7 @@ trici_tomek_prep = make_column_transformer(
 						# 'age',
 						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						'count_week_from_term_begin_dt',
+						# 'count_week_from_term_begin_dt',
 						# 'sat_erws',
 						# 'sat_mss',
 						# 'sat_comp',
@@ -1427,15 +1433,16 @@ trici_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						# 'fall_term_grade_count',
+						# 'fall_term_no_letter_count',
+						'fall_term_F_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
-						# # 'fall_avg_pct_withdrawn',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# # 'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
@@ -1522,7 +1529,7 @@ univr_tomek_prep = make_column_transformer(
 						# 'age',
 						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
-						'count_week_from_term_begin_dt',
+						# 'count_week_from_term_begin_dt',
 						# 'sat_erws',
 						# 'sat_mss',
 						# 'sat_comp',
@@ -1550,15 +1557,16 @@ univr_tomek_prep = make_column_transformer(
 						# 'fall_midterm_W_grade_count',
 						'fall_term_gpa',
 						'fall_term_gpa_mi',
-						# 'fall_term_grade_count',
+						# 'fall_term_no_letter_count',
+						'fall_term_F_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
 						# 'fall_avg_difficulty',
-						# # 'fall_avg_pct_withdrawn',
+						# 'fall_avg_pct_withdrawn',
 						# 'fall_avg_pct_CDFW',
-						# # 'fall_avg_pct_CDF',
+						# 'fall_avg_pct_CDF',
 						'fall_lec_count',
 						'fall_lab_count',
 						# 'fall_int_count',
@@ -1651,10 +1659,9 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ cum_adj_transfer_hours \
 				+ resident \
 				+ fall_term_gpa + fall_term_gpa_mi \
-				+ fall_term_S_grade_count + fall_term_W_grade_count \
+				+ fall_term_F_grade_count + fall_term_S_grade_count + fall_term_W_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr + unmet_need_ofr_mi \
-				+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
+            	+ unmet_need_ofr + unmet_need_ofr_mi', data=pullm_logit_df, return_type='dataframe')
 
 pullm_logit_mod = Logit(pullm_y, pullm_x)
 pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -1675,9 +1682,9 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ cum_adj_transfer_hours \
 				+ resident \
 				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_F_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr + unmet_need_ofr_mi \
-				+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
+            	+ unmet_need_ofr + unmet_need_ofr_mi', data=vanco_logit_df, return_type='dataframe')
 
 vanco_logit_mod = Logit(vanco_y, vanco_x)
 vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
@@ -1698,9 +1705,9 @@ trici_y, trici_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ cum_adj_transfer_hours \
 				+ resident \
 				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_F_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr + unmet_need_ofr_mi \
-				+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
+            	+ unmet_need_ofr + unmet_need_ofr_mi', data=trici_logit_df, return_type='dataframe')
 
 trici_logit_mod = Logit(trici_y, trici_x)
 trici_logit_res = trici_logit_mod.fit(maxiter=500)
@@ -1721,9 +1728,9 @@ univr_y, univr_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ cum_adj_transfer_hours \
 				+ resident \
 				+ fall_term_gpa + fall_term_gpa_mi \
+				+ fall_term_F_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-            	+ unmet_need_ofr + unmet_need_ofr_mi \
-				+ count_week_from_term_begin_dt', data=univr_logit_df, return_type='dataframe')
+            	+ unmet_need_ofr + unmet_need_ofr_mi', data=univr_logit_df, return_type='dataframe')
 
 univr_logit_mod = Logit(univr_y, univr_x)
 univr_logit_res = univr_logit_mod.fit(maxiter=500)

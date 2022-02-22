@@ -76,7 +76,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production or 5 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 0);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -730,6 +730,12 @@ run;
 				when crse_grade_off = 'F'	then 0.0
 											else .
 											end as class_gpa,
+			case when crse_grade_off = 'D' 	then 1
+											else 0
+											end as D_grade_ind,
+			case when crse_grade_off = 'F' 	then 1
+											else 0
+											end as F_grade_ind,
 			case when crse_grade_off = 'W' 	then 1
 											else 0
 											end as W_grade_ind,
@@ -762,11 +768,79 @@ run;
 	;quit;
 	
 	proc sql;
+		create table eot_class_registration_&cohort_year. as
+		select distinct
+			strm,
+			emplid,
+			class_nbr,
+			crse_id,
+			ssr_component,
+			unt_taken,
+			grading_basis_enrl,
+			enrl_status_reason,
+			enrl_ind,
+			class_grade_points as grade_points,
+			class_grade_points_per_unit as grd_pts_per_unit,
+			subject_catalog_nbr,
+			crse_grade_off as crse_grade,
+			case when crse_grade_off = 'A' 	then 4.0
+				when crse_grade_off = 'A-'	then 3.7
+				when crse_grade_off = 'B+'	then 3.3
+				when crse_grade_off = 'B'	then 3.0
+				when crse_grade_off = 'B-'	then 2.7
+				when crse_grade_off = 'C+'	then 2.3
+				when crse_grade_off = 'C'	then 2.0
+				when crse_grade_off = 'C-'	then 1.7
+				when crse_grade_off = 'D+'	then 1.3
+				when crse_grade_off = 'D'	then 1.0
+				when crse_grade_off = 'F'	then 0.0
+											else .
+											end as class_gpa,
+			case when crse_grade_off = 'D' 	then 1
+											else 0
+											end as D_grade_ind,
+			case when crse_grade_off = 'F' 	then 1
+											else 0
+											end as F_grade_ind,
+			case when crse_grade_off = 'W' 	then 1
+											else 0
+											end as W_grade_ind,
+			case when crse_grade_off = 'I' 	then 1
+											else 0
+											end as I_grade_ind,
+			case when crse_grade_off = 'X' 	then 1
+											else 0
+											end as X_grade_ind,
+			case when crse_grade_off = 'U' 	then 1
+											else 0
+											end as U_grade_ind,
+			case when crse_grade_off = 'S' 	then 1
+											else 0
+											end as S_grade_ind,
+			case when crse_grade_off = 'P' 	then 1
+											else 0
+											end as P_grade_ind,
+			case when crse_grade_input = 'Z'	then 1
+												else 0
+												end as Z_grade_ind,
+			case when unt_taken is not null and enrl_status_reason ^= 'WDRW'	then 1
+																				else 0
+																				end as term_grade_ind
+		from &dsn..class_registration_vw
+		where snapshot = 'eot'
+			and full_acad_year = "&cohort_year."
+			and subject_catalog_nbr ^= 'NURS 399'
+			and stdnt_enrl_status = 'E'
+	;quit;
+	
+	proc sql;
 		create table eot_fall_term_grades_&cohort_year. as
 		select distinct
 			a.emplid,
 			b.fall_term_gpa_hours,
 			b.fall_term_gpa,
+			c.fall_term_D_grade_count,
+			c.fall_term_F_grade_count,
 			c.fall_term_W_grade_count,
 			c.fall_term_I_grade_count,
 			c.fall_term_X_grade_count,
@@ -774,13 +848,14 @@ run;
 			c.fall_term_S_grade_count,
 			c.fall_term_P_grade_count,
 			c.fall_term_Z_grade_count,
+			c.fall_term_letter_count,
 			c.fall_term_grade_count
-		from class_registration_&cohort_year. as a
+		from eot_class_registration_&cohort_year. as a
 		left join (select distinct
 						emplid,
 						sum(unt_taken) as fall_term_gpa_hours,
 						sum(class_gpa * unt_taken) / sum(unt_taken) as fall_term_gpa
-					from class_registration_&cohort_year.
+					from eot_class_registration_&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and grading_basis_enrl = 'GRD'
 						and crse_grade in ('A','A-','B+','B','B-','C+','C','C-','D+','D','F')
@@ -788,6 +863,8 @@ run;
 			on a.emplid = b.emplid
 		left join (select distinct 
 						emplid,
+						sum(D_grade_ind) as fall_term_D_grade_count,
+						sum(F_grade_ind) as fall_term_F_grade_count,
 						sum(W_grade_ind) as fall_term_W_grade_count,
 						sum(I_grade_ind) as fall_term_I_grade_count,
 						sum(X_grade_ind) as fall_term_X_grade_count,
@@ -795,8 +872,9 @@ run;
 						sum(S_grade_ind) as fall_term_S_grade_count,
 						sum(P_grade_ind) as fall_term_P_grade_count,
 						sum(Z_grade_ind) as fall_term_Z_grade_count,
+						count(class_gpa) as fall_term_letter_count,
 						sum(term_grade_ind) as fall_term_grade_count
-					from class_registration_&cohort_year.
+					from eot_class_registration_&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 					group by emplid) as c
 			on a.emplid = c.emplid
@@ -809,6 +887,8 @@ run;
 			a.emplid,
 			b.spring_term_gpa_hours,
 			b.spring_term_gpa,
+			c.spring_term_D_grade_count,
+			c.spring_term_F_grade_count,
 			c.spring_term_W_grade_count,
 			c.spring_term_I_grade_count,
 			c.spring_term_X_grade_count,
@@ -816,13 +896,14 @@ run;
 			c.spring_term_S_grade_count,
 			c.spring_term_P_grade_count,
 			c.spring_term_Z_grade_count,
+			c.spring_term_letter_count,
 			c.spring_term_grade_count
-		from class_registration_&cohort_year. as a
+		from eot_class_registration_&cohort_year. as a
 		left join (select distinct
 						emplid,
 						sum(unt_taken) as spring_term_gpa_hours,
 						sum(class_gpa * unt_taken) / sum(unt_taken) as spring_term_gpa
-					from class_registration_&cohort_year.
+					from eot_class_registration_&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and grading_basis_enrl = 'GRD'
 						and crse_grade in ('A','A-','B+','B','B-','C+','C','C-','D+','D','F')
@@ -830,6 +911,8 @@ run;
 			on a.emplid = b.emplid
 		left join (select distinct
 						emplid,
+						sum(D_grade_ind) as spring_term_D_grade_count,
+						sum(F_grade_ind) as spring_term_F_grade_count,
 						sum(W_grade_ind) as spring_term_W_grade_count,
 						sum(I_grade_ind) as spring_term_I_grade_count,
 						sum(X_grade_ind) as spring_term_X_grade_count,
@@ -837,8 +920,9 @@ run;
 						sum(S_grade_ind) as spring_term_S_grade_count,
 						sum(P_grade_ind) as spring_term_P_grade_count,
 						sum(Z_grade_ind) as spring_term_Z_grade_count,
+						count(class_gpa) as spring_term_letter_count,
 						sum(term_grade_ind) as spring_term_grade_count
-					from class_registration_&cohort_year.
+					from eot_class_registration_&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 					group by emplid) as c
 			on a.emplid = c.emplid
@@ -851,7 +935,7 @@ run;
 			emplid,
 			sum(unt_taken) as cum_gpa_hours,
 			sum(class_gpa * unt_taken) / sum(unt_taken) as cum_gpa
-		from class_registration_&cohort_year.
+		from eot_class_registration_&cohort_year.
 		where (strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' 
 			or strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3')
 			and grading_basis_enrl = 'GRD'
@@ -1733,12 +1817,12 @@ run;
 		select 
 			a.*,
 			b.pell_recipient_ind,
-/* 			x.fall_term_gpa, */
-/* 			x.fall_term_gpa_hours, */
 /* 			x.fall_cum_gpa, */
 /* 			x.fall_cum_gpa_hours, */
-			y.fall_term_gpa,
-			y.fall_term_gpa_hours,
+			coalesce(y.fall_term_gpa, x.fall_term_gpa) as fall_term_gpa,
+			coalesce(y.fall_term_gpa_hours, x.fall_term_gpa_hours) as fall_term_gpa_hours,
+			y.fall_term_D_grade_count,
+			y.fall_term_F_grade_count,
 			y.fall_term_W_grade_count,
 			y.fall_term_I_grade_count,
 			y.fall_term_X_grade_count,
@@ -1746,6 +1830,7 @@ run;
 			y.fall_term_S_grade_count,
 			y.fall_term_P_grade_count,
 			y.fall_term_Z_grade_count,
+			y.fall_term_letter_count,
 			y.fall_term_grade_count,
 /* 			x.spring_term_gpa, */
 /* 			x.spring_term_gpa_hours, */
@@ -1753,6 +1838,8 @@ run;
 /* 			x.spring_cum_gpa_hours, */
 			z.spring_term_gpa,
 			z.spring_term_gpa_hours,
+			z.spring_term_D_grade_count,
+			z.spring_term_F_grade_count,
 			z.spring_term_W_grade_count,
 			z.spring_term_I_grade_count,
 			z.spring_term_X_grade_count,
@@ -1760,6 +1847,7 @@ run;
 			z.spring_term_S_grade_count,
 			z.spring_term_P_grade_count,
 			z.spring_term_Z_grade_count,
+			z.spring_term_letter_count,
 			z.spring_term_grade_count,
 			aa.cum_gpa,
 			aa.cum_gpa_hours,
@@ -1940,8 +2028,8 @@ run;
 		from cohort_&cohort_year. as a
 		left join pell_&cohort_year. as b
 			on a.emplid = b.emplid
-/* 		left join eot_term_gpa_&cohort_year. as x */
-/* 			on a.emplid = x.emplid */
+		left join eot_term_gpa_&cohort_year. as x
+			on a.emplid = x.emplid
 		left join enrolled_&cohort_year. as c
 			on a.emplid = c.emplid
  				and a.term_code + 10 = c.cont_term
@@ -2595,6 +2683,12 @@ run;
 					when crse_grade_input_fin = 'F'		then 0.0
 														else .
 														end as class_gpa,
+				case when crse_grade_off = 'D' 	then 1
+												else 0
+												end as D_grade_ind,	
+				case when crse_grade_off = 'F' 	then 1
+												else 0
+												end as F_grade_ind,										
 				case when crse_grade_off = 'W' 	then 1
 												else 0
 												end as W_grade_ind,
@@ -2653,6 +2747,12 @@ run;
 					when crse_grade_input_fin = 'F'		then 0.0
 														else .
 														end as class_gpa,
+				case when crse_grade_off = 'D' 	then 1
+												else 0
+												end as D_grade_ind,	
+				case when crse_grade_off = 'F' 	then 1
+												else 0
+												end as F_grade_ind,	
 				case when crse_grade_off = 'W' 	then 1
 												else 0
 												end as W_grade_ind,
@@ -2717,6 +2817,12 @@ run;
 					when crse_grade_input_fin = 'F'		then 0.0
 														else .
 														end as class_gpa,
+				case when crse_grade_off = 'D' 	then 1
+												else 0
+												end as D_grade_ind,	
+				case when crse_grade_off = 'F' 	then 1
+												else 0
+												end as F_grade_ind,
 				case when crse_grade_off = 'W' 	then 1
 												else 0
 												end as W_grade_ind,
@@ -2754,6 +2860,8 @@ run;
 			a.emplid,
 			b.fall_term_gpa_hours,
 			b.fall_term_gpa,
+			c.fall_term_D_grade_count,
+			c.fall_term_F_grade_count,
 			c.fall_term_W_grade_count,
 			c.fall_term_I_grade_count,
 			c.fall_term_X_grade_count,
@@ -2761,6 +2869,7 @@ run;
 			c.fall_term_S_grade_count,
 			c.fall_term_P_grade_count,
 			c.fall_term_Z_grade_count,
+			c.fall_term_letter_count,
 			c.fall_term_grade_count
 		from class_registration_&cohort_year. as a
 		left join (select distinct
@@ -2775,6 +2884,8 @@ run;
 			on a.emplid = b.emplid
 		left join (select distinct 
 						emplid,
+						sum(D_grade_ind) as fall_term_D_grade_count,
+						sum(F_grade_ind) as fall_term_F_grade_count,
 						sum(W_grade_ind) as fall_term_W_grade_count,
 						sum(I_grade_ind) as fall_term_I_grade_count,
 						sum(X_grade_ind) as fall_term_X_grade_count,
@@ -2782,6 +2893,7 @@ run;
 						sum(S_grade_ind) as fall_term_S_grade_count,
 						sum(P_grade_ind) as fall_term_P_grade_count,
 						sum(Z_grade_ind) as fall_term_Z_grade_count,
+						count(class_gpa) as fall_term_letter_count, 
 						sum(term_grade_ind) as fall_term_grade_count
 					from class_registration_&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
@@ -2796,6 +2908,8 @@ run;
 			a.emplid,
 			b.spring_term_gpa_hours,
 			b.spring_term_gpa,
+			c.spring_term_D_grade_count,
+			c.spring_term_F_grade_count,
 			c.spring_term_W_grade_count,
 			c.spring_term_I_grade_count,
 			c.spring_term_X_grade_count,
@@ -2803,6 +2917,7 @@ run;
 			c.spring_term_S_grade_count,
 			c.spring_term_P_grade_count,
 			c.spring_term_Z_grade_count,
+			c.spring_term_letter_count,
 			c.spring_term_grade_count
 		from class_registration_&cohort_year. as a
 		left join (select distinct
@@ -2817,6 +2932,8 @@ run;
 			on a.emplid = b.emplid
 		left join (select distinct
 						emplid,
+						sum(D_grade_ind) as spring_term_D_grade_count,
+						sum(F_grade_ind) as spring_term_F_grade_count,
 						sum(W_grade_ind) as spring_term_W_grade_count,
 						sum(I_grade_ind) as spring_term_I_grade_count,
 						sum(X_grade_ind) as spring_term_X_grade_count,
@@ -2824,6 +2941,7 @@ run;
 						sum(S_grade_ind) as spring_term_S_grade_count,
 						sum(P_grade_ind) as spring_term_P_grade_count,
 						sum(Z_grade_ind) as spring_term_Z_grade_count,
+						count(class_gpa) as spring_term_letter_count,
 						sum(term_grade_ind) as spring_term_grade_count
 					from class_registration_&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
@@ -3716,12 +3834,12 @@ run;
 		select 
 			a.*,
 			b.pell_recipient_ind,
-/* 			x.fall_term_gpa, */
-/* 			x.fall_term_gpa_hours, */
 /* 			x.fall_cum_gpa, */
 /* 			x.fall_cum_gpa_hours, */
-			y.fall_term_gpa,
-			y.fall_term_gpa_hours,
+			coalesce(y.fall_term_gpa, x.fall_term_gpa) as fall_term_gpa,
+			coalesce(y.fall_term_gpa_hours, x.fall_term_gpa_hours) as fall_term_gpa_hours,
+			y.fall_term_D_grade_count,
+			y.fall_term_F_grade_count,
 			y.fall_term_W_grade_count,
 			y.fall_term_I_grade_count,
 			y.fall_term_X_grade_count,
@@ -3729,6 +3847,7 @@ run;
 			y.fall_term_S_grade_count,
 			y.fall_term_P_grade_count,
 			y.fall_term_Z_grade_count,
+			y.fall_term_letter_count,
 			y.fall_term_grade_count,
 /* 			x.spring_term_gpa, */
 /* 			x.spring_term_gpa_hours, */
@@ -3736,6 +3855,8 @@ run;
 /* 			x.spring_cum_gpa_hours, */
 			z.spring_term_gpa,
 			z.spring_term_gpa_hours,
+			z.spring_term_D_grade_count,
+			z.spring_term_F_grade_count,
 			z.spring_term_W_grade_count,
 			z.spring_term_I_grade_count,
 			z.spring_term_X_grade_count,
@@ -3743,6 +3864,7 @@ run;
 			z.spring_term_S_grade_count,
 			z.spring_term_P_grade_count,
 			z.spring_term_Z_grade_count,
+			z.spring_term_letter_count,
 			z.spring_term_grade_count,
 			aa.cum_gpa,
 			aa.cum_gpa_hours,
@@ -3918,8 +4040,8 @@ run;
 		from cohort_&cohort_year. as a
 		left join pell_&cohort_year. as b
 			on a.emplid = b.emplid
-/* 		left join eot_term_gpa_&cohort_year. as x */
-/* 			on a.emplid = x.emplid */
+		left join eot_term_gpa_&cohort_year. as x
+			on a.emplid = x.emplid
  		left join plan_&cohort_year. as c
  			on a.emplid = c.emplid
  		left join need_&cohort_year. as d
@@ -4087,6 +4209,10 @@ data training_set;
 	if fall_term_gpa = . then fall_term_gpa = 0;
 	if spring_term_gpa = . then spring_term_gpa_mi = 1; else spring_term_gpa_mi = 0;
 	if spring_term_gpa = . then spring_term_gpa = 0;
+	if fall_term_D_grade_count = . then fall_term_D_grade_count_mi = 1; else fall_term_D_grade_count_mi = 0;
+	if fall_term_D_grade_count = . then fall_term_D_grade_count = 0;
+	if fall_term_F_grade_count = . then fall_term_F_grade_count_mi = 1; else fall_term_F_grade_count_mi = 0;
+	if fall_term_F_grade_count = . then fall_term_F_grade_count = 0;
 	if fall_term_W_grade_count = . then fall_term_W_grade_count_mi = 1; else fall_term_W_grade_count_mi = 0;
 	if fall_term_W_grade_count = . then fall_term_W_grade_count = 0;
 	if fall_term_I_grade_count = . then fall_term_I_grade_count_mi = 1; else fall_term_I_grade_count_mi = 0;
@@ -4101,8 +4227,15 @@ data training_set;
 	if fall_term_P_grade_count = . then fall_term_P_grade_count = 0;
 	if fall_term_Z_grade_count = . then fall_term_Z_grade_count_mi = 1; else fall_term_Z_grade_count_mi = 0;
 	if fall_term_Z_grade_count = . then fall_term_Z_grade_count = 0;
+	if fall_term_letter_count = . then fall_term_letter_count_mi = 1; else fall_term_letter_count_mi = 0;
+	if fall_term_letter_count = . then fall_term_letter_count = 0;
 	if fall_term_grade_count = . then fall_term_grade_count_mi = 1; else fall_term_grade_count_mi = 0;
 	if fall_term_grade_count = . then fall_term_grade_count = 0;
+	fall_term_no_letter_count = fall_term_grade_count - fall_term_letter_count;
+	if spring_term_D_grade_count = . then spring_term_D_grade_count_mi = 1; else spring_term_D_grade_count_mi = 0;
+	if spring_term_D_grade_count = . then spring_term_D_grade_count = 0;
+	if spring_term_F_grade_count = . then spring_term_F_grade_count_mi = 1; else spring_term_F_grade_count_mi = 0;
+	if spring_term_F_grade_count = . then spring_term_F_grade_count = 0;
 	if spring_term_W_grade_count = . then spring_term_W_grade_count_mi = 1; else spring_term_W_grade_count_mi = 0;
 	if spring_term_W_grade_count = . then spring_term_W_grade_count = 0;
 	if spring_term_I_grade_count = . then spring_term_I_grade_count_mi = 1; else spring_term_I_grade_count_mi = 0;
@@ -4117,8 +4250,11 @@ data training_set;
 	if spring_term_P_grade_count = . then spring_term_P_grade_count = 0;
 	if spring_term_Z_grade_count = . then spring_term_Z_grade_count_mi = 1; else spring_term_Z_grade_count_mi = 0;
 	if spring_term_Z_grade_count = . then spring_term_Z_grade_count = 0;
+	if spring_term_letter_count = . then spring_term_leter_count_mi = 1; else spring_term_leter_count_mi = 0;
+	if spring_term_letter_count = . then spring_term_letter_count = 0;
 	if spring_term_grade_count = . then spring_term_grade_count_mi = 1; else spring_term_grade_count_mi = 0;
 	if spring_term_grade_count = . then spring_term_grade_count = 0;
+	spring_term_no_letter_count = spring_term_grade_count - spring_term_letter_count;
 	if first_gen_flag = '' then first_gen_flag_mi = 1; else first_gen_flag_mi = 0;
 	if first_gen_flag = '' then first_gen_flag = 'N';
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
@@ -4258,6 +4394,10 @@ data testing_set;
 	if fall_term_gpa = . then fall_term_gpa = 0;
 	if spring_term_gpa = . then spring_term_gpa_mi = 1; else spring_term_gpa_mi = 0;
 	if spring_term_gpa = . then spring_term_gpa = 0;
+	if fall_term_D_grade_count = . then fall_term_D_grade_count_mi = 1; else fall_term_D_grade_count_mi = 0;
+	if fall_term_D_grade_count = . then fall_term_D_grade_count = 0;
+	if fall_term_F_grade_count = . then fall_term_F_grade_count_mi = 1; else fall_term_F_grade_count_mi = 0;
+	if fall_term_F_grade_count = . then fall_term_F_grade_count = 0;
 	if fall_term_W_grade_count = . then fall_term_W_grade_count_mi = 1; else fall_term_W_grade_count_mi = 0;
 	if fall_term_W_grade_count = . then fall_term_W_grade_count = 0;
 	if fall_term_I_grade_count = . then fall_term_I_grade_count_mi = 1; else fall_term_I_grade_count_mi = 0;
@@ -4272,8 +4412,15 @@ data testing_set;
 	if fall_term_P_grade_count = . then fall_term_P_grade_count = 0;
 	if fall_term_Z_grade_count = . then fall_term_Z_grade_count_mi = 1; else fall_term_Z_grade_count_mi = 0;
 	if fall_term_Z_grade_count = . then fall_term_Z_grade_count = 0;
+	if fall_term_letter_count = . then fall_term_letter_count_mi = 1; else fall_term_letter_count_mi = 0;
+	if fall_term_letter_count = . then fall_term_letter_count = 0;
 	if fall_term_grade_count = . then fall_term_grade_count_mi = 1; else fall_term_grade_count_mi = 0;
 	if fall_term_grade_count = . then fall_term_grade_count = 0;
+	fall_term_no_letter_count = fall_term_grade_count - fall_term_letter_count;
+	if spring_term_D_grade_count = . then spring_term_D_grade_count_mi = 1; else spring_term_D_grade_count_mi = 0;
+	if spring_term_D_grade_count = . then spring_term_D_grade_count = 0;
+	if spring_term_F_grade_count = . then spring_term_F_grade_count_mi = 1; else spring_term_F_grade_count_mi = 0;
+	if spring_term_F_grade_count = . then spring_term_F_grade_count = 0;
 	if spring_term_W_grade_count = . then spring_term_W_grade_count_mi = 1; else spring_term_W_grade_count_mi = 0;
 	if spring_term_W_grade_count = . then spring_term_W_grade_count = 0;
 	if spring_term_I_grade_count = . then spring_term_I_grade_count_mi = 1; else spring_term_I_grade_count_mi = 0;
@@ -4288,8 +4435,11 @@ data testing_set;
 	if spring_term_P_grade_count = . then spring_term_P_grade_count = 0;
 	if spring_term_Z_grade_count = . then spring_term_Z_grade_count_mi = 1; else spring_term_Z_grade_count_mi = 0;
 	if spring_term_Z_grade_count = . then spring_term_Z_grade_count = 0;
+	if spring_term_letter_count = . then spring_term_leter_count_mi = 1; else spring_term_leter_count_mi = 0;
+	if spring_term_letter_count = . then spring_term_letter_count = 0;
 	if spring_term_grade_count = . then spring_term_grade_count_mi = 1; else spring_term_grade_count_mi = 0;
 	if spring_term_grade_count = . then spring_term_grade_count = 0;
+	spring_term_no_letter_count = spring_term_grade_count - spring_term_letter_count;
 	if first_gen_flag = '' then first_gen_flag_mi = 1; else first_gen_flag_mi = 0;
 	if first_gen_flag = '' then first_gen_flag = 'N';
 	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
