@@ -1681,9 +1681,7 @@ univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_t
 # Pullman standard model
 print('\nStandard logistic model for Pullman freshmen...\n')
 
-pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
-				+ gini_indx + median_inc + median_value + acs_mi \
+pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_lec_count + fall_lab_count + fall_stu_count + fall_oth_count \
 				+ fall_credit_hours \
@@ -1697,7 +1695,6 @@ pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
-            	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
 				+ fall_term_S_grade_count + fall_term_W_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -1714,9 +1711,7 @@ print('\n')
 # Vancouver standard model
 print('\nStandard logistic model for Vancouver freshmen...\n')
 
-vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
-				+ gini_indx + median_inc + median_value + acs_mi \
+vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
@@ -1724,7 +1719,6 @@ vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
-            	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
@@ -1740,9 +1734,7 @@ print('\n')
 # Tri-Cities standard model
 print('\nStandard logistic model for Tri-Cities freshmen...\n')
 
-trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
-				+ gini_indx + median_inc + median_value + acs_mi \
+trici_y, trici_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
@@ -1750,7 +1742,6 @@ trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
-            	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
@@ -1766,9 +1757,7 @@ print('\n')
 # University standard model
 print('\nStandard logistic model for University freshmen...\n')
 
-univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-				+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
-				+ gini_indx + median_inc + median_value + acs_mi \
+univr_y, univr_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ fall_lec_count + fall_lab_count \
 				+ fall_credit_hours \
@@ -1776,7 +1765,6 @@ univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
-            	+ high_school_gpa + high_school_gpa_mi \
 				+ fall_term_gpa + fall_term_gpa_mi \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
             	+ unmet_need_ofr + unmet_need_ofr_mi \
