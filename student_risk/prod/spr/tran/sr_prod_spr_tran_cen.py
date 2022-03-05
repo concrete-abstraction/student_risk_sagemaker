@@ -43,7 +43,6 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 strm = None
 top_N = 5
 model_id = 5
-day_of_week = 6
 run_date = date.today()
 unwanted_vars = ['emplid','enrl_ind']
 
@@ -74,7 +73,7 @@ pullm_data_vars = [
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
-# 'marital_status',
+'acad_level_bot_descr',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
@@ -290,7 +289,7 @@ vanco_data_vars = [
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
-# 'marital_status',
+'acad_level_bot_descr',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
@@ -504,7 +503,7 @@ trici_data_vars = [
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
-# 'marital_status',
+'acad_level_bot_descr',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
@@ -700,220 +699,6 @@ trici_current_outcome = trici_testing_set[[
                             ]].copy(deep=True)
 
 #%%
-# Spokane variables
-spoka_data_vars = [
-'emplid',
-'enrl_ind', 
-# 'acad_year',
-# 'age_group', 
-# 'age',
-'male',
-# 'race_hispanic',
-# 'race_american_indian',
-# 'race_alaska',
-# 'race_asian',
-# 'race_black',
-# 'race_native_hawaiian',
-# 'race_white',
-# 'min_week_from_term_begin_dt',
-# 'max_week_from_term_begin_dt',
-# 'count_week_from_term_begin_dt',
-# 'marital_status',
-# 'acs_mi',
-# 'distance',
-# 'pop_dens',
-'underrep_minority',
-# 'ipeds_ethnic_group_descrshort',
-'pell_eligibility_ind', 
-# 'pell_recipient_ind',
-'first_gen_flag', 
-'first_gen_flag_mi',
-# 'LSAMP_STEM_Flag',
-# 'anywhere_STEM_Flag',
-# 'honors_program_ind',
-# 'afl_greek_indicator',
-# 'high_school_gpa',
-'fall_term_gpa',
-'fall_term_gpa_mi',
-'fall_term_D_grade_count',
-'fall_term_F_grade_count',
-# 'fall_term_S_grade_count',
-# 'fall_term_W_grade_count',
-# 'spring_midterm_gpa_change',
-# 'awe_instrument',
-# 'cdi_instrument',
-# 'fall_avg_difficulty',
-# 'fall_avg_pct_withdrawn',
-# 'fall_avg_pct_CDFW',
-# 'fall_avg_pct_CDF',
-# 'fall_avg_pct_DFW',
-# 'fall_avg_pct_DF',
-# 'spring_avg_difficulty',
-# 'spring_avg_pct_withdrawn',
-# 'spring_avg_pct_CDFW',
-# 'spring_avg_pct_CDF',
-# 'spring_avg_pct_DFW',
-# 'spring_avg_pct_DF',
-# 'fall_lec_count',
-# 'fall_lab_count',
-# 'fall_lec_contact_hrs',
-# 'fall_lab_contact_hrs',
-'spring_lec_count',
-'spring_lab_count',
-# 'spring_lec_contact_hrs',
-# 'spring_lab_contact_hrs',
-# 'total_fall_contact_hrs',
-# 'total_spring_contact_hrs',
-# 'fall_midterm_gpa_avg',
-# 'fall_midterm_gpa_avg_ind',
-# 'spring_midterm_gpa_avg',
-# 'spring_midterm_gpa_avg_ind',
-'cum_adj_transfer_hours',
-# 'resident',
-# 'father_wsu_flag',
-# 'mother_wsu_flag',
-'parent1_highest_educ_lvl',
-'parent2_highest_educ_lvl',
-# 'citizenship_country',
-# 'gini_indx',
-# 'pvrt_rate',
-# 'median_inc',
-# 'median_value',
-# 'educ_rate',
-# 'pct_blk',
-# 'pct_ai',
-# 'pct_asn',
-# 'pct_hawi',
-# 'pct_oth',
-# 'pct_two',
-# 'pct_non',
-# 'pct_hisp',
-# 'city_large',
-# 'city_mid',
-# 'city_small',
-# 'suburb_large',
-# 'suburb_mid',
-# 'suburb_small',
-# 'town_fringe',
-# 'town_distant',
-# 'town_remote',
-# 'rural_fringe',
-# 'rural_distant',
-# 'rural_remote',
-# 'AD_DTA',
-# 'AD_AST',
-# 'AP',
-# 'RS',
-# 'CHS',
-# 'IB',
-# 'AICE',
-# 'IB_AICE', 
-# 'spring_credit_hours',
-# 'total_spring_units',
-# 'spring_withdrawn_hours',
-# 'athlete',
-# 'remedial',
-# 'ACAD_PLAN',
-# 'plan_owner_org',
-# 'business',
-# 'cahnrs_anml',
-# 'cahnrs_envr',
-# 'cahnrs_econ',
-# 'cahnrext',
-# 'cas_chem',
-# 'cas_crim',
-# 'cas_math',
-# 'cas_psyc',
-# 'cas_biol',
-# 'cas_engl',
-# 'cas_phys',
-# 'cas',
-# 'comm',
-# 'education',
-# 'medicine',
-'nursing',
-# 'pharmacy',
-# 'provost',
-# 'vcea_bioe',
-# 'vcea_cive',
-# 'vcea_desn',
-# 'vcea_eecs',
-# 'vcea_mech',
-# 'vcea',
-# 'vet_med',
-# 'last_sch_proprietorship',
-# 'sat_erws',
-# 'sat_mss',
-# 'sat_comp',
-# 'attendee_alive',
-# 'attendee_campus_visit',
-# 'attendee_cashe',
-# 'attendee_destination',
-# 'attendee_experience',
-# 'attendee_fcd_pullman',
-# 'attendee_fced',
-# 'attendee_fcoc',
-# 'attendee_fcod',
-# 'attendee_group_visit',
-# 'attendee_honors_visit',
-# 'attendee_imagine_tomorrow',
-# 'attendee_imagine_u',
-# 'attendee_la_bienvenida',
-# 'attendee_lvp_camp',
-# 'attendee_oos_destination',
-# 'attendee_oos_experience',
-# 'attendee_preview',
-# 'attendee_preview_jrs',
-# 'attendee_shaping',
-# 'attendee_top_scholars',
-# 'attendee_transfer_day',
-# 'attendee_vibes',
-# 'attendee_welcome_center',
-# 'attendee_any_visitation_ind',
-# 'attendee_total_visits',
-# 'qvalue',
-# 'fed_efc',
-# 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
-]
-
-spoka_tomek_vars = [x for x in spoka_data_vars if x not in unwanted_vars]
-
-# Spokane dataframes
-spoka_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][spoka_data_vars].dropna().drop(columns=['emplid'])
-
-spoka_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][spoka_data_vars].dropna()
-
-spoka_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-									& (testing_set['adj_admit_type_cat'] == 'TRAN')][spoka_data_vars].dropna().drop(columns=['enrl_ind'])
-
-spoka_testing_set = spoka_testing_set.reset_index()
-
-spoka_shap_outcome = spoka_testing_set['emplid'].copy(deep=True).values.tolist()
-
-spoka_pred_outcome = spoka_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-spoka_aggregate_outcome = spoka_testing_set[[ 
-                            'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag'
-							# 'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-spoka_current_outcome = spoka_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-#%%
 # University variables
 univr_data_vars = [
 'emplid',
@@ -932,7 +717,7 @@ univr_data_vars = [
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
-# 'marital_status',
+'acad_level_bot_descr',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
@@ -1101,8 +886,8 @@ univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')
 
 univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE') 
 								& (testing_set['adj_admit_type_cat'] == 'TRAN')) 
-								# | ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-								# & (testing_set['adj_admit_type_cat'] == 'TRAN')) 
+								| ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
+								& (testing_set['adj_admit_type_cat'] == 'TRAN')) 
 								| ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') 
 								& (testing_set['adj_admit_type_cat'] == 'TRAN'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
 
@@ -1147,7 +932,6 @@ pullm_outlier_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1157,7 +941,8 @@ pullm_outlier_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
+                                    'parent2_highest_educ_lvl',
+									'acad_level_bot_descr'
                                     ]),
     remainder='passthrough'
 )
@@ -1187,7 +972,6 @@ vanco_outlier_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1197,7 +981,8 @@ vanco_outlier_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
+                                    'parent2_highest_educ_lvl',
+									'acad_level_bot_descr'
                                     ]),
     remainder='passthrough'
 )
@@ -1227,7 +1012,7 @@ trici_outlier_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    # 'marital_status',
+                                    'acad_level_bot_descr',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1253,46 +1038,6 @@ trici_training_set = trici_training_set.drop(trici_training_set[trici_training_s
 trici_training_set = trici_training_set.drop(columns='mask')
 
 #%%
-# Spokane outliers
-spoka_x_outlier = spoka_training_set.drop(columns=['enrl_ind','emplid'])
-
-spoka_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
-)
-
-spoka_x_outlier = spoka_outlier_prep.fit_transform(spoka_x_outlier)
-
-spoka_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(spoka_x_outlier)
-
-spoka_outlier_set = spoka_training_set.drop(spoka_training_set[spoka_training_set['mask'] == 1].index)
-spoka_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\spoka_tran_outlier_set.csv', encoding='utf-8', index=False)
-
-spoka_training_set = spoka_training_set.drop(spoka_training_set[spoka_training_set['mask'] == -1].index)
-spoka_training_set = spoka_training_set.drop(columns='mask')
-
-#%%
 # University outliers
 univr_x_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
 
@@ -1307,7 +1052,6 @@ univr_outlier_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1317,7 +1061,8 @@ univr_outlier_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
+                                    'parent2_highest_educ_lvl',
+									'acad_level_bot_descr'
                                     ]),
     remainder='passthrough'
 )
@@ -1418,7 +1163,6 @@ pullm_tomek_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1428,7 +1172,8 @@ pullm_tomek_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
+                                    'parent2_highest_educ_lvl',
+									'acad_level_bot_descr'
                                     ]),
     remainder='passthrough'
 )
@@ -1542,7 +1287,6 @@ vanco_tomek_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1552,7 +1296,8 @@ vanco_tomek_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
+                                    'parent2_highest_educ_lvl',
+									'acad_level_bot_descr'
                                     ]),
     remainder='passthrough'
 )
@@ -1666,7 +1411,6 @@ trici_tomek_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1676,7 +1420,8 @@ trici_tomek_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
+                                    'parent2_highest_educ_lvl',
+									'acad_level_bot_descr'
                                     ]),
     remainder='passthrough'
 )
@@ -1705,130 +1450,6 @@ trici_training_set = trici_training_set.reset_index(drop=True)
 
 trici_tomek_set = trici_training_set.drop(trici_tomek_index)
 trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_set.csv', encoding='utf-8', index=False)
-
-#%%
-# Spokane undersample
-spoka_x_train = spoka_training_set.drop(columns=['enrl_ind','emplid'])
-
-spoka_x_test = spoka_testing_set[spoka_tomek_vars]
-
-spoka_y_train = spoka_training_set['enrl_ind']
-# spoka_y_test = spoka_testing_set['enrl_ind']
-
-spoka_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'high_school_gpa',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_mi',
-						# 'spring_midterm_grade_count',
-						# 'spring_midterm_S_grade_count',
-						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
-						# 'fall_term_gpa_mi',
-						'fall_term_D_grade_count',
-						'fall_term_F_grade_count',
-						# 'fall_term_S_grade_count',
-						# 'fall_term_W_grade_count',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						# 'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						'spring_lec_count',
-						'spring_lab_count',
-						# 'spring_int_count',
-						# 'spring_stu_count',
-						# 'spring_sem_count',
-						# 'spring_oth_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
-						# 'spring_int_contact_hrs',
-						# 'spring_stu_contact_hrs',
-						# 'spring_sem_contact_hrs',
-						# 'spring_oth_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'total_spring_units',
-						# 'spring_credit_hours',
-						# 'spring_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
-)
-
-spoka_x_train = spoka_tomek_prep.fit_transform(spoka_x_train)
-spoka_x_test = spoka_tomek_prep.transform(spoka_x_test)
-
-spoka_feat_names = []
-
-for name, transformer, features, _ in spoka_tomek_prep._iter(fitted=True):
-
-	if transformer != 'passthrough':
-		try:
-			spoka_feat_names.extend(spoka_tomek_prep.named_transformers_[name].get_feature_names())
-		except AttributeError:
-			spoka_feat_names.extend(features)
-
-	if transformer == 'passthrough':
-		spoka_feat_names.extend(spoka_tomek_prep._feature_names_in[features])
-
-spoka_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-spoka_x_train, spoka_y_train = spoka_under.fit_resample(spoka_x_train, spoka_y_train)
-
-spoka_tomek_index = spoka_under.sample_indices_
-spoka_training_set = spoka_training_set.reset_index(drop=True)
-
-spoka_tomek_set = spoka_training_set.drop(spoka_tomek_index)
-spoka_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\spoka_tran_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # University undersample
@@ -1914,7 +1535,6 @@ univr_tomek_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1924,7 +1544,8 @@ univr_tomek_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
+                                    'parent2_highest_educ_lvl',
+									'acad_level_bot_descr'
                                     ]),
     remainder='passthrough'
 )
@@ -1962,7 +1583,7 @@ print('\nStandard logistic model for Pullman transfers...\n')
 
 try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
+					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
 					+ spring_lec_count + spring_lab_count + spring_stu_count + spring_oth_count \
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
@@ -1994,7 +1615,7 @@ print('\nStandard logistic model for Vancouver transfers...\n')
 
 try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
+					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
 					+ spring_lec_count + spring_lab_count \
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
@@ -2022,7 +1643,7 @@ print('\nStandard logistic model for Tri-Cities transfers...\n')
 
 try:
 	trici_y, trici_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
+					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
 					+ spring_lec_count + spring_lab_count \
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
@@ -2044,35 +1665,12 @@ except:
 print('\n')
 
 #%%
-# Spokane standard model
-print('\nStandard logistic model for Spokane transfers...\n')
-
-try:
-	spoka_y, spoka_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ spring_lec_count + spring_lab_count \
-					+ nursing \
-					+ cum_adj_transfer_hours \
-					+ fall_term_gpa + fall_term_gpa_mi \
-					+ fall_term_D_grade_count + fall_term_F_grade_count \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=spoka_logit_df, return_type='dataframe')
-	
-	spoka_logit_mod = Logit(spoka_y, spoka_x)
-	spoka_logit_res = spoka_logit_mod.fit(maxiter=500)
-	print(spoka_logit_res.summary())
-except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
-
-print('\n')
-
-#%%
 # University standard model
 print('\nStandard logistic model for University transfers...\n')
 
 try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
+					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
 					+ spring_lec_count + spring_lab_count \
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
@@ -2184,17 +1782,6 @@ print(f'\nOverall accuracy for Tri-Cities logistic model (training): {trici_lreg
 print(f'ROC AUC for Tri-Cities logistic model (training): {trici_lreg_auc:.4f}\n')
 
 #%%
-# Spokane logistic
-spoka_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(spoka_x_train, spoka_y_train)
-
-spoka_lreg_probs = spoka_lreg.predict_proba(spoka_x_train)
-spoka_lreg_probs = spoka_lreg_probs[:, 1]
-spoka_lreg_auc = roc_auc_score(spoka_y_train, spoka_lreg_probs)
-
-print(f'\nOverall accuracy for Spokane logistic model (training): {spoka_lreg.score(spoka_x_train, spoka_y_train):.4f}')
-print(f'ROC AUC for Spokane logistic model (training): {spoka_lreg_auc:.4f}\n')
-
-#%%
 # University logistic
 univr_lreg = LogisticRegression(penalty='elasticnet', class_weight='balanced', solver='saga', max_iter=5000, l1_ratio=0.0, C=1.0, n_jobs=-1, verbose=False).fit(univr_x_train, univr_y_train)
 
@@ -2239,17 +1826,6 @@ trici_sgd_auc = roc_auc_score(trici_y_train, trici_sgd_probs)
 
 print(f'\nOverall accuracy for Tri-Cities SGD model (training): {trici_sgd.score(trici_x_train, trici_y_train):.4f}')
 print(f'ROC AUC for Tri-Cities SGD model (training): {trici_sgd_auc:.4f}\n')
-
-#%%
-# Spokane SGD
-spoka_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(spoka_x_train, spoka_y_train)
-
-spoka_sgd_probs = spoka_sgd.predict_proba(spoka_x_train)
-spoka_sgd_probs = spoka_sgd_probs[:, 1]
-spoka_sgd_auc = roc_auc_score(spoka_y_train, spoka_sgd_probs)
-
-print(f'\nOverall accuracy for Spokane SGD model (training): {spoka_sgd.score(spoka_x_train, spoka_y_train):.4f}')
-print(f'ROC AUC for Spokane SGD model (training): {spoka_sgd_auc:.4f}\n')
 
 #%%
 # University SGD
@@ -2381,30 +1957,6 @@ trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
 
 print(f'\nOverall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
 print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
-
-#%%
-# Spokane XGBoost tuning
-spoka_class_weight = spoka_y_train[spoka_y_train == 0].count() / spoka_y_train[spoka_y_train == 1].count()
-spoka_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
-
-spoka_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=spoka_class_weight, eval_metric='logloss', use_label_encoder=False), spoka_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-spoka_best_model = spoka_gridsearch.fit(spoka_x_train, spoka_y_train)
-
-print(f'Best parameters: {spoka_gridsearch.best_params_}')
-
-#%%
-# Spokane XGB
-spoka_class_weight = spoka_y_train[spoka_y_train == 0].count() / spoka_y_train[spoka_y_train == 1].count()
-spoka_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=spoka_class_weight, 
-								eval_metric='logloss', **spoka_gridsearch.best_params_, use_label_encoder=False).fit(spoka_x_train, spoka_y_train)
-
-spoka_xgb_probs = spoka_xgb.predict_proba(spoka_x_train)
-spoka_xgb_probs = spoka_xgb_probs[:, 1]
-spoka_xgb_auc = roc_auc_score(spoka_y_train, spoka_xgb_probs)
-
-print(f'\nOverall accuracy for Spokane XGB model (training): {spoka_xgb.score(spoka_x_train, spoka_y_train):.4f}')
-print(f'ROC AUC for Spokane XGB model (training): {spoka_xgb_auc:.4f}\n')
 
 #%%
 # University XGBoost tuning
@@ -2542,27 +2094,6 @@ for index in range(len(trici_shap_values[0])):
 trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
 
 #%%
-# Spokane SHAP training (see: https://github.com/slundberg/shap)
-spoka_explainer = shap.TreeExplainer(model=spoka_xgb, data=spoka_x_train, model_output='predict_proba')
-
-#%%
-# Spokane SHAP prediction
-spoka_shap_values = spoka_explainer.shap_values(X=spoka_x_test)
-
-#%%
-# Spokane SHAP plots
-# 	for index in range(len(spoka_shap_values[0])):
-# 		shap.plots._waterfall.waterfall_legacy(spoka_explainer.expected_value[0], spoka_shap_values[0][index], spoka_x_test[index], feature_names=spoka_feat_names, max_display=4)
-
-#%%
-spoka_shap_results = []
-
-for index in range(len(spoka_shap_values[0])):
-	spoka_shap_results.extend(pd.DataFrame(data=spoka_shap_values[0][index].reshape(1, len(spoka_feat_names)), columns=spoka_feat_names).sort_values(by=0, axis=1, key=abs, ascending=False).to_dict(orient='records'))
-
-spoka_shap_zip = dict(zip(spoka_shap_outcome, spoka_shap_results))
-
-#%%
 # University SHAP training (see: https://github.com/slundberg/shap)
 univr_explainer = shap.TreeExplainer(model=univr_xgb, data=univr_x_train, model_output='predict_proba')
 
@@ -2628,19 +2159,6 @@ trici_xgb_pred_probs = trici_xgb_pred_probs[:, 1]
 # trici_vcf_pred_probs = trici_vcf_pred_probs[:, 1]
 
 #%%
-# Spokane probabilities
-spoka_lreg_pred_probs = spoka_lreg.predict_proba(spoka_x_test)
-spoka_lreg_pred_probs = spoka_lreg_pred_probs[:, 1]
-spoka_sgd_pred_probs = spoka_sgd.predict_proba(spoka_x_test)
-spoka_sgd_pred_probs = spoka_sgd_pred_probs[:, 1]
-spoka_xgb_pred_probs = spoka_xgb.predict_proba(spoka_x_test)
-spoka_xgb_pred_probs = spoka_xgb_pred_probs[:, 1]
-# spoka_mlp_pred_probs = spoka_mlp.predict_proba(spoka_x_test)
-# spoka_mlp_pred_probs = spoka_mlp_pred_probs[:, 1]
-# spoka_vcf_pred_probs = spoka_vcf.predict_proba(spoka_x_test)
-# spoka_vcf_pred_probs = spoka_vcf_pred_probs[:, 1]
-
-#%%
 # University probabilities
 univr_lreg_pred_probs = univr_lreg.predict_proba(univr_x_test)
 univr_lreg_pred_probs = univr_lreg_pred_probs[:, 1]
@@ -2699,20 +2217,6 @@ trici_pred_outcome['xgb_pred'] = trici_xgb.predict(trici_x_test)
 # trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 # trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
 trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_pred_outcome.csv', encoding='utf-8', index=False)
-
-#%%
-# Spokane predicted outcome
-spoka_pred_outcome['lr_prob'] = pd.DataFrame(spoka_lreg_pred_probs)
-spoka_pred_outcome['lr_pred'] = spoka_lreg.predict(spoka_x_test)
-spoka_pred_outcome['sgd_prob'] = pd.DataFrame(spoka_sgd_pred_probs)
-spoka_pred_outcome['sgd_pred'] = spoka_sgd.predict(spoka_x_test)
-spoka_pred_outcome['xgb_prob'] = pd.DataFrame(spoka_xgb_pred_probs)
-spoka_pred_outcome['xgb_pred'] = spoka_xgb.predict(spoka_x_test)
-# spoka_pred_outcome['mlp_prob'] = pd.DataFrame(spoka_mlp_pred_probs)
-# spoka_pred_outcome['mlp_pred'] = spoka_mlp.predict(spoka_x_test)
-# spoka_pred_outcome['vcf_prob'] = pd.DataFrame(spoka_vcf_pred_probs)
-# spoka_pred_outcome['vcf_pred'] = spoka_vcf.predict(spoka_x_test)
-spoka_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\spoka\\spoka_tran_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # University predicted outcome
@@ -2807,32 +2311,6 @@ trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'firs
 trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
-# Spokane aggregate outcome
-spoka_aggregate_outcome['emplid'] = spoka_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-spoka_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(spoka_xgb_pred_probs).round(4)
-
-spoka_aggregate_outcome = spoka_aggregate_outcome.rename(columns={"male": "sex_ind"})
-spoka_aggregate_outcome.loc[spoka_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
-spoka_aggregate_outcome.loc[spoka_aggregate_outcome['sex_ind'] == 0, 'sex_descr'] = 'Female'
-
-spoka_aggregate_outcome = spoka_aggregate_outcome.rename(columns={"underrep_minority": "underrep_minority_ind"})
-spoka_aggregate_outcome.loc[spoka_aggregate_outcome['underrep_minority_ind'] == 1, 'underrep_minority_descr'] = 'Minority'
-spoka_aggregate_outcome.loc[spoka_aggregate_outcome['underrep_minority_ind'] == 0, 'underrep_minority_descr'] = 'Non-minority'
-
-# spoka_aggregate_outcome = spoka_aggregate_outcome.rename(columns={"resident": "resident_ind"})
-# spoka_aggregate_outcome.loc[spoka_aggregate_outcome['resident_ind'] == 1, 'resident_descr'] = 'Resident'
-# spoka_aggregate_outcome.loc[spoka_aggregate_outcome['resident_ind'] == 0, 'resident_descr'] = 'non-Resident'
-
-spoka_aggregate_outcome.loc[spoka_aggregate_outcome['first_gen_flag'] == 'Y', 'first_gen_flag'] = 1
-spoka_aggregate_outcome.loc[spoka_aggregate_outcome['first_gen_flag'] == 'N', 'first_gen_flag'] = 0
-
-spoka_aggregate_outcome = spoka_aggregate_outcome.rename(columns={"first_gen_flag": "first_gen_ind"})
-spoka_aggregate_outcome.loc[spoka_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
-spoka_aggregate_outcome.loc[spoka_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
-
-spoka_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\spoka\\spoka_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
-
-#%%
 # University aggregate outcome
 univr_aggregate_outcome['emplid'] = univr_aggregate_outcome['emplid'].astype(str).str.zfill(9)
 univr_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgb_pred_probs).round(4)
@@ -2883,14 +2361,6 @@ trici_current_outcome['date'] = run_date
 trici_current_outcome['model_id'] = model_id
 
 #%%
-# Spokane current outcome
-spoka_current_outcome['emplid'] = spoka_current_outcome['emplid'].astype(str).str.zfill(9)
-spoka_current_outcome['risk_prob'] = 1 - pd.DataFrame(spoka_xgb_pred_probs).round(4)
-
-spoka_current_outcome['date'] = run_date
-spoka_current_outcome['model_id'] = model_id
-
-#%%
 # University current outcome
 univr_current_outcome['emplid'] = univr_current_outcome['emplid'].astype(str).str.zfill(9)
 univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgb_pred_probs).round(4)
@@ -2933,18 +2403,6 @@ else:
 	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
 	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_student_outcome.csv', encoding='utf-8', index=False)
 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-
-#%%
-# Spokane to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\spoka\\spoka_tran_student_outcome.csv'):
-	spoka_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\spoka\\spoka_tran_student_outcome.csv', encoding='utf-8', index=False)
-	spoka_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-else:
-	spoka_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\spoka\\spoka_tran_student_outcome.csv', encoding='utf-8', low_memory=False)
-	spoka_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\spoka\\spoka_tran_student_backup.csv', encoding='utf-8', index=False)
-	spoka_student_outcome = pd.concat([spoka_prior_outcome, spoka_current_outcome])
-	spoka_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\spoka\\spoka_tran_student_outcome.csv', encoding='utf-8', index=False)
-	spoka_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # University to csv and to sql
@@ -3052,39 +2510,8 @@ while trici_shap_insert:
 	engine.execute(ins)
 
 #%%
-# Spokane top-N SHAP values to csv and to sql
-spoka_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\spoka\\spoka_tran_shap.csv', 'w', newline='')
-spoka_shap_writer = csv.writer(spoka_shap_file)
-spoka_shap_insert = []
-
-spoka_shap_writer.writerow(['emplid','shap_values'])
-
-for emplid in spoka_shap_zip:
-	spoka_shap_writer.writerow([emplid, list(islice(spoka_shap_zip[emplid].items(), top_N))])
-	spoka_shap_sql = [emplid, list(islice(spoka_shap_zip[emplid].items(), top_N))]
-	
-	spoka_shap_insert.append(str(spoka_shap_sql[0]).zfill(9))
-
-	for index in range(top_N):
-		shap_str, shap_float = spoka_shap_sql[1][index]
-		spoka_shap_insert.append(shap_str) 
-		spoka_shap_insert.append(round(shap_float, 4))
-
-spoka_shap_file.close()
-
-while spoka_shap_insert:
-	ins = student_shap.insert().values(emplid=spoka_shap_insert.pop(0), 
-										shap_descr_1=spoka_shap_insert.pop(0), shap_value_1=spoka_shap_insert.pop(0), 
-										shap_descr_2=spoka_shap_insert.pop(0), shap_value_2=spoka_shap_insert.pop(0), 
-										shap_descr_3=spoka_shap_insert.pop(0), shap_value_3=spoka_shap_insert.pop(0), 
-										shap_descr_4=spoka_shap_insert.pop(0), shap_value_4=spoka_shap_insert.pop(0), 
-										shap_descr_5=spoka_shap_insert.pop(0), shap_value_5=spoka_shap_insert.pop(0), 
-										date=run_date, model_id=model_id)
-	engine.execute(ins)
-
-#%%
 # University top-N SHAP values to csv and to sql
-univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\univr_tran_shap.csv', 'w', newline='')
+univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\univr\\univr_tran_shap.csv', 'w', newline='')
 univr_shap_writer = csv.writer(univr_shap_file)
 univr_shap_insert = []
 
@@ -3126,10 +2553,6 @@ joblib.dump(vanco_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_tran_mo
 #%%
 # Tri-Cities model output
 joblib.dump(trici_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_tran_model_v{sklearn.__version__}.pkl')
-
-#%%
-# Spokane model output
-joblib.dump(spoka_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\spoka_tran_model_v{sklearn.__version__}.pkl')
 
 #%%
 # University model output

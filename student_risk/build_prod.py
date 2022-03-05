@@ -2404,17 +2404,27 @@ class DatasetBuilderProd:
 			proc sql;
 				create table enrolled_&cohort_year. as
 				select distinct 
-					emplid, 
-					term_code as cont_term,
-					enrl_ind
-				from &dsn..student_enrolled_vw
-				where snapshot = 'census'
-					and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-					and substr(strm,4,1) = '7'
-					and acad_career = 'UGRD'
-					and new_continue_status = 'CTU'
-					and term_credit_hours > 0
-				order by emplid
+					a.emplid, 
+					a.term_code as cont_term,
+					case when b.emplid is not null 	then 1
+													else a.enrl_ind
+													end as enrl_ind
+				from &dsn..student_enrolled_vw as a
+				full join (select distinct 
+								emplid 
+							from &dsn..student_degree_vw 
+							where snapshot = 'degree'
+								and full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+								and acad_career = 'UGRD'
+								and ipeds_award_lvl = 5) as b
+					on a.emplid = b.emplid
+				where a.snapshot = 'census'
+					and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+					and substr(a.strm,4,1) = '7'
+					and a.acad_career = 'UGRD'
+					and a.new_continue_status = 'CTU'
+					and a.term_credit_hours > 0
+				order by a.emplid
 			;quit;
 			
 			proc sql;

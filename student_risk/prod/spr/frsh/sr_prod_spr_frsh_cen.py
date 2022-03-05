@@ -44,7 +44,6 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 strm = None
 top_N = 5
 model_id = 5
-day_of_week = 5
 run_date = date.today()
 unwanted_vars = ['emplid','enrl_ind']
 
