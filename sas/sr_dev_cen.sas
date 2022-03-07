@@ -41,7 +41,13 @@ proc sql;
 proc sql;
 	select distinct a.snapshot into: aid_snapshot
 	from &dsn..fa_award_aid_year_vw as a
-	inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&full_acad_year."	) as b
+	inner join (select distinct 
+					emplid, 
+					aid_year, 
+					min(snapshot) as snapshot 
+				from &dsn..fa_award_aid_year_vw 
+				where aid_year = "&full_acad_year." 
+					and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 		on a.emplid = b.emplid
 			and a.aid_year = b.aid_year
 			and a.snapshot = b.snapshot

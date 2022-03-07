@@ -45,13 +45,45 @@ class DatasetBuilderProd:
 		;quit;
 
 		proc sql;
-			select distinct a.snapshot into: snapshot
+			select distinct a.snapshot into: aid_snapshot
 			from &dsn..fa_award_aid_year_vw as a
-			inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&full_acad_year."	) as b
+			inner join (select distinct 
+							emplid, 
+							aid_year, 
+							min(snapshot) as snapshot 
+						from &dsn..fa_award_aid_year_vw 
+						where aid_year = "&full_acad_year." 
+							and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 				on a.emplid = b.emplid
 					and a.aid_year = b.aid_year
 					and a.snapshot = b.snapshot
 			where a.aid_year = "&full_acad_year."	
+		;quit;
+
+		proc sql;
+			create table snap_check as
+			select distinct
+				max(case when snapshot = 'census' 	then 1
+					when snapshot = 'midterm' 		then 2
+					when snapshot = 'eot'			then 3
+													else 0
+													end) as snap_order
+			from &dsn..class_registration_vw
+			where acad_career = 'UGRD'
+				and strm = (select distinct
+								max(strm)
+							from &dsn..class_registration_vw where acad_career = 'UGRD')
+				and full_acad_year = "&full_acad_year."
+		;quit;
+
+		proc sql;
+			select distinct 
+				case when snap_order = 1	then 'census'
+					when snap_order = 2		then 'midterm'
+					when snap_order = 3		then 'eot'
+											else '' end
+				into: snapshot
+			from snap_check
 		;quit;
 		""")
 
@@ -340,7 +372,7 @@ class DatasetBuilderProd:
 					fed_efc,
 					fed_need
 				from &dsn..fa_award_period
-				where snapshot = "&snapshot."
+				where snapshot = "&aid_snapshot."
 					and aid_year = "&cohort_year."	
 					and award_period = 'A'
 					and efc_status = 'O'
@@ -356,7 +388,7 @@ class DatasetBuilderProd:
 					sum(offer_amt) as total_offer,
 					sum(accept_amt) as total_accept
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&snapshot."
+				where snapshot = "&aid_snapshot."
 					and aid_year = "&cohort_year."
 					and award_period in ('A','B')
 					and award_status in ('A','O')
@@ -2164,7 +2196,13 @@ class DatasetBuilderProd:
 		proc sql;
 			select distinct a.snapshot into: aid_snapshot
 			from &dsn..fa_award_aid_year_vw as a
-			inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&full_acad_year."	) as b
+			inner join (select distinct 
+							emplid, 
+							aid_year, 
+							min(snapshot) as snapshot 
+						from &dsn..fa_award_aid_year_vw 
+						where aid_year = "&full_acad_year." 
+							and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 				on a.emplid = b.emplid
 					and a.aid_year = b.aid_year
 					and a.snapshot = b.snapshot
