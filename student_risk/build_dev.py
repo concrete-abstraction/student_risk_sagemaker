@@ -1776,12 +1776,11 @@ class DatasetBuilderDev:
 		print('Run SAS macro program...')
 		start = time.perf_counter()
 
-		with HaloNotebook(text='Running', spinner='dots'):
-			sas_log = sas.submit("""
-			%loop;
-			""")
+		sas_log = sas.submit("""
+		%loop;
+		""")
 
-			HTML(sas_log['LOG'])
+		HTML(sas_log['LOG'])
 
 		stop = time.perf_counter()
 		print(f'Done in {(stop - start)/60:.1f} minutes\n')
@@ -6284,12 +6283,11 @@ class DatasetBuilderDev:
 		print('Run SAS macro program...')
 		start = time.perf_counter()
 
-		with HaloNotebook(text='Running', spinner='dots'):
-			sas_log = sas.submit("""
-			%loop;
-			""")
+		sas_log = sas.submit("""
+		%loop;
+		""")
 
-			HTML(sas_log['LOG'])
+		HTML(sas_log['LOG'])
 
 		stop = time.perf_counter()
 		print(f'Done in {(stop - start)/60:.1f} minutes\n')

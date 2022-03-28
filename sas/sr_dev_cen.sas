@@ -82,7 +82,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production or 5 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 4);
+%let start_cohort = %eval(&end_cohort. - 5);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -4119,8 +4119,8 @@ run;
 %loop;
 
 data training_set;
-/* 	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.); */
-	set dataset_&start_cohort.-dataset_&end_cohort.;
+	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
+/* 	set dataset_&start_cohort.-dataset_&end_cohort.; */
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
 	if distance = . then distance = 0;
@@ -4304,8 +4304,8 @@ proc sort data=training_set nodupkey dupout=training_dups;
 run;
 
 data testing_set;
-/* 	set dataset_&end_cohort.; */
-	set dataset_%eval(&end_cohort. + &lag_year.);
+	set dataset_&end_cohort.;
+/* 	set dataset_%eval(&end_cohort. + &lag_year.); */
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
 	if distance = . then distance = 0;

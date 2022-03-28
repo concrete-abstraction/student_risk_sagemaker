@@ -1725,16 +1725,6 @@ print(trici_vif.round(1).to_string())
 print('\n')
 
 #%%
-# Spokane VIF
-print('VIF for Spokane...\n')
-spoka_vif = pd.DataFrame()
-spoka_vif['vif factor'] = [variance_inflation_factor(spoka_x.values, i) for i in range(spoka_x.shape[1])]
-spoka_vif['features'] = spoka_x.columns
-spoka_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
-print(spoka_vif.round(1).to_string())
-print('\n')
-
-#%%
 # University VIF
 print('VIF for University...\n')
 univr_vif = pd.DataFrame()

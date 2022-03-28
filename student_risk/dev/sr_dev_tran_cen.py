@@ -1683,7 +1683,7 @@ univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_t
 # Standard logistic model
 
 # Pullman standard model
-print('\nStandard logistic model for Pullman freshmen...\n')
+print('\nStandard logistic model for Pullman transfer...\n')
 
 pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1708,7 +1708,7 @@ print('\n')
 
 #%%
 # Vancouver standard model
-print('\nStandard logistic model for Vancouver freshmen...\n')
+print('\nStandard logistic model for Vancouver transfer...\n')
 
 vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1731,7 +1731,7 @@ print('\n')
 
 #%%
 # Tri-Cities standard model
-print('\nStandard logistic model for Tri-Cities freshmen...\n')
+print('\nStandard logistic model for Tri-Cities transfer...\n')
 
 trici_y, trici_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1754,7 +1754,7 @@ print('\n')
 
 #%%
 # University standard model
-print('\nStandard logistic model for University freshmen...\n')
+print('\nStandard logistic model for University transfer...\n')
 
 univr_y, univr_x = dmatrices('enrl_ind ~ distance + acs_mi \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
