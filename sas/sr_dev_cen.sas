@@ -82,7 +82,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production or 5 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 4);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -3678,51 +3678,52 @@ run;
 			class_nbr,
 			crse_id,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
-			case when crse_grade_input_mid = 'A' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'A-' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'B+' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'B'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'B-' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'C+' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'C'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'C-' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'D+' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'D'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'F'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'A' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'A-' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B+' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B-' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C+' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C-' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'D+' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'D'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'F'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
 																					else .
 																					end as unt_taken,
-			case when crse_grade_input_mid = 'A' and enrl_status_reason ^= 'WDRW'	then 4.0
-				when crse_grade_input_mid = 'A-' and enrl_status_reason ^= 'WDRW'	then 3.7
-				when crse_grade_input_mid = 'B+' and enrl_status_reason ^= 'WDRW'	then 3.3
-				when crse_grade_input_mid = 'B'	 and enrl_status_reason ^= 'WDRW'	then 3.0
-				when crse_grade_input_mid = 'B-' and enrl_status_reason ^= 'WDRW'	then 2.7
-				when crse_grade_input_mid = 'C+' and enrl_status_reason ^= 'WDRW'	then 2.3
-				when crse_grade_input_mid = 'C'	 and enrl_status_reason ^= 'WDRW'	then 2.0
-				when crse_grade_input_mid = 'C-' and enrl_status_reason ^= 'WDRW'	then 1.7
-				when crse_grade_input_mid = 'D+' and enrl_status_reason ^= 'WDRW'	then 1.3
-				when crse_grade_input_mid = 'D'	 and enrl_status_reason ^= 'WDRW'	then 1.0
-				when crse_grade_input_mid = 'F'	 and enrl_status_reason ^= 'WDRW'	then 0.0
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'A' and enrl_status_reason ^= 'WDRW'	then 4.0
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'A-' and enrl_status_reason ^= 'WDRW'	then 3.7
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B+' and enrl_status_reason ^= 'WDRW'	then 3.3
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B'	 and enrl_status_reason ^= 'WDRW'	then 3.0
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B-' and enrl_status_reason ^= 'WDRW'	then 2.7
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C+' and enrl_status_reason ^= 'WDRW'	then 2.3
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C'	 and enrl_status_reason ^= 'WDRW'	then 2.0
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C-' and enrl_status_reason ^= 'WDRW'	then 1.7
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'D+' and enrl_status_reason ^= 'WDRW'	then 1.3
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'D'	 and enrl_status_reason ^= 'WDRW'	then 1.0
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'F'	 and enrl_status_reason ^= 'WDRW'	then 0.0
 																					else .
 																					end as fall_midterm_grade,
 			case when calculated unt_taken is not null and enrl_status_reason ^= 'WDRW'		then 1
 																							else 0
 																							end as fall_midterm_grade_ind,
-			case when crse_grade_input_mid = 'S' and enrl_status_reason ^= 'WDRW'	then 1
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'S' and enrl_status_reason ^= 'WDRW'	then 1
+																													else 0
+																													end as fall_midterm_S_grade_ind,									
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'X'	then 1
 																					else 0
-																					end as fall_midterm_S_grade_ind,									
-			case when crse_grade_input_mid = 'X'	then 1
-													else 0
-													end as fall_midterm_X_grade_ind,
-			case when crse_grade_input_mid = 'Z'	then 1
-													else 0
-													end as fall_midterm_Z_grade_ind,
+																					end as fall_midterm_X_grade_ind,
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'Z'	then 1
+																					else 0
+																					end as fall_midterm_Z_grade_ind,
 			case when enrl_status_reason = 'WDRW'	then 1
 													else 0
 													end as fall_midterm_W_grade_ind
 		from acs.crse_grade_data
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and stdnt_enrl_status = 'E'
-			and crse_grade_input_mid ^= ''
+/* 			and crse_grade_input_mid ^= '' */
+/* 			and crse_grade_input_fin ^= '' */
 	;quit;
 
 	proc sql;
@@ -3733,51 +3734,52 @@ run;
 			class_nbr,
 			crse_id,
 			strip(subject) || ' ' || strip(catalog_nbr) as subject_catalog_nbr,
-			case when crse_grade_input_mid = 'A' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'A-' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'B+' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'B'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'B-' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'C+' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'C'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'C-' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'D+' and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'D'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
-				when crse_grade_input_mid = 'F'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'A' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'A-' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B+' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B-' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C+' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C-' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'D+' and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'D'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'F'	 and enrl_status_reason ^= 'WDRW'	then unt_taken
 																					else .
 																					end as unt_taken,
-			case when crse_grade_input_mid = 'A' and enrl_status_reason ^= 'WDRW'	then 4.0
-				when crse_grade_input_mid = 'A-' and enrl_status_reason ^= 'WDRW'	then 3.7
-				when crse_grade_input_mid = 'B+' and enrl_status_reason ^= 'WDRW'	then 3.3
-				when crse_grade_input_mid = 'B'	 and enrl_status_reason ^= 'WDRW'	then 3.0
-				when crse_grade_input_mid = 'B-' and enrl_status_reason ^= 'WDRW'	then 2.7
-				when crse_grade_input_mid = 'C+' and enrl_status_reason ^= 'WDRW'	then 2.3
-				when crse_grade_input_mid = 'C'	 and enrl_status_reason ^= 'WDRW'	then 2.0
-				when crse_grade_input_mid = 'C-' and enrl_status_reason ^= 'WDRW'	then 1.7
-				when crse_grade_input_mid = 'D+' and enrl_status_reason ^= 'WDRW'	then 1.3
-				when crse_grade_input_mid = 'D'	 and enrl_status_reason ^= 'WDRW'	then 1.0
-				when crse_grade_input_mid = 'F'	 and enrl_status_reason ^= 'WDRW'	then 0.0
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'A' and enrl_status_reason ^= 'WDRW'	then 4.0
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'A-' and enrl_status_reason ^= 'WDRW'	then 3.7
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B+' and enrl_status_reason ^= 'WDRW'	then 3.3
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B'	 and enrl_status_reason ^= 'WDRW'	then 3.0
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'B-' and enrl_status_reason ^= 'WDRW'	then 2.7
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C+' and enrl_status_reason ^= 'WDRW'	then 2.3
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C'	 and enrl_status_reason ^= 'WDRW'	then 2.0
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'C-' and enrl_status_reason ^= 'WDRW'	then 1.7
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'D+' and enrl_status_reason ^= 'WDRW'	then 1.3
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'D'	 and enrl_status_reason ^= 'WDRW'	then 1.0
+				when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'F'	 and enrl_status_reason ^= 'WDRW'	then 0.0
 																					else .
 																					end as spring_midterm_grade,
 			case when calculated unt_taken is not null and enrl_status_reason ^= 'WDRW'		then 1
 																							else 0
 																							end as spring_midterm_grade_ind,
-			case when crse_grade_input_mid = 'S' and enrl_status_reason ^= 'WDRW'	then 1
-																				else 0
-																				end as spring_midterm_S_grade_ind,									
-			case when crse_grade_input_mid = 'X'	then 1
-													else 0
-													end as spring_midterm_X_grade_ind,
-			case when crse_grade_input_mid = 'Z'	then 1
-													else 0
-													end as spring_midterm_Z_grade_ind,
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'S' and enrl_status_reason ^= 'WDRW'	then 1
+																													else 0
+																													end as spring_midterm_S_grade_ind,									
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'X'	then 1
+																					else 0
+																					end as spring_midterm_X_grade_ind,
+			case when coalesce(crse_grade_input_mid, crse_grade_input_fin) = 'Z'	then 1
+																					else 0
+																					end as spring_midterm_Z_grade_ind,
 			case when enrl_status_reason = 'WDRW'	then 1
 													else 0
 													end as spring_midterm_W_grade_ind
 		from acs.crse_grade_data
 		where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 			and stdnt_enrl_status = 'E'
-			and crse_grade_input_mid ^= ''
+/* 			and crse_grade_input_mid ^= '' */
+/* 			and crse_grade_input_fin ^= '' */
 	;quit;
 
 	proc sql;
