@@ -2633,21 +2633,19 @@ print(f'ROC AUC for University SGD model (training): {univr_sgd_auc:.4f}\n')
 # XGBoost model
 
 # Pullman XGBoost tuning
-pullm_interaction_constraints = '[[0,1,2,3,4,5,6,7,8,9,10,11,25,26,27,28],[13,14,15,16,17,18,19,30,31,32,33,34,35,36,37,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59],[12,20,21,22,23,24,29,60]]'
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, interaction_constraints=pullm_interaction_constraints, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
 
 #%%
 # Pullman XGB
-pullm_interaction_constraints = '[[0,1,2,3,4,5,6,7,8,9,10,11,25,26,27,28],[13,14,15,16,17,18,19,30,31,32,33,34,35,36,37,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59],[12,20,21,22,23,24,29,60]]'
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgb = XGBClassifier(n_estimators=1000, interaction_constraints=pullm_interaction_constraints, scale_pos_weight=pullm_class_weight, 
+pullm_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
@@ -2659,21 +2657,19 @@ print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
 
 #%%
 # Vancouver XGBoost tuning
-vanco_interaction_constraints = '[[0,1,2,3,4,5,6,7,8,9,23,24,25,26],[11,12,13,14,15,16,17],[10,18,19,20,21,22,27,28,29]]'
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, interaction_constraints=vanco_interaction_constraints, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
 
 #%%
 # Vancouver XGB
-vanco_interaction_constraints = '[[0,1,2,3,4,5,6,7,8,9,23,24,25,26],[11,12,13,14,15,16,17],[10,18,19,20,21,22,27,28,29]]'
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgb = XGBClassifier(n_estimators=1000, interaction_constraints=vanco_interaction_constraints, scale_pos_weight=vanco_class_weight, 
+vanco_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=vanco_class_weight, 
 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
@@ -2685,21 +2681,19 @@ print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
 
 #%%
 # Tri-Cities XGBoost tuning
-trici_interaction_constraints = '[[0,1,2,3,4,5,6,7,8,9,23,24,25,26],[11,12,13,14,15,16,17],[10,18,19,20,21,22,27,28,29]]'
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, interaction_constraints=trici_interaction_constraints, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
 
 #%%
 # Tri-Cities XGB
-trici_interaction_constraints = '[[0,1,2,3,4,5,6,7,8,9,23,24,25,26],[11,12,13,14,15,16,17],[10,18,19,20,21,22,27,28,29]]'
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgb = XGBClassifier(n_estimators=1000, interaction_constraints=trici_interaction_constraints, scale_pos_weight=trici_class_weight, 
+trici_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=trici_class_weight, 
 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
 
 trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
@@ -2711,21 +2705,19 @@ print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
 
 #%%
 # University XGBoost tuning
-univr_interaction_constraints = '[[0,1,2,3,4,5,6,7,8,9,23,24,25,26],[11,12,13,14,15,16,17],[10,18,19,20,21,22,27,28,29]]'
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, interaction_constraints=univr_interaction_constraints, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
 
 #%%
 # Univeristy XGB
-univr_interaction_constraints = '[[0,1,2,3,4,5,6,7,8,9,23,24,25,26],[11,12,13,14,15,16,17],[10,18,19,20,21,22,27,28,29]]'
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgb = XGBClassifier(n_estimators=1000, interaction_constraints=univr_interaction_constraints, scale_pos_weight=univr_class_weight, 
+univr_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
 
 univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)

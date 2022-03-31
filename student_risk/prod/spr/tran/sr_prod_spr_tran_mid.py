@@ -18,7 +18,7 @@ from imblearn.under_sampling import TomekLinks, NearMiss
 from itertools import islice
 from sklearn.compose import make_column_transformer
 from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PowerTransformer
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
@@ -402,7 +402,7 @@ vanco_data_vars = [
 # 'comm',
 # 'education',
 # 'medicine',
-'nursing',
+# 'nursing',
 # 'pharmacy',
 # 'provost',
 # 'vcea_bioe',
@@ -616,7 +616,7 @@ trici_data_vars = [
 # 'comm',
 # 'education',
 # 'medicine',
-'nursing',
+# 'nursing',
 # 'pharmacy',
 # 'provost',
 # 'vcea_bioe',
@@ -747,10 +747,10 @@ univr_data_vars = [
 # 'fall_avg_pct_CDF',
 # 'fall_avg_pct_DFW',
 # 'fall_avg_pct_DF',
-'spring_avg_difficulty',
-'spring_avg_pct_withdrawn',
+# 'spring_avg_difficulty',
+# 'spring_avg_pct_withdrawn',
 # 'spring_avg_pct_CDFW',
-'spring_avg_pct_CDF',
+# 'spring_avg_pct_CDF',
 # 'spring_avg_pct_DFW',
 # 'spring_avg_pct_DF',
 # 'fall_lec_count',
@@ -830,7 +830,7 @@ univr_data_vars = [
 # 'comm',
 # 'education',
 # 'medicine',
-'nursing',
+# 'nursing',
 # 'pharmacy',
 # 'provost',
 # 'vcea_bioe',
@@ -1500,7 +1500,7 @@ univr_tomek_prep = make_column_transformer(
 						# 'fall_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						'spring_avg_difficulty',
+						# 'spring_avg_difficulty',
 						# 'spring_avg_pct_withdrawn',
 						# 'spring_avg_pct_CDFW',
 						# 'spring_avg_pct_CDF',
@@ -1621,7 +1621,6 @@ try:
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
 					+ spring_withdrawn_hours \
-					+ nursing \
 					+ remedial \
 					+ cum_adj_transfer_hours \
 					+ resident \
@@ -1650,7 +1649,6 @@ try:
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
 					+ spring_withdrawn_hours \
-					+ nursing \
 					+ remedial \
 					+ cum_adj_transfer_hours \
 					+ resident \
@@ -1676,9 +1674,7 @@ try:
 					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
 					+ spring_lec_count + spring_lab_count \
 					+ spring_credit_hours \
-					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
 					+ spring_withdrawn_hours \
-					+ nursing \
 					+ remedial \
 					+ cum_adj_transfer_hours \
 					+ resident \
