@@ -2640,7 +2640,7 @@ pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
-print(f'Best parameters: {pullm_gridsearch.best_params_}')
+print(f'Best Pullman parameters: {pullm_gridsearch.best_params_}')
 
 #%%
 # Pullman XGB
@@ -2652,7 +2652,7 @@ pullm_xgb_probs = pullm_xgb.predict_proba(pullm_x_train)
 pullm_xgb_probs = pullm_xgb_probs[:, 1]
 pullm_xgb_auc = roc_auc_score(pullm_y_train, pullm_xgb_probs)
 
-print(f'\nOverall accuracy for Pullman XGB model (training): {pullm_xgb.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'Overall accuracy for Pullman XGB model (training): {pullm_xgb.score(pullm_x_train, pullm_y_train):.4f}')
 print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
 
 #%%
@@ -2664,7 +2664,7 @@ vanco_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint
 vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
-print(f'Best parameters: {vanco_gridsearch.best_params_}')
+print(f'Best Vancouver parameters: {vanco_gridsearch.best_params_}')
 
 #%%
 # Vancouver XGB
@@ -2676,7 +2676,7 @@ vanco_xgb_probs = vanco_xgb.predict_proba(vanco_x_train)
 vanco_xgb_probs = vanco_xgb_probs[:, 1]
 vanco_xgb_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
 
-print(f'\nOverall accuracy for Vancouver XGB model (training): {vanco_xgb.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'Overall accuracy for Vancouver XGB model (training): {vanco_xgb.score(vanco_x_train, vanco_y_train):.4f}')
 print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
 
 #%%
@@ -2688,7 +2688,7 @@ trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
-print(f'Best parameters: {trici_gridsearch.best_params_}')
+print(f'Best Tri-Cities parameters: {trici_gridsearch.best_params_}')
 
 #%%
 # Tri-Cities XGB
@@ -2700,7 +2700,7 @@ trici_xgb_probs = trici_xgb.predict_proba(trici_x_train)
 trici_xgb_probs = trici_xgb_probs[:, 1]
 trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
 
-print(f'\nOverall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
+print(f'Overall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
 print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
 
 #%%
@@ -2712,7 +2712,7 @@ univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
-print(f'Best parameters: {univr_gridsearch.best_params_}')
+print(f'Best University parameters: {univr_gridsearch.best_params_}')
 
 #%%
 # Univeristy XGB
@@ -2724,7 +2724,7 @@ univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
 univr_xgb_probs = univr_xgb_probs[:, 1]
 univr_xgb_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
 
-print(f'\nOverall accuracy for Univeristy XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
+print(f'Overall accuracy for Univeristy XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
 print(f'ROC AUC for Univeristy XGB model (training): {univr_xgb_auc:.4f}\n')
 
 #%%
