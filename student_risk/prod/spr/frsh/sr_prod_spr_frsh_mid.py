@@ -2640,7 +2640,7 @@ pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
-print(f'Best Pullman parameters: {pullm_gridsearch.best_params_}')
+print(f'Best Pullman XGB parameters: {pullm_gridsearch.best_params_}')
 
 #%%
 # Pullman XGB
@@ -2664,7 +2664,7 @@ vanco_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint
 vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
-print(f'Best Vancouver parameters: {vanco_gridsearch.best_params_}')
+print(f'Best Vancouver XGB parameters: {vanco_gridsearch.best_params_}')
 
 #%%
 # Vancouver XGB
@@ -2688,7 +2688,7 @@ trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
-print(f'Best Tri-Cities parameters: {trici_gridsearch.best_params_}')
+print(f'Best Tri-Cities XGB parameters: {trici_gridsearch.best_params_}')
 
 #%%
 # Tri-Cities XGB
@@ -2712,7 +2712,7 @@ univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
-print(f'Best University parameters: {univr_gridsearch.best_params_}')
+print(f'Best University XGB parameters: {univr_gridsearch.best_params_}')
 
 #%%
 # Univeristy XGB
