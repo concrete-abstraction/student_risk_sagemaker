@@ -2024,7 +2024,7 @@ univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 print(f'Best parameters: {univr_gridsearch.best_params_}')
 
 #%%
-# Univeristy XGB
+# University XGB
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
@@ -2033,8 +2033,8 @@ univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
 univr_xgb_probs = univr_xgb_probs[:, 1]
 univr_xgb_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
 
-print(f'\nOverall accuracy for Univeristy XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for Univeristy XGB model (training): {univr_xgb_auc:.4f}\n')
+print(f'\nOverall accuracy for University XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for University XGB model (training): {univr_xgb_auc:.4f}\n')
 
 #%%
 # Ensemble model

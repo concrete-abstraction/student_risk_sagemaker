@@ -28,7 +28,7 @@ from sklearn.model_selection import GridSearchCV
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from sqlalchemy import MetaData, Table
-from xgboost import XGBClassifier
+from xgboost import XGBClassifier, XGBRFClassifier
 
 #%%
 # Database connection
@@ -335,693 +335,6 @@ pullm_current_outcome = pullm_testing_set[[
                             'emplid',
                             # 'enrl_ind'
                             ]].copy(deep=True)
-
-#%%
-# Vancouver variables
-vanco_data_vars = [
-'emplid',
-'enrl_ind', 
-# 'acad_year',
-# 'age_group', 
-# 'age',
-'male',
-# 'race_hispanic',
-# 'race_american_indian',
-# 'race_alaska',
-# 'race_asian',
-# 'race_black',
-# 'race_native_hawaiian',
-# 'race_white',
-# 'min_week_from_term_begin_dt',
-# 'max_week_from_term_begin_dt',
-# 'count_week_from_term_begin_dt',
-# 'marital_status',
-# 'acs_mi',
-# 'distance',
-# 'pop_dens',
-'underrep_minority',
-# 'ipeds_ethnic_group_descrshort',
-'pell_eligibility_ind', 
-# 'pell_recipient_ind',
-'first_gen_flag', 
-'first_gen_flag_mi',
-# 'LSAMP_STEM_Flag',
-# 'anywhere_STEM_Flag',
-'honors_program_ind',
-# 'afl_greek_indicator',
-# 'high_school_gpa',
-'fall_term_gpa',
-'fall_term_gpa_mi',
-'fall_term_D_grade_count',
-'fall_term_F_grade_count',
-# 'fall_term_S_grade_count',
-# 'fall_term_W_grade_count',
-# 'spring_midterm_gpa_change',
-# 'awe_instrument',
-# 'cdi_instrument',
-# 'fall_avg_difficulty',
-# 'fall_avg_pct_withdrawn',
-# 'fall_avg_pct_CDFW',
-# 'fall_avg_pct_CDF',
-# 'fall_avg_pct_DFW',
-# 'fall_avg_pct_DF',
-'spring_avg_difficulty',
-'spring_avg_pct_withdrawn',
-# 'spring_avg_pct_CDFW',
-'spring_avg_pct_CDF',
-# 'spring_avg_pct_DFW',
-# 'spring_avg_pct_DF',
-# 'fall_lec_count',
-# 'fall_lab_count',
-# 'fall_lec_contact_hrs',
-# 'fall_lab_contact_hrs',
-'spring_lec_count',
-'spring_lab_count',
-# 'spring_lec_contact_hrs',
-# 'spring_lab_contact_hrs',
-# 'total_fall_contact_hrs',
-# 'total_spring_contact_hrs',
-# 'fall_midterm_gpa_avg',
-# 'fall_midterm_gpa_avg_ind',
-'spring_midterm_gpa_avg',
-'spring_midterm_gpa_avg_mi',
-'cum_adj_transfer_hours',
-'resident',
-# 'father_wsu_flag',
-# 'mother_wsu_flag',
-'parent1_highest_educ_lvl',
-'parent2_highest_educ_lvl',
-# 'citizenship_country',
-# 'gini_indx',
-# 'pvrt_rate',
-# 'median_inc',
-# 'median_value',
-# 'educ_rate',
-# 'pct_blk',
-# 'pct_ai',
-# 'pct_asn',
-# 'pct_hawi',
-# 'pct_oth',
-# 'pct_two',
-# 'pct_non',
-# 'pct_hisp',
-# 'city_large',
-# 'city_mid',
-# 'city_small',
-# 'suburb_large',
-# 'suburb_mid',
-# 'suburb_small',
-# 'town_fringe',
-# 'town_distant',
-# 'town_remote',
-# 'rural_fringe',
-# 'rural_distant',
-# 'rural_remote',
-# 'AD_DTA',
-# 'AD_AST',
-# 'AP',
-# 'RS',
-# 'CHS',
-# 'IB',
-# 'AICE',
-# 'IB_AICE', 
-'spring_credit_hours',
-# 'total_spring_units',
-'spring_withdrawn_hours',
-# 'athlete',
-'remedial',
-# 'ACAD_PLAN',
-# 'plan_owner_org',
-# 'business',
-# 'cahnrs_anml',
-# 'cahnrs_envr',
-# 'cahnrs_econ',
-# 'cahnrext',
-# 'cas_chem',
-# 'cas_crim',
-# 'cas_math',
-# 'cas_psyc',
-# 'cas_biol',
-# 'cas_engl',
-# 'cas_phys',
-# 'cas',
-# 'comm',
-# 'education',
-# 'medicine',
-# 'nursing',
-# 'pharmacy',
-# 'provost',
-# 'vcea_bioe',
-# 'vcea_cive',
-# 'vcea_desn',
-# 'vcea_eecs',
-# 'vcea_mech',
-# 'vcea',
-# 'vet_med',
-# 'last_sch_proprietorship',
-# 'sat_erws',
-# 'sat_mss',
-# 'sat_comp',
-# 'attendee_alive',
-# 'attendee_campus_visit',
-# 'attendee_cashe',
-# 'attendee_destination',
-# 'attendee_experience',
-# 'attendee_fcd_pullman',
-# 'attendee_fced',
-# 'attendee_fcoc',
-# 'attendee_fcod',
-# 'attendee_group_visit',
-# 'attendee_honors_visit',
-# 'attendee_imagine_tomorrow',
-# 'attendee_imagine_u',
-# 'attendee_la_bienvenida',
-# 'attendee_lvp_camp',
-# 'attendee_oos_destination',
-# 'attendee_oos_experience',
-# 'attendee_preview',
-# 'attendee_preview_jrs',
-# 'attendee_shaping',
-# 'attendee_top_scholars',
-# 'attendee_transfer_day',
-# 'attendee_vibes',
-# 'attendee_welcome_center',
-# 'attendee_any_visitation_ind',
-# 'attendee_total_visits',
-# 'qvalue',
-# 'fed_efc',
-# 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
-]
-
-vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
-
-# Vancouver dataframes
-vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['emplid'])
-
-vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
-
-vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
-
-vanco_testing_set = vanco_testing_set.reset_index()
-
-vanco_shap_outcome = vanco_testing_set['emplid'].copy(deep=True).values.tolist()
-
-vanco_pred_outcome = vanco_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-vanco_aggregate_outcome = vanco_testing_set[[ 
-                            'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag',
-							'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-vanco_current_outcome = vanco_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-#%%
-# Tri-Cities variables
-trici_data_vars = [
-'emplid',
-'enrl_ind', 
-# 'acad_year',
-# 'age_group', 
-# 'age',
-'male',
-# 'race_hispanic',
-# 'race_american_indian',
-# 'race_alaska',
-# 'race_asian',
-# 'race_black',
-# 'race_native_hawaiian',
-# 'race_white',
-# 'min_week_from_term_begin_dt',
-# 'max_week_from_term_begin_dt',
-# 'count_week_from_term_begin_dt',
-# 'marital_status',
-# 'acs_mi',
-# 'distance',
-# 'pop_dens',
-'underrep_minority',
-# 'ipeds_ethnic_group_descrshort',
-'pell_eligibility_ind', 
-# 'pell_recipient_ind',
-'first_gen_flag', 
-'first_gen_flag_mi',
-# 'LSAMP_STEM_Flag',
-# 'anywhere_STEM_Flag',
-'honors_program_ind',
-# 'afl_greek_indicator',
-# 'high_school_gpa',
-'fall_term_gpa',
-'fall_term_gpa_mi',
-'fall_term_D_grade_count',
-'fall_term_F_grade_count',
-# 'fall_term_S_grade_count',
-# 'fall_term_W_grade_count',
-# 'spring_midterm_gpa_change',
-# 'awe_instrument',
-# 'cdi_instrument',
-# 'fall_avg_difficulty',
-# 'fall_avg_pct_withdrawn',
-# 'fall_avg_pct_CDFW',
-# 'fall_avg_pct_CDF',
-# 'fall_avg_pct_DFW',
-# 'fall_avg_pct_DF',
-'spring_avg_difficulty',
-'spring_avg_pct_withdrawn',
-# 'spring_avg_pct_CDFW',
-'spring_avg_pct_CDF',
-# 'spring_avg_pct_DFW',
-# 'spring_avg_pct_DF',
-# 'fall_lec_count',
-# 'fall_lab_count',
-# 'fall_lec_contact_hrs',
-# 'fall_lab_contact_hrs',
-'spring_lec_count',
-'spring_lab_count',
-# 'spring_lec_contact_hrs',
-# 'spring_lab_contact_hrs',
-# 'total_fall_contact_hrs',
-# 'total_spring_contact_hrs',
-# 'fall_midterm_gpa_avg',
-# 'fall_midterm_gpa_avg_ind',
-'spring_midterm_gpa_avg',
-'spring_midterm_gpa_avg_mi',
-'cum_adj_transfer_hours',
-'resident',
-# 'father_wsu_flag',
-# 'mother_wsu_flag',
-'parent1_highest_educ_lvl',
-'parent2_highest_educ_lvl',
-# 'citizenship_country',
-# 'gini_indx',
-# 'pvrt_rate',
-# 'median_inc',
-# 'median_value',
-# 'educ_rate',
-# 'pct_blk',
-# 'pct_ai',
-# 'pct_asn',
-# 'pct_hawi',
-# 'pct_oth',
-# 'pct_two',
-# 'pct_non',
-# 'pct_hisp',
-# 'city_large',
-# 'city_mid',
-# 'city_small',
-# 'suburb_large',
-# 'suburb_mid',
-# 'suburb_small',
-# 'town_fringe',
-# 'town_distant',
-# 'town_remote',
-# 'rural_fringe',
-# 'rural_distant',
-# 'rural_remote',
-# 'AD_DTA',
-# 'AD_AST',
-# 'AP',
-# 'RS',
-# 'CHS',
-# 'IB',
-# 'AICE',
-# 'IB_AICE', 
-'spring_credit_hours',
-# 'total_spring_units',
-'spring_withdrawn_hours',
-# 'athlete',
-'remedial',
-# 'ACAD_PLAN',
-# 'plan_owner_org',
-# 'business',
-# 'cahnrs_anml',
-# 'cahnrs_envr',
-# 'cahnrs_econ',
-# 'cahnrext',
-# 'cas_chem',
-# 'cas_crim',
-# 'cas_math',
-# 'cas_psyc',
-# 'cas_biol',
-# 'cas_engl',
-# 'cas_phys',
-# 'cas',
-# 'comm',
-# 'education',
-# 'medicine',
-# 'nursing',
-# 'pharmacy',
-# 'provost',
-# 'vcea_bioe',
-# 'vcea_cive',
-# 'vcea_desn',
-# 'vcea_eecs',
-# 'vcea_mech',
-# 'vcea',
-# 'vet_med',
-# 'last_sch_proprietorship',
-# 'sat_erws',
-# 'sat_mss',
-# 'sat_comp',
-# 'attendee_alive',
-# 'attendee_campus_visit',
-# 'attendee_cashe',
-# 'attendee_destination',
-# 'attendee_experience',
-# 'attendee_fcd_pullman',
-# 'attendee_fced',
-# 'attendee_fcoc',
-# 'attendee_fcod',
-# 'attendee_group_visit',
-# 'attendee_honors_visit',
-# 'attendee_imagine_tomorrow',
-# 'attendee_imagine_u',
-# 'attendee_la_bienvenida',
-# 'attendee_lvp_camp',
-# 'attendee_oos_destination',
-# 'attendee_oos_experience',
-# 'attendee_preview',
-# 'attendee_preview_jrs',
-# 'attendee_shaping',
-# 'attendee_top_scholars',
-# 'attendee_transfer_day',
-# 'attendee_vibes',
-# 'attendee_welcome_center',
-# 'attendee_any_visitation_ind',
-# 'attendee_total_visits',
-# 'qvalue',
-# 'fed_efc',
-# 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
-]
-
-trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
-
-# Tri-Cities dataframes
-trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['emplid'])
-
-trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
-
-trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
-								
-trici_testing_set = trici_testing_set.reset_index()
-
-trici_shap_outcome = trici_testing_set['emplid'].copy(deep=True).values.tolist()
-
-trici_pred_outcome = trici_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-trici_aggregate_outcome = trici_testing_set[[ 
-                            'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag',
-							'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-trici_current_outcome = trici_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-#%%
-# University variables
-univr_data_vars = [
-'emplid',
-'enrl_ind', 
-# 'acad_year',
-# 'age_group', 
-# 'age',
-'male',
-# 'race_hispanic',
-# 'race_american_indian',
-# 'race_alaska',
-# 'race_asian',
-# 'race_black',
-# 'race_native_hawaiian',
-# 'race_white',
-# 'min_week_from_term_begin_dt',
-# 'max_week_from_term_begin_dt',
-# 'count_week_from_term_begin_dt',
-# 'marital_status',
-# 'acs_mi',
-# 'distance',
-# 'pop_dens',
-'underrep_minority',
-# 'ipeds_ethnic_group_descrshort',
-'pell_eligibility_ind', 
-# 'pell_recipient_ind',
-'first_gen_flag', 
-'first_gen_flag_mi',
-# 'LSAMP_STEM_Flag',
-# 'anywhere_STEM_Flag',
-'honors_program_ind',
-# 'afl_greek_indicator',
-# 'high_school_gpa',
-'fall_term_gpa',
-'fall_term_gpa_mi',
-'fall_term_D_grade_count',
-'fall_term_F_grade_count',
-# 'fall_term_S_grade_count',
-# 'fall_term_W_grade_count',
-# 'spring_midterm_gpa_change',
-# 'awe_instrument',
-# 'cdi_instrument',
-# 'fall_avg_difficulty',
-# 'fall_avg_pct_withdrawn',
-# 'fall_avg_pct_CDFW',
-# 'fall_avg_pct_CDF',
-# 'fall_avg_pct_DFW',
-# 'fall_avg_pct_DF',
-'spring_avg_difficulty',
-'spring_avg_pct_withdrawn',
-# 'spring_avg_pct_CDFW',
-'spring_avg_pct_CDF',
-# 'spring_avg_pct_DFW',
-# 'spring_avg_pct_DF',
-# 'fall_lec_count',
-# 'fall_lab_count',
-# 'fall_lec_contact_hrs',
-# 'fall_lab_contact_hrs',
-'spring_lec_count',
-'spring_lab_count',
-# 'spring_lec_contact_hrs',
-# 'spring_lab_contact_hrs',
-# 'total_fall_contact_hrs',
-# 'total_spring_contact_hrs',
-# 'fall_midterm_gpa_avg',
-# 'fall_midterm_gpa_avg_ind',
-'spring_midterm_gpa_avg',
-'spring_midterm_gpa_avg_mi',
-'cum_adj_transfer_hours',
-'resident',
-# 'father_wsu_flag',
-# 'mother_wsu_flag',
-'parent1_highest_educ_lvl',
-'parent2_highest_educ_lvl',
-# 'citizenship_country',
-# 'gini_indx',
-# 'pvrt_rate',
-# 'median_inc',
-# 'median_value',
-# 'educ_rate',
-# 'pct_blk',
-# 'pct_ai',
-# 'pct_asn',
-# 'pct_hawi',
-# 'pct_oth',
-# 'pct_two',
-# 'pct_non',
-# 'pct_hisp',
-# 'city_large',
-# 'city_mid',
-# 'city_small',
-# 'suburb_large',
-# 'suburb_mid',
-# 'suburb_small',
-# 'town_fringe',
-# 'town_distant',
-# 'town_remote',
-# 'rural_fringe',
-# 'rural_distant',
-# 'rural_remote',
-# 'AD_DTA',
-# 'AD_AST',
-# 'AP',
-# 'RS',
-# 'CHS',
-# 'IB',
-# 'AICE',
-# 'IB_AICE', 
-'spring_credit_hours',
-# 'total_spring_units',
-'spring_withdrawn_hours',
-# 'athlete',
-'remedial',
-# 'ACAD_PLAN',
-# 'plan_owner_org',
-# 'business',
-# 'cahnrs_anml',
-# 'cahnrs_envr',
-# 'cahnrs_econ',
-# 'cahnrext',
-# 'cas_chem',
-# 'cas_crim',
-# 'cas_math',
-# 'cas_psyc',
-# 'cas_biol',
-# 'cas_engl',
-# 'cas_phys',
-# 'cas',
-# 'comm',
-# 'education',
-# 'medicine',
-# 'nursing',
-# 'pharmacy',
-# 'provost',
-# 'vcea_bioe',
-# 'vcea_cive',
-# 'vcea_desn',
-# 'vcea_eecs',
-# 'vcea_mech',
-# 'vcea',
-# 'vet_med',
-# 'last_sch_proprietorship',
-# 'sat_erws',
-# 'sat_mss',
-# 'sat_comp',
-# 'attendee_alive',
-# 'attendee_campus_visit',
-# 'attendee_cashe',
-# 'attendee_destination',
-# 'attendee_experience',
-# 'attendee_fcd_pullman',
-# 'attendee_fced',
-# 'attendee_fcoc',
-# 'attendee_fcod',
-# 'attendee_group_visit',
-# 'attendee_honors_visit',
-# 'attendee_imagine_tomorrow',
-# 'attendee_imagine_u',
-# 'attendee_la_bienvenida',
-# 'attendee_lvp_camp',
-# 'attendee_oos_destination',
-# 'attendee_oos_experience',
-# 'attendee_preview',
-# 'attendee_preview_jrs',
-# 'attendee_shaping',
-# 'attendee_top_scholars',
-# 'attendee_transfer_day',
-# 'attendee_vibes',
-# 'attendee_welcome_center',
-# 'attendee_any_visitation_ind',
-# 'attendee_total_visits',
-# 'qvalue',
-# 'fed_efc',
-# 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
-]
-
-univr_tomek_vars = [x for x in univr_data_vars if x not in unwanted_vars]
-
-# University dataframes
-univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna().drop(columns=['emplid'])
-
-univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna()
-
-univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
-								| ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
-								| ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
-
-univr_testing_set = univr_testing_set.reset_index()
-
-univr_shap_outcome = univr_testing_set['emplid'].copy(deep=True).values.tolist()
-
-univr_pred_outcome = univr_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-univr_aggregate_outcome = univr_testing_set[[ 
-                            'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag',
-							'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-univr_current_outcome = univr_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
-
-#%%
-# Detect and remove outliers
-print('\nDetect and remove outliers...')
-
-# Pullman outliers
-pullm_x_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
-
-pullm_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
-)
-
-pullm_x_outlier = pullm_outlier_prep.fit_transform(pullm_x_outlier)
-
-pullm_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_outlier)
-
-pullm_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_outlier_set.csv', encoding='utf-8', index=False)
-
-pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
-pullm_training_set = pullm_training_set.drop(columns='mask')
 
 #%%
 # Vancouver variables
@@ -2501,7 +1814,7 @@ pullm_lreg_probs = pullm_lreg.predict_proba(pullm_x_train)
 pullm_lreg_probs = pullm_lreg_probs[:, 1]
 pullm_lreg_auc = roc_auc_score(pullm_y_train, pullm_lreg_probs)
 
-print(f'\nOverall accuracy for Pullman logistic model (training): {pullm_lreg.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'Overall accuracy for Pullman logistic model (training): {pullm_lreg.score(pullm_x_train, pullm_y_train):.4f}')
 print(f'ROC AUC for Pullman logistic model (training): {pullm_lreg_auc:.4f}\n')
 
 #%%
@@ -2512,7 +1825,7 @@ vanco_lreg_probs = vanco_lreg.predict_proba(vanco_x_train)
 vanco_lreg_probs = vanco_lreg_probs[:, 1]
 vanco_lreg_auc = roc_auc_score(vanco_y_train, vanco_lreg_probs)
 
-print(f'\nOverall accuracy for Vancouver logistic model (training): {vanco_lreg.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'Overall accuracy for Vancouver logistic model (training): {vanco_lreg.score(vanco_x_train, vanco_y_train):.4f}')
 print(f'ROC AUC for Vancouver logistic model (training): {vanco_lreg_auc:.4f}\n')
 
 #%%
@@ -2523,7 +1836,7 @@ trici_lreg_probs = trici_lreg.predict_proba(trici_x_train)
 trici_lreg_probs = trici_lreg_probs[:, 1]
 trici_lreg_auc = roc_auc_score(trici_y_train, trici_lreg_probs)
 
-print(f'\nOverall accuracy for Tri-Cities logistic model (training): {trici_lreg.score(trici_x_train, trici_y_train):.4f}')
+print(f'Overall accuracy for Tri-Cities logistic model (training): {trici_lreg.score(trici_x_train, trici_y_train):.4f}')
 print(f'ROC AUC for Tri-Cities logistic model (training): {trici_lreg_auc:.4f}\n')
 
 #%%
@@ -2534,7 +1847,7 @@ univr_lreg_probs = univr_lreg.predict_proba(univr_x_train)
 univr_lreg_probs = univr_lreg_probs[:, 1]
 univr_lreg_auc = roc_auc_score(univr_y_train, univr_lreg_probs)
 
-print(f'\nOverall accuracy for University logistic model (training): {univr_lreg.score(univr_x_train, univr_y_train):.4f}')
+print(f'Overall accuracy for University logistic model (training): {univr_lreg.score(univr_x_train, univr_y_train):.4f}')
 print(f'ROC AUC for University logistic model (training): {univr_lreg_auc:.4f}\n')
 
 #%%
@@ -2547,7 +1860,7 @@ pullm_sgd_probs = pullm_sgd.predict_proba(pullm_x_train)
 pullm_sgd_probs = pullm_sgd_probs[:, 1]
 pullm_sgd_auc = roc_auc_score(pullm_y_train, pullm_sgd_probs)
 
-print(f'\nOverall accuracy for Pullman SGD model (training): {pullm_sgd.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'Overall accuracy for Pullman SGD model (training): {pullm_sgd.score(pullm_x_train, pullm_y_train):.4f}')
 print(f'ROC AUC for Pullman SGD model (training): {pullm_sgd_auc:.4f}\n')
 
 #%%
@@ -2558,7 +1871,7 @@ vanco_sgd_probs = vanco_sgd.predict_proba(vanco_x_train)
 vanco_sgd_probs = vanco_sgd_probs[:, 1]
 vanco_sgd_auc = roc_auc_score(vanco_y_train, vanco_sgd_probs)
 
-print(f'\nOverall accuracy for Vancouver SGD model (training): {vanco_sgd.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'Overall accuracy for Vancouver SGD model (training): {vanco_sgd.score(vanco_x_train, vanco_y_train):.4f}')
 print(f'ROC AUC for Vancouver SGD model (training): {vanco_sgd_auc:.4f}\n')
 
 #%%
@@ -2569,7 +1882,7 @@ trici_sgd_probs = trici_sgd.predict_proba(trici_x_train)
 trici_sgd_probs = trici_sgd_probs[:, 1]
 trici_sgd_auc = roc_auc_score(trici_y_train, trici_sgd_probs)
 
-print(f'\nOverall accuracy for Tri-Cities SGD model (training): {trici_sgd.score(trici_x_train, trici_y_train):.4f}')
+print(f'Overall accuracy for Tri-Cities SGD model (training): {trici_sgd.score(trici_x_train, trici_y_train):.4f}')
 print(f'ROC AUC for Tri-Cities SGD model (training): {trici_sgd_auc:.4f}\n')
 
 #%%
@@ -2580,7 +1893,7 @@ univr_sgd_probs = univr_sgd.predict_proba(univr_x_train)
 univr_sgd_probs = univr_sgd_probs[:, 1]
 univr_sgd_auc = roc_auc_score(univr_y_train, univr_sgd_probs)
 
-print(f'\nOverall accuracy for University SGD model (training): {univr_sgd.score(univr_x_train, univr_y_train):.4f}')
+print(f'Overall accuracy for University SGD model (training): {univr_sgd.score(univr_x_train, univr_y_train):.4f}')
 print(f'ROC AUC for University SGD model (training): {univr_sgd_auc:.4f}\n')
 
 #%%
@@ -2634,7 +1947,7 @@ print(f'ROC AUC for University SGD model (training): {univr_sgd_auc:.4f}\n')
 
 # Pullman XGBoost tuning
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+pullm_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2643,7 +1956,7 @@ pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 print(f'Best Pullman XGB parameters: {pullm_gridsearch.best_params_}')
 
 #%%
-# Pullman XGB
+# Pullman XGBoost
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
@@ -2658,7 +1971,7 @@ print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
 #%%
 # Vancouver XGBoost tuning
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
+vanco_hyperparameters = [{'max_depth': np.linspace(5, 15, 11, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2667,7 +1980,7 @@ vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 print(f'Best Vancouver XGB parameters: {vanco_gridsearch.best_params_}')
 
 #%%
-# Vancouver XGB
+# Vancouver XGBoost
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=vanco_class_weight, 
 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
@@ -2682,7 +1995,7 @@ print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
 #%%
 # Tri-Cities XGBoost tuning
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+trici_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2691,7 +2004,7 @@ trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 print(f'Best Tri-Cities XGB parameters: {trici_gridsearch.best_params_}')
 
 #%%
-# Tri-Cities XGB
+# Tri-Cities XGBoost
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=trici_class_weight, 
 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
@@ -2706,7 +2019,7 @@ print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
 #%%
 # University XGBoost tuning
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+univr_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2715,7 +2028,7 @@ univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 print(f'Best University XGB parameters: {univr_gridsearch.best_params_}')
 
 #%%
-# Univeristy XGB
+# University XGBboost
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
@@ -2724,8 +2037,200 @@ univr_xgb_probs = univr_xgb.predict_proba(univr_x_train)
 univr_xgb_probs = univr_xgb_probs[:, 1]
 univr_xgb_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
 
-print(f'Overall accuracy for Univeristy XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for Univeristy XGB model (training): {univr_xgb_auc:.4f}\n')
+print(f'Overall accuracy for University XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for University XGB model (training): {univr_xgb_auc:.4f}\n')
+
+#%%
+# Pullman Random Forest tuning
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+pullm_gridsearch = GridSearchCV(XGBRFClassifier(n_estimators=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+
+print(f'Best Pullman Random Forest parameters: {pullm_gridsearch.best_params_}')
+
+#%%
+# Pullman Random Forest
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_xgbrf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
+								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
+
+pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
+pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
+pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
+
+print(f'Overall accuracy for Pullman Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman Random Forest model (training): {pullm_xgbrf_auc:.4f}\n')
+
+#%%
+# Vancouver Random Forest tuning
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+vanco_gridsearch = GridSearchCV(XGBRFClassifier(n_estimators=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+
+print(f'Best Vancouver Random Forest parameters: {vanco_gridsearch.best_params_}')
+
+#%%
+# Vancouver Random Forest
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_xgbrf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
+								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
+
+vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
+vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
+vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
+
+print(f'Overall accuracy for Vancouver Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver Random Forest model (training): {vanco_xgbrf_auc:.4f}\n')
+
+#%%
+# Tri-Cities Random Forest tuning
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+trici_gridsearch = GridSearchCV(XGBRFClassifier(n_estimators=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+
+print(f'Best Tri-Cities Random Forest parameters: {trici_gridsearch.best_params_}')
+
+#%%
+# Tri-Cities Random Forest
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_xgbrf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
+								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
+
+trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
+trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
+trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+
+print(f'Overall accuracy for Tri-Cities Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities Random Forest model (training): {trici_xgbrf_auc:.4f}\n')
+
+#%%
+# University Random Forest tuning
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+univr_gridsearch = GridSearchCV(XGBRFClassifier(n_estimators=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
+
+print(f'Best University Random Forest parameters: {univr_gridsearch.best_params_}')
+
+#%%
+# University Random Forest
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_xgbrf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
+								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
+
+univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
+univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
+univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+
+print(f'Overall accuracy for University Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for University Random Forest model (training): {univr_xgbrf_auc:.4f}\n')
+
+#%%
+# Pullman XGBoost Random Forest tuning
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+
+print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
+
+#%%
+# Pullman XGBoost Random Forest
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
+								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
+
+pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
+pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
+pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
+
+print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}\n')
+
+#%%
+# Vancouver XGBoost Random Forest tuning
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+
+print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
+
+#%%
+# Vancouver XGBoost Random Forest
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
+								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
+
+vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
+vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
+vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
+
+print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}\n')
+
+#%%
+# Tri-Cities XGBoost Random Forest tuning
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+
+print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
+
+#%%
+# Tri-Cities XGBoost Random Forest
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
+								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
+
+trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
+trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
+trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+
+print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}\n')
+
+#%%
+# University XGBoost Random Forest tuning
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
+
+print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
+
+#%%
+# University XGBoost Random Forest
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
+								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
+
+univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
+univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
+univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+
+print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}\n')
 
 #%%
 # Ensemble model
@@ -2872,6 +2377,8 @@ pullm_sgd_pred_probs = pullm_sgd.predict_proba(pullm_x_test)
 pullm_sgd_pred_probs = pullm_sgd_pred_probs[:, 1]
 pullm_xgb_pred_probs = pullm_xgb.predict_proba(pullm_x_test)
 pullm_xgb_pred_probs = pullm_xgb_pred_probs[:, 1]
+pullm_xgbrf_pred_probs = pullm_xgbrf.predict_proba(pullm_x_test)
+pullm_xgbrf_pred_probs = pullm_xgbrf_pred_probs[:, 1]
 # pullm_mlp_pred_probs = pullm_mlp.predict_proba(pullm_x_test)
 # pullm_mlp_pred_probs = pullm_mlp_pred_probs[:, 1]
 # pullm_vcf_pred_probs = pullm_vcf.predict_proba(pullm_x_test)
@@ -2885,6 +2392,8 @@ vanco_sgd_pred_probs = vanco_sgd.predict_proba(vanco_x_test)
 vanco_sgd_pred_probs = vanco_sgd_pred_probs[:, 1]
 vanco_xgb_pred_probs = vanco_xgb.predict_proba(vanco_x_test)
 vanco_xgb_pred_probs = vanco_xgb_pred_probs[:, 1]
+vanco_xgbrf_pred_probs = vanco_xgbrf.predict_proba(vanco_x_test)
+vanco_xgbrf_pred_probs = vanco_xgbrf_pred_probs[:, 1]
 # vanco_mlp_pred_probs = vanco_mlp.predict_proba(vanco_x_test)
 # vanco_mlp_pred_probs = vanco_mlp_pred_probs[:, 1]
 # vanco_vcf_pred_probs = vanco_vcf.predict_proba(vanco_x_test)
@@ -2898,6 +2407,8 @@ trici_sgd_pred_probs = trici_sgd.predict_proba(trici_x_test)
 trici_sgd_pred_probs = trici_sgd_pred_probs[:, 1]
 trici_xgb_pred_probs = trici_xgb.predict_proba(trici_x_test)
 trici_xgb_pred_probs = trici_xgb_pred_probs[:, 1]
+trici_xgbrf_pred_probs = trici_xgbrf.predict_proba(trici_x_test)
+trici_xgbrf_pred_probs = trici_xgbrf_pred_probs[:, 1]
 # trici_mlp_pred_probs = trici_mlp.predict_proba(trici_x_test)
 # trici_mlp_pred_probs = trici_mlp_pred_probs[:, 1]
 # trici_vcf_pred_probs = trici_vcf.predict_proba(trici_x_test)
@@ -2911,6 +2422,8 @@ univr_sgd_pred_probs = univr_sgd.predict_proba(univr_x_test)
 univr_sgd_pred_probs = univr_sgd_pred_probs[:, 1]
 univr_xgb_pred_probs = univr_xgb.predict_proba(univr_x_test)
 univr_xgb_pred_probs = univr_xgb_pred_probs[:, 1]
+univr_xgbrf_pred_probs = univr_xgbrf.predict_proba(univr_x_test)
+univr_xgbrf_pred_probs = univr_xgbrf_pred_probs[:, 1]
 # univr_mlp_pred_probs = univr_mlp.predict_proba(univr_x_test)
 # univr_mlp_pred_probs = univr_mlp_pred_probs[:, 1]
 # univr_vcf_pred_probs = univr_vcf.predict_proba(univr_x_test)
@@ -2929,6 +2442,8 @@ pullm_pred_outcome['sgd_prob'] = pd.DataFrame(pullm_sgd_pred_probs)
 pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
 pullm_pred_outcome['xgb_prob'] = pd.DataFrame(pullm_xgb_pred_probs)
 pullm_pred_outcome['xgb_pred'] = pullm_xgb.predict(pullm_x_test)
+pullm_pred_outcome['xgbrf_prob'] = pd.DataFrame(pullm_xgbrf_pred_probs)
+pullm_pred_outcome['xgbrf_pred'] = pullm_xgbrf.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_prob'] = pd.DataFrame(pullm_mlp_pred_probs)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 # pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
@@ -2943,6 +2458,8 @@ vanco_pred_outcome['sgd_prob'] = pd.DataFrame(vanco_sgd_pred_probs)
 vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
 vanco_pred_outcome['xgb_prob'] = pd.DataFrame(vanco_xgb_pred_probs)
 vanco_pred_outcome['xgb_pred'] = vanco_xgb.predict(vanco_x_test)
+vanco_pred_outcome['xgbrf_prob'] = pd.DataFrame(vanco_xgbrf_pred_probs)
+vanco_pred_outcome['xgbrf_pred'] = vanco_xgbrf.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_prob'] = pd.DataFrame(vanco_mlp_pred_probs)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 # vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
@@ -2957,6 +2474,8 @@ trici_pred_outcome['sgd_prob'] = pd.DataFrame(trici_sgd_pred_probs)
 trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
 trici_pred_outcome['xgb_prob'] = pd.DataFrame(trici_xgb_pred_probs)
 trici_pred_outcome['xgb_pred'] = trici_xgb.predict(trici_x_test)
+trici_pred_outcome['xgbrf_prob'] = pd.DataFrame(trici_xgbrf_pred_probs)
+trici_pred_outcome['xgbrf_pred'] = trici_xgbrf.predict(trici_x_test)
 # trici_pred_outcome['mlp_prob'] = pd.DataFrame(trici_mlp_pred_probs)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 # trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
@@ -2971,6 +2490,8 @@ univr_pred_outcome['sgd_prob'] = pd.DataFrame(univr_sgd_pred_probs)
 univr_pred_outcome['sgd_pred'] = univr_sgd.predict(univr_x_test)
 univr_pred_outcome['xgb_prob'] = pd.DataFrame(univr_xgb_pred_probs)
 univr_pred_outcome['xgb_pred'] = univr_xgb.predict(univr_x_test)
+univr_pred_outcome['xgbrf_prob'] = pd.DataFrame(univr_xgbrf_pred_probs)
+univr_pred_outcome['xgbrf_pred'] = univr_xgbrf.predict(univr_x_test)
 # univr_pred_outcome['mlp_prob'] = pd.DataFrame(univr_mlp_pred_probs)
 # univr_pred_outcome['mlp_pred'] = univr_mlp.predict(univr_x_test)
 # univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)
