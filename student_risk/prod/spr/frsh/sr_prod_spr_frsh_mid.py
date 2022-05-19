@@ -2282,7 +2282,7 @@ print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_
 print('Calculate SHAP values...')
 
 # Pullman SHAP training (see: https://github.com/slundberg/shap)
-pullm_explainer = shap.TreeExplainer(model=pullm_xgb, data=pullm_x_train, model_output='predict_proba')
+pullm_explainer = shap.TreeExplainer(model=pullm_xgbrf, data=pullm_x_train, model_output='predict_proba')
 
 #%%
 # Pullman SHAP prediction
@@ -2303,7 +2303,7 @@ pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 
 #%%
 # Vancouver SHAP training (see: https://github.com/slundberg/shap)
-vanco_explainer = shap.TreeExplainer(model=vanco_xgb, data=vanco_x_train, model_output='predict_proba')
+vanco_explainer = shap.TreeExplainer(model=vanco_xgbrf, data=vanco_x_train, model_output='predict_proba')
 
 #%%
 # Vancouver SHAP prediction
@@ -2324,7 +2324,7 @@ vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
 
 #%%
 # Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
-trici_explainer = shap.TreeExplainer(model=trici_xgb, data=trici_x_train, model_output='predict_proba')
+trici_explainer = shap.TreeExplainer(model=trici_xgbrf, data=trici_x_train, model_output='predict_proba')
 
 #%%
 # Tri-Cities SHAP prediction
@@ -2345,7 +2345,7 @@ trici_shap_zip = dict(zip(trici_shap_outcome, trici_shap_results))
 
 #%%
 # University SHAP training (see: https://github.com/slundberg/shap)
-univr_explainer = shap.TreeExplainer(model=univr_xgb, data=univr_x_train, model_output='predict_proba')
+univr_explainer = shap.TreeExplainer(model=univr_xgbrf, data=univr_x_train, model_output='predict_proba')
 
 #%%
 # University SHAP prediction
@@ -2517,7 +2517,7 @@ univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\
 #%%
 # Pullman aggregate outcome
 pullm_aggregate_outcome['emplid'] = pullm_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-pullm_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_xgb_pred_probs).round(4)
+pullm_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_xgbrf_pred_probs).round(4)
 
 pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"male": "sex_ind"})
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -2543,7 +2543,7 @@ pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\p
 #%%
 # Vancouver aggregate outcome
 vanco_aggregate_outcome['emplid'] = vanco_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-vanco_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_xgb_pred_probs).round(4)
+vanco_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_xgbrf_pred_probs).round(4)
 
 vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"male": "sex_ind"})
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -2569,7 +2569,7 @@ vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\v
 #%%
 # Tri-Cities aggregate outcome
 trici_aggregate_outcome['emplid'] = trici_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-trici_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(trici_xgb_pred_probs).round(4)
+trici_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(trici_xgbrf_pred_probs).round(4)
 
 trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"male": "sex_ind"})
 trici_aggregate_outcome.loc[trici_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -2595,7 +2595,7 @@ trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\t
 #%%
 # University aggregate outcome
 univr_aggregate_outcome['emplid'] = univr_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-univr_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgb_pred_probs).round(4)
+univr_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgbrf_pred_probs).round(4)
 
 univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"male": "sex_ind"})
 univr_aggregate_outcome.loc[univr_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
@@ -2621,7 +2621,7 @@ univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\u
 #%%
 # Pullman current outcome
 pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).str.zfill(9)
-pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_xgb_pred_probs).round(4)
+pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_xgbrf_pred_probs).round(4)
 
 pullm_current_outcome['date'] = run_date
 pullm_current_outcome['model_id'] = model_id
@@ -2629,7 +2629,7 @@ pullm_current_outcome['model_id'] = model_id
 #%%
 # Vancouver current outcome
 vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).str.zfill(9)
-vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_xgb_pred_probs).round(4)
+vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_xgbrf_pred_probs).round(4)
 
 vanco_current_outcome['date'] = run_date
 vanco_current_outcome['model_id'] = model_id
@@ -2637,7 +2637,7 @@ vanco_current_outcome['model_id'] = model_id
 #%%
 # Tri-Cities current outcome
 trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).str.zfill(9)
-trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_xgb_pred_probs).round(4)
+trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_xgbrf_pred_probs).round(4)
 
 trici_current_outcome['date'] = run_date
 trici_current_outcome['model_id'] = model_id
@@ -2645,7 +2645,7 @@ trici_current_outcome['model_id'] = model_id
 #%%
 # University current outcome
 univr_current_outcome['emplid'] = univr_current_outcome['emplid'].astype(str).str.zfill(9)
-univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgb_pred_probs).round(4)
+univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgbrf_pred_probs).round(4)
 
 univr_current_outcome['date'] = run_date
 univr_current_outcome['model_id'] = model_id
