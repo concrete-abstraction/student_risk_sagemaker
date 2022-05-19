@@ -1986,15 +1986,15 @@ print(f'Best Pullman Random Forest parameters: {pullm_gridsearch.best_params_}')
 #%%
 # Pullman Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
+pullm_rf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
 
-pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
-pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
-pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
+pullm_rf_probs = pullm_rf.predict_proba(pullm_x_train)
+pullm_rf_probs = pullm_rf_probs[:, 1]
+pullm_rf_auc = roc_auc_score(pullm_y_train, pullm_rf_probs)
 
-print(f'Overall accuracy for Pullman Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman Random Forest model (training): {pullm_xgbrf_auc:.4f}\n')
+print(f'Overall accuracy for Pullman Random Forest model (training): {pullm_rf.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman Random Forest model (training): {pullm_rf_auc:.4f}\n')
 
 #%%
 # Vancouver Random Forest tuning
@@ -2010,15 +2010,15 @@ print(f'Best Vancouver Random Forest parameters: {vanco_gridsearch.best_params_}
 #%%
 # Vancouver Random Forest
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgbrf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
+vanco_rf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
 
-vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
-vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
-vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
+vanco_rf_probs = vanco_rf.predict_proba(vanco_x_train)
+vanco_rf_probs = vanco_rf_probs[:, 1]
+vanco_rf_auc = roc_auc_score(vanco_y_train, vanco_rf_probs)
 
-print(f'Overall accuracy for Vancouver Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver Random Forest model (training): {vanco_xgbrf_auc:.4f}\n')
+print(f'Overall accuracy for Vancouver Random Forest model (training): {vanco_rf.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver Random Forest model (training): {vanco_rf_auc:.4f}\n')
 
 #%%
 # Tri-Cities Random Forest tuning
@@ -2034,15 +2034,15 @@ print(f'Best Tri-Cities Random Forest parameters: {trici_gridsearch.best_params_
 #%%
 # Tri-Cities Random Forest
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgbrf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
+trici_rf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
 
-trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
-trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
-trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+trici_rf_probs = trici_rf.predict_proba(trici_x_train)
+trici_rf_probs = trici_rf_probs[:, 1]
+trici_rf_auc = roc_auc_score(trici_y_train, trici_rf_probs)
 
-print(f'Overall accuracy for Tri-Cities Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities Random Forest model (training): {trici_xgbrf_auc:.4f}\n')
+print(f'Overall accuracy for Tri-Cities Random Forest model (training): {trici_rf.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities Random Forest model (training): {trici_rf_auc:.4f}\n')
 
 #%%
 # University Random Forest tuning
@@ -2058,15 +2058,15 @@ print(f'Best University Random Forest parameters: {univr_gridsearch.best_params_
 #%%
 # University Random Forest
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgbrf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
+univr_rf = XGBRFClassifier(n_estimators=1000, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
 
-univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
-univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
-univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+univr_rf_probs = univr_rf.predict_proba(univr_x_train)
+univr_rf_probs = univr_rf_probs[:, 1]
+univr_rf_auc = roc_auc_score(univr_y_train, univr_rf_probs)
 
-print(f'Overall accuracy for University Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University Random Forest model (training): {univr_xgbrf_auc:.4f}\n')
+print(f'Overall accuracy for University Random Forest model (training): {univr_rf.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for University Random Forest model (training): {univr_rf_auc:.4f}\n')
 
 #%%
 # Pullman XGBoost Random Forest tuning
@@ -2309,6 +2309,8 @@ pullm_sgd_pred_probs = pullm_sgd.predict_proba(pullm_x_test)
 pullm_sgd_pred_probs = pullm_sgd_pred_probs[:, 1]
 pullm_xgb_pred_probs = pullm_xgb.predict_proba(pullm_x_test)
 pullm_xgb_pred_probs = pullm_xgb_pred_probs[:, 1]
+pullm_rf_pred_probs = pullm_rf.predict_proba(pullm_x_test)
+pullm_rf_pred_probs = pullm_rf_pred_probs[:, 1]
 pullm_xgbrf_pred_probs = pullm_xgbrf.predict_proba(pullm_x_test)
 pullm_xgbrf_pred_probs = pullm_xgbrf_pred_probs[:, 1]
 # pullm_mlp_pred_probs = pullm_mlp.predict_proba(pullm_x_test)
@@ -2324,6 +2326,8 @@ vanco_sgd_pred_probs = vanco_sgd.predict_proba(vanco_x_test)
 vanco_sgd_pred_probs = vanco_sgd_pred_probs[:, 1]
 vanco_xgb_pred_probs = vanco_xgb.predict_proba(vanco_x_test)
 vanco_xgb_pred_probs = vanco_xgb_pred_probs[:, 1]
+vanco_rf_pred_probs = vanco_rf.predict_proba(vanco_x_test)
+vanco_rf_pred_probs = vanco_rf_pred_probs[:, 1]
 vanco_xgbrf_pred_probs = vanco_xgbrf.predict_proba(vanco_x_test)
 vanco_xgbrf_pred_probs = vanco_xgbrf_pred_probs[:, 1]
 # vanco_mlp_pred_probs = vanco_mlp.predict_proba(vanco_x_test)
@@ -2339,6 +2343,8 @@ trici_sgd_pred_probs = trici_sgd.predict_proba(trici_x_test)
 trici_sgd_pred_probs = trici_sgd_pred_probs[:, 1]
 trici_xgb_pred_probs = trici_xgb.predict_proba(trici_x_test)
 trici_xgb_pred_probs = trici_xgb_pred_probs[:, 1]
+trici_rf_pred_probs = trici_rf.predict_proba(trici_x_test)
+trici_rf_pred_probs = trici_rf_pred_probs[:, 1]
 trici_xgbrf_pred_probs = trici_xgbrf.predict_proba(trici_x_test)
 trici_xgbrf_pred_probs = trici_xgbrf_pred_probs[:, 1]
 # trici_mlp_pred_probs = trici_mlp.predict_proba(trici_x_test)
@@ -2354,6 +2360,8 @@ univr_sgd_pred_probs = univr_sgd.predict_proba(univr_x_test)
 univr_sgd_pred_probs = univr_sgd_pred_probs[:, 1]
 univr_xgb_pred_probs = univr_xgb.predict_proba(univr_x_test)
 univr_xgb_pred_probs = univr_xgb_pred_probs[:, 1]
+univr_rf_pred_probs = univr_rf.predict_proba(univr_x_test)
+univr_rf_pred_probs = univr_rf_pred_probs[:, 1]
 univr_xgbrf_pred_probs = univr_xgbrf.predict_proba(univr_x_test)
 univr_xgbrf_pred_probs = univr_xgbrf_pred_probs[:, 1]
 # univr_mlp_pred_probs = univr_mlp.predict_proba(univr_x_test)
@@ -2374,6 +2382,8 @@ pullm_pred_outcome['sgd_prob'] = pd.DataFrame(pullm_sgd_pred_probs)
 pullm_pred_outcome['sgd_pred'] = pullm_sgd.predict(pullm_x_test)
 pullm_pred_outcome['xgb_prob'] = pd.DataFrame(pullm_xgb_pred_probs)
 pullm_pred_outcome['xgb_pred'] = pullm_xgb.predict(pullm_x_test)
+pullm_pred_outcome['rf_prob'] = pd.DataFrame(pullm_rf_pred_probs)
+pullm_pred_outcome['rf_pred'] = pullm_rf.predict(pullm_x_test)
 pullm_pred_outcome['xgbrf_prob'] = pd.DataFrame(pullm_xgbrf_pred_probs)
 pullm_pred_outcome['xgbrf_pred'] = pullm_xgbrf.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_prob'] = pd.DataFrame(pullm_mlp_pred_probs)
@@ -2390,6 +2400,8 @@ vanco_pred_outcome['sgd_prob'] = pd.DataFrame(vanco_sgd_pred_probs)
 vanco_pred_outcome['sgd_pred'] = vanco_sgd.predict(vanco_x_test)
 vanco_pred_outcome['xgb_prob'] = pd.DataFrame(vanco_xgb_pred_probs)
 vanco_pred_outcome['xgb_pred'] = vanco_xgb.predict(vanco_x_test)
+vanco_pred_outcome['rf_prob'] = pd.DataFrame(vanco_rf_pred_probs)
+vanco_pred_outcome['rf_pred'] = vanco_rf.predict(vanco_x_test)
 vanco_pred_outcome['xgbrf_prob'] = pd.DataFrame(vanco_xgbrf_pred_probs)
 vanco_pred_outcome['xgbrf_pred'] = vanco_xgbrf.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_prob'] = pd.DataFrame(vanco_mlp_pred_probs)
@@ -2406,6 +2418,8 @@ trici_pred_outcome['sgd_prob'] = pd.DataFrame(trici_sgd_pred_probs)
 trici_pred_outcome['sgd_pred'] = trici_sgd.predict(trici_x_test)
 trici_pred_outcome['xgb_prob'] = pd.DataFrame(trici_xgb_pred_probs)
 trici_pred_outcome['xgb_pred'] = trici_xgb.predict(trici_x_test)
+trici_pred_outcome['rf_prob'] = pd.DataFrame(trici_rf_pred_probs)
+trici_pred_outcome['rf_pred'] = trici_rf.predict(trici_x_test)
 trici_pred_outcome['xgbrf_prob'] = pd.DataFrame(trici_xgbrf_pred_probs)
 trici_pred_outcome['xgbrf_pred'] = trici_xgbrf.predict(trici_x_test)
 # trici_pred_outcome['mlp_prob'] = pd.DataFrame(trici_mlp_pred_probs)
@@ -2422,6 +2436,8 @@ univr_pred_outcome['sgd_prob'] = pd.DataFrame(univr_sgd_pred_probs)
 univr_pred_outcome['sgd_pred'] = univr_sgd.predict(univr_x_test)
 univr_pred_outcome['xgb_prob'] = pd.DataFrame(univr_xgb_pred_probs)
 univr_pred_outcome['xgb_pred'] = univr_xgb.predict(univr_x_test)
+univr_pred_outcome['rf_prob'] = pd.DataFrame(univr_rf_pred_probs)
+univr_pred_outcome['rf_pred'] = univr_rf.predict(univr_x_test)
 univr_pred_outcome['xgbrf_prob'] = pd.DataFrame(univr_xgbrf_pred_probs)
 univr_pred_outcome['xgbrf_pred'] = univr_xgbrf.predict(univr_x_test)
 # univr_pred_outcome['mlp_prob'] = pd.DataFrame(univr_mlp_pred_probs)
