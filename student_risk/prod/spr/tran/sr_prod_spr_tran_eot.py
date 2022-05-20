@@ -2062,7 +2062,7 @@ print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params
 #%%
 # Pullman XGBoost Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=40, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
+pullm_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
@@ -2086,7 +2086,7 @@ print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_para
 #%%
 # Vancouver XGBoost Random Forest
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=40, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
+vanco_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
@@ -2110,7 +2110,7 @@ print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_par
 #%%
 # Tri-Cities XGBoost Random Forest
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=40, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
+trici_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
 
 trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
@@ -2134,7 +2134,7 @@ print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_par
 #%%
 # University XGBoost Random Forest
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=40, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
+univr_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
 
 univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
