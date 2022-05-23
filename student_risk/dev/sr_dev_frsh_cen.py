@@ -2440,7 +2440,7 @@ univr_xgb_ccv = XGBClassifier(n_estimators=1000, scale_pos_weight=univr_class_we
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
 
 # University XGB calibration
-# univr_xgb = XGBClassifier(n_estimators=500, scale_pos_weight=univr_class_weight, eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False)
+# univr_xgb = XGBClassifier(n_estimators=1000, scale_pos_weight=univr_class_weight, eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False)
 # univr_xgb_ccv = CalibratedClassifierCV(univr_xgb, method='isotonic', cv=5).fit(univr_x_train, univr_y_train)
 
 univr_xgb_probs = univr_xgb_ccv.predict_proba(univr_x_train)
@@ -2475,6 +2475,240 @@ univr_xgb_matrix = confusion_matrix(univr_y_test, univr_xgb_ccv.predict_proba(un
 univr_xgb_df = pd.DataFrame(univr_xgb_matrix)
 
 sns.heatmap(univr_xgb_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
+plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# XGBoost Random Forest model
+
+# Pullman XGBoost Random Forest tuning
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+pullm_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+
+print(f'Best parameters: {pullm_gridsearch.best_params_}')
+
+#%%
+# Pullman XGB Random Forest
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+
+pullm_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=pullm_class_weight, 
+								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
+
+# Pullman XGB Random Forest calibration
+# pullm_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=pullm_class_weight, eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False)
+# pullm_xgbrf_ccv = CalibratedClassifierCV(pullm_xgbrf, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
+
+pullm_xgbrf_probs = pullm_xgbrf_ccv.predict_proba(pullm_x_train)
+pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
+pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
+
+print(f'\nOverall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf_ccv.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
+print(f'Overall accuracy for Pullman XGB Random Forest model (testing): {pullm_xgbrf_ccv.score(pullm_x_test, pullm_y_test):.4f}')
+
+pullm_xgbrf_fpr, pullm_xgbrf_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgbrf_probs, drop_intermediate=False)
+
+plt.plot(pullm_xgbrf_fpr, pullm_xgbrf_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('XGBOOST ROC CURVE (TRAINING)')
+plt.show()
+
+pullm_xgbrf_y, pullm_xgbrf_x = calibration_curve(pullm_y_train, pullm_xgb_probs, n_bins=10)
+
+plt.plot(pullm_xgbrf_y, pullm_xgbrf_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('XGBOOST CALIBRATION PLOT (TRAINING)')
+plt.show()
+
+pullm_xgbrf_matrix = confusion_matrix(pullm_y_test, pullm_xgbrf_ccv.predict_proba(pullm_x_test)[:, 1] > 0.5)
+pullm_xgbrf_df = pd.DataFrame(pullm_xgbrf_matrix)
+
+sns.heatmap(pullm_xgbrf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
+plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# Vancouver XGBoost Random Forest tuning
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+vanco_hyperparameters = [{'max_depth': np.linspace(5, 15, 11, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+
+print(f'Best parameters: {vanco_gridsearch.best_params_}')
+
+#%%
+# Vancouver XGB Random Forest
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+
+vanco_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=vanco_class_weight, 
+								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
+
+# Vancouver XGB Random Forest calibration
+# vanco_xgb = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=vanco_class_weight, eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False)
+# vanco_xgb_ccv = CalibratedClassifierCV(vanco_xgbrf, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
+
+vanco_xgbrf_probs = vanco_xgbrf_ccv.predict_proba(vanco_x_train)
+vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
+vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
+
+print(f'\nOverall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf_ccv.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
+print(f'Overall accuracy for Vancouver XGB Random Forest model (testing): {vanco_xgbrf_ccv.score(vanco_x_test, vanco_y_test):.4f}')
+
+vanco_xgbrf_fpr, vanco_xgbrf_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgbrf_probs, drop_intermediate=False)
+
+plt.plot(vanco_xgbrf_fpr, vanco_xgbrf_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('XGBOOST ROC CURVE (TRAINING)')
+plt.show()
+
+vanco_xgbrf_y, vanco_xgbrf_x = calibration_curve(vanco_y_train, vanco_xgbrf_probs, n_bins=10)
+
+plt.plot(vanco_xgbrf_y, vanco_xgbrf_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('XGBOOST CALIBRATION PLOT (TRAINING)')
+plt.show()
+
+vanco_xgbrf_matrix = confusion_matrix(vanco_y_test, vanco_xgbrf_ccv.predict_proba(vanco_x_test)[:, 1] > 0.5)
+vanco_xgbrf_df = pd.DataFrame(vanco_xgbrf_matrix)
+
+sns.heatmap(vanco_xgbrf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
+plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# Tri-Cities XGBoost Random Forest tuning
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+trici_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+
+print(f'Best parameters: {trici_gridsearch.best_params_}')
+
+#%%
+# Tri-Cities XGB Random Forest
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+
+trici_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=trici_class_weight, 
+								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
+
+# Tri-Cities XGB Random Forest calibration
+# trici_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=trici_class_weight, eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False)
+# trici_xgbrf_ccv = CalibratedClassifierCV(trici_xgbrf, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
+
+trici_xgbrf_probs = trici_xgbrf_ccv.predict_proba(trici_x_train)
+trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
+trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+
+print(f'\nOverall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_ccv.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
+print(f'Overall accuracy for Tri-Cities XGB Random Forest model (testing): {trici_xgbrf_ccv.score(trici_x_test, trici_y_test):.4f}')
+
+trici_xgbrf_fpr, trici_xgbrf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgbrf_probs, drop_intermediate=False)
+
+plt.plot(trici_xgbrf_fpr, trici_xgbrf_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('XGBOOST ROC CURVE (TRAINING)')
+plt.show()
+
+trici_xgbrf_y, trici_xgbrf_x = calibration_curve(trici_y_train, trici_xgbrf_probs, n_bins=10)
+
+plt.plot(trici_xgbrf_y, trici_xgbrf_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('XGBOOST CALIBRATION PLOT (TRAINING)')
+plt.show()
+
+trici_xgbrf_matrix = confusion_matrix(trici_y_test, trici_xgbrf_ccv.predict_proba(trici_x_test)[:, 1] > 0.5)
+trici_xgbrf_df = pd.DataFrame(trici_xgbrf_matrix)
+
+sns.heatmap(trici_xgbrf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
+plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
+plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
+plt.show()
+
+#%%
+# University XGBoost Random Forest tuning
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+univr_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
+
+print(f'Best parameters: {univr_gridsearch.best_params_}')
+
+#%%
+# University XGB Random Forest
+class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+
+univr_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=univr_class_weight, 
+								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
+
+# University XGB Random Forest calibration
+# univr_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=univr_class_weight, eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False)
+# univr_xgbrf_ccv = CalibratedClassifierCV(univr_xgbrf, method='isotonic', cv=5).fit(univr_x_train, univr_y_train)
+
+univr_xgbrf_probs = univr_xgbrf_ccv.predict_proba(univr_x_train)
+univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
+univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
+
+print(f'\nOverall accuracy for University XGB Random Forest model (training): {univr_xgbrf_ccv.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
+print(f'Overall accuracy for University XGB Random Forest model (testing): {univr_xgbrf_ccv.score(univr_x_test, univr_y_test):.4f}')
+
+univr_xgbrf_fpr, univr_xgbrf_tpr, univr_thresholds = roc_curve(univr_y_train, univr_xgbrf_probs, drop_intermediate=False)
+
+plt.plot(univr_xgbrf_fpr, univr_xgbrf_tpr, color='red', lw=2, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
+plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
+plt.title('XGBOOST ROC CURVE (TRAINING)')
+plt.show()
+
+univr_xgbrf_y, univr_xgbrf_x = calibration_curve(univr_y_train, univr_xgbrf_probs, n_bins=10)
+
+plt.plot(univr_xgbrf_y, univr_xgbrf_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+
+leg = plt.legend(loc = 'upper left')
+plt.xlabel('AVERAGE PREDICTED PROBABILITY')
+plt.ylabel('RATIO OF POSITIVES')
+plt.title('XGBOOST CALIBRATION PLOT (TRAINING)')
+plt.show()
+
+univr_xgbrf_matrix = confusion_matrix(univr_y_test, univr_xgbrf_ccv.predict_proba(univr_x_test)[:, 1] > 0.5)
+univr_xgbrf_df = pd.DataFrame(univr_xgbrf_matrix)
+
+sns.heatmap(univr_xgbrf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()

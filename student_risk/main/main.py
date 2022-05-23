@@ -13,7 +13,7 @@ start = time.perf_counter()
 sas = saspy.SASsession()
 
 sas.submit("""
-%let dsn = census;
+%let adm = adm;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 
@@ -33,7 +33,7 @@ proc sql;
         ,day(datepart(term_end_dt)) as end_day
         ,month(datepart(term_end_dt)) as end_month
         ,year(datepart(term_end_dt)) as end_year
-    from &dsn..xw_term
+    from &adm..xw_term
     where acad_career = 'UGRD'
     order by term_code
 ;quit;
@@ -43,8 +43,8 @@ filename calendar \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_c
 proc export data=acad_calendar outfile=calendar dbms=csv replace;
 
 proc sql;
-    select term_type into: term_type 
-    from &dsn..xw_term 
+    select max(term_type) into: term_type 
+    from &adm..xw_term 
     where term_year = year(today())
         and month(datepart(term_begin_dt)) <= month(today()) 
         and month(datepart(term_end_dt)) >= month(today()) 

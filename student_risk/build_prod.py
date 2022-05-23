@@ -36,7 +36,7 @@ class DatasetBuilderProd:
 		sas.submit("""
 		proc sql;
 			select distinct full_acad_year into: full_acad_year 
-			from &dsn..xw_term 
+			from &adm..xw_term 
 			where term_year = year(today())
 				and month(datepart(term_begin_dt)) <= month(today()) 
 				and month(datepart(term_end_dt)) >= month(today())
@@ -2175,7 +2175,7 @@ class DatasetBuilderProd:
 		sas.submit("""
 		proc sql;
 			select full_acad_year into: full_acad_year 
-			from &dsn..xw_term 
+			from &adm..xw_term 
 			where term_year = year(today())
 				and month(datepart(term_begin_dt)) <= month(today()) 
 				and month(datepart(term_end_dt)) >= month(today())
@@ -2184,8 +2184,8 @@ class DatasetBuilderProd:
 		;quit;
 
 		proc sql;
-			select term_type into: term_type 
-			from &dsn..xw_term 
+			select max(term_type) into: term_type 
+			from &adm..xw_term 
 			where term_year = year(today())
 				and month(datepart(term_begin_dt)) <= month(today()) 
 				and month(datepart(term_end_dt)) >= month(today()) 
