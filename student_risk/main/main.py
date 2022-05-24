@@ -15,7 +15,7 @@ sas = saspy.SASsession()
 sas.submit("""
 %let adm = adm;
 
-libname &dsn. odbc dsn=&dsn. schema=dbo;
+libname &adm. odbc dsn=&adm. schema=dbo;
 
 proc sql;
     create table acad_calendar as
