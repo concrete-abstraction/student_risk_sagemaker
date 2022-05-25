@@ -2250,7 +2250,7 @@ plt.show()
 
 # Pullman XGBoost tuning
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+pullm_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2366,7 +2366,7 @@ plt.show()
 #%%
 # Tri-Cities XGBoost tuning
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+trici_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2424,7 +2424,7 @@ plt.show()
 #%%
 # University XGBoost tuning
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+univr_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2484,7 +2484,7 @@ plt.show()
 
 # Pullman XGBoost Random Forest tuning
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+pullm_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2600,7 +2600,7 @@ plt.show()
 #%%
 # Tri-Cities XGBoost Random Forest tuning
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+trici_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
@@ -2658,7 +2658,7 @@ plt.show()
 #%%
 # University XGBoost Random Forest tuning
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_hyperparameters = [{'max_depth':np.linspace(5, 15, 11, dtype=int, endpoint=True),
+univr_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
