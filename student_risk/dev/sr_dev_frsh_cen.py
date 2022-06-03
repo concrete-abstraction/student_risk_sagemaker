@@ -2487,7 +2487,7 @@ pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[p
 pullm_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=5, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -2496,11 +2496,11 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 # Pullman XGB Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 
-pullm_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=pullm_class_weight, 
+pullm_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
 
 # Pullman XGB Random Forest calibration
-# pullm_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=pullm_class_weight, eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False)
+# pullm_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=pullm_class_weight, eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False)
 # pullm_xgbrf_ccv = CalibratedClassifierCV(pullm_xgbrf, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgbrf_probs = pullm_xgbrf_ccv.predict_proba(pullm_x_train)
@@ -2545,7 +2545,7 @@ vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[v
 vanco_hyperparameters = [{'max_depth': np.linspace(5, 15, 11, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=5, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -2554,11 +2554,11 @@ print(f'Best parameters: {vanco_gridsearch.best_params_}')
 # Vancouver XGB Random Forest
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 
-vanco_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=vanco_class_weight, 
+vanco_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=vanco_class_weight, 
 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
 
 # Vancouver XGB Random Forest calibration
-# vanco_xgb = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=vanco_class_weight, eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False)
+# vanco_xgb = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=vanco_class_weight, eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False)
 # vanco_xgb_ccv = CalibratedClassifierCV(vanco_xgbrf, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
 
 vanco_xgbrf_probs = vanco_xgbrf_ccv.predict_proba(vanco_x_train)
@@ -2603,7 +2603,7 @@ trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[t
 trici_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=5, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -2612,11 +2612,11 @@ print(f'Best parameters: {trici_gridsearch.best_params_}')
 # Tri-Cities XGB Random Forest
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 
-trici_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=trici_class_weight, 
+trici_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=trici_class_weight, 
 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
 
 # Tri-Cities XGB Random Forest calibration
-# trici_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=trici_class_weight, eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False)
+# trici_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=trici_class_weight, eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False)
 # trici_xgbrf_ccv = CalibratedClassifierCV(trici_xgbrf, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
 
 trici_xgbrf_probs = trici_xgbrf_ccv.predict_proba(trici_x_train)
@@ -2661,7 +2661,7 @@ univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[u
 univr_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=10, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=5, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -2670,11 +2670,11 @@ print(f'Best parameters: {univr_gridsearch.best_params_}')
 # University XGB Random Forest
 class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 
-univr_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=univr_class_weight, 
+univr_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
 
 # University XGB Random Forest calibration
-# univr_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=10, scale_pos_weight=univr_class_weight, eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False)
+# univr_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=univr_class_weight, eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False)
 # univr_xgbrf_ccv = CalibratedClassifierCV(univr_xgbrf, method='isotonic', cv=5).fit(univr_x_train, univr_y_train)
 
 univr_xgbrf_probs = univr_xgbrf_ccv.predict_proba(univr_x_train)

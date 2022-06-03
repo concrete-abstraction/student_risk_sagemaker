@@ -18,7 +18,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 
 proc sql;
 	select term_type into: term_type 
-	from &dsn..xw_term 
+	from &adm..xw_term 
 	where term_year = year(today())
 		and month(datepart(term_begin_dt)) <= month(today()) 
 		and month(datepart(term_end_dt)) >= month(today()) 
@@ -29,7 +29,7 @@ proc sql;
 
 proc sql;
 	select distinct full_acad_year into: full_acad_year 
-	from &dsn..xw_term 
+	from &adm..xw_term 
 	where term_year = year(today())
 		and month(datepart(term_begin_dt)) <= month(today()) 
 		and month(datepart(term_end_dt)) >= month(today()) 
@@ -4121,8 +4121,7 @@ run;
 %loop;
 
 data training_set;
-	set dataset_&start_cohort.-dataset_%eval(&end_cohort. - &lag_year.);
-/* 	set dataset_&start_cohort.-dataset_&end_cohort.; */
+	set dataset_&start_cohort.-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
 	if distance = . then distance = 0;
@@ -4306,8 +4305,7 @@ proc sort data=training_set nodupkey dupout=training_dups;
 run;
 
 data testing_set;
-	set dataset_&end_cohort.;
-/* 	set dataset_%eval(&end_cohort. + &lag_year.); */
+	set dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
 	if distance = . then distance = 0;
@@ -4486,7 +4484,7 @@ data testing_set;
 	if total_accept = . then total_accept = 0;
 run;
 		
-proc sort data=testing_set nodupkey dupout=training_dups;
+proc sort data=testing_set nodupkey dupout=testing_dups;
 	by emplid;
 run;
 
@@ -4519,7 +4517,6 @@ run;
 /* 	var fall_lec_contact_hrs fall_lab_contact_hrs spring_lec_contact_hrs spring_lab_contact_hrs fall_lec_count fall_lab_count spring_lec_count spring_lab_count; */
 /* 	title 'AY2021 Data'; */
 /* run; */
-
 
 filename training "Z:\Nathan\Models\student_risk\datasets\training_set.csv" encoding="utf-8";
 
