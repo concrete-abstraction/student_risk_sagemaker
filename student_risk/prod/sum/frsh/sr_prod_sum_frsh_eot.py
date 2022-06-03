@@ -1695,15 +1695,15 @@ pullm_x_train, pullm_x_cv, pullm_y_train, pullm_y_cv = train_test_split(pullm_x_
 
 #%%
 # Vancouver train/cv set split
-vanco_train, vanco_x_cv, vanco_y_train, vanco_y_cv = train_test_split(vanco_x_train, vanco_y_train, train_size=0.80)
+vanco_x_train, vanco_x_cv, vanco_y_train, vanco_y_cv = train_test_split(vanco_x_train, vanco_y_train, train_size=0.80)
 
 #%%
 # Tri-Cities train/cv set split
-trici_train, trici_x_cv, trici_y_train, trici_y_cv = train_test_split(trici_x_train, trici_y_train, train_size=0.80)
+trici_x_train, trici_x_cv, trici_y_train, trici_y_cv = train_test_split(trici_x_train, trici_y_train, train_size=0.80)
 
 #%%
 # University train/cv set split
-univr_train, univr_x_cv, univr_y_train, univr_y_cv = train_test_split(univr_x_train, univr_y_train, train_size=0.80)
+univr_x_train, univr_x_cv, univr_y_train, univr_y_cv = train_test_split(univr_x_train, univr_y_train, train_size=0.80)
 
 #%%
 # Standard logistic model
@@ -2119,7 +2119,7 @@ print(f'Best Pullman Random Forest parameters: {pullm_gridsearch.best_params_}')
 # Pullman Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_rf = XGBRFClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=500, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
-								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
+								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, verbose=False)
 
 pullm_rf_probs = pullm_rf.predict_proba(pullm_x_train)
 pullm_rf_probs = pullm_rf_probs[:, 1]
@@ -2143,7 +2143,7 @@ print(f'Best Vancouver Random Forest parameters: {vanco_gridsearch.best_params_}
 # Vancouver Random Forest
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_rf = XGBRFClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=500, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
-								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
+								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, verbose=False)
 
 vanco_rf_probs = vanco_rf.predict_proba(vanco_x_train)
 vanco_rf_probs = vanco_rf_probs[:, 1]
@@ -2167,7 +2167,7 @@ print(f'Best Tri-Cities Random Forest parameters: {trici_gridsearch.best_params_
 # Tri-Cities Random Forest
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_rf = XGBRFClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=500, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
-								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
+								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, verbose=False)
 
 trici_rf_probs = trici_rf.predict_proba(trici_x_train)
 trici_rf_probs = trici_rf_probs[:, 1]
@@ -2191,7 +2191,7 @@ print(f'Best University Random Forest parameters: {univr_gridsearch.best_params_
 # University Random Forest
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_rf = XGBRFClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=500, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
-								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
+								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, verbose=False)
 
 univr_rf_probs = univr_rf.predict_proba(univr_x_train)
 univr_rf_probs = univr_rf_probs[:, 1]
@@ -2207,7 +2207,7 @@ pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='lossguide', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_cv, pullm_y_cv)
 
 print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
@@ -2215,7 +2215,7 @@ print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params
 #%%
 # Pullman XGBoost Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='lossguide', n_estimators=500, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
+pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=500, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
 pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
@@ -2232,7 +2232,7 @@ vanco_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='lossguide', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_cv, vanco_y_cv)
 
 print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
@@ -2240,7 +2240,7 @@ print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_para
 #%%
 # Vancouver XGBoost Random Forest
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='lossguide', n_estimators=500, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
+vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=500, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 
 vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
@@ -2257,7 +2257,7 @@ trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='lossguide', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_cv, trici_y_cv)
 
 print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
@@ -2265,7 +2265,7 @@ print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_par
 #%%
 # Tri-Cities XGBoost Random Forest
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='lossguide', n_estimators=500, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
+trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=500, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
 
 trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
@@ -2282,7 +2282,7 @@ univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoin
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='lossguide', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_cv, univr_y_cv)
 
 print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
@@ -2290,7 +2290,7 @@ print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_par
 #%%
 # University XGBoost Random Forest
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='lossguide', n_estimators=500, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
+univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=500, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
 
 univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
