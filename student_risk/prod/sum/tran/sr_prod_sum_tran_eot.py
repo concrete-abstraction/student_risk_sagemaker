@@ -1,33 +1,35 @@
 #%%
 import csv
 import datetime
+import os
+import pathlib
+import urllib
+from datetime import date
+from itertools import islice
+
 import joblib
 import numpy as np
 import pandas as pd
-import pathlib
 import pyodbc
-import os
 import saspy
-import shap
 import sklearn
 import sqlalchemy
-import urllib
-from datetime import date
+from imblearn.under_sampling import NearMiss, TomekLinks
 from patsy import dmatrices
-from imblearn.under_sampling import TomekLinks, NearMiss
-from itertools import islice
 from sklearn.compose import make_column_transformer
-from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import StandardScaler, OneHotEncoder, PowerTransformer
-from sklearn.linear_model import LogisticRegression, SGDClassifier
-from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sqlalchemy import MetaData, Table
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
-from sqlalchemy import MetaData, Table
 from xgboost import XGBClassifier, XGBRFClassifier
+
+import shap
 
 #%%
 # Database connection
@@ -48,6 +50,7 @@ unwanted_vars = ['emplid','enrl_ind']
 
 #%%
 # Import pre-split data
+validation_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\validation_set.csv', encoding='utf-8', low_memory=False)
 training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8', low_memory=False)
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
 
@@ -246,6 +249,9 @@ pullm_tomek_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 # Pullman dataframes
 pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
 								& (training_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna().drop(columns=['emplid'])
+
+pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM') 
+								& (validation_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna()
 
 pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
 								& (training_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna()
@@ -467,6 +473,9 @@ vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
 								& (training_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna().drop(columns=['emplid'])
 
+vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO') 
+								& (validation_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna()
+
 vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
 								& (training_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna()
 
@@ -687,6 +696,9 @@ trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
 								& (training_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna().drop(columns=['emplid'])
 
+trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI') 
+								& (validation_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna()
+
 trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
 								& (training_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna()
 
@@ -906,6 +918,8 @@ univr_tomek_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 # University dataframes
 univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna().drop(columns=['emplid'])
 
+univr_validation_set = validation_set[(validation_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna()
+
 univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna()
 
 univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE')
@@ -943,7 +957,8 @@ univr_current_outcome = univr_testing_set[[
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
-pullm_x_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_training_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -971,19 +986,26 @@ pullm_outlier_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-pullm_x_outlier = pullm_outlier_prep.fit_transform(pullm_x_outlier)
+pullm_x_training_outlier = pullm_outlier_prep.fit_transform(pullm_x_training_outlier)
+pullm_x_validation_outlier = pullm_outlier_prep.transform(pullm_x_validation_outlier)
 
-pullm_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_outlier)
+pullm_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_training_outlier)
+pullm_validation_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_validation_outlier)
 
-pullm_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_outlier_set.csv', encoding='utf-8', index=False)
+pullm_training_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
+pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_training_outlier_set.csv', encoding='utf-8', index=False)
+pullm_validation_outlier_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == 1].index)
+pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
 pullm_training_set = pullm_training_set.drop(columns='mask')
+pullm_validation_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == -1].index)
+pullm_validation_set = pullm_validation_set.drop(columns='mask')
 
 #%%
 # Vancouver outliers
-vanco_x_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_training_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1011,19 +1033,26 @@ vanco_outlier_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-vanco_x_outlier = vanco_outlier_prep.fit_transform(vanco_x_outlier)
+vanco_x_training_outlier = vanco_outlier_prep.fit_transform(vanco_x_training_outlier)
+vanco_x_validation_outlier = vanco_outlier_prep.transform(vanco_x_validation_outlier)
 
-vanco_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_outlier)
+vanco_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_training_outlier)
+vanco_validation_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_validation_outlier)
 
-vanco_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_outlier_set.csv', encoding='utf-8', index=False)
+vanco_training_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
+vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_training_outlier_set.csv', encoding='utf-8', index=False)
+vanco_validation_outlier_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == 1].index)
+vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
 vanco_training_set = vanco_training_set.drop(columns='mask')
+vanco_validation_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == -1].index)
+vanco_validation_set = vanco_validation_set.drop(columns='mask')
 
 #%%
 # Tri-Cities outliers
-trici_x_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
+trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
+trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
 trici_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1051,19 +1080,26 @@ trici_outlier_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-trici_x_outlier = trici_outlier_prep.fit_transform(trici_x_outlier)
+trici_x_training_outlier = trici_outlier_prep.fit_transform(trici_x_training_outlier)
+trici_x_validation_outlier = trici_outlier_prep.transform(trici_x_validation_outlier)
 
-trici_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_outlier)
+trici_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_training_outlier)
+trici_validation_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_validation_outlier)
 
-trici_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_outlier_set.csv', encoding='utf-8', index=False)
+trici_training_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
+trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_training_outlier_set.csv', encoding='utf-8', index=False)
+trici_validation_outlier_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == 1].index)
+trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
+trici_validation_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == -1].index)
+trici_validation_set = trici_validation_set.drop(columns='mask')
 
 #%%
 # University outliers
-univr_x_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
+univr_x_training_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
+univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
 univr_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1091,25 +1127,33 @@ univr_outlier_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-univr_x_outlier = univr_outlier_prep.fit_transform(univr_x_outlier)
+univr_x_training_outlier = univr_outlier_prep.fit_transform(univr_x_training_outlier)
+univr_x_validation_outlier = univr_outlier_prep.transform(univr_x_validation_outlier)
 
-univr_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(univr_x_outlier)
+univr_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(univr_x_training_outlier)
+univr_validation_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(univr_x_validation_outlier)
 
-univr_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
-univr_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_outlier_set.csv', encoding='utf-8', index=False)
+univr_training_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
+univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_training_outlier_set.csv', encoding='utf-8', index=False)
+univr_validation_outlier_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == 1].index)
+univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 univr_training_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == -1].index)
 univr_training_set = univr_training_set.drop(columns='mask')
+univr_validation_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == -1].index)
+univr_validation_set = univr_validation_set.drop(columns='mask')
 
 #%%
 # Create Tomek Link undersampled training set
 
 # Pullman undersample
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_cv= pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_x_test = pullm_testing_set[pullm_tomek_vars]
 
 pullm_y_train = pullm_training_set['enrl_ind']
+pullm_y_cv = pullm_validation_set['enrl_ind']
 # pullm_y_test = pullm_testing_set['enrl_ind']
 
 pullm_tomek_prep = make_column_transformer(
@@ -1209,6 +1253,7 @@ pullm_tomek_prep = make_column_transformer(
 )
 
 pullm_x_train = pullm_tomek_prep.fit_transform(pullm_x_train)
+pullm_x_cv = pullm_tomek_prep.transform(pullm_x_cv)
 pullm_x_test = pullm_tomek_prep.transform(pullm_x_test)
 
 pullm_feat_names = []
@@ -1224,22 +1269,31 @@ for name, transformer, features, _ in pullm_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		pullm_feat_names.extend(pullm_tomek_prep._feature_names_in[features])
 
-pullm_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-pullm_x_train, pullm_y_train = pullm_under.fit_resample(pullm_x_train, pullm_y_train)
+pullm_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
+pullm_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
 
-pullm_tomek_index = pullm_under.sample_indices_
+pullm_x_train, pullm_y_train = pullm_under_train.fit_resample(pullm_x_train, pullm_y_train)
+pullm_x_cv, pullm_y_cv = pullm_under_valid.fit_resample(pullm_x_cv, pullm_y_cv)
+
+pullm_tomek_train_index = pullm_under_train.sample_indices_
+pullm_tomek_valid_index = pullm_under_valid.sample_indices_
 pullm_training_set = pullm_training_set.reset_index(drop=True)
+pullm_validation_set = pullm_validation_set.reset_index(drop=True)
 
-pullm_tomek_set = pullm_training_set.drop(pullm_tomek_index)
-pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_tomek_set.csv', encoding='utf-8', index=False)
+pullm_tomek_train_set = pullm_training_set.drop(pullm_tomek_train_index)
+pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_tomek_training_set.csv', encoding='utf-8', index=False)
+pullm_tomek_valid_set = pullm_validation_set.drop(pullm_tomek_valid_index)
+pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver undersample
 vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_cv= vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_x_test = vanco_testing_set[vanco_tomek_vars]
 
 vanco_y_train = vanco_training_set['enrl_ind']
+vanco_y_cv = vanco_validation_set['enrl_ind']
 # vanco_y_test = vanco_testing_set['enrl_ind']
 
 vanco_tomek_prep = make_column_transformer(
@@ -1339,6 +1393,7 @@ vanco_tomek_prep = make_column_transformer(
 )
 
 vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
+vanco_x_cv = vanco_tomek_prep.transform(vanco_x_cv)
 vanco_x_test = vanco_tomek_prep.transform(vanco_x_test)
 
 vanco_feat_names = []
@@ -1354,22 +1409,31 @@ for name, transformer, features, _ in vanco_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		vanco_feat_names.extend(vanco_tomek_prep._feature_names_in[features])
 
-vanco_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-vanco_x_train, vanco_y_train = vanco_under.fit_resample(vanco_x_train, vanco_y_train)
+vanco_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
+vanco_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
 
-vanco_tomek_index = vanco_under.sample_indices_
+vanco_x_train, vanco_y_train = vanco_under_train.fit_resample(vanco_x_train, vanco_y_train)
+vanco_x_cv, vanco_y_cv = vanco_under_valid.fit_resample(vanco_x_cv, vanco_y_cv)
+
+vanco_tomek_train_index = vanco_under_train.sample_indices_
+vanco_tomek_valid_index = vanco_under_valid.sample_indices_
 vanco_training_set = vanco_training_set.reset_index(drop=True)
+vanco_validation_set = vanco_validation_set.reset_index(drop=True)
 
-vanco_tomek_set = vanco_training_set.drop(vanco_tomek_index)
-vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_tomek_set.csv', encoding='utf-8', index=False)
+vanco_tomek_train_set = vanco_training_set.drop(vanco_tomek_train_index)
+vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_tomek_training_set.csv', encoding='utf-8', index=False)
+vanco_tomek_valid_set = vanco_validation_set.drop(vanco_tomek_valid_index)
+vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities undersample
 trici_x_train = trici_training_set.drop(columns=['enrl_ind','emplid'])
+trici_x_cv= trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
 trici_x_test = trici_testing_set[trici_tomek_vars]
 
 trici_y_train = trici_training_set['enrl_ind']
+trici_y_cv = trici_validation_set['enrl_ind']
 # trici_y_test = trici_testing_set['enrl_ind']
 
 trici_tomek_prep = make_column_transformer(
@@ -1469,6 +1533,7 @@ trici_tomek_prep = make_column_transformer(
 )
 
 trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
+trici_x_cv = trici_tomek_prep.transform(trici_x_cv)
 trici_x_test = trici_tomek_prep.transform(trici_x_test)
 
 trici_feat_names = []
@@ -1484,22 +1549,31 @@ for name, transformer, features, _ in trici_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		trici_feat_names.extend(trici_tomek_prep._feature_names_in[features])
 
-trici_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-trici_x_train, trici_y_train = trici_under.fit_resample(trici_x_train, trici_y_train)
+trici_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
+trici_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
 
-trici_tomek_index = trici_under.sample_indices_
+trici_x_train, trici_y_train = trici_under_train.fit_resample(trici_x_train, trici_y_train)
+trici_x_cv, trici_y_cv = trici_under_valid.fit_resample(trici_x_cv, trici_y_cv)
+
+trici_tomek_train_index = trici_under_train.sample_indices_
+trici_tomek_valid_index = trici_under_valid.sample_indices_
 trici_training_set = trici_training_set.reset_index(drop=True)
+trici_validation_set = trici_validation_set.reset_index(drop=True)
 
-trici_tomek_set = trici_training_set.drop(trici_tomek_index)
-trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_set.csv', encoding='utf-8', index=False)
+trici_tomek_train_set = trici_training_set.drop(trici_tomek_train_index)
+trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_training_set.csv', encoding='utf-8', index=False)
+trici_tomek_valid_set = trici_validation_set.drop(trici_tomek_valid_index)
+trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # University undersample
 univr_x_train = univr_training_set.drop(columns=['enrl_ind','emplid'])
+univr_x_cv= univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
 univr_x_test = univr_testing_set[univr_tomek_vars]
 
 univr_y_train = univr_training_set['enrl_ind']
+univr_y_cv = univr_validation_set['enrl_ind']
 # univr_y_test = univr_testing_set['enrl_ind']
 
 univr_tomek_prep = make_column_transformer(
@@ -1599,6 +1673,7 @@ univr_tomek_prep = make_column_transformer(
 )
 
 univr_x_train = univr_tomek_prep.fit_transform(univr_x_train)
+univr_x_cv = univr_tomek_prep.transform(univr_x_cv)
 univr_x_test = univr_tomek_prep.transform(univr_x_test)
 
 univr_feat_names = []
@@ -1614,32 +1689,21 @@ for name, transformer, features, _ in univr_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		univr_feat_names.extend(univr_tomek_prep._feature_names_in[features])
 
-univr_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-univr_x_train, univr_y_train = univr_under.fit_resample(univr_x_train, univr_y_train)
+univr_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
+univr_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
 
-univr_tomek_index = univr_under.sample_indices_
+univr_x_train, univr_y_train = univr_under_train.fit_resample(univr_x_train, univr_y_train)
+univr_x_cv, univr_y_cv = univr_under_valid.fit_resample(univr_x_cv, univr_y_cv)
+
+univr_tomek_train_index = univr_under_train.sample_indices_
+univr_tomek_valid_index = univr_under_valid.sample_indices_
 univr_training_set = univr_training_set.reset_index(drop=True)
+univr_validation_set = univr_validation_set.reset_index(drop=True)
 
-univr_tomek_set = univr_training_set.drop(univr_tomek_index)
-univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_tomek_set.csv', encoding='utf-8', index=False)
-
-#%%
-# Create cross-validation sets
-
-# Pullman train/cv set split
-pullm_x_train, pullm_x_cv, pullm_y_train, pullm_y_cv = train_test_split(pullm_x_train, pullm_y_train, train_size=0.80)
-
-#%%
-# Vancouver train/cv set split
-vanco_x_train, vanco_x_cv, vanco_y_train, vanco_y_cv = train_test_split(vanco_x_train, vanco_y_train, train_size=0.80)
-
-#%%
-# Tri-Cities train/cv set split
-trici_x_train, trici_x_cv, trici_y_train, trici_y_cv = train_test_split(trici_x_train, trici_y_train, train_size=0.80)
-
-#%%
-# University train/cv set split
-univr_x_train, univr_x_cv, univr_y_train, univr_y_cv = train_test_split(univr_x_train, univr_y_train, train_size=0.80)
+univr_tomek_train_set = univr_training_set.drop(univr_tomek_train_index)
+univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_tomek_training_set.csv', encoding='utf-8', index=False)
+univr_tomek_valid_set = univr_validation_set.drop(univr_tomek_valid_index)
+univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model
@@ -1944,13 +2008,13 @@ print(f'ROC AUC for University SGD model (training): {univr_sgd_auc:.4f}\n')
 # XGBoost model
 
 # Pullman XGBoost tuning
-pullm_class_weight = pullm_y_cv[pullm_y_cv == 0].count() / pullm_y_cv[pullm_y_cv == 1].count()
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
 pullm_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-pullm_best_model = pullm_gridsearch.fit(pullm_x_cv, pullm_y_cv)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best Pullman XGB parameters: {pullm_gridsearch.best_params_}')
 
@@ -1965,17 +2029,18 @@ pullm_xgb_probs = pullm_xgb_probs[:, 1]
 pullm_xgb_auc = roc_auc_score(pullm_y_train, pullm_xgb_probs)
 
 print(f'Overall accuracy for Pullman XGB model (training): {pullm_xgb.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}\n')
+print(f'ROC AUC for Pullman XGB model (training): {pullm_xgb_auc:.4f}')
+print(f'Overall accuracy for Pullman XGB model (validation): {pullm_xgb.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 #%%
 # Vancouver XGBoost tuning
-vanco_class_weight = vanco_y_cv[vanco_y_cv == 0].count() / vanco_y_cv[vanco_y_cv == 1].count()
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth': np.linspace(5, 15, 11, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
 vanco_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-vanco_best_model = vanco_gridsearch.fit(vanco_x_cv, vanco_y_cv)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best Vancouver XGB parameters: {vanco_gridsearch.best_params_}')
 
@@ -1990,17 +2055,18 @@ vanco_xgb_probs = vanco_xgb_probs[:, 1]
 vanco_xgb_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
 
 print(f'Overall accuracy for Vancouver XGB model (training): {vanco_xgb.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}\n')
+print(f'ROC AUC for Vancouver XGB model (training): {vanco_xgb_auc:.4f}')
+print(f'Overall accuracy for Vancouver XGB model (validation): {vanco_xgb.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 #%%
 # Tri-Cities XGBoost tuning
-trici_class_weight = trici_y_cv[trici_y_cv == 0].count() / trici_y_cv[trici_y_cv == 1].count()
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
 trici_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-trici_best_model = trici_gridsearch.fit(trici_x_cv, trici_y_cv)
+trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best Tri-Cities XGB parameters: {trici_gridsearch.best_params_}')
 
@@ -2015,17 +2081,18 @@ trici_xgb_probs = trici_xgb_probs[:, 1]
 trici_xgb_auc = roc_auc_score(trici_y_train, trici_xgb_probs)
 
 print(f'Overall accuracy for Tri-Cities XGB model (training): {trici_xgb.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities XGB model (training): {trici_xgb_auc:.4f}')
+print(f'Overall accuracy for Tri-Cities XGB model (validation): {trici_xgb.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 #%%
 # University XGBoost tuning
-univr_class_weight = univr_y_cv[univr_y_cv == 0].count() / univr_y_cv[univr_y_cv == 1].count()
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
 univr_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-univr_best_model = univr_gridsearch.fit(univr_x_cv, univr_y_cv)
+univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best University XGB parameters: {univr_gridsearch.best_params_}')
 
@@ -2040,16 +2107,17 @@ univr_xgb_probs = univr_xgb_probs[:, 1]
 univr_xgb_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
 
 print(f'Overall accuracy for University XGB model (training): {univr_xgb.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University XGB model (training): {univr_xgb_auc:.4f}\n')
+print(f'ROC AUC for University XGB model (training): {univr_xgb_auc:.4f}')
+print(f'Overall accuracy for University XGB model (validation): {univr_xgb.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
 # Pullman Random Forest tuning
-pullm_class_weight = pullm_y_cv[pullm_y_cv == 0].count() / pullm_y_cv[pullm_y_cv == 1].count()
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 pullm_gridsearch = GridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-pullm_best_model = pullm_gridsearch.fit(pullm_x_cv, pullm_y_cv)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best Pullman Random Forest parameters: {pullm_gridsearch.best_params_}')
 
@@ -2064,16 +2132,17 @@ pullm_rf_probs = pullm_rf_probs[:, 1]
 pullm_rf_auc = roc_auc_score(pullm_y_train, pullm_rf_probs)
 
 print(f'Overall accuracy for Pullman Random Forest model (training): {pullm_rf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman Random Forest model (training): {pullm_rf_auc:.4f}\n')
+print(f'ROC AUC for Pullman Random Forest model (training): {pullm_rf_auc:.4f}')
+print(f'Overall accuracy for Pullman Random Forest model (validation): {pullm_rf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 #%%
 # Vancouver Random Forest tuning
-vanco_class_weight = vanco_y_cv[vanco_y_cv == 0].count() / vanco_y_cv[vanco_y_cv == 1].count()
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
 vanco_gridsearch = GridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-vanco_best_model = vanco_gridsearch.fit(vanco_x_cv, vanco_y_cv)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best Vancouver Random Forest parameters: {vanco_gridsearch.best_params_}')
 
@@ -2088,7 +2157,8 @@ vanco_rf_probs = vanco_rf_probs[:, 1]
 vanco_rf_auc = roc_auc_score(vanco_y_train, vanco_rf_probs)
 
 print(f'Overall accuracy for Vancouver Random Forest model (training): {vanco_rf.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver Random Forest model (training): {vanco_rf_auc:.4f}\n')
+print(f'ROC AUC for Vancouver Random Forest model (training): {vanco_rf_auc:.4f}')
+print(f'Overall accuracy for Vancouver Random Forest model (validation): {vanco_rf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 #%%
 # Tri-Cities Random Forest tuning
@@ -2112,7 +2182,8 @@ trici_rf_probs = trici_rf_probs[:, 1]
 trici_rf_auc = roc_auc_score(trici_y_train, trici_rf_probs)
 
 print(f'Overall accuracy for Tri-Cities Random Forest model (training): {trici_rf.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities Random Forest model (training): {trici_rf_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities Random Forest model (training): {trici_rf_auc:.4f}')
+print(f'Overall accuracy for Tri-Cities Random Forest model (validation): {trici_rf.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 #%%
 # University Random Forest tuning
@@ -2136,17 +2207,18 @@ univr_rf_probs = univr_rf_probs[:, 1]
 univr_rf_auc = roc_auc_score(univr_y_train, univr_rf_probs)
 
 print(f'Overall accuracy for University Random Forest model (training): {univr_rf.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University Random Forest model (training): {univr_rf_auc:.4f}\n')
+print(f'ROC AUC for University Random Forest model (training): {univr_rf_auc:.4f}')
+print(f'Overall accuracy for University Random Forest model (validation): {univr_rf.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
 # Pullman XGBoost Random Forest tuning
-pullm_class_weight = pullm_y_cv[pullm_y_cv == 0].count() / pullm_y_cv[pullm_y_cv == 1].count()
+pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
 pullm_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-pullm_best_model = pullm_gridsearch.fit(pullm_x_cv, pullm_y_cv)
+pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
 
@@ -2161,17 +2233,18 @@ pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
 pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
 
 print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}\n')
+print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
+print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 #%%
 # Vancouver XGBoost Random Forest tuning
-vanco_class_weight = vanco_y_cv[vanco_y_cv == 0].count() / vanco_y_cv[vanco_y_cv == 1].count()
+vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
 vanco_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-vanco_best_model = vanco_gridsearch.fit(vanco_x_cv, vanco_y_cv)
+vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
 
@@ -2186,17 +2259,18 @@ vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
 vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
 
 print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}\n')
+print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
+print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 #%%
 # Tri-Cities XGBoost Random Forest tuning
-trici_class_weight = trici_y_cv[trici_y_cv == 0].count() / trici_y_cv[trici_y_cv == 1].count()
+trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
 trici_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-trici_best_model = trici_gridsearch.fit(trici_x_cv, trici_y_cv)
+trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
 
@@ -2211,17 +2285,18 @@ trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
 trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
 
 print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
+print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 #%%
 # University XGBoost Random Forest tuning
-univr_class_weight = univr_y_cv[univr_y_cv == 0].count() / univr_y_cv[univr_y_cv == 1].count()
+univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
 univr_gridsearch = GridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', n_estimators=100, num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
-univr_best_model = univr_gridsearch.fit(univr_x_cv, univr_y_cv)
+univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
 
@@ -2236,7 +2311,8 @@ univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
 univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
 
 print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}\n')
+print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
+print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
 # Ensemble model

@@ -1,10 +1,12 @@
 #%%
-from student_risk import config
-import saspy
 import sys
 import time
 import traceback
 from datetime import date
+
+import saspy
+
+from student_risk import config
 
 #%%
 start = time.perf_counter()
