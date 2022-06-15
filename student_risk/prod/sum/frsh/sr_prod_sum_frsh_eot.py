@@ -2971,18 +2971,18 @@ while univr_shap_insert:
 # Output model
 
 # Pullman model output
-joblib.dump(pullm_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_frsh_model_v{sklearn.__version__}.pkl')
+joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_frsh_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver model output
-joblib.dump(vanco_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_frsh_model_v{sklearn.__version__}.pkl')
+joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_frsh_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities model output
-joblib.dump(trici_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_frsh_model_v{sklearn.__version__}.pkl')
+joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_frsh_model_v{sklearn.__version__}.pkl')
 
 #%%
 # University model output
-joblib.dump(univr_xgb, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_frsh_model_v{sklearn.__version__}.pkl')
+joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_frsh_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')
