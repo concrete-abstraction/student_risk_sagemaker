@@ -14,6 +14,9 @@ libname &adm. odbc dsn=&adm. schema=dbo;
 
 libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 
+options sqlreduceput=all sqlremerge;
+run;
+
 /* Note: Code review needed. */
 
 proc sql;
@@ -80,9 +83,9 @@ proc sql;
 	from snap_check
 ;quit;
 
-/* Note: This is a test date. Revert to 4 in production or 5 in development. */
+/* Note: This is a test date. Revert to 5 in production or 6 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 4);
+%let start_cohort = %eval(&end_cohort. - 5);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -218,7 +221,6 @@ run;
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
 			and a.WA_residency ^= 'NON-I'
-		order by a.emplid
 	;quit;
 	
 	proc sql;
@@ -284,7 +286,6 @@ run;
 			and a.acad_career = 'UGRD'
 			and a.new_continue_status = 'CTU'
 			and a.term_credit_hours > 0
-		order by a.emplid
 	;quit;
 	
 	proc sql;
@@ -680,7 +681,6 @@ run;
 		where snapshot = "&snapshot."
 			and aid_year = "&cohort_year."
 			and grading_basis_enrl in ('REM','RMS','RMP')
-		order by emplid
 	;quit;
 	
 	proc sql;
@@ -694,7 +694,6 @@ run;
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and ugrd_applicant_counting_ind = 1
 		group by emplid
-		order by emplid;
 	;quit;
 
 	proc sql;
@@ -1221,7 +1220,6 @@ run;
 		where a.snapshot = 'eot'
 			and a.full_acad_year = "&cohort_year."
 			and a.grading_basis = 'GRD'
-		order by a.subject_catalog_nbr
 	;quit;
 	
 	proc sql;
@@ -2208,7 +2206,6 @@ run;
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
 			and a.WA_residency ^= 'NON-I'
-		order by a.emplid
 	;quit;
 	
 	proc sql;
@@ -2633,7 +2630,6 @@ run;
 		where snapshot = 'census'
 			and aid_year = "&cohort_year."
 			and grading_basis_enrl in ('REM','RMS','RMP')
-		order by emplid
 	;quit;
 	
 	proc sql;
@@ -2647,7 +2643,6 @@ run;
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and ugrd_applicant_counting_ind = 1
 		group by emplid
-		order by emplid;
 	;quit;
 	
 	proc sql;
@@ -3242,7 +3237,6 @@ run;
 		where a.snapshot = 'census'
 			and a.full_acad_year = "&cohort_year."
 			and a.grading_basis = 'GRD'
-		order by a.subject_catalog_nbr
 	;quit;
 	
 	proc sql;

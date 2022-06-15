@@ -16,6 +16,11 @@ class DatasetBuilderProd:
 
 		sas = saspy.SASsession()
 
+		sas.submit("""
+		options sqlreduceput=all sqlremerge;
+		run;
+		""")
+		
 		# Set libname statements
 		print('Set libname statements...')
 
@@ -2326,6 +2331,11 @@ class DatasetBuilderProd:
 
 		sas = saspy.SASsession()
 
+		sas.submit("""
+		options sqlreduceput=all sqlremerge;
+		run;
+		""")
+		
 		# Set libname statements
 		print('Set libname statements...')
 

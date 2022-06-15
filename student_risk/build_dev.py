@@ -1,8 +1,10 @@
 #%%
-import saspy
 import time
+
+import saspy
 from halo import HaloNotebook
 from IPython.display import HTML
+
 
 #%%
 class DatasetBuilderDev:
@@ -14,6 +16,11 @@ class DatasetBuilderDev:
 		print('\nStart SAS session...')
 
 		sas = saspy.SASsession()
+
+		sas.submit("""
+		options sqlreduceput=all sqlremerge;
+		run;
+		""")
 
 		# Set libname statements
 		print('Set libname statements...')
@@ -2154,6 +2161,11 @@ class DatasetBuilderDev:
 
 		sas = saspy.SASsession()
 
+		sas.submit("""
+		options sqlreduceput=all sqlremerge;
+		run;
+		""")
+		
 		# Set libname statements
 		print('Set libname statements...')
 
