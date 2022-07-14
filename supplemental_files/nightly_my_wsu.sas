@@ -17,29 +17,79 @@ libname dir "\\ad.wsu.edu\POIS\IR\Nathan\Models\student_risk\supplemental_files"
 %global passthru;
 %let curlib = WSUNCPRD;
 /*%let curlib = WSUNCT1T;*/
+proc sql;
+create table xw_term1 as
+select 
+	distinct
+	a.strm,
+	a.acad_career,
+	a.session_code,
+	floor((input(strm,8.)+ 18000)/10)*10 + (input(substr(strm,4,1),1.)-1)/2 as term_code,
+	floor(calculated term_code/10) as term_year,
+	case when substr(a.strm,4,1) = '3' then 'SPR'
+		 when substr(a.strm,4,1) = '5' then 'SUM'
+		 when substr(a.strm,4,1) = '7' then 'FAL'
+		 when substr(a.strm,4,1) = '9' then 'WNT'
+		 							   else ' '
+									   end as term_type length=3,
+	a.descr as term_descr,
+	tranwrd(tranwrd(tranwrd(a.descr,' Semester',''),' Session',''),' Term','')  as term_descr15 length=15,
+
+	case when a.acad_career <> 'MEDS' and substr(a.strm,4,1)='5' then ' ' else a.acad_year end as acad_year length=4,
+	put(floor((calculated term_code+7)/10),4.) as full_acad_year length=4,
+	floor((calculated term_code+8)/10) as fiscal_year,
+/*	put(floor((calculated term_code+7)/10),4.) as aid_year length=4,*/
+	a.weeks_of_instruct,
+	a.term_begin_dt
+/*	dhms(intnx('Day',datepart(a.term_begin_dt),11),0,0,0) as term_census_dt format=datetime20.,*/
+/*	dhms(intnx('Day',datepart(a.term_begin_dt),29),0,0,0) as term_30th_dt format=datetime20.,*/
+/*	dhms(intnx('Day',datepart(a.SSR_TRMAC_LAST_DT),11),0,0,0) as term_max_prog_effdt format=datetime20.,*/
+/*	case when a.acad_career = 'MEDS' then . else dhms(datepart("&mid_term_dt."dt),0,0,0) end as term_midterm_dt format=datetime20.,*/
+/*	a.term_end_dt,*/
+/*	case when a.acad_career = 'MEDS' then dhms(datepart("&term_end_snapshot_dt_meds."dt),0,0,0)*/
+/*									 else dhms(datepart("&term_end_snapshot_dt_othr."dt),0,0,0) 	  */
+/*									 end as term_end_snapshot_dt format=datetime20.*/
+from &curlib..ps_term_tbl  a
+where strm >= '2217' ;
+quit;
 
 proc sql;
 	select strm
 	into: strm 
-	from census.xw_term 
+	from xw_term1
 	where term_year = year(today()) 
 		and acad_career = 'UGRD' 
 		and term_type = (case when today() lt input(catx('/','07','01',put(year(today()),z4.)), mmddyy10.) then 'SPR' else 'FAL' end)
 ;quit;
 
+%put &strm.;
+/*Need to move to one strm earlier (so a total of four terms). Code was getting preceding and following strm. Need two preceding.*/
+proc sql;
+	select strm
+	into: strmprevious 
+	from xw_term1
+	where strm = (select max(strm)  
+							from xw_term1
+							where strm < "&strm." 
+								and acad_career = 'UGRD' 
+								and substr(strm,4,1) in ('7','3'))
+							and acad_career = 'UGRD'
+								;quit;
+
+
 proc sql;
 	create table strms as
 	select strm 
-	from &curlib..ps_term_tbl 
+	from xw_term1
 	where acad_career = 'UGRD' 
 		and substr(strm,4,1) in ('7','3')
 		and strm between (select max(strm)  
-							from &curlib..ps_term_tbl 
-							where strm < "&strm." 
+							from xw_term1
+							where strm < "&strmprevious." 
 								and acad_career = 'UGRD' 
 								and substr(strm,4,1) in ('7','3')) 
 		and (select min(strm) 
-				from &curlib..ps_term_tbl
+				from xw_term1
 				where strm > "&strm."  
 					and acad_career = 'UGRD' 
 					and substr(strm,4,1) in ('7','3'))
@@ -79,6 +129,8 @@ proc sql noprint;
 	from aid_years
 ;quit;
 
+%put &list_of_aid_years.;
+
 
 %macro passthrulib;
 %if &curlib. = WSUNCPRD %then %do;
@@ -100,13 +152,13 @@ select * from connection to oracle
 
 SELECT DISTINCT A.STRM, A.EMPLID, B.SUBJECT, B.CATALOG_NBR, B.SSR_COMPONENT, B.CRSE_ID, B.CLASS_NBR, A.UNT_TAKEN, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate
 FROM PS_STDNT_ENRL A, PS_CLASS_TBL B
-WHERE (A.STRM >= %bquote('&strm.')
+WHERE a.strm  in %bquote(('&list_of_strms.'))
 AND A.STDNT_ENRL_STATUS = 'E'
 AND A.ACAD_CAREER = 'UGRD'
 AND A.ACAD_CAREER = B.ACAD_CAREER
 AND A.INSTITUTION = B.INSTITUTION
 AND A.STRM = B.STRM
-AND A.CLASS_NBR = B.CLASS_NBR)
+AND A.CLASS_NBR = B.CLASS_NBR
 
 ); 
 quit;

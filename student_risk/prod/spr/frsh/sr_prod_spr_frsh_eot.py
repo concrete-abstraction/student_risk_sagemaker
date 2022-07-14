@@ -1,34 +1,36 @@
 #%%
-from student_risk import build_prod, config
 import csv
 import datetime
+import os
+import pathlib
+import urllib
+from datetime import date
+from itertools import islice
+
 import joblib
 import numpy as np
 import pandas as pd
-import pathlib
 import pyodbc
-import os
 import saspy
-import shap
 import sklearn
 import sqlalchemy
-import urllib
-from datetime import date
+from imblearn.under_sampling import NearMiss, TomekLinks
 from patsy import dmatrices
-from imblearn.under_sampling import TomekLinks, NearMiss
-from itertools import islice
 from sklearn.compose import make_column_transformer
-from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.linear_model import LogisticRegression, SGDClassifier
-from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.linear_model import LogisticRegression, SGDClassifier
+from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.model_selection import GridSearchCV
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sqlalchemy import MetaData, Table
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
-from sqlalchemy import MetaData, Table
 from xgboost import XGBClassifier, XGBRFClassifier
+
+import shap
+from student_risk import build_prod, config
 
 #%%
 # Database connection

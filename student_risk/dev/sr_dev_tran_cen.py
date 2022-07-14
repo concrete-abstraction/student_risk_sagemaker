@@ -1,26 +1,29 @@
 #%%
-from student_risk import build_dev
+import gower
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import shap
-from imblearn.under_sampling import TomekLinks, NearMiss
+from imblearn.under_sampling import NearMiss, TomekLinks
 from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
-from sklearn.compose import make_column_transformer
-from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
-from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
-from sklearn.model_selection import GridSearchCV, cross_val_predict
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
+from sklearn.compose import make_column_transformer
+from sklearn.ensemble import VotingClassifier
+from sklearn.linear_model import (LinearRegression, LogisticRegression,
+                                  SGDClassifier)
+from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
+from sklearn.model_selection import GridSearchCV, cross_val_predict
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, StandardScaler
 from statsmodels.api import OLS
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier
+
+import shap
+from student_risk import build_dev
 
 #%%
 # Global variables

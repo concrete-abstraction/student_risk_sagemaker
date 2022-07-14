@@ -1,32 +1,38 @@
 #%%
-from student_risk import build_dev
+import gower
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import shap
-from imblearn.under_sampling import TomekLinks, NearMiss
+from imblearn.under_sampling import NearMiss, TomekLinks
 from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
-from sklearn.compose import make_column_transformer
-from sklearn.neighbors import LocalOutlierFactor
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
-from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import VotingClassifier
-from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
-from sklearn.model_selection import GridSearchCV, cross_val_predict
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
+from sklearn.compose import make_column_transformer
+from sklearn.ensemble import VotingClassifier
+from sklearn.experimental import enable_halving_search_cv
+from sklearn.linear_model import (LinearRegression, LogisticRegression,
+                                  SGDClassifier)
+from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
+from sklearn.model_selection import HalvingGridSearchCV, cross_val_predict
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, StandardScaler
 from statsmodels.api import OLS
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier
+
+import shap
+from student_risk import build_dev
 
 #%%
 # Global variables
 wsu_color = (0.596,0.117,0.196)
 wsu_cmap = sns.light_palette("#981e32",as_cmap=True)
 unwanted_vars = ['emplid','enrl_ind']
+plt.rcParams['figure.figsize'] = [15, 10]
+plt.rcParams['font.size'] = '24'
 
 #%%
 # SAS dataset builder
@@ -34,6 +40,7 @@ build_dev.DatasetBuilderDev.build_census_dev()
 
 #%%
 # Import pre-split data
+validation_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\validation_set.csv', encoding='utf-8', low_memory=False)
 training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8', low_memory=False)
 testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
 
@@ -240,8 +247,8 @@ pullm_data_vars = [
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
 # 'marital_status',
-'acs_mi',
-'distance',
+# 'acs_mi',
+# 'distance',
 # 'pop_dens',
 'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
@@ -256,10 +263,16 @@ pullm_data_vars = [
 # 'high_school_gpa',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_no_letter_count',
-'fall_term_F_grade_count',
-'fall_term_S_grade_count',
-'fall_term_W_grade_count',
+# 'fall_term_D_grade_count',
+# 'fall_term_F_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
+'spring_term_gpa',
+'spring_term_gpa_mi',
+'spring_term_D_grade_count',
+'spring_term_F_grade_count',
+# 'spring_term_S_grade_count',
+# 'spring_term_W_grade_count',
 # 'spring_midterm_gpa_change',
 # 'awe_instrument',
 # 'cdi_instrument',
@@ -290,7 +303,7 @@ pullm_data_vars = [
 # 'fall_midterm_gpa_avg',
 # 'fall_midterm_gpa_avg_ind',
 # 'spring_midterm_gpa_avg',
-# 'spring_midterm_gpa_avg_ind',
+# 'spring_midterm_gpa_avg_mi',
 'cum_adj_transfer_hours',
 'resident',
 # 'father_wsu_flag',
@@ -407,6 +420,9 @@ pullm_tomek_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
 								& (training_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna().drop(columns=['emplid'])
 
+pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM') 
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
+
 pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
 								& (training_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
 
@@ -419,7 +435,21 @@ pullm_shap_outcome = pullm_testing_set['emplid'].copy(deep=True).values.tolist()
 
 pullm_pred_outcome = pullm_testing_set[[ 
                             'emplid',
-                            'enrl_ind'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+pullm_aggregate_outcome = pullm_testing_set[[ 
+                            'emplid',
+							'male',
+							'underrep_minority',
+							'first_gen_flag',
+							'resident'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+pullm_current_outcome = pullm_testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
                             ]].copy(deep=True)
 
 #%%
@@ -442,8 +472,8 @@ vanco_data_vars = [
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
 # 'marital_status',
-'acs_mi',
-'distance',
+# 'acs_mi',
+# 'distance',
 # 'pop_dens',
 'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
@@ -458,10 +488,16 @@ vanco_data_vars = [
 # 'high_school_gpa',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_no_letter_count',
-'fall_term_F_grade_count',
-'fall_term_S_grade_count',
-'fall_term_W_grade_count',
+# 'fall_term_D_grade_count',
+# 'fall_term_F_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
+'spring_term_gpa',
+'spring_term_gpa_mi',
+'spring_term_D_grade_count',
+'spring_term_F_grade_count',
+# 'spring_term_S_grade_count',
+# 'spring_term_W_grade_count',
 # 'spring_midterm_gpa_change',
 # 'awe_instrument',
 # 'cdi_instrument',
@@ -490,7 +526,7 @@ vanco_data_vars = [
 # 'fall_midterm_gpa_avg',
 # 'fall_midterm_gpa_avg_ind',
 # 'spring_midterm_gpa_avg',
-# 'spring_midterm_gpa_avg_ind',
+# 'spring_midterm_gpa_avg_mi',
 'cum_adj_transfer_hours',
 'resident',
 # 'father_wsu_flag',
@@ -607,11 +643,14 @@ vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
 								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['emplid'])
 
+vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO') 
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
+
 vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
 								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
 
 vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
 
 vanco_testing_set = vanco_testing_set.reset_index()
 
@@ -619,7 +658,21 @@ vanco_shap_outcome = vanco_testing_set['emplid'].copy(deep=True).values.tolist()
 
 vanco_pred_outcome = vanco_testing_set[[ 
                             'emplid',
-                            'enrl_ind'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+vanco_aggregate_outcome = vanco_testing_set[[ 
+                            'emplid',
+							'male',
+							'underrep_minority',
+							'first_gen_flag',
+							'resident'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+vanco_current_outcome = vanco_testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
                             ]].copy(deep=True)
 
 #%%
@@ -642,8 +695,8 @@ trici_data_vars = [
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
 # 'marital_status',
-'acs_mi',
-'distance',
+# 'acs_mi',
+# 'distance',
 # 'pop_dens',
 'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
@@ -658,10 +711,16 @@ trici_data_vars = [
 # 'high_school_gpa',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_no_letter_count',
-'fall_term_F_grade_count',
-'fall_term_S_grade_count',
-'fall_term_W_grade_count',
+# 'fall_term_D_grade_count',
+# 'fall_term_F_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
+'spring_term_gpa',
+'spring_term_gpa_mi',
+'spring_term_D_grade_count',
+'spring_term_F_grade_count',
+# 'spring_term_S_grade_count',
+# 'spring_term_W_grade_count',
 # 'spring_midterm_gpa_change',
 # 'awe_instrument',
 # 'cdi_instrument',
@@ -690,7 +749,7 @@ trici_data_vars = [
 # 'fall_midterm_gpa_avg',
 # 'fall_midterm_gpa_avg_ind',
 # 'spring_midterm_gpa_avg',
-# 'spring_midterm_gpa_avg_ind',
+# 'spring_midterm_gpa_avg_mi',
 'cum_adj_transfer_hours',
 'resident',
 # 'father_wsu_flag',
@@ -807,11 +866,14 @@ trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
 								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['emplid'])
 
+trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI') 
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
+
 trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
 								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
 
 trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
 								
 trici_testing_set = trici_testing_set.reset_index()
 
@@ -819,7 +881,21 @@ trici_shap_outcome = trici_testing_set['emplid'].copy(deep=True).values.tolist()
 
 trici_pred_outcome = trici_testing_set[[ 
                             'emplid',
-                            'enrl_ind'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+trici_aggregate_outcome = trici_testing_set[[ 
+                            'emplid',
+							'male',
+							'underrep_minority',
+							'first_gen_flag',
+							'resident'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+trici_current_outcome = trici_testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
                             ]].copy(deep=True)
 
 #%%
@@ -842,8 +918,8 @@ univr_data_vars = [
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
 # 'marital_status',
-'acs_mi',
-'distance',
+# 'acs_mi',
+# 'distance',
 # 'pop_dens',
 'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
@@ -858,10 +934,16 @@ univr_data_vars = [
 # 'high_school_gpa',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_no_letter_count',
-'fall_term_F_grade_count',
-'fall_term_S_grade_count',
-'fall_term_W_grade_count',
+# 'fall_term_D_grade_count',
+# 'fall_term_F_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
+'spring_term_gpa',
+'spring_term_gpa_mi',
+'spring_term_D_grade_count',
+'spring_term_F_grade_count',
+# 'spring_term_S_grade_count',
+# 'spring_term_W_grade_count',
 # 'spring_midterm_gpa_change',
 # 'awe_instrument',
 # 'cdi_instrument',
@@ -890,7 +972,7 @@ univr_data_vars = [
 # 'fall_midterm_gpa_avg',
 # 'fall_midterm_gpa_avg_ind',
 # 'spring_midterm_gpa_avg',
-# 'spring_midterm_gpa_avg_ind',
+# 'spring_midterm_gpa_avg_mi',
 'cum_adj_transfer_hours',
 'resident',
 # 'father_wsu_flag',
@@ -1006,6 +1088,8 @@ univr_tomek_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 # University dataframes
 univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna().drop(columns=['emplid'])
 
+univr_validation_set = validation_set[(validation_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna()
+
 univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna()
 
 univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE') 
@@ -1013,7 +1097,7 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 								| ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
 								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
 								| ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH'))][univr_data_vars].dropna()
+								& (testing_set['adj_admit_type_cat'] == 'FRSH'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
 
 univr_testing_set = univr_testing_set.reset_index()
 
@@ -1021,7 +1105,21 @@ univr_shap_outcome = univr_testing_set['emplid'].copy(deep=True).values.tolist()
 
 univr_pred_outcome = univr_testing_set[[ 
                             'emplid',
-                            'enrl_ind'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+univr_aggregate_outcome = univr_testing_set[[ 
+                            'emplid',
+							'male',
+							'underrep_minority',
+							'first_gen_flag',
+							'resident'
+                            # 'enrl_ind'
+                            ]].copy(deep=True)
+
+univr_current_outcome = univr_testing_set[[ 
+                            'emplid',
+                            # 'enrl_ind'
                             ]].copy(deep=True)
 
 #%%
@@ -1029,7 +1127,8 @@ univr_pred_outcome = univr_testing_set[[
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
-pullm_x_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_training_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1057,19 +1156,29 @@ pullm_outlier_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-pullm_x_outlier = pullm_outlier_prep.fit_transform(pullm_x_outlier)
+pullm_x_training_outlier = pullm_outlier_prep.fit_transform(pullm_x_training_outlier)
+pullm_x_validation_outlier = pullm_outlier_prep.transform(pullm_x_validation_outlier)
 
-pullm_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_outlier)
+pullm_x_training_gower = gower.gower_matrix(pullm_x_training_outlier)
+pullm_x_validation_gower = gower.gower_matrix(pullm_x_validation_outlier)
 
-pullm_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_outlier_set.csv', encoding='utf-8', index=False)
+pullm_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_training_gower)
+pullm_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_validation_gower)
+
+pullm_training_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
+pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
+pullm_validation_outlier_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == 1].index)
+pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
 pullm_training_set = pullm_training_set.drop(columns='mask')
+pullm_validation_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == -1].index)
+pullm_validation_set = pullm_validation_set.drop(columns='mask')
 
 #%%
 # Vancouver outliers
-vanco_x_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_training_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1097,19 +1206,29 @@ vanco_outlier_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-vanco_x_outlier = vanco_outlier_prep.fit_transform(vanco_x_outlier)
+vanco_x_training_outlier = vanco_outlier_prep.fit_transform(vanco_x_training_outlier)
+vanco_x_validation_outlier = vanco_outlier_prep.transform(vanco_x_validation_outlier)
 
-vanco_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_outlier)
+vanco_x_training_gower = gower.gower_matrix(vanco_x_training_outlier)
+vanco_x_validation_gower = gower.gower_matrix(vanco_x_validation_outlier)
 
-vanco_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_outlier_set.csv', encoding='utf-8', index=False)
+vanco_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_training_gower)
+vanco_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_validation_gower)
+
+vanco_training_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
+vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
+vanco_validation_outlier_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == 1].index)
+vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
 vanco_training_set = vanco_training_set.drop(columns='mask')
+vanco_validation_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == -1].index)
+vanco_validation_set = vanco_validation_set.drop(columns='mask')
 
 #%%
 # Tri-Cities outliers
-trici_x_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
+trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
+trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
 trici_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1137,19 +1256,29 @@ trici_outlier_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-trici_x_outlier = trici_outlier_prep.fit_transform(trici_x_outlier)
+trici_x_training_outlier = trici_outlier_prep.fit_transform(trici_x_training_outlier)
+trici_x_validation_outlier = trici_outlier_prep.transform(trici_x_validation_outlier)
 
-trici_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_outlier)
+trici_x_training_gower = gower.gower_matrix(trici_x_training_outlier)
+trici_x_validation_gower = gower.gower_matrix(trici_x_validation_outlier)
 
-trici_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_outlier_set.csv', encoding='utf-8', index=False)
+trici_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_training_gower)
+trici_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_validation_gower)
+
+trici_training_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
+trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
+trici_validation_outlier_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == 1].index)
+trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
+trici_validation_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == -1].index)
+trici_validation_set = trici_validation_set.drop(columns='mask')
 
 #%%
 # University outliers
-univr_x_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
+univr_x_training_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
+univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
 univr_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), [
@@ -1177,30 +1306,41 @@ univr_outlier_prep = make_column_transformer(
     remainder='passthrough'
 )
 
-univr_x_outlier = univr_outlier_prep.fit_transform(univr_x_outlier)
+univr_x_training_outlier = univr_outlier_prep.fit_transform(univr_x_training_outlier)
+univr_x_validation_outlier = univr_outlier_prep.transform(univr_x_validation_outlier)
 
-univr_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(univr_x_outlier)
+univr_x_training_gower = gower.gower_matrix(univr_x_training_outlier)
+univr_x_validation_gower = gower.gower_matrix(univr_x_validation_outlier)
 
-univr_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
-univr_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_outlier_set.csv', encoding='utf-8', index=False)
+univr_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_training_gower)
+univr_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_validation_gower)
+
+univr_training_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
+univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
+univr_validation_outlier_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == 1].index)
+univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 univr_training_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == -1].index)
 univr_training_set = univr_training_set.drop(columns='mask')
+univr_validation_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == -1].index)
+univr_validation_set = univr_validation_set.drop(columns='mask')
 
 #%%
-# Create Tomek Link undersampled training set
+# Create Tomek Link undersampled validation and training sets
 
 # Pullman undersample
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_cv = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_x_test = pullm_testing_set[pullm_tomek_vars]
 
 pullm_y_train = pullm_training_set['enrl_ind']
+pullm_y_cv = pullm_validation_set['enrl_ind']
 pullm_y_test = pullm_testing_set['enrl_ind']
 
 pullm_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
-						'distance',
+						# 'distance',
 						# 'age',
 						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
@@ -1230,15 +1370,21 @@ pullm_tomek_prep = make_column_transformer(
 						# 'spring_midterm_grade_count',
 						# 'spring_midterm_S_grade_count',
 						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
-						'fall_term_gpa_mi',
-						# 'fall_term_no_letter_count',
-						'fall_term_F_grade_count',
-						'fall_term_S_grade_count',
-						'fall_term_W_grade_count',
+						# 'fall_term_gpa',
+						# 'fall_term_gpa_mi',
+						# 'fall_term_D_grade_count',
+						# 'fall_term_F_grade_count',
+						# 'fall_term_S_grade_count',
+						# 'fall_term_W_grade_count',
+						'spring_term_gpa',
+						# 'spring_term_gpa_mi',
+						'spring_term_D_grade_count',
+						'spring_term_F_grade_count',
+						# 'spring_term_S_grade_count',
+						# 'spring_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						# 'spring_avg_difficulty',
+						'spring_avg_difficulty',
 						# 'spring_avg_pct_withdrawn',
 						# 'spring_avg_pct_CDFW',
 						# 'spring_avg_pct_CDF',
@@ -1289,6 +1435,7 @@ pullm_tomek_prep = make_column_transformer(
 )
 
 pullm_x_train = pullm_tomek_prep.fit_transform(pullm_x_train)
+pullm_x_cv = pullm_tomek_prep.transform(pullm_x_cv)
 pullm_x_test = pullm_tomek_prep.transform(pullm_x_test)
 
 pullm_feat_names = []
@@ -1304,27 +1451,36 @@ for name, transformer, features, _ in pullm_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		pullm_feat_names.extend(pullm_tomek_prep._feature_names_in[features])
 
-pullm_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-pullm_x_train, pullm_y_train = pullm_under.fit_resample(pullm_x_train, pullm_y_train)
+pullm_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
+pullm_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
 
-pullm_tomek_index = pullm_under.sample_indices_
+pullm_x_train, pullm_y_train = pullm_under_train.fit_resample(pullm_x_train, pullm_y_train)
+pullm_x_cv, pullm_y_cv = pullm_under_valid.fit_resample(pullm_x_cv, pullm_y_cv)
+
+pullm_tomek_train_index = pullm_under_train.sample_indices_
+pullm_tomek_valid_index = pullm_under_valid.sample_indices_
 pullm_training_set = pullm_training_set.reset_index(drop=True)
+pullm_validation_set = pullm_validation_set.reset_index(drop=True)
 
-pullm_tomek_set = pullm_training_set.drop(pullm_tomek_index)
-pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_tomek_set.csv', encoding='utf-8', index=False)
+pullm_tomek_train_set = pullm_training_set.drop(pullm_tomek_train_index)
+pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_tomek_training_set.csv', encoding='utf-8', index=False)
+pullm_tomek_valid_set = pullm_validation_set.drop(pullm_tomek_valid_index)
+pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver undersample
 vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_cv = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_x_test = vanco_testing_set[vanco_tomek_vars]
 
 vanco_y_train = vanco_training_set['enrl_ind']
+vanco_y_cv = vanco_validation_set['enrl_ind']
 vanco_y_test = vanco_testing_set['enrl_ind']
 
 vanco_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
-						'distance',
+						# 'distance',
 						# 'age',
 						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
@@ -1354,15 +1510,21 @@ vanco_tomek_prep = make_column_transformer(
 						# 'spring_midterm_grade_count',
 						# 'spring_midterm_S_grade_count',
 						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
-						'fall_term_gpa_mi',
-						# 'fall_term_no_letter_count',
-						'fall_term_F_grade_count',
+						# 'fall_term_gpa',
+						# 'fall_term_gpa_mi',
+						# 'fall_term_D_grade_count',
+						# 'fall_term_F_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
+						'spring_term_gpa',
+						# 'spring_term_gpa_mi',
+						'spring_term_D_grade_count',
+						'spring_term_F_grade_count',
+						# 'spring_term_S_grade_count',
+						# 'spring_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						# 'spring_avg_difficulty',
+						'spring_avg_difficulty',
 						# 'spring_avg_pct_withdrawn',
 						# 'spring_avg_pct_CDFW',
 						# 'spring_avg_pct_CDF',
@@ -1413,6 +1575,7 @@ vanco_tomek_prep = make_column_transformer(
 )
 
 vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
+vanco_x_cv = vanco_tomek_prep.transform(vanco_x_cv)
 vanco_x_test = vanco_tomek_prep.transform(vanco_x_test)
 
 vanco_feat_names = []
@@ -1428,27 +1591,36 @@ for name, transformer, features, _ in vanco_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		vanco_feat_names.extend(vanco_tomek_prep._feature_names_in[features])
 
-vanco_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-vanco_x_train, vanco_y_train = vanco_under.fit_resample(vanco_x_train, vanco_y_train)
+vanco_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
+vanco_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
 
-vanco_tomek_index = vanco_under.sample_indices_
+vanco_x_train, vanco_y_train = vanco_under_train.fit_resample(vanco_x_train, vanco_y_train)
+vanco_x_cv, vanco_y_cv = vanco_under_valid.fit_resample(vanco_x_cv, vanco_y_cv)
+
+vanco_tomek_train_index = vanco_under_train.sample_indices_
+vanco_tomek_valid_index = vanco_under_valid.sample_indices_
 vanco_training_set = vanco_training_set.reset_index(drop=True)
+vanco_validation_set = vanco_validation_set.reset_index(drop=True)
 
-vanco_tomek_set = vanco_training_set.drop(vanco_tomek_index)
-vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_tomek_set.csv', encoding='utf-8', index=False)
+vanco_tomek_train_set = vanco_training_set.drop(vanco_tomek_train_index)
+vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_tomek_training_set.csv', encoding='utf-8', index=False)
+vanco_tomek_valid_set = vanco_validation_set.drop(vanco_tomek_valid_index)
+vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities undersample
 trici_x_train = trici_training_set.drop(columns=['enrl_ind','emplid'])
+trici_x_cv = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
 trici_x_test = trici_testing_set[trici_tomek_vars]
 
 trici_y_train = trici_training_set['enrl_ind']
+trici_y_cv = trici_validation_set['enrl_ind']
 trici_y_test = trici_testing_set['enrl_ind']
 
 trici_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
-						'distance',
+						# 'distance',
 						# 'age',
 						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
@@ -1478,15 +1650,21 @@ trici_tomek_prep = make_column_transformer(
 						# 'spring_midterm_grade_count',
 						# 'spring_midterm_S_grade_count',
 						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
-						'fall_term_gpa_mi',
-						# 'fall_term_no_letter_count',
-						'fall_term_F_grade_count',
+						# 'fall_term_gpa',
+						# 'fall_term_gpa_mi',
+						# 'fall_term_D_grade_count',
+						# 'fall_term_F_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
+						'spring_term_gpa',
+						# 'spring_term_gpa_mi',
+						'spring_term_D_grade_count',
+						'spring_term_F_grade_count',
+						# 'spring_term_S_grade_count',
+						# 'spring_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						# 'spring_avg_difficulty',
+						'spring_avg_difficulty',
 						# 'spring_avg_pct_withdrawn',
 						# 'spring_avg_pct_CDFW',
 						# 'spring_avg_pct_CDF',
@@ -1537,6 +1715,7 @@ trici_tomek_prep = make_column_transformer(
 )
 
 trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
+trici_x_cv = trici_tomek_prep.transform(trici_x_cv)
 trici_x_test = trici_tomek_prep.transform(trici_x_test)
 
 trici_feat_names = []
@@ -1552,27 +1731,36 @@ for name, transformer, features, _ in trici_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		trici_feat_names.extend(trici_tomek_prep._feature_names_in[features])
 
-trici_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-trici_x_train, trici_y_train = trici_under.fit_resample(trici_x_train, trici_y_train)
+trici_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
+trici_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
 
-trici_tomek_index = trici_under.sample_indices_
+trici_x_train, trici_y_train = trici_under_train.fit_resample(trici_x_train, trici_y_train)
+trici_x_cv, trici_y_cv = trici_under_valid.fit_resample(trici_x_cv, trici_y_cv)
+
+trici_tomek_train_index = trici_under_train.sample_indices_
+trici_tomek_valid_index = trici_under_valid.sample_indices_
 trici_training_set = trici_training_set.reset_index(drop=True)
+trici_validation_set = trici_validation_set.reset_index(drop=True)
 
-trici_tomek_set = trici_training_set.drop(trici_tomek_index)
-trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_tomek_set.csv', encoding='utf-8', index=False)
+trici_tomek_train_set = trici_training_set.drop(trici_tomek_train_index)
+trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_tomek_training_set.csv', encoding='utf-8', index=False)
+trici_tomek_valid_set = trici_validation_set.drop(trici_tomek_valid_index)
+trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # University undersample
 univr_x_train = univr_training_set.drop(columns=['enrl_ind','emplid'])
+univr_x_cv = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
 univr_x_test = univr_testing_set[univr_tomek_vars]
 
 univr_y_train = univr_training_set['enrl_ind']
+univr_y_cv = univr_validation_set['enrl_ind']
 univr_y_test = univr_testing_set['enrl_ind']
 
 univr_tomek_prep = make_column_transformer(
 	(StandardScaler(), [
-						'distance',
+						# 'distance',
 						# 'age',
 						# 'min_week_from_term_begin_dt',
 						# 'max_week_from_term_begin_dt',
@@ -1602,15 +1790,21 @@ univr_tomek_prep = make_column_transformer(
 						# 'spring_midterm_grade_count',
 						# 'spring_midterm_S_grade_count',
 						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
-						'fall_term_gpa_mi',
-						# 'fall_term_no_letter_count',
-						'fall_term_F_grade_count',
+						# 'fall_term_gpa',
+						# 'fall_term_gpa_mi',
+						# 'fall_term_D_grade_count',
+						# 'fall_term_F_grade_count',
 						# 'fall_term_S_grade_count',
 						# 'fall_term_W_grade_count',
+						'spring_term_gpa',
+						# 'spring_term_gpa_mi',
+						'spring_term_D_grade_count',
+						'spring_term_F_grade_count',
+						# 'spring_term_S_grade_count',
+						# 'spring_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						# 'spring_avg_difficulty',
+						'spring_avg_difficulty',
 						# 'spring_avg_pct_withdrawn',
 						# 'spring_avg_pct_CDFW',
 						# 'spring_avg_pct_CDF',
@@ -1661,6 +1855,7 @@ univr_tomek_prep = make_column_transformer(
 )
 
 univr_x_train = univr_tomek_prep.fit_transform(univr_x_train)
+univr_x_cv = univr_tomek_prep.transform(univr_x_cv)
 univr_x_test = univr_tomek_prep.transform(univr_x_test)
 
 univr_feat_names = []
@@ -1676,14 +1871,21 @@ for name, transformer, features, _ in univr_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		univr_feat_names.extend(univr_tomek_prep._feature_names_in[features])
 
-univr_under = TomekLinks(sampling_strategy='all', n_jobs=-1)
-univr_x_train, univr_y_train = univr_under.fit_resample(univr_x_train, univr_y_train)
+univr_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
+univr_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
 
-univr_tomek_index = univr_under.sample_indices_
+univr_x_train, univr_y_train = univr_under_train.fit_resample(univr_x_train, univr_y_train)
+univr_x_cv, univr_y_cv = univr_under_valid.fit_resample(univr_x_cv, univr_y_cv)
+
+univr_tomek_train_index = univr_under_train.sample_indices_
+univr_tomek_valid_index = univr_under_valid.sample_indices_
 univr_training_set = univr_training_set.reset_index(drop=True)
+univr_validation_set = univr_validation_set.reset_index(drop=True)
 
-univr_tomek_set = univr_training_set.drop(univr_tomek_index)
-univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_tomek_set.csv', encoding='utf-8', index=False)
+univr_tomek_train_set = univr_training_set.drop(univr_tomek_train_index)
+univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_tomek_training_set.csv', encoding='utf-8', index=False)
+univr_tomek_valid_set = univr_validation_set.drop(univr_tomek_valid_index)
+univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model
@@ -1691,22 +1893,25 @@ univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_t
 # Pullman standard model
 print('\nStandard logistic model for Pullman freshmen...\n')
 
-pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + acs_mi \
-				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-				+ spring_lec_count + spring_lab_count + spring_stu_count + spring_oth_count \
-				+ spring_credit_hours \
-				+ spring_withdrawn_hours \
-				+ honors_program_ind \
-				+ business + comm + education + medicine + nursing + vet_med \
-				+ cahnrs_anml + cahnrs_econ + cahnrext \
-				+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
-				+ vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
-				+ remedial \
-				+ cum_adj_transfer_hours \
-				+ resident \
-				+ fall_term_gpa + fall_term_gpa_mi \
-				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-				+ unmet_need_ofr + unmet_need_ofr_mi', data=pullm_logit_df, return_type='dataframe')
+pullm_y, pullm_x = dmatrices('enrl_ind ~ \
+			+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
+			+ spring_lec_count + spring_lab_count + spring_stu_count + spring_oth_count \
+			+ spring_credit_hours \
+			+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
+			+ spring_withdrawn_hours \
+			+ honors_program_ind \
+			+ business + comm + education + medicine + nursing + vet_med \
+			+ cahnrs_anml + cahnrs_econ + cahnrext \
+			+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
+			+ vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
+			+ remedial \
+			+ cum_adj_transfer_hours \
+			+ resident \
+			+ fall_term_gpa + fall_term_gpa_mi \
+			+ spring_term_gpa + spring_term_gpa_mi \
+			+ spring_term_D_grade_count + spring_term_F_grade_count \
+			+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
+			+ unmet_need_ofr + unmet_need_ofr_mi', data=pullm_logit_df, return_type='dataframe')
 
 pullm_logit_mod = Logit(pullm_y, pullm_x)
 pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -1718,15 +1923,18 @@ print('\n')
 # Vancouver standard model
 print('\nStandard logistic model for Vancouver freshmen...\n')
 
-vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + acs_mi \
+vanco_y, vanco_x = dmatrices('enrl_ind ~ \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ spring_lec_count + spring_lab_count \
 				+ spring_credit_hours \
+				+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
 				+ spring_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
 				+ fall_term_gpa + fall_term_gpa_mi \
+				+ spring_term_gpa + spring_term_gpa_mi \
+				+ spring_term_D_grade_count + spring_term_F_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
 				+ unmet_need_ofr + unmet_need_ofr_mi', data=vanco_logit_df, return_type='dataframe')
 
@@ -1740,15 +1948,18 @@ print('\n')
 # Tri-Cities standard model
 print('\nStandard logistic model for Tri-Cities freshmen...\n')
 
-trici_y, trici_x = dmatrices('enrl_ind ~ distance + acs_mi \
+trici_y, trici_x = dmatrices('enrl_ind ~ \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ spring_lec_count + spring_lab_count \
 				+ spring_credit_hours \
+				+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
 				+ spring_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
 				+ fall_term_gpa + fall_term_gpa_mi \
+				+ spring_term_gpa + spring_term_gpa_mi \
+				+ spring_term_D_grade_count + spring_term_F_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
 				+ unmet_need_ofr + unmet_need_ofr_mi', data=trici_logit_df, return_type='dataframe')
 
@@ -1762,15 +1973,18 @@ print('\n')
 # University standard model
 print('\nStandard logistic model for University freshmen...\n')
 
-univr_y, univr_x = dmatrices('enrl_ind ~ distance + acs_mi \
+univr_y, univr_x = dmatrices('enrl_ind ~ \
 				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 				+ spring_lec_count + spring_lab_count \
 				+ spring_credit_hours \
+				+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
 				+ spring_withdrawn_hours \
 				+ remedial \
 				+ cum_adj_transfer_hours \
 				+ resident \
 				+ fall_term_gpa + fall_term_gpa_mi \
+				+ spring_term_gpa + spring_term_gpa_mi \
+				+ spring_term_D_grade_count + spring_term_F_grade_count \
 				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
 				+ unmet_need_ofr + unmet_need_ofr_mi', data=univr_logit_df, return_type='dataframe')
 
@@ -1830,7 +2044,7 @@ pullm_hyperparameters = [{'penalty': ['elasticnet'],
                     'l1_ratio': np.linspace(0, 1, 11, endpoint=True),
                     'C': np.logspace(0, 4, 20, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), pullm_hyperparameters, cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = HalvingGridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), pullm_hyperparameters, cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -1853,8 +2067,8 @@ print(f'Overall accuracy for Pullman logistic model (testing): {pullm_lreg_ccv.s
 
 pullm_lreg_fpr, pullm_lreg_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_lreg_probs, drop_intermediate=False)
 
-plt.plot(pullm_lreg_fpr, pullm_lreg_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(pullm_lreg_fpr, pullm_lreg_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('LOGISTIC ROC CURVE (TRAINING)')
@@ -1862,8 +2076,8 @@ plt.show()
 
 pullm_lreg_y, pullm_lreg_x = calibration_curve(pullm_y_train, pullm_lreg_probs, n_bins=10)
 
-plt.plot(pullm_lreg_y, pullm_lreg_x, marker = '.', color='red', lw=2, label = 'Logistic Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(pullm_lreg_y, pullm_lreg_x, marker = '.', color=wsu_color, lw=6, label = 'Logistic Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -1887,7 +2101,7 @@ vanco_hyperparameters = [{'penalty': ['elasticnet'],
                     'l1_ratio': np.linspace(0, 1, 11, endpoint=True),
                     'C': np.logspace(0, 4, 20, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), vanco_hyperparameters, cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = HalvingGridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), vanco_hyperparameters, cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -1910,8 +2124,8 @@ print(f'Overall accuracy for Vancouver logistic model (testing): {vanco_lreg_ccv
 
 vanco_lreg_fpr, vanco_lreg_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_lreg_probs, drop_intermediate=False)
 
-plt.plot(vanco_lreg_fpr, vanco_lreg_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(vanco_lreg_fpr, vanco_lreg_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('LOGISTIC ROC CURVE (TRAINING)')
@@ -1919,8 +2133,8 @@ plt.show()
 
 vanco_lreg_y, vanco_lreg_x = calibration_curve(vanco_y_train, vanco_lreg_probs, n_bins=10)
 
-plt.plot(vanco_lreg_y, vanco_lreg_x, marker = '.', color='red', lw=2, label = 'Logistic Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(vanco_lreg_y, vanco_lreg_x, marker = '.', color=wsu_color, lw=6, label = 'Logistic Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -1944,7 +2158,7 @@ trici_hyperparameters = [{'penalty': ['elasticnet'],
                     'l1_ratio': np.linspace(0, 1, 11, endpoint=True),
                     'C': np.logspace(0, 4, 20, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), trici_hyperparameters, cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = HalvingGridSearchCV(LogisticRegression(solver='saga', class_weight='balanced'), trici_hyperparameters, cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -1967,8 +2181,8 @@ print(f'Overall accuracy for Tri-Cities logistic model (testing): {trici_lreg_cc
 
 trici_lreg_fpr, trici_lreg_tpr, trici_thresholds = roc_curve(trici_y_train, trici_lreg_probs, drop_intermediate=False)
 
-plt.plot(trici_lreg_fpr, trici_lreg_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(trici_lreg_fpr, trici_lreg_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('LOGISTIC ROC CURVE (TRAINING)')
@@ -1976,8 +2190,8 @@ plt.show()
 
 trici_lreg_y, trici_lreg_x = calibration_curve(trici_y_train, trici_lreg_probs, n_bins=10)
 
-plt.plot(trici_lreg_y, trici_lreg_x, marker = '.', color='red', lw=2, label = 'Logistic Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(trici_lreg_y, trici_lreg_x, marker = '.', color=wsu_color, lw=6, label = 'Logistic Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2015,8 +2229,8 @@ print(f'Overall accuracy for Pullman SGD model (testing): {pullm_sgd_ccv.score(p
 
 pullm_sgd_fpr, pullm_sgd_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_sgd_probs, drop_intermediate=False)
 
-plt.plot(pullm_sgd_fpr, pullm_sgd_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(pullm_sgd_fpr, pullm_sgd_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('SGD ROC CURVE (TRAINING)')
@@ -2024,8 +2238,8 @@ plt.show()
 
 pullm_sgd_y, pullm_sgd_x = calibration_curve(pullm_y_train, pullm_sgd_probs, n_bins=10)
 
-plt.plot(pullm_sgd_y, pullm_sgd_x, marker = '.', color='red', lw=2, label = 'SGD Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(pullm_sgd_y, pullm_sgd_x, marker = '.', color=wsu_color, lw=6, label = 'SGD Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2061,8 +2275,8 @@ print(f'Overall accuracy for Vancouver SGD model (testing): {vanco_sgd_ccv.score
 
 vanco_sgd_fpr, vanco_sgd_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_sgd_probs, drop_intermediate=False)
 
-plt.plot(vanco_sgd_fpr, vanco_sgd_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(vanco_sgd_fpr, vanco_sgd_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('SGD ROC CURVE (TRAINING)')
@@ -2070,8 +2284,8 @@ plt.show()
 
 vanco_sgd_y, vanco_sgd_x = calibration_curve(vanco_y_train, vanco_sgd_probs, n_bins=10)
 
-plt.plot(vanco_sgd_y, vanco_sgd_x, marker = '.', color='red', lw=2, label = 'SGD Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(vanco_sgd_y, vanco_sgd_x, marker = '.', color=wsu_color, lw=6, label = 'SGD Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2107,8 +2321,8 @@ print(f'Overall accuracy for Tri-Cities SGD model (testing): {trici_sgd_ccv.scor
 
 trici_sgd_fpr, trici_sgd_tpr, trici_thresholds = roc_curve(trici_y_train, trici_sgd_probs, drop_intermediate=False)
 
-plt.plot(trici_sgd_fpr, trici_sgd_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(trici_sgd_fpr, trici_sgd_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('SGD ROC CURVE (TRAINING)')
@@ -2116,8 +2330,8 @@ plt.show()
 
 trici_sgd_y, trici_sgd_x = calibration_curve(trici_y_train, trici_sgd_probs, n_bins=10)
 
-plt.plot(trici_sgd_y, trici_sgd_x, marker = '.', color='red', lw=2, label = 'SGD Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(trici_sgd_y, trici_sgd_x, marker = '.', color=wsu_color, lw=6, label = 'SGD Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2155,8 +2369,8 @@ print(f'Overall accuracy for Pullman multi-layer perceptron model (testing): {pu
 
 pullm_mlp_fpr, pullm_mlp_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_mlp_probs, drop_intermediate=False)
 
-plt.plot(pullm_mlp_fpr, pullm_mlp_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(pullm_mlp_fpr, pullm_mlp_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('NEURAL NETWORK ROC CURVE (TRAINING)')
@@ -2164,8 +2378,8 @@ plt.show()
 
 pullm_mlp_y, pullm_mlp_x = calibration_curve(pullm_y_train, pullm_mlp_probs, n_bins=10)
 
-plt.plot(pullm_mlp_y, pullm_mlp_x, marker = '.', color='red', lw=2, label = 'MLP Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(pullm_mlp_y, pullm_mlp_x, marker = '.', color=wsu_color, lw=6, label = 'MLP Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2197,8 +2411,8 @@ print(f'Overall accuracy for Vancouver multi-layer perceptron model (testing): {
 
 vanco_mlp_fpr, vanco_mlp_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_mlp_probs, drop_intermediate=False)
 
-plt.plot(vanco_mlp_fpr, vanco_mlp_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(vanco_mlp_fpr, vanco_mlp_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('NEURAL NETWORK ROC CURVE (TRAINING)')
@@ -2228,8 +2442,8 @@ print(f'Overall accuracy for Tri-Cities multi-layer perceptron model (testing): 
 
 trici_mlp_fpr, trici_mlp_tpr, trici_thresholds = roc_curve(trici_y_train, trici_mlp_probs, drop_intermediate=False)
 
-plt.plot(trici_mlp_fpr, trici_mlp_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(trici_mlp_fpr, trici_mlp_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('NEURAL NETWORK ROC CURVE (TRAINING)')
@@ -2253,7 +2467,7 @@ pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[p
 pullm_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -2279,8 +2493,8 @@ print(f'Overall accuracy for Pullman XGB model (testing): {pullm_xgb_ccv.score(p
 
 pullm_xgb_fpr, pullm_xgb_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgb_probs, drop_intermediate=False)
 
-plt.plot(pullm_xgb_fpr, pullm_xgb_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(pullm_xgb_fpr, pullm_xgb_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('XGBOOST ROC CURVE (TRAINING)')
@@ -2288,8 +2502,8 @@ plt.show()
 
 pullm_xgb_y, pullm_xgb_x = calibration_curve(pullm_y_train, pullm_xgb_probs, n_bins=10)
 
-plt.plot(pullm_xgb_y, pullm_xgb_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(pullm_xgb_y, pullm_xgb_x, marker = '.', color=wsu_color, lw=6, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2311,7 +2525,7 @@ vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[v
 vanco_hyperparameters = [{'max_depth': np.linspace(5, 15, 11, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -2337,8 +2551,8 @@ print(f'Overall accuracy for Vancouver XGB model (testing): {vanco_xgb_ccv.score
 
 vanco_xgb_fpr, vanco_xgb_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgb_probs, drop_intermediate=False)
 
-plt.plot(vanco_xgb_fpr, vanco_xgb_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(vanco_xgb_fpr, vanco_xgb_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('XGBOOST ROC CURVE (TRAINING)')
@@ -2346,8 +2560,8 @@ plt.show()
 
 vanco_xgb_y, vanco_xgb_x = calibration_curve(vanco_y_train, vanco_xgb_probs, n_bins=10)
 
-plt.plot(vanco_xgb_y, vanco_xgb_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(vanco_xgb_y, vanco_xgb_x, marker = '.', color=wsu_color, lw=6, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2369,7 +2583,7 @@ trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[t
 trici_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -2395,8 +2609,8 @@ print(f'Overall accuracy for Tri-Cities XGB model (testing): {trici_xgb_ccv.scor
 
 trici_xgb_fpr, trici_xgb_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgb_probs, drop_intermediate=False)
 
-plt.plot(trici_xgb_fpr, trici_xgb_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(trici_xgb_fpr, trici_xgb_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('XGBOOST ROC CURVE (TRAINING)')
@@ -2404,8 +2618,8 @@ plt.show()
 
 trici_xgb_y, trici_xgb_x = calibration_curve(trici_y_train, trici_xgb_probs, n_bins=10)
 
-plt.plot(trici_xgb_y, trici_xgb_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(trici_xgb_y, trici_xgb_x, marker = '.', color=wsu_color, lw=6, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2427,7 +2641,7 @@ univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[u
 univr_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -2453,8 +2667,8 @@ print(f'Overall accuracy for University XGB model (testing): {univr_xgb_ccv.scor
 
 univr_xgb_fpr, univr_xgb_tpr, univr_thresholds = roc_curve(univr_y_train, univr_xgb_probs, drop_intermediate=False)
 
-plt.plot(univr_xgb_fpr, univr_xgb_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(univr_xgb_fpr, univr_xgb_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('XGBOOST ROC CURVE (TRAINING)')
@@ -2462,8 +2676,8 @@ plt.show()
 
 univr_xgb_y, univr_xgb_x = calibration_curve(univr_y_train, univr_xgb_probs, n_bins=10)
 
-plt.plot(univr_xgb_y, univr_xgb_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(univr_xgb_y, univr_xgb_x, marker = '.', color=wsu_color, lw=6, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2484,10 +2698,11 @@ plt.show()
 
 # Pullman XGBoost Random Forest tuning
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
+						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
-pullm_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=5, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -2495,12 +2710,12 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 #%%
 # Pullman XGB Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-
-pullm_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=pullm_class_weight, 
-								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False).fit(pullm_x_train, pullm_y_train)
+pullm_xgbrf_ccv = XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
+								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
 # Pullman XGB Random Forest calibration
-# pullm_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=pullm_class_weight, eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False)
+# pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, 
+# 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 # pullm_xgbrf_ccv = CalibratedClassifierCV(pullm_xgbrf, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgbrf_probs = pullm_xgbrf_ccv.predict_proba(pullm_x_train)
@@ -2513,17 +2728,17 @@ print(f'Overall accuracy for Pullman XGB Random Forest model (testing): {pullm_x
 
 pullm_xgbrf_fpr, pullm_xgbrf_tpr, pullm_thresholds = roc_curve(pullm_y_train, pullm_xgbrf_probs, drop_intermediate=False)
 
-plt.plot(pullm_xgbrf_fpr, pullm_xgbrf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(pullm_xgbrf_fpr, pullm_xgbrf_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=6, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('XGBOOST ROC CURVE (TRAINING)')
 plt.show()
 
-pullm_xgbrf_y, pullm_xgbrf_x = calibration_curve(pullm_y_train, pullm_xgb_probs, n_bins=10)
+pullm_xgbrf_y, pullm_xgbrf_x = calibration_curve(pullm_y_train, pullm_xgbrf_probs, n_bins=10)
 
-plt.plot(pullm_xgbrf_y, pullm_xgbrf_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(pullm_xgbrf_y, pullm_xgbrf_x, marker = '.', color=wsu_color, lw=6, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=6, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2542,10 +2757,11 @@ plt.show()
 #%%
 # Vancouver XGBoost Random Forest tuning
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_hyperparameters = [{'max_depth': np.linspace(5, 15, 11, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+vanco_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
+						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
-vanco_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=5, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -2554,16 +2770,17 @@ print(f'Best parameters: {vanco_gridsearch.best_params_}')
 # Vancouver XGB Random Forest
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 
-vanco_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=vanco_class_weight, 
-								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False).fit(vanco_x_train, vanco_y_train)
+vanco_xgbrf_ccv = XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
+								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 
 # Vancouver XGB Random Forest calibration
-# vanco_xgb = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=vanco_class_weight, eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False)
+# vanco_xgb = XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, 
+# 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 # vanco_xgb_ccv = CalibratedClassifierCV(vanco_xgbrf, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
 
 vanco_xgbrf_probs = vanco_xgbrf_ccv.predict_proba(vanco_x_train)
 vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
-vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgb_probs)
+vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
 
 print(f'\nOverall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf_ccv.score(vanco_x_train, vanco_y_train):.4f}')
 print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
@@ -2571,8 +2788,8 @@ print(f'Overall accuracy for Vancouver XGB Random Forest model (testing): {vanco
 
 vanco_xgbrf_fpr, vanco_xgbrf_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_xgbrf_probs, drop_intermediate=False)
 
-plt.plot(vanco_xgbrf_fpr, vanco_xgbrf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(vanco_xgbrf_fpr, vanco_xgbrf_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=6, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('XGBOOST ROC CURVE (TRAINING)')
@@ -2580,8 +2797,8 @@ plt.show()
 
 vanco_xgbrf_y, vanco_xgbrf_x = calibration_curve(vanco_y_train, vanco_xgbrf_probs, n_bins=10)
 
-plt.plot(vanco_xgbrf_y, vanco_xgbrf_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(vanco_xgbrf_y, vanco_xgbrf_x, marker = '.', color=wsu_color, lw=6, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=6, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2600,10 +2817,11 @@ plt.show()
 #%%
 # Tri-Cities XGBoost Random Forest tuning
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
+						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
-trici_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=5, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -2612,11 +2830,12 @@ print(f'Best parameters: {trici_gridsearch.best_params_}')
 # Tri-Cities XGB Random Forest
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 
-trici_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=trici_class_weight, 
-								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False).fit(trici_x_train, trici_y_train)
+trici_xgbrf_ccv = XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
+								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
 
 # Tri-Cities XGB Random Forest calibration
-# trici_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=trici_class_weight, eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False)
+# trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, 
+# 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
 # trici_xgbrf_ccv = CalibratedClassifierCV(trici_xgbrf, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
 
 trici_xgbrf_probs = trici_xgbrf_ccv.predict_proba(trici_x_train)
@@ -2629,8 +2848,8 @@ print(f'Overall accuracy for Tri-Cities XGB Random Forest model (testing): {tric
 
 trici_xgbrf_fpr, trici_xgbrf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_xgbrf_probs, drop_intermediate=False)
 
-plt.plot(trici_xgbrf_fpr, trici_xgbrf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(trici_xgbrf_fpr, trici_xgbrf_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=6, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('XGBOOST ROC CURVE (TRAINING)')
@@ -2638,8 +2857,8 @@ plt.show()
 
 trici_xgbrf_y, trici_xgbrf_x = calibration_curve(trici_y_train, trici_xgbrf_probs, n_bins=10)
 
-plt.plot(trici_xgbrf_y, trici_xgbrf_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(trici_xgbrf_y, trici_xgbrf_x, marker = '.', color=wsu_color, lw=6, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=6, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2658,10 +2877,11 @@ plt.show()
 #%%
 # University XGBoost Random Forest tuning
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_hyperparameters = [{'max_depth':np.linspace(1, 15, 15, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True)}]
+univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(0, 20, 21, dtype=int, endpoint=True),
+						'learning_rate': [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]}]
 
-univr_gridsearch = GridSearchCV(XGBClassifier(n_estimators=100, num_parallel_tree=5, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -2670,16 +2890,17 @@ print(f'Best parameters: {univr_gridsearch.best_params_}')
 # University XGB Random Forest
 class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 
-univr_xgbrf_ccv = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=univr_class_weight, 
-								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False).fit(univr_x_train, univr_y_train)
+univr_xgbrf_ccv = XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
+								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
 
 # University XGB Random Forest calibration
-# univr_xgbrf = XGBClassifier(n_estimators=1000, num_parallel_tree=5, scale_pos_weight=univr_class_weight, eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False)
+# univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, 
+# 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
 # univr_xgbrf_ccv = CalibratedClassifierCV(univr_xgbrf, method='isotonic', cv=5).fit(univr_x_train, univr_y_train)
 
 univr_xgbrf_probs = univr_xgbrf_ccv.predict_proba(univr_x_train)
 univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
-univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgb_probs)
+univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
 
 print(f'\nOverall accuracy for University XGB Random Forest model (training): {univr_xgbrf_ccv.score(univr_x_train, univr_y_train):.4f}')
 print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
@@ -2687,8 +2908,8 @@ print(f'Overall accuracy for University XGB Random Forest model (testing): {univ
 
 univr_xgbrf_fpr, univr_xgbrf_tpr, univr_thresholds = roc_curve(univr_y_train, univr_xgbrf_probs, drop_intermediate=False)
 
-plt.plot(univr_xgbrf_fpr, univr_xgbrf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(univr_xgbrf_fpr, univr_xgbrf_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=6, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('XGBOOST ROC CURVE (TRAINING)')
@@ -2696,8 +2917,8 @@ plt.show()
 
 univr_xgbrf_y, univr_xgbrf_x = calibration_curve(univr_y_train, univr_xgbrf_probs, n_bins=10)
 
-plt.plot(univr_xgbrf_y, univr_xgbrf_x, marker = '.', color='red', lw=2, label = 'XGBoost Classifier')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle = '--', label = 'Calibrated')
+plt.plot(univr_xgbrf_y, univr_xgbrf_x, marker = '.', color=wsu_color, lw=6, label = 'XGBoost Classifier')
+plt.plot([0, 1], [0, 1], color='black', lw=6, linestyle = '--', label = 'Calibrated')
 
 leg = plt.legend(loc = 'upper left')
 plt.xlabel('AVERAGE PREDICTED PROBABILITY')
@@ -2775,8 +2996,8 @@ print(f'Overall accuracy for Vancouver ensemble model (testing): {vanco_vcf.scor
 
 vanco_vcf_fpr, vanco_vcf_tpr, vanco_thresholds = roc_curve(vanco_y_train, vanco_vcf_probs, drop_intermediate=False)
 
-plt.plot(vanco_vcf_fpr, vanco_vcf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(vanco_vcf_fpr, vanco_vcf_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('ENSEMBLE ROC CURVE (TRAINING)')
@@ -2806,8 +3027,8 @@ print(f'Overall accuracy for Tri-Cities ensemble model (testing): {trici_vcf.sco
 
 trici_vcf_fpr, trici_vcf_tpr, trici_thresholds = roc_curve(trici_y_train, trici_vcf_probs, drop_intermediate=False)
 
-plt.plot(trici_vcf_fpr, trici_vcf_tpr, color='red', lw=2, label='ROC CURVE')
-plt.plot([0, 1], [0, 1], color='blue', lw=2, linestyle='--')
+plt.plot(trici_vcf_fpr, trici_vcf_tpr, color=wsu_color, lw=6, label='ROC CURVE')
+plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
 plt.xlabel('FALSE-POSITIVE RATE (1 - SPECIFICITY)')
 plt.ylabel('TRUE-POSITIVE RATE (SENSITIVITY)')
 plt.title('ENSEMBLE ROC CURVE (TRAINING)')

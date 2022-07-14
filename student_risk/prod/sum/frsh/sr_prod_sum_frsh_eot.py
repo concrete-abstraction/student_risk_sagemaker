@@ -7,6 +7,7 @@ import urllib
 from datetime import date
 from itertools import islice
 
+import gower
 import joblib
 import numpy as np
 import pandas as pd
@@ -156,8 +157,8 @@ pullm_data_vars = [
 'honors_program_ind',
 # 'afl_greek_indicator',
 # 'high_school_gpa',
-# 'fall_term_gpa',
-# 'fall_term_gpa_mi',
+'fall_term_gpa',
+'fall_term_gpa_mi',
 # 'fall_term_D_grade_count',
 # 'fall_term_F_grade_count',
 # 'fall_term_S_grade_count',
@@ -381,8 +382,8 @@ vanco_data_vars = [
 'honors_program_ind',
 # 'afl_greek_indicator',
 # 'high_school_gpa',
-# 'fall_term_gpa',
-# 'fall_term_gpa_mi',
+'fall_term_gpa',
+'fall_term_gpa_mi',
 # 'fall_term_D_grade_count',
 # 'fall_term_F_grade_count',
 # 'fall_term_S_grade_count',
@@ -604,8 +605,8 @@ trici_data_vars = [
 'honors_program_ind',
 # 'afl_greek_indicator',
 # 'high_school_gpa',
-# 'fall_term_gpa',
-# 'fall_term_gpa_mi',
+'fall_term_gpa',
+'fall_term_gpa_mi',
 # 'fall_term_D_grade_count',
 # 'fall_term_F_grade_count',
 # 'fall_term_S_grade_count',
@@ -827,8 +828,8 @@ univr_data_vars = [
 'honors_program_ind',
 # 'afl_greek_indicator',
 # 'high_school_gpa',
-# 'fall_term_gpa',
-# 'fall_term_gpa_mi',
+'fall_term_gpa',
+'fall_term_gpa_mi',
 # 'fall_term_D_grade_count',
 # 'fall_term_F_grade_count',
 # 'fall_term_S_grade_count',
@@ -1054,8 +1055,11 @@ pullm_outlier_prep = make_column_transformer(
 pullm_x_training_outlier = pullm_outlier_prep.fit_transform(pullm_x_training_outlier)
 pullm_x_validation_outlier = pullm_outlier_prep.transform(pullm_x_validation_outlier)
 
-pullm_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_training_outlier)
-pullm_validation_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_validation_outlier)
+pullm_x_training_gower = gower.gower_matrix(pullm_x_training_outlier)
+pullm_x_validation_gower = gower.gower_matrix(pullm_x_validation_outlier)
+
+pullm_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_training_gower)
+pullm_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_validation_gower)
 
 pullm_training_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
 pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
@@ -1101,8 +1105,11 @@ vanco_outlier_prep = make_column_transformer(
 vanco_x_training_outlier = vanco_outlier_prep.fit_transform(vanco_x_training_outlier)
 vanco_x_validation_outlier = vanco_outlier_prep.transform(vanco_x_validation_outlier)
 
-vanco_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_training_outlier)
-vanco_validation_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_validation_outlier)
+vanco_x_training_gower = gower.gower_matrix(vanco_x_training_outlier)
+vanco_x_validation_gower = gower.gower_matrix(vanco_x_validation_outlier)
+
+vanco_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_training_gower)
+vanco_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_validation_gower)
 
 vanco_training_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
 vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
@@ -1148,8 +1155,11 @@ trici_outlier_prep = make_column_transformer(
 trici_x_training_outlier = trici_outlier_prep.fit_transform(trici_x_training_outlier)
 trici_x_validation_outlier = trici_outlier_prep.transform(trici_x_validation_outlier)
 
-trici_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_training_outlier)
-trici_validation_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_validation_outlier)
+trici_x_training_gower = gower.gower_matrix(trici_x_training_outlier)
+trici_x_validation_gower = gower.gower_matrix(trici_x_validation_outlier)
+
+trici_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_training_gower)
+trici_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_validation_gower)
 
 trici_training_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
 trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
@@ -1195,8 +1205,11 @@ univr_outlier_prep = make_column_transformer(
 univr_x_training_outlier = univr_outlier_prep.fit_transform(univr_x_training_outlier)
 univr_x_validation_outlier = univr_outlier_prep.transform(univr_x_validation_outlier)
 
-univr_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(univr_x_training_outlier)
-univr_validation_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(univr_x_validation_outlier)
+univr_x_training_gower = gower.gower_matrix(univr_x_training_outlier)
+univr_x_validation_gower = gower.gower_matrix(univr_x_validation_outlier)
+
+univr_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_training_gower)
+univr_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_validation_gower)
 
 univr_training_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
 univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
@@ -1213,7 +1226,7 @@ univr_validation_set = univr_validation_set.drop(columns='mask')
 
 # Pullman undersample
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
-pullm_x_cv= pullm_validation_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_cv = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_x_test = pullm_testing_set[pullm_tomek_vars]
 
@@ -1353,7 +1366,7 @@ pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_
 #%%
 # Vancouver undersample
 vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','emplid'])
-vanco_x_cv= vanco_validation_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_cv = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_x_test = vanco_testing_set[vanco_tomek_vars]
 
@@ -1493,7 +1506,7 @@ vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_
 #%%
 # Tri-Cities undersample
 trici_x_train = trici_training_set.drop(columns=['enrl_ind','emplid'])
-trici_x_cv= trici_validation_set.drop(columns=['enrl_ind','emplid'])
+trici_x_cv = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
 trici_x_test = trici_testing_set[trici_tomek_vars]
 
@@ -1633,7 +1646,7 @@ trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_
 #%%
 # University undersample
 univr_x_train = univr_training_set.drop(columns=['enrl_ind','emplid'])
-univr_x_cv= univr_validation_set.drop(columns=['enrl_ind','emplid'])
+univr_x_cv = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
 univr_x_test = univr_testing_set[univr_tomek_vars]
 
@@ -1791,6 +1804,7 @@ try:
 					+ remedial \
 					+ cum_adj_transfer_hours \
 					+ resident \
+					+ fall_term_gpa + fall_term_gpa_mi \
 					+ spring_term_gpa + spring_term_gpa_mi \
 					+ spring_term_D_grade_count + spring_term_F_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -1818,6 +1832,7 @@ try:
 					+ remedial \
 					+ cum_adj_transfer_hours \
 					+ resident \
+					+ fall_term_gpa + fall_term_gpa_mi \
 					+ spring_term_gpa + spring_term_gpa_mi \
 					+ spring_term_D_grade_count + spring_term_F_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -1845,6 +1860,7 @@ try:
 					+ remedial \
 					+ cum_adj_transfer_hours \
 					+ resident \
+					+ fall_term_gpa + fall_term_gpa_mi \
 					+ spring_term_gpa + spring_term_gpa_mi \
 					+ spring_term_D_grade_count + spring_term_F_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -1872,6 +1888,7 @@ try:
 					+ remedial \
 					+ cum_adj_transfer_hours \
 					+ resident \
+					+ fall_term_gpa + fall_term_gpa_mi \
 					+ spring_term_gpa + spring_term_gpa_mi \
 					+ spring_term_D_grade_count + spring_term_F_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -1940,7 +1957,8 @@ pullm_lreg_probs = pullm_lreg_probs[:, 1]
 pullm_lreg_auc = roc_auc_score(pullm_y_train, pullm_lreg_probs)
 
 print(f'Overall accuracy for Pullman logistic model (training): {pullm_lreg.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman logistic model (training): {pullm_lreg_auc:.4f}\n')
+print(f'ROC AUC for Pullman logistic model (training): {pullm_lreg_auc:.4f}')
+print(f'Overall accuracy for Pullman logistic model (validation): {pullm_lreg.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 #%%
 # Vancouver logistic
@@ -1951,7 +1969,8 @@ vanco_lreg_probs = vanco_lreg_probs[:, 1]
 vanco_lreg_auc = roc_auc_score(vanco_y_train, vanco_lreg_probs)
 
 print(f'Overall accuracy for Vancouver logistic model (training): {vanco_lreg.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver logistic model (training): {vanco_lreg_auc:.4f}\n')
+print(f'ROC AUC for Vancouver logistic model (training): {vanco_lreg_auc:.4f}')
+print(f'Overall accuracy for Vancouver logistic model (validation): {vanco_lreg.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 #%%
 # Tri-Cities logistic
@@ -1962,7 +1981,8 @@ trici_lreg_probs = trici_lreg_probs[:, 1]
 trici_lreg_auc = roc_auc_score(trici_y_train, trici_lreg_probs)
 
 print(f'Overall accuracy for Tri-Cities logistic model (training): {trici_lreg.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities logistic model (training): {trici_lreg_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities logistic model (training): {trici_lreg_auc:.4f}')
+print(f'Overall accuracy for Tri-Cities logistic model (validation): {trici_lreg.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 #%%
 # University logistic
@@ -1973,7 +1993,8 @@ univr_lreg_probs = univr_lreg_probs[:, 1]
 univr_lreg_auc = roc_auc_score(univr_y_train, univr_lreg_probs)
 
 print(f'Overall accuracy for University logistic model (training): {univr_lreg.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University logistic model (training): {univr_lreg_auc:.4f}\n')
+print(f'ROC AUC for University logistic model (training): {univr_lreg_auc:.4f}')
+print(f'Overall accuracy for University logistic model (validation): {univr_lreg.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
 # Stochastic gradient descent model
@@ -1986,7 +2007,8 @@ pullm_sgd_probs = pullm_sgd_probs[:, 1]
 pullm_sgd_auc = roc_auc_score(pullm_y_train, pullm_sgd_probs)
 
 print(f'Overall accuracy for Pullman SGD model (training): {pullm_sgd.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman SGD model (training): {pullm_sgd_auc:.4f}\n')
+print(f'ROC AUC for Pullman SGD model (training): {pullm_sgd_auc:.4f}')
+print(f'Overall accuracy for Pullman SGD model (validation): {pullm_sgd.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 #%%
 # Vancouver SGD
@@ -1997,7 +2019,8 @@ vanco_sgd_probs = vanco_sgd_probs[:, 1]
 vanco_sgd_auc = roc_auc_score(vanco_y_train, vanco_sgd_probs)
 
 print(f'Overall accuracy for Vancouver SGD model (training): {vanco_sgd.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver SGD model (training): {vanco_sgd_auc:.4f}\n')
+print(f'ROC AUC for Vancouver SGD model (training): {vanco_sgd_auc:.4f}')
+print(f'Overall accuracy for Vancouver SGD model (validation): {vanco_sgd.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 #%%
 # Tri-Cities SGD
@@ -2008,7 +2031,8 @@ trici_sgd_probs = trici_sgd_probs[:, 1]
 trici_sgd_auc = roc_auc_score(trici_y_train, trici_sgd_probs)
 
 print(f'Overall accuracy for Tri-Cities SGD model (training): {trici_sgd.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities SGD model (training): {trici_sgd_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities SGD model (training): {trici_sgd_auc:.4f}')
+print(f'Overall accuracy for Tri-Cities SGD model (validation): {trici_sgd.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 #%%
 # University SGD
@@ -2019,7 +2043,8 @@ univr_sgd_probs = univr_sgd_probs[:, 1]
 univr_sgd_auc = roc_auc_score(univr_y_train, univr_sgd_probs)
 
 print(f'Overall accuracy for University SGD model (training): {univr_sgd.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University SGD model (training): {univr_sgd_auc:.4f}\n')
+print(f'ROC AUC for University SGD model (training): {univr_sgd_auc:.4f}')
+print(f'Overall accuracy for University SGD model (validation): {univr_sgd.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
 # Multi-layer perceptron model
