@@ -1,6 +1,6 @@
 * ------------------------------------------------------------------------------- ;
 *                                                                                 ;
-*                             STUDENT RISK (4 OF 6)                               ;
+*                             STUDENT RISK (2 OF 6)                               ;
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
@@ -85,7 +85,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 0);
+%let start_cohort = %eval(&end_cohort. - 6);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -105,28 +105,21 @@ proc import out=cpi
 	getnames=YES;
 run;
 
-proc sql;
-	describe table &dsn..student_enrolled_vw 
-;quit;
-
 %macro loop;
 	
 	%do cohort_year=&start_cohort. %to &end_cohort.;
 	
 	proc sql;
-		create table cohort_&cohort_year. (drop=enrl_ind) as
-		select distinct 
-			a.strm as init_strm,
-			a2.*,
-			a.adj_admit_type_cat,
+		create table cohort_&cohort_year. as
+		select distinct a.*,
 			substr(a.last_sch_postal,1,5) as targetid,
-			case when a2.sex = 'M' then 1 
+			case when a.sex = 'M' then 1 
 				else 0
 			end as male,
-			case when a2.age < 18.25 then 'Q1'
-				when 18.25 <= a2.age < 18.5 then 'Q2'
-				when 18.5 <= a2.age < 18.75 then 'Q3'
-				when 18.75 <= a2.age then 'Q4'
+			case when a.age < 18.25 then 'Q1'
+				when 18.25 <= a.age < 18.5 then 'Q2'
+				when 18.5 <= a.age < 18.75 then 'Q3'
+				when 18.75 <= a.age then 'Q4'
 				else 'missing'
 			end as age_group,
 			case when a.father_attended_wsu_flag = 'Y' then 1 
@@ -135,10 +128,10 @@ proc sql;
 			case when a.mother_attended_wsu_flag = 'Y' then 1 
 				else 0
 			end as mother_wsu_flag,
-			case when a2.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
+			case when a.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
 				else 0
 			end as underrep_minority,
-			case when a2.WA_residency = 'RES' then 1
+			case when a.WA_residency = 'RES' then 1
 				else 0
 			end as resident,
 			case when a.adm_parent1_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
@@ -182,16 +175,6 @@ proc sql;
 			case when k.locale = '42' then 1 else 0 end as rural_distant,
 			case when k.locale = '43' then 1 else 0 end as rural_remote
 		from &dsn..new_student_enrolled_vw as a
-		inner join &dsn..student_enrolled_vw (drop=adj_admit_type_cat) as a2
-			on a.emplid = a2.emplid
-				and a2.snapshot = 'census'
-				and a2.full_acad_year = "&cohort_year."
-				and substr(a2.strm,4,1) = '7'
-				and a2.acad_career = 'UGRD'
-				and a2.ipeds_full_part_time = 'F'
-				and a2.ipeds_ind = 1
-				and a2.term_credit_hours > 0
-				and a2.WA_residency ^= 'NON-I'
 		left join acs.distance_km as b
 			on substr(a.last_sch_postal,1,5) = b.inputid
 				and a.adj_acad_prog_primary_campus = 'PULLM'
@@ -230,11 +213,11 @@ proc sql;
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		left join cpi as l
 			on input(a.full_acad_year,4.) = l.acs_lag
-		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+		where a.full_acad_year = "&cohort_year."
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat = 'FRSH'
-/* 			and a.ipeds_full_part_time = 'F' */
+			and a.adj_admit_type_cat in ('FRSH','TRAN')
+			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
 			and a.WA_residency ^= 'NON-I'
@@ -242,17 +225,16 @@ proc sql;
 	
 	proc sql;
 		create table pell_&cohort_year. as
-		select
+		select distinct
 			emplid,
-			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
-		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
-			and aid_year = "&cohort_year."
-			and item_type in ('900101001000','900101001010','900101001011')
-			and award_status = 'A'
-		group by emplid
+			pell_recipient_ind
+		from &dsn..new_student_profile_ugrd_cs
+		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+			and adj_admit_type_cat in ('FRSH','TRAN')
+			and ipeds_full_part_time = 'F'
+			and WA_residency ^= 'NON-I'
 	;quit;
-
+	
 	proc sql;
 		create table eot_term_gpa_&cohort_year. as
 		select distinct
@@ -455,7 +437,7 @@ proc sql;
 			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
 			and acad_career = 'UGRD'
-/* 			and adj_admit_type_cat in ('FRSH','TRAN') */
+			and adj_admit_type_cat in ('FRSH','TRAN')
 			and WA_residency ^= 'NON-I'
 			and primary_plan_flag = 'Y'
 			and primary_prog_flag = 'Y'
@@ -726,7 +708,7 @@ proc sql;
 			and ugrd_applicant_counting_ind = 1
 		group by emplid
 	;quit;
-
+	
 	proc sql;
 		create table term_credit_hours_&cohort_year. as
 		select distinct
@@ -1791,7 +1773,7 @@ proc sql;
 			and stdnt_enrl_status = 'E'
 			and crse_grade_input ^= ''
 	;quit;
-
+	
 /* 	proc sql; */
 /* 		create table midterm_grades_&cohort_year. as */
 /* 		select distinct */
@@ -1887,7 +1869,7 @@ proc sql;
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and acad_career = 'UGRD'
-/* 			and adj_admit_type_cat in ('FRSH','TRAN') */
+			and adj_admit_type_cat in ('FRSH','TRAN')
 	;quit;
 	
 	proc sql;
@@ -2175,9 +2157,7 @@ proc sql;
 
 	proc sql;
 		create table cohort_&cohort_year. as
-		select distinct 
-			a.strm as init_strm,
-			a2.*,
+		select distinct a.*,
 			substr(a.last_sch_postal,1,5) as targetid,
 			case when a.sex = 'M' then 1 
 				else 0
@@ -2238,16 +2218,6 @@ proc sql;
 			case when k.locale = '42' then 1 else 0 end as rural_distant,
 			case when k.locale = '43' then 1 else 0 end as rural_remote
 		from &dsn..new_student_enrolled_vw as a
-		inner join &dsn..student_enrolled_vw as a2
-			on a.emplid = a2.emplid
-				and a2.snapshot = 'census'
-				and a2.full_acad_year = "&cohort_year."
-				and substr(a2.strm,4,1) = '7'
-				and a2.acad_career = 'UGRD'
-				and a2.ipeds_full_part_time = 'F'
-				and a2.ipeds_ind = 1
-				and a2.term_credit_hours > 0
-				and a2.WA_residency ^= 'NON-I'
 		left join acs.distance_km as b
 			on substr(a.last_sch_postal,1,5) = b.inputid
 				and a.adj_acad_prog_primary_campus = 'PULLM'
@@ -2284,10 +2254,11 @@ proc sql;
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
-		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-			and substr(a.strm,4,1) = '7'
+		where a.full_acad_year = "&cohort_year"
+			and substr(a.strm, 4 , 1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat = 'FRSH'
+			and a.adj_admit_type_cat in ('FRSH','TRAN')
+			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
 			and a.WA_residency ^= 'NON-I'
@@ -2295,15 +2266,14 @@ proc sql;
 	
 	proc sql;
 		create table pell_&cohort_year. as
-		select
+		select distinct
 			emplid,
-			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
-		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
-			and aid_year = "&cohort_year."
-			and item_type in ('900101001000','900101001010','900101001011')
-			and award_status = 'A'
-		group by emplid
+			pell_recipient_ind
+		from &dsn..new_student_profile_ugrd_cs
+		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+			and adj_admit_type_cat in ('FRSH','TRAN')
+			and ipeds_full_part_time = 'F'
+			and WA_residency ^= 'NON-I'
 	;quit;
 	
 	proc sql;
@@ -2483,7 +2453,7 @@ proc sql;
 			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
 			and acad_career = 'UGRD'
-/* 			and adj_admit_type_cat in ('FRSH','TRAN') */
+			and adj_admit_type_cat in ('FRSH','TRAN')
 			and WA_residency ^= 'NON-I'
 			and primary_plan_flag = 'Y'
 			and primary_prog_flag = 'Y'
@@ -4838,17 +4808,17 @@ run;
 /* 	title 'AY2021 Data'; */
 /* run; */
 
-filename valid "Z:\Nathan\Models\student_risk\datasets\soph_validation_set.csv" encoding="utf-8";
+filename valid "Z:\Nathan\Models\student_risk\datasets\frst_validation_set.csv" encoding="utf-8";
 
 proc export data=validation_set outfile=valid dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\datasets\soph_training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\datasets\frst_training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\datasets\soph_testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\datasets\frst_testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;

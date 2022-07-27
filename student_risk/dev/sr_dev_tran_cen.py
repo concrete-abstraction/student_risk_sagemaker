@@ -23,7 +23,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier
 
 import shap
-from student_risk import build_dev
+from student_risk import build_frst_dev
 
 #%%
 # Global variables
@@ -33,7 +33,7 @@ unwanted_vars = ['emplid','enrl_ind']
 
 #%%
 # SAS dataset builder
-build_dev.DatasetBuilderDev.build_census_dev()
+build_frst_dev.DatasetBuilderDev.build_census_dev()
 
 #%%
 # Import pre-split data
@@ -1434,7 +1434,7 @@ vanco_tomek_index = vanco_under.sample_indices_
 vanco_training_set = vanco_training_set.reset_index(drop=True)
 
 vanco_tomek_set = vanco_training_set.drop(vanco_tomek_index)
-vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_tomek_set.csv', encoding='utf-8', index=False)
+vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities undersample
@@ -1557,7 +1557,7 @@ trici_tomek_index = trici_under.sample_indices_
 trici_training_set = trici_training_set.reset_index(drop=True)
 
 trici_tomek_set = trici_training_set.drop(trici_tomek_index)
-trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_tomek_set.csv', encoding='utf-8', index=False)
+trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # University undersample
@@ -1680,7 +1680,7 @@ univr_tomek_index = univr_under.sample_indices_
 univr_training_set = univr_training_set.reset_index(drop=True)
 
 univr_tomek_set = univr_training_set.drop(univr_tomek_index)
-univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_tomek_set.csv', encoding='utf-8', index=False)
+univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model

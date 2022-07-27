@@ -29,7 +29,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier
 
 import shap
-from student_risk import build_prod, config
+from student_risk import build_frst_prod, config
 
 #%%
 # Database connection
@@ -111,7 +111,7 @@ else:
 
 #%%
 # SAS dataset builder
-build_prod.DatasetBuilderProd.build_census_prod()
+build_frst_prod.DatasetBuilderProd.build_census_prod()
 
 #%%
 # Import pre-split data
@@ -2307,7 +2307,7 @@ pullm_x_outlier = pullm_outlier_prep.fit_transform(pullm_x_outlier)
 pullm_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(pullm_x_outlier)
 
 pullm_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_outlier_set.csv', encoding='utf-8', index=False)
+pullm_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_outlier_set.csv', encoding='utf-8', index=False)
 
 pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
 pullm_training_set = pullm_training_set.drop(columns='mask')
@@ -2347,7 +2347,7 @@ vanco_x_outlier = vanco_outlier_prep.fit_transform(vanco_x_outlier)
 vanco_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(vanco_x_outlier)
 
 vanco_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_outlier_set.csv', encoding='utf-8', index=False)
+vanco_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_outlier_set.csv', encoding='utf-8', index=False)
 
 vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
 vanco_training_set = vanco_training_set.drop(columns='mask')
@@ -2387,7 +2387,7 @@ trici_x_outlier = trici_outlier_prep.fit_transform(trici_x_outlier)
 trici_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(trici_x_outlier)
 
 trici_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_outlier_set.csv', encoding='utf-8', index=False)
+trici_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_outlier_set.csv', encoding='utf-8', index=False)
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
@@ -2427,7 +2427,7 @@ univr_x_outlier = univr_outlier_prep.fit_transform(univr_x_outlier)
 univr_training_set['mask'] = LocalOutlierFactor(metric='manhattan', n_jobs=-1).fit_predict(univr_x_outlier)
 
 univr_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
-univr_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_outlier_set.csv', encoding='utf-8', index=False)
+univr_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_outlier_set.csv', encoding='utf-8', index=False)
 
 univr_training_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == -1].index)
 univr_training_set = univr_training_set.drop(columns='mask')
@@ -2716,7 +2716,7 @@ pullm_tomek_index = pullm_under.sample_indices_
 pullm_training_set = pullm_training_set.reset_index(drop=True)
 
 pullm_tomek_set = pullm_training_set.drop(pullm_tomek_index)
-pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_tomek_set.csv', encoding='utf-8', index=False)
+pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver undersample
@@ -3000,7 +3000,7 @@ vanco_tomek_index = vanco_under.sample_indices_
 vanco_training_set = vanco_training_set.reset_index(drop=True)
 
 vanco_tomek_set = vanco_training_set.drop(vanco_tomek_index)
-vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_tomek_set.csv', encoding='utf-8', index=False)
+vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities undersample
@@ -3284,7 +3284,7 @@ trici_tomek_index = trici_under.sample_indices_
 trici_training_set = trici_training_set.reset_index(drop=True)
 
 trici_tomek_set = trici_training_set.drop(trici_tomek_index)
-trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_tomek_set.csv', encoding='utf-8', index=False)
+trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # University undersample
@@ -3568,7 +3568,7 @@ univr_tomek_index = univr_under.sample_indices_
 univr_training_set = univr_training_set.reset_index(drop=True)
 
 univr_tomek_set = univr_training_set.drop(univr_tomek_index)
-univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_tomek_set.csv', encoding='utf-8', index=False)
+univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_tomek_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model
@@ -4191,7 +4191,7 @@ pullm_pred_outcome['xgb_pred'] = pullm_xgb.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
-pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_pred_outcome.csv', encoding='utf-8', index=False)
+pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver predicted outcome
@@ -4205,7 +4205,7 @@ vanco_pred_outcome['xgb_pred'] = vanco_xgb.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
 vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
-vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_pred_outcome.csv', encoding='utf-8', index=False)
+vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities predicted outcome
@@ -4219,7 +4219,7 @@ trici_pred_outcome['xgb_pred'] = trici_xgb.predict(trici_x_test)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
-trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_pred_outcome.csv', encoding='utf-8', index=False)
+trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # University predicted outcome
@@ -4233,7 +4233,7 @@ univr_pred_outcome['xgb_pred'] = univr_xgb.predict(univr_x_test)
 # univr_pred_outcome['mlp_pred'] = univr_mlp.predict(univr_x_test)
 univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)
 univr_pred_outcome['vcf_pred'] = univr_vcf.predict(univr_x_test)
-univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_pred_outcome.csv', encoding='utf-8', index=False)
+univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome
@@ -4259,7 +4259,7 @@ pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"first_gen_fla
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
+pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver aggregate outcome
@@ -4285,7 +4285,7 @@ vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"first_gen_fla
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
+vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities aggregate outcome
@@ -4311,7 +4311,7 @@ trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"first_gen_fla
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
+trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # University aggregate outcome
@@ -4337,7 +4337,7 @@ univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"first_gen_fla
 univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_aggregate_outcome.csv', encoding='utf-8', index=False)
+univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman current outcome
@@ -4373,57 +4373,57 @@ univr_current_outcome['model_id'] = model_id
 
 #%%
 # Pullman to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_outcome.csv'):
-	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv'):
+	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', index=False)
 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
-	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_backup.csv', encoding='utf-8', index=False)
+	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
+	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_backup.csv', encoding='utf-8', index=False)
 	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
-	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', index=False)
 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Vancouver to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv'):
-	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv'):
+	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', index=False)
 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
-	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_backup.csv', encoding='utf-8', index=False)
+	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
+	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_backup.csv', encoding='utf-8', index=False)
 	vanco_student_outcome = pd.concat([vanco_prior_outcome, vanco_current_outcome])
-	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', index=False)
 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Tri-Cities to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv'):
-	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv'):
+	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', index=False)
 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
-	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_backup.csv', encoding='utf-8', index=False)
+	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
+	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_backup.csv', encoding='utf-8', index=False)
 	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
-	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', index=False)
 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # University to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv'):
-	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv'):
+	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', index=False)
 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', low_memory=False)
-	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_backup.csv', encoding='utf-8', index=False)
+	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
+	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_backup.csv', encoding='utf-8', index=False)
 	univr_student_outcome = pd.concat([univr_prior_outcome, univr_current_outcome])
-	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frsh_student_outcome.csv', encoding='utf-8', index=False)
+	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', index=False)
 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Pullman top-N SHAP values to csv and to sql
 if datetime.datetime.today().weekday() == day_of_week:
 
-	pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_frsh_shap.csv', 'w', newline='')
+	pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_frst_shap.csv', 'w', newline='')
 	pullm_shap_writer = csv.writer(pullm_shap_file)
 	pullm_shap_insert = []
 
@@ -4454,7 +4454,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 
 #%%
 # Vancouver top-N SHAP values to csv and to sql
-	vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_frsh_shap.csv', 'w', newline='')
+	vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_frst_shap.csv', 'w', newline='')
 	vanco_shap_writer = csv.writer(vanco_shap_file)
 	vanco_shap_insert = []
 
@@ -4485,7 +4485,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 
 #%%
 # Tri-Cities top-N SHAP values to csv and to sql
-	trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_frsh_shap.csv', 'w', newline='')
+	trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_frst_shap.csv', 'w', newline='')
 	trici_shap_writer = csv.writer(trici_shap_file)
 	trici_shap_insert = []
 
@@ -4516,7 +4516,7 @@ if datetime.datetime.today().weekday() == day_of_week:
 
 #%%
 # University top-N SHAP values to csv and to sql
-	univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\univr_frsh_shap.csv', 'w', newline='')
+	univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\univr_frst_shap.csv', 'w', newline='')
 	univr_shap_writer = csv.writer(univr_shap_file)
 	univr_shap_insert = []
 
@@ -4549,18 +4549,18 @@ if datetime.datetime.today().weekday() == day_of_week:
 # Output model
 
 # Pullman model output
-joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_frsh_model_v{sklearn.__version__}.pkl')
+joblib.dump(pullm_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_frst_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver model output
-joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_frsh_model_v{sklearn.__version__}.pkl')
+joblib.dump(vanco_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_frst_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities model output
-joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_frsh_model_v{sklearn.__version__}.pkl')
+joblib.dump(trici_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_frst_model_v{sklearn.__version__}.pkl')
 
 #%%
 # University model output
-joblib.dump(univr_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_frsh_model_v{sklearn.__version__}.pkl')
+joblib.dump(univr_vcf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_frst_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')

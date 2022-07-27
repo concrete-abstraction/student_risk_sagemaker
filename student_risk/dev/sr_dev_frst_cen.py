@@ -24,7 +24,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier
 
 import shap
-from student_risk import build_dev
+from student_risk import build_frst_dev
 
 #%%
 # Global variables
@@ -36,7 +36,7 @@ plt.rcParams['font.size'] = '24'
 
 #%%
 # SAS dataset builder
-build_dev.DatasetBuilderDev.build_census_dev()
+build_frst_dev.DatasetBuilderDev.build_census_dev()
 
 #%%
 # Import pre-split data
@@ -1166,9 +1166,9 @@ pullm_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 pullm_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_validation_gower)
 
 pullm_training_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
+pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_training_outlier_set.csv', encoding='utf-8', index=False)
 pullm_validation_outlier_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == 1].index)
-pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_validation_outlier_set.csv', encoding='utf-8', index=False)
+pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
 pullm_training_set = pullm_training_set.drop(columns='mask')
@@ -1216,9 +1216,9 @@ vanco_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 vanco_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_validation_gower)
 
 vanco_training_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
+vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_training_outlier_set.csv', encoding='utf-8', index=False)
 vanco_validation_outlier_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == 1].index)
-vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_validation_outlier_set.csv', encoding='utf-8', index=False)
+vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
 vanco_training_set = vanco_training_set.drop(columns='mask')
@@ -1266,9 +1266,9 @@ trici_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 trici_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_validation_gower)
 
 trici_training_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
+trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_training_outlier_set.csv', encoding='utf-8', index=False)
 trici_validation_outlier_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == 1].index)
-trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_validation_outlier_set.csv', encoding='utf-8', index=False)
+trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
@@ -1316,9 +1316,9 @@ univr_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 univr_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_validation_gower)
 
 univr_training_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
-univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_training_outlier_set.csv', encoding='utf-8', index=False)
+univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_training_outlier_set.csv', encoding='utf-8', index=False)
 univr_validation_outlier_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == 1].index)
-univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_validation_outlier_set.csv', encoding='utf-8', index=False)
+univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 univr_training_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == -1].index)
 univr_training_set = univr_training_set.drop(columns='mask')
@@ -1463,9 +1463,9 @@ pullm_training_set = pullm_training_set.reset_index(drop=True)
 pullm_validation_set = pullm_validation_set.reset_index(drop=True)
 
 pullm_tomek_train_set = pullm_training_set.drop(pullm_tomek_train_index)
-pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_tomek_training_set.csv', encoding='utf-8', index=False)
+pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_tomek_training_set.csv', encoding='utf-8', index=False)
 pullm_tomek_valid_set = pullm_validation_set.drop(pullm_tomek_valid_index)
-pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frsh_tomek_validation_set.csv', encoding='utf-8', index=False)
+pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver undersample
@@ -1603,9 +1603,9 @@ vanco_training_set = vanco_training_set.reset_index(drop=True)
 vanco_validation_set = vanco_validation_set.reset_index(drop=True)
 
 vanco_tomek_train_set = vanco_training_set.drop(vanco_tomek_train_index)
-vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_tomek_training_set.csv', encoding='utf-8', index=False)
+vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_tomek_training_set.csv', encoding='utf-8', index=False)
 vanco_tomek_valid_set = vanco_validation_set.drop(vanco_tomek_valid_index)
-vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frsh_tomek_validation_set.csv', encoding='utf-8', index=False)
+vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities undersample
@@ -1743,9 +1743,9 @@ trici_training_set = trici_training_set.reset_index(drop=True)
 trici_validation_set = trici_validation_set.reset_index(drop=True)
 
 trici_tomek_train_set = trici_training_set.drop(trici_tomek_train_index)
-trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_tomek_training_set.csv', encoding='utf-8', index=False)
+trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_tomek_training_set.csv', encoding='utf-8', index=False)
 trici_tomek_valid_set = trici_validation_set.drop(trici_tomek_valid_index)
-trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frsh_tomek_validation_set.csv', encoding='utf-8', index=False)
+trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # University undersample
@@ -1883,9 +1883,9 @@ univr_training_set = univr_training_set.reset_index(drop=True)
 univr_validation_set = univr_validation_set.reset_index(drop=True)
 
 univr_tomek_train_set = univr_training_set.drop(univr_tomek_train_index)
-univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_tomek_training_set.csv', encoding='utf-8', index=False)
+univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_tomek_training_set.csv', encoding='utf-8', index=False)
 univr_tomek_valid_set = univr_validation_set.drop(univr_tomek_valid_index)
-univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frsh_tomek_validation_set.csv', encoding='utf-8', index=False)
+univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model

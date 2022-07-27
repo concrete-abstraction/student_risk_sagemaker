@@ -1,6 +1,6 @@
 * ------------------------------------------------------------------------------- ;
 *                                                                                 ;
-*                             STUDENT RISK (1 OF 2)                               ;
+*                             STUDENT RISK (1 OF 6)                               ;
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
@@ -39,7 +39,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 0);
+%let start_cohort = %eval(&end_cohort. - 5);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -2202,8 +2202,8 @@ run;
  		left join aid_&cohort_year. as x
  			on a.emplid = x.emplid
  				and x.aid_year = "&cohort_year."
-/*  		left join exams_&cohort_year. as t */
-/*  			on a.emplid = t.emplid */
+/* 		left join exams_&cohort_year. as t */
+/* 			on a.emplid = t.emplid */
 		left join class_count_&cohort_year. as u
 			on a.emplid = u.emplid
 		left join race_detail_&cohort_year. as v
@@ -2221,8 +2221,95 @@ run;
 /* 	var age; */
 /* run; */
 
+data validation_set;
+	set dataset_&start_cohort.;
+	if enrl_ind = . then enrl_ind = 0;
+	if distance = . then acs_mi = 1; else acs_mi = 0;
+	if distance = . then distance = 0;
+	if pop_dens = . then pop_dens = 0;
+	if educ_rate = . then educ_rate = 0;	
+	if pct_blk = . then pct_blk = 0;	
+	if pct_ai = . then pct_ai = 0;	
+	if pct_asn = .	then pct_asn = 0;
+	if pct_hawi = . then pct_hawi = 0;
+	if pct_two = . then pct_two = 0;
+	if pct_hisp = . then pct_hisp = 0;
+	if pct_oth = . then pct_oth = 0;
+	if pct_non = . then pct_non = 0;
+	if median_inc = . then median_inc = 0;
+	if median_value = . then median_value = 0;
+	if gini_indx = . then gini_indx = 0;
+	if pvrt_rate = . then pvrt_rate = 0;
+	if educ_rate = . then educ_rate = 0;
+	if city_large = . then city_large = 0;
+	if city_mid = . then city_mid = 0;
+	if city_small = . then city_small = 0;
+	if suburb_large = . then suburb_large = 0;
+	if suburb_mid = . then suburb_mid = 0;
+	if suburb_small = . then suburb_small = 0;
+	if town_fringe = . then town_fringe = 0;
+	if town_distant = . then town_distant = 0;
+	if town_remote = . then town_remote = 0;
+	if rural_fringe = . then rural_fringe = 0;
+	if rural_distant = . then rural_distant = 0;
+	if rural_remote = . then rural_remote = 0;
+	if ad_dta = . then ad_dta = 0;
+	if ad_ast = . then ad_ast = 0;
+	if ap = . then ap = 0;
+	if rs = . then rs = 0;
+	if chs = . then chs = 0;
+	if ib = . then ib = 0;
+	if aice = . then aice = 0;
+	if ib_aice = . then ib_aice = 0;
+	if athlete = . then athlete = 0;
+	if remedial = . then remedial = 0;
+	if sat_mss = . then sat_mss = 0;
+	if sat_erws = . then sat_erws = 0;
+	if high_school_gpa = . then high_school_gpa_mi = 1; else high_school_gpa_mi = 0;
+	if high_school_gpa = . then high_school_gpa = 0;
+	if transfer_gpa = . then transfer_gpa_mi = 1; else transfer_gpa_mi = 0;
+	if transfer_gpa = . then transfer_gpa = 0;
+	if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
+	if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
+	if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
+	if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+	if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+	if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+	if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+	if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
+	if fall_avg_difficulty = . then fall_avg_difficulty = 0;
+	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
+ 	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
+ 	if fall_int_contact_hrs = . then fall_int_contact_hrs = 0;
+ 	if fall_stu_contact_hrs = . then fall_stu_contact_hrs = 0;
+ 	if fall_sem_contact_hrs = . then fall_sem_contact_hrs = 0;
+ 	if fall_oth_contact_hrs = . then fall_oth_contact_hrs = 0;
+	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
+	if first_gen_flag = '' then first_gen_flag_mi = 1; else first_gen_flag_mi = 0;
+	if first_gen_flag = '' then first_gen_flag = 'N';
+	if camp_addr_indicator ^= 'Y' then camp_addr_indicator = 'N';
+	if housing_reshall_indicator ^= 'Y' then housing_reshall_indicator = 'N';
+	if housing_ssa_indicator ^= 'Y' then housing_ssa_indicator = 'N';
+	if housing_family_indicator ^= 'Y' then housing_family_indicator = 'N';
+	if afl_reshall_indicator ^= 'Y' then afl_reshall_indicator = 'N';
+	if afl_ssa_indicator ^= 'Y' then afl_ssa_indicator = 'N';
+	if afl_family_indicator ^= 'Y' then afl_family_indicator = 'N';
+	if afl_greek_indicator ^= 'Y' then afl_greek_indicator = 'N';
+	if afl_greek_life_indicator ^= 'Y' then afl_greek_life_indicator = 'N';
+	unmet_need_disb = fed_need - total_disb;
+	unmet_need_acpt = fed_need - total_accept;
+	unmet_need_ofr = fed_need - total_offer;
+	if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
+	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
+	if fed_efc = . then fed_efc = 0;
+	if fed_need = . then fed_need = 0;
+	if total_disb = . then total_disb = 0;
+	if total_offer = . then total_offer = 0;
+	if total_accept = . then total_accept = 0;
+run;
+
 data training_set;
-	set dataset_&start_cohort.-dataset_&end_cohort.;
+	set dataset_%eval(&start_cohort. + &lag_year.)-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
 	if distance = . then distance = 0;
@@ -2399,16 +2486,17 @@ data testing_set;
 	if total_accept = . then total_accept = 0;
 run;
 
-proc sort data=testing_set nodupkey dupout=testing_dups;
-	by emplid;
+filename valid "Z:\Nathan\Models\student_risk\datasets\frst_validation_set.csv" encoding="utf-8";
+
+proc export data=validation_set outfile=valid dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\datasets\training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\datasets\frst_training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\datasets\testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\datasets\frst_testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;

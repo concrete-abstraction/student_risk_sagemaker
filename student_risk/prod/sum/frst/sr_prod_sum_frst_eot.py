@@ -32,6 +32,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier, XGBRFClassifier
 
 import shap
+from student_risk import build_frst_prod, config
 
 #%%
 # Database connection
@@ -49,6 +50,69 @@ top_N = 5
 model_id = 7
 run_date = date.today()
 unwanted_vars = ['emplid','enrl_ind']
+
+#%%
+# End of term date and snapshot check 
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
+now = datetime.datetime.now()
+
+now_day = now.day
+now_month = now.month
+now_year = now.year
+
+eot_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
+eot_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
+eot_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
+
+if now_year < eot_year:
+	raise config.EOTError(f'{date.today()}: End of term year exception, outside of date range.')
+
+elif (now_year == eot_year and now_month < eot_month):
+	raise config.EOTError(f'{date.today()}: End of term month exception, outside of date range.')
+
+elif (now_year == eot_year and now_month == eot_month and now_day < eot_day):
+	raise config.EOTError(f'{date.today()}: End of term day exception, outside of date range.')
+
+else:
+	sas = saspy.SASsession()
+
+	sas.symput('strm', strm)
+
+	sas.submit("""
+	%let dsn = census;
+
+	libname &dsn. odbc dsn=&dsn. schema=dbo;
+
+	proc sql;
+		select distinct
+			max(case when snapshot = 'census' 	then 1
+				when snapshot = 'midterm' 		then 2
+				when snapshot = 'eot'			then 3
+												else 0
+												end) as snap_order
+			into: snap_check
+			separated by ''
+		from &dsn..class_registration
+		where acad_career = 'UGRD'
+			and strm = (select distinct
+							max(strm)
+						from &dsn..class_registration where acad_career = 'UGRD')
+	;quit;
+	""")
+
+	snap_check = sas.symget('snap_check')
+
+	sas.endsas()
+
+	if snap_check != 3:
+		raise config.EOTError(f'{date.today()}: No end of term date exception but snapshot exception, data not available.')
+
+	else:
+		print(f'{date.today()}: No end of term date or snapshot exceptions, running from eot.')
+
+#%%
+# SAS dataset builder
+build_frst_prod.DatasetBuilderProd.build_census_prod()
 
 #%%
 # Import pre-split data
@@ -78,7 +142,7 @@ pullm_data_vars = [
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
-'acad_level_bot_descr',
+# 'marital_status',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
@@ -250,16 +314,16 @@ pullm_tomek_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 
 # Pullman dataframes
 pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna().drop(columns=['emplid'])
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna().drop(columns=['emplid'])
 
 pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (validation_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna()
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
 
 pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna()
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
 
 pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna().drop(columns=['enrl_ind'])
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna().drop(columns=['enrl_ind'])
 
 pullm_testing_set = pullm_testing_set.reset_index()
 
@@ -303,7 +367,7 @@ vanco_data_vars = [
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
-'acad_level_bot_descr',
+# 'marital_status',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
@@ -473,16 +537,16 @@ vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 
 # Vancouver dataframes
 vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna().drop(columns=['emplid'])
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['emplid'])
 
 vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (validation_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna()
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
 
 vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna()
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
 
 vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
 
 vanco_testing_set = vanco_testing_set.reset_index()
 
@@ -526,7 +590,7 @@ trici_data_vars = [
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
-'acad_level_bot_descr',
+# 'marital_status',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
@@ -696,16 +760,16 @@ trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 
 # Tri-Cities dataframes
 trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna().drop(columns=['emplid'])
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['emplid'])
 
 trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (validation_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna()
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
 
 trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna()
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
 
 trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
 								
 trici_testing_set = trici_testing_set.reset_index()
 
@@ -749,7 +813,7 @@ univr_data_vars = [
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
-'acad_level_bot_descr',
+# 'marital_status',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
@@ -785,10 +849,10 @@ univr_data_vars = [
 # 'fall_avg_pct_CDF',
 # 'fall_avg_pct_DFW',
 # 'fall_avg_pct_DF',
-# 'spring_avg_difficulty',
-# 'spring_avg_pct_withdrawn',
+'spring_avg_difficulty',
+'spring_avg_pct_withdrawn',
 # 'spring_avg_pct_CDFW',
-# 'spring_avg_pct_CDF',
+'spring_avg_pct_CDF',
 # 'spring_avg_pct_DFW',
 # 'spring_avg_pct_DF',
 # 'fall_lec_count',
@@ -918,18 +982,18 @@ univr_data_vars = [
 univr_tomek_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 
 # University dataframes
-univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna().drop(columns=['emplid'])
+univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna().drop(columns=['emplid'])
 
-univr_validation_set = validation_set[(validation_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna()
+univr_validation_set = validation_set[(validation_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna()
 
-univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna()
+univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna()
 
-univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE')
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')) 
+univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE') 
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
 								| ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')) 
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
 								| ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
+								& (testing_set['adj_admit_type_cat'] == 'FRSH'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
 
 univr_testing_set = univr_testing_set.reset_index()
 
@@ -973,6 +1037,7 @@ pullm_outlier_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
+                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -982,8 +1047,7 @@ pullm_outlier_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl',
-									'acad_level_bot_descr'
+                                    'parent2_highest_educ_lvl'
                                     ]),
     remainder='passthrough'
 )
@@ -998,9 +1062,9 @@ pullm_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 pullm_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_validation_gower)
 
 pullm_training_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_training_outlier_set.csv', encoding='utf-8', index=False)
+pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_training_outlier_set.csv', encoding='utf-8', index=False)
 pullm_validation_outlier_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == 1].index)
-pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_validation_outlier_set.csv', encoding='utf-8', index=False)
+pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
 pullm_training_set = pullm_training_set.drop(columns='mask')
@@ -1023,6 +1087,7 @@ vanco_outlier_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
+                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1032,8 +1097,7 @@ vanco_outlier_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl',
-									'acad_level_bot_descr'
+                                    'parent2_highest_educ_lvl'
                                     ]),
     remainder='passthrough'
 )
@@ -1048,9 +1112,9 @@ vanco_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 vanco_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_validation_gower)
 
 vanco_training_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_training_outlier_set.csv', encoding='utf-8', index=False)
+vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_training_outlier_set.csv', encoding='utf-8', index=False)
 vanco_validation_outlier_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == 1].index)
-vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_validation_outlier_set.csv', encoding='utf-8', index=False)
+vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
 vanco_training_set = vanco_training_set.drop(columns='mask')
@@ -1073,7 +1137,7 @@ trici_outlier_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
-                                    'acad_level_bot_descr',
+                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1098,9 +1162,9 @@ trici_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 trici_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_validation_gower)
 
 trici_training_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_training_outlier_set.csv', encoding='utf-8', index=False)
+trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_training_outlier_set.csv', encoding='utf-8', index=False)
 trici_validation_outlier_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == 1].index)
-trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_validation_outlier_set.csv', encoding='utf-8', index=False)
+trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
@@ -1123,6 +1187,7 @@ univr_outlier_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
+                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1132,8 +1197,7 @@ univr_outlier_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl',
-									'acad_level_bot_descr'
+                                    'parent2_highest_educ_lvl'
                                     ]),
     remainder='passthrough'
 )
@@ -1148,9 +1212,9 @@ univr_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 univr_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_validation_gower)
 
 univr_training_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
-univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_training_outlier_set.csv', encoding='utf-8', index=False)
+univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_training_outlier_set.csv', encoding='utf-8', index=False)
 univr_validation_outlier_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == 1].index)
-univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_validation_outlier_set.csv', encoding='utf-8', index=False)
+univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 univr_training_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == -1].index)
 univr_training_set = univr_training_set.drop(columns='mask')
@@ -1158,7 +1222,7 @@ univr_validation_set = univr_validation_set.drop(univr_validation_set[univr_vali
 univr_validation_set = univr_validation_set.drop(columns='mask')
 
 #%%
-# Create Tomek Link undersampled training set
+# Create Tomek Link undersampled validation and training sets
 
 # Pullman undersample
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
@@ -1202,7 +1266,7 @@ pullm_tomek_prep = make_column_transformer(
 						# 'spring_midterm_grade_count',
 						# 'spring_midterm_S_grade_count',
 						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
+						# 'fall_term_gpa',
 						# 'fall_term_gpa_mi',
 						# 'fall_term_D_grade_count',
 						# 'fall_term_F_grade_count',
@@ -1251,6 +1315,7 @@ pullm_tomek_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
+                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1260,8 +1325,7 @@ pullm_tomek_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl',
-									'acad_level_bot_descr'
+                                    'parent2_highest_educ_lvl'
                                     ]),
     remainder='passthrough'
 )
@@ -1295,9 +1359,9 @@ pullm_training_set = pullm_training_set.reset_index(drop=True)
 pullm_validation_set = pullm_validation_set.reset_index(drop=True)
 
 pullm_tomek_train_set = pullm_training_set.drop(pullm_tomek_train_index)
-pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_tomek_training_set.csv', encoding='utf-8', index=False)
+pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_tomek_training_set.csv', encoding='utf-8', index=False)
 pullm_tomek_valid_set = pullm_validation_set.drop(pullm_tomek_valid_index)
-pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_tomek_validation_set.csv', encoding='utf-8', index=False)
+pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver undersample
@@ -1342,7 +1406,7 @@ vanco_tomek_prep = make_column_transformer(
 						# 'spring_midterm_grade_count',
 						# 'spring_midterm_S_grade_count',
 						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
+						# 'fall_term_gpa',
 						# 'fall_term_gpa_mi',
 						# 'fall_term_D_grade_count',
 						# 'fall_term_F_grade_count',
@@ -1391,6 +1455,7 @@ vanco_tomek_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
+                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1400,8 +1465,7 @@ vanco_tomek_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl',
-									'acad_level_bot_descr'
+                                    'parent2_highest_educ_lvl'
                                     ]),
     remainder='passthrough'
 )
@@ -1435,9 +1499,9 @@ vanco_training_set = vanco_training_set.reset_index(drop=True)
 vanco_validation_set = vanco_validation_set.reset_index(drop=True)
 
 vanco_tomek_train_set = vanco_training_set.drop(vanco_tomek_train_index)
-vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_tomek_training_set.csv', encoding='utf-8', index=False)
+vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_tomek_training_set.csv', encoding='utf-8', index=False)
 vanco_tomek_valid_set = vanco_validation_set.drop(vanco_tomek_valid_index)
-vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_tran_tomek_validation_set.csv', encoding='utf-8', index=False)
+vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities undersample
@@ -1482,7 +1546,7 @@ trici_tomek_prep = make_column_transformer(
 						# 'spring_midterm_grade_count',
 						# 'spring_midterm_S_grade_count',
 						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
+						# 'fall_term_gpa',
 						# 'fall_term_gpa_mi',
 						# 'fall_term_D_grade_count',
 						# 'fall_term_F_grade_count',
@@ -1531,6 +1595,7 @@ trici_tomek_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
+                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1540,8 +1605,7 @@ trici_tomek_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl',
-									'acad_level_bot_descr'
+                                    'parent2_highest_educ_lvl'
                                     ]),
     remainder='passthrough'
 )
@@ -1575,9 +1639,9 @@ trici_training_set = trici_training_set.reset_index(drop=True)
 trici_validation_set = trici_validation_set.reset_index(drop=True)
 
 trici_tomek_train_set = trici_training_set.drop(trici_tomek_train_index)
-trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_training_set.csv', encoding='utf-8', index=False)
+trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_tomek_training_set.csv', encoding='utf-8', index=False)
 trici_tomek_valid_set = trici_validation_set.drop(trici_tomek_valid_index)
-trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_tran_tomek_validation_set.csv', encoding='utf-8', index=False)
+trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # University undersample
@@ -1622,7 +1686,7 @@ univr_tomek_prep = make_column_transformer(
 						# 'spring_midterm_grade_count',
 						# 'spring_midterm_S_grade_count',
 						# 'spring_midterm_W_grade_count',
-						'fall_term_gpa',
+						# 'fall_term_gpa',
 						# 'fall_term_gpa_mi',
 						# 'fall_term_D_grade_count',
 						# 'fall_term_F_grade_count',
@@ -1636,7 +1700,7 @@ univr_tomek_prep = make_column_transformer(
 						# 'spring_term_W_grade_count',
 						# 'awe_instrument',
 						# 'cdi_instrument',
-						# 'spring_avg_difficulty',
+						'spring_avg_difficulty',
 						# 'spring_avg_pct_withdrawn',
 						# 'spring_avg_pct_CDFW',
 						# 'spring_avg_pct_CDF',
@@ -1671,6 +1735,7 @@ univr_tomek_prep = make_column_transformer(
 									# 'race_white',
                                     # 'acad_year', 
                                     # 'age_group',
+                                    # 'marital_status',
                                     'first_gen_flag',
                                     # 'LSAMP_STEM_Flag',
                                     # 'anywhere_STEM_Flag',
@@ -1680,8 +1745,7 @@ univr_tomek_prep = make_column_transformer(
                                     # 'ipeds_ethnic_group_descrshort',
                                     # 'last_sch_proprietorship', 
                                     'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl',
-									'acad_level_bot_descr'
+                                    'parent2_highest_educ_lvl'
                                     ]),
     remainder='passthrough'
 )
@@ -1715,19 +1779,19 @@ univr_training_set = univr_training_set.reset_index(drop=True)
 univr_validation_set = univr_validation_set.reset_index(drop=True)
 
 univr_tomek_train_set = univr_training_set.drop(univr_tomek_train_index)
-univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_tomek_training_set.csv', encoding='utf-8', index=False)
+univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_tomek_training_set.csv', encoding='utf-8', index=False)
 univr_tomek_valid_set = univr_validation_set.drop(univr_tomek_valid_index)
-univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_tomek_validation_set.csv', encoding='utf-8', index=False)
+univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model
 
 # Pullman standard model
-print('\nStandard logistic model for Pullman transfers...\n')
+print('\nStandard logistic model for Pullman freshmen...\n')
 
 try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
+					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 					+ spring_lec_count + spring_lab_count + spring_stu_count + spring_oth_count \
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
@@ -1756,11 +1820,11 @@ print('\n')
 
 #%%
 # Vancouver standard model
-print('\nStandard logistic model for Vancouver transfers...\n')
+print('\nStandard logistic model for Vancouver freshmen...\n')
 
 try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
+					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 					+ spring_lec_count + spring_lab_count \
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
@@ -1778,17 +1842,17 @@ try:
 	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
 	print(vanco_logit_res.summary())
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('\nFailed to converge: Linear combination, singular matrix, divide by zero, or separation')
 
 print('\n')
 
 #%%
 # Tri-Cities standard model
-print('\nStandard logistic model for Tri-Cities transfers...\n')
+print('\nStandard logistic model for Tri-Cities freshmen...\n')
 
 try:
 	trici_y, trici_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
+					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 					+ spring_lec_count + spring_lab_count \
 					+ spring_credit_hours \
 					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
@@ -1801,6 +1865,7 @@ try:
 					+ spring_term_D_grade_count + spring_term_F_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
 					+ unmet_need_ofr + unmet_need_ofr_mi', data=trici_logit_df, return_type='dataframe')
+
 	trici_logit_mod = Logit(trici_y, trici_x)
 	trici_logit_res = trici_logit_mod.fit(maxiter=500)
 	print(trici_logit_res.summary())
@@ -1811,13 +1876,14 @@ print('\n')
 
 #%%
 # University standard model
-print('\nStandard logistic model for University transfers...\n')
+print('\nStandard logistic model for University freshmen...\n')
 
 try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
+					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
 					+ spring_lec_count + spring_lab_count \
 					+ spring_credit_hours \
+					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
 					+ spring_withdrawn_hours \
 					+ remedial \
 					+ cum_adj_transfer_hours \
@@ -1827,7 +1893,7 @@ try:
 					+ spring_term_D_grade_count + spring_term_F_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
 					+ unmet_need_ofr + unmet_need_ofr_mi', data=univr_logit_df, return_type='dataframe')
-	
+
 	univr_logit_mod = Logit(univr_y, univr_x)
 	univr_logit_res = univr_logit_mod.fit(maxiter=500)
 	print(univr_logit_res.summary())
@@ -1879,7 +1945,7 @@ print(univr_vif.round(1).to_string())
 print('\n')
 
 #%%
-print('Run machine learning models for transfers...\n')
+print('Run machine learning models for freshmen...\n')
 
 # Logistic model
 
@@ -2562,7 +2628,7 @@ pullm_pred_outcome['xgbrf_pred'] = pullm_xgbrf.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 # pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 # pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
-pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_tran_pred_outcome.csv', encoding='utf-8', index=False)
+pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver predicted outcome
@@ -2580,7 +2646,7 @@ vanco_pred_outcome['xgbrf_pred'] = vanco_xgbrf.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 # vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
 # vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
-vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_tran_pred_outcome.csv', encoding='utf-8', index=False)
+vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities predicted outcome
@@ -2598,7 +2664,7 @@ trici_pred_outcome['xgbrf_pred'] = trici_xgbrf.predict(trici_x_test)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 # trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 # trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
-trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_pred_outcome.csv', encoding='utf-8', index=False)
+trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # University predicted outcome
@@ -2616,7 +2682,7 @@ univr_pred_outcome['xgbrf_pred'] = univr_xgbrf.predict(univr_x_test)
 # univr_pred_outcome['mlp_pred'] = univr_mlp.predict(univr_x_test)
 # univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)
 # univr_pred_outcome['vcf_pred'] = univr_vcf.predict(univr_x_test)
-univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_pred_outcome.csv', encoding='utf-8', index=False)
+univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome
@@ -2642,7 +2708,7 @@ pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"first_gen_fla
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
+pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver aggregate outcome
@@ -2668,7 +2734,7 @@ vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"first_gen_fla
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
+vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities aggregate outcome
@@ -2694,7 +2760,7 @@ trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"first_gen_fla
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
+trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # University aggregate outcome
@@ -2720,7 +2786,7 @@ univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"first_gen_fla
 univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_aggregate_outcome.csv', encoding='utf-8', index=False)
+univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman current outcome
@@ -2756,55 +2822,55 @@ univr_current_outcome['model_id'] = model_id
 
 #%%
 # Pullman to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_tran_student_outcome.csv'):
-	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_tran_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv'):
+	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', index=False)
 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_tran_student_outcome.csv', encoding='utf-8', low_memory=False)
-	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_tran_student_backup.csv', encoding='utf-8', index=False)
+	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
+	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_backup.csv', encoding='utf-8', index=False)
 	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
-	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_tran_student_outcome.csv', encoding='utf-8', index=False)
+	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', index=False)
 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Vancouver to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_tran_student_outcome.csv'):
-	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_tran_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv'):
+	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', index=False)
 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_tran_student_outcome.csv', encoding='utf-8', low_memory=False)
-	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_tran_student_backup.csv', encoding='utf-8', index=False)
+	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
+	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_backup.csv', encoding='utf-8', index=False)
 	vanco_student_outcome = pd.concat([vanco_prior_outcome, vanco_current_outcome])
-	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_tran_student_outcome.csv', encoding='utf-8', index=False)
+	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', index=False)
 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Tri-Cities to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_student_outcome.csv'):
-	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv'):
+	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', index=False)
 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_student_outcome.csv', encoding='utf-8', low_memory=False)
-	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_student_backup.csv', encoding='utf-8', index=False)
+	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
+	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_backup.csv', encoding='utf-8', index=False)
 	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
-	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_tran_student_outcome.csv', encoding='utf-8', index=False)
+	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', index=False)
 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # University to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_student_outcome.csv'):
-	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv'):
+	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', index=False)
 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_student_outcome.csv', encoding='utf-8', low_memory=False)
-	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_student_backup.csv', encoding='utf-8', index=False)
+	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
+	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_backup.csv', encoding='utf-8', index=False)
 	univr_student_outcome = pd.concat([univr_prior_outcome, univr_current_outcome])
-	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_tran_student_outcome.csv', encoding='utf-8', index=False)
+	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', index=False)
 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Pullman top-N SHAP values to csv and to sql
-pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_tran_shap.csv', 'w', newline='')
+pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_frst_shap.csv', 'w', newline='')
 pullm_shap_writer = csv.writer(pullm_shap_file)
 pullm_shap_insert = []
 
@@ -2835,7 +2901,7 @@ while pullm_shap_insert:
 
 #%%
 # Vancouver top-N SHAP values to csv and to sql
-vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_tran_shap.csv', 'w', newline='')
+vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_frst_shap.csv', 'w', newline='')
 vanco_shap_writer = csv.writer(vanco_shap_file)
 vanco_shap_insert = []
 
@@ -2866,7 +2932,7 @@ while vanco_shap_insert:
 
 #%%
 # Tri-Cities top-N SHAP values to csv and to sql
-trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_tran_shap.csv', 'w', newline='')
+trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_frst_shap.csv', 'w', newline='')
 trici_shap_writer = csv.writer(trici_shap_file)
 trici_shap_insert = []
 
@@ -2897,7 +2963,7 @@ while trici_shap_insert:
 
 #%%
 # University top-N SHAP values to csv and to sql
-univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\univr\\univr_tran_shap.csv', 'w', newline='')
+univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\univr\\univr_frst_shap.csv', 'w', newline='')
 univr_shap_writer = csv.writer(univr_shap_file)
 univr_shap_insert = []
 
@@ -2930,18 +2996,18 @@ while univr_shap_insert:
 # Output model
 
 # Pullman model output
-joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_tran_model_v{sklearn.__version__}.pkl')
+joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_frst_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver model output
-joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_tran_model_v{sklearn.__version__}.pkl')
+joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_frst_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities model output
-joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_tran_model_v{sklearn.__version__}.pkl')
+joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_frst_model_v{sklearn.__version__}.pkl')
 
 #%%
 # University model output
-joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_tran_model_v{sklearn.__version__}.pkl')
+joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_frst_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')

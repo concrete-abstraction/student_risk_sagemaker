@@ -43,54 +43,23 @@ class DatasetBuilderProd:
 		sas.submit("""
 		proc sql;
 			select distinct full_acad_year into: full_acad_year 
-			from &adm..xw_term 
+			from &dsn..xw_term 
 			where term_year = year(today())
 				and month(datepart(term_begin_dt)) <= month(today()) 
 				and month(datepart(term_end_dt)) >= month(today())
 				and week(datepart(term_begin_dt)) <= week(today())
+				and week(datepart(term_end_dt)) >= week(today())
 				and acad_career = 'UGRD'
 		;quit;
 
 		proc sql;
-			select distinct a.snapshot into: aid_snapshot
+			select distinct a.snapshot into: snapshot
 			from &dsn..fa_award_aid_year_vw as a
-			inner join (select distinct 
-							emplid, 
-							aid_year, 
-							min(snapshot) as snapshot 
-						from &dsn..fa_award_aid_year_vw 
-						where aid_year = "&full_acad_year." 
-							and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+			inner join (select distinct emplid, aid_year, min(snapshot) as snapshot from &dsn..fa_award_aid_year_vw where aid_year = "&full_acad_year."	) as b
 				on a.emplid = b.emplid
 					and a.aid_year = b.aid_year
 					and a.snapshot = b.snapshot
 			where a.aid_year = "&full_acad_year."	
-		;quit;
-
-		proc sql;
-			create table snap_check as
-			select distinct
-				max(case when snapshot = 'census' 	then 1
-					when snapshot = 'midterm' 		then 2
-					when snapshot = 'eot'			then 3
-													else 0
-													end) as snap_order
-			from &dsn..class_registration_vw
-			where acad_career = 'UGRD'
-				and strm = (select distinct
-								max(strm)
-							from &dsn..class_registration_vw where acad_career = 'UGRD')
-				and full_acad_year = "&full_acad_year."
-		;quit;
-
-		proc sql;
-			select distinct 
-				case when snap_order = 1	then 'census'
-					when snap_order = 2		then 'midterm'
-					when snap_order = 3		then 'eot'
-											else '' end
-				into: snapshot
-			from snap_check
 		;quit;
 		""")
 
@@ -254,7 +223,7 @@ class DatasetBuilderProd:
 					and ipeds_full_part_time = 'F'
 					and WA_residency ^= 'NON-I'
 			;quit;
-
+		
 			%if &cohort_year. < &end_cohort. %then %do;
 				proc sql;
 					create table enrolled_&cohort_year. as
@@ -379,12 +348,12 @@ class DatasetBuilderProd:
 					fed_efc,
 					fed_need
 				from &dsn..fa_award_period
-				where snapshot = "&aid_snapshot."
+				where snapshot = "&snapshot."
 					and aid_year = "&cohort_year."	
 					and award_period = 'A'
 					and efc_status = 'O'
 			;quit;
-
+		
 			proc sql;
 				create table aid_&cohort_year. as
 				select distinct
@@ -395,14 +364,14 @@ class DatasetBuilderProd:
 					sum(offer_amt) as total_offer,
 					sum(accept_amt) as total_accept
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = "&snapshot."
 					and aid_year = "&cohort_year."
 					and award_period in ('A','B')
 					and award_status in ('A','O')
 					and acad_career = 'UGRD'
 				group by emplid
 			;quit;
-
+		
 			proc sql;
 				create table date_&cohort_year. as
 				select distinct
@@ -436,7 +405,7 @@ class DatasetBuilderProd:
 					and subject_catalog_nbr ^= 'NURS 399'
 					and enrl_ind = 1
 			;quit;
-
+		
 			proc sql;
 				create table class_difficulty_&cohort_year. as
 				select distinct
@@ -701,7 +670,7 @@ class DatasetBuilderProd:
 					and a.grading_basis = 'GRD'
 				order by a.subject_catalog_nbr
 			;quit;
-
+			
 			proc sql;
 				create table coursework_difficulty_&cohort_year. as
 				select distinct
@@ -719,7 +688,7 @@ class DatasetBuilderProd:
 						and a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 				group by a.emplid
 			;quit;
-
+			
 			proc sql;
 				create table class_count_&cohort_year. as
 				select distinct
@@ -831,7 +800,7 @@ class DatasetBuilderProd:
 						and a.class_nbr = m.class_nbr
 				group by a.emplid
 			;quit;
-
+			
 			proc sql;
 				create table term_contact_hrs_&cohort_year. as
 				select distinct
@@ -925,7 +894,7 @@ class DatasetBuilderProd:
 						and substr(a.strm,4,1) = '7'
 				group by a.emplid
 			;quit;
-
+			
 			proc sql;
 				create table dataset_&cohort_year. as
 				select 
@@ -996,7 +965,7 @@ class DatasetBuilderProd:
 			;quit;
 			
 			%end;
-
+		
 			proc sql;
 				create table cohort_&cohort_year. as
 				select distinct 
@@ -1178,7 +1147,7 @@ class DatasetBuilderProd:
 								and xe6.ethnic_group = '3') as hispc
 					on a.emplid = hispc.emplid
 			;quit;
-
+			
 			proc sql;
 				create table need_&cohort_year. as
 				select distinct
@@ -1189,7 +1158,7 @@ class DatasetBuilderProd:
 					where aid_year = "&cohort_year."
 				group by emplid, aid_year
 			;quit;
-
+		
 			proc sql;
 				create table aid_&cohort_year. as
 				select distinct
@@ -1214,7 +1183,7 @@ class DatasetBuilderProd:
 				group by emplid
 				order by emplid;
 			;quit;
-
+		
 			proc sql;
 				create table class_registration_&cohort_year. as
 				select distinct
@@ -2300,17 +2269,17 @@ class DatasetBuilderProd:
 		print('Export data from SAS...')
 
 		sas_log = sas.submit("""
-		filename valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\validation_set.csv\" encoding="utf-8";
+		filename valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\frst_validation_set.csv\" encoding="utf-8";
 
 		proc export data=validation_set outfile=valid dbms=csv replace;
 		run;
 
-		filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv\" encoding="utf-8";
+		filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\frst_training_set.csv\" encoding="utf-8";
 
 		proc export data=training_set outfile=training dbms=csv replace;
 		run;
 
-		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv" encoding="utf-8";
+		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\frst_testing_set.csv" encoding="utf-8";
 
 		proc export data=testing_set outfile=testing dbms=csv replace;
 		run;
@@ -2464,7 +2433,7 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		%macro loop;
-	
+			
 			%do cohort_year=&start_cohort. %to &end_cohort.;
 			
 			proc sql;
@@ -2579,7 +2548,6 @@ class DatasetBuilderProd:
 					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
 					and a.WA_residency ^= 'NON-I'
-				order by a.emplid
 			;quit;
 			
 			proc sql;
@@ -2635,7 +2603,7 @@ class DatasetBuilderProd:
 								emplid 
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
-								and full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+								and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
 								and acad_career = 'UGRD'
 								and ipeds_award_lvl = 5) as b
 					on a.emplid = b.emplid
@@ -2645,7 +2613,6 @@ class DatasetBuilderProd:
 					and a.acad_career = 'UGRD'
 					and a.new_continue_status = 'CTU'
 					and a.term_credit_hours > 0
-				order by a.emplid
 			;quit;
 			
 			proc sql;
@@ -3041,13 +3008,12 @@ class DatasetBuilderProd:
 				where snapshot = "&snapshot."
 					and aid_year = "&cohort_year."
 					and grading_basis_enrl in ('REM','RMS','RMP')
-				order by emplid
 			;quit;
-			
+
 			proc sql;
 				create table date_&cohort_year. as
 				select distinct
-					min(emplid) as emplid,
+					emplid,
 					min(week_from_term_begin_dt) as min_week_from_term_begin_dt,
 					max(week_from_term_begin_dt) as max_week_from_term_begin_dt,
 					count(week_from_term_begin_dt) as count_week_from_term_begin_dt
@@ -3055,9 +3021,8 @@ class DatasetBuilderProd:
 				where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 					and ugrd_applicant_counting_ind = 1
 				group by emplid
-				order by emplid;
 			;quit;
-
+			
 			proc sql;
 				create table term_credit_hours_&cohort_year. as
 				select distinct
@@ -3231,7 +3196,7 @@ class DatasetBuilderProd:
 				left join (select distinct
 								emplid,
 								sum(unt_taken) as fall_term_gpa_hours,
-								sum(class_gpa * unt_taken) / sum(unt_taken) as fall_term_gpa
+								round(sum(class_gpa * unt_taken) / sum(unt_taken), .01) as fall_term_gpa
 							from eot_class_registration_&cohort_year.
 							where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 								and grading_basis_enrl = 'GRD'
@@ -3279,7 +3244,7 @@ class DatasetBuilderProd:
 				left join (select distinct
 								emplid,
 								sum(unt_taken) as spring_term_gpa_hours,
-								sum(class_gpa * unt_taken) / sum(unt_taken) as spring_term_gpa
+								round(sum(class_gpa * unt_taken) / sum(unt_taken), .01) as spring_term_gpa
 							from eot_class_registration_&cohort_year.
 							where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 								and grading_basis_enrl = 'GRD'
@@ -3311,7 +3276,7 @@ class DatasetBuilderProd:
 				select distinct
 					emplid,
 					sum(unt_taken) as cum_gpa_hours,
-					sum(class_gpa * unt_taken) / sum(unt_taken) as cum_gpa
+					round(sum(class_gpa * unt_taken) / sum(unt_taken), .01) as cum_gpa
 				from eot_class_registration_&cohort_year.
 				where (strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' 
 					or strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3')
@@ -3582,7 +3547,6 @@ class DatasetBuilderProd:
 				where a.snapshot = 'eot'
 					and a.full_acad_year = "&cohort_year."
 					and a.grading_basis = 'GRD'
-				order by a.subject_catalog_nbr
 			;quit;
 			
 			proc sql;
@@ -4128,19 +4092,43 @@ class DatasetBuilderProd:
 				create table midterm_grades_&cohort_year. as
 				select distinct
 					a.emplid,
-					(select distinct sum(b.fall_midterm_grade * b.unt_taken) / sum(b.unt_taken) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_gpa_avg,
-					(select distinct sum(b.fall_midterm_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_grade_count,
-					(select distinct sum(b.fall_midterm_S_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_S_grade_count,
-					(select distinct sum(b.fall_midterm_X_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_X_grade_count,
-					(select distinct sum(b.fall_midterm_Z_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_Z_grade_count,
-					(select distinct sum(b.fall_midterm_W_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_W_grade_count,
-					(select distinct sum(c.spring_midterm_grade * c.unt_taken) / sum(c.unt_taken) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_gpa_avg,
-					(select distinct sum(c.spring_midterm_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_grade_count,
-					(select distinct sum(c.spring_midterm_S_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_S_grade_count,
-					(select distinct sum(c.spring_midterm_X_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_X_grade_count,
-					(select distinct sum(c.spring_midterm_Z_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_Z_grade_count,
-					(select distinct sum(c.spring_midterm_W_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_W_grade_count
+					b.fall_midterm_gpa_avg,
+					c.fall_midterm_grade_count,
+					d.fall_midterm_S_grade_count,
+					e.fall_midterm_X_grade_count,
+					f.fall_midterm_Z_grade_count,
+					g.fall_midterm_W_grade_count,
+					h.spring_midterm_gpa_avg,
+					i.spring_midterm_grade_count,
+					j.spring_midterm_S_grade_count,
+					k.spring_midterm_X_grade_count,
+					l.spring_midterm_Z_grade_count,
+					m.spring_midterm_W_grade_count
 				from cohort_&cohort_year. as a
+				left join (select distinct emplid, round(sum(fall_midterm_grade * unt_taken) / sum(unt_taken), .01) as fall_midterm_gpa_avg from fall_midterm_&cohort_year. group by emplid) as b
+					on a.emplid = b.emplid
+				left join (select distinct emplid, sum(fall_midterm_grade_ind) as fall_midterm_grade_count from fall_midterm_&cohort_year. group by emplid) as c 
+					on a.emplid = c.emplid
+				left join (select distinct emplid, sum(fall_midterm_S_grade_ind) as fall_midterm_S_grade_count from fall_midterm_&cohort_year. group by emplid) as d
+					on a.emplid = d.emplid
+				left join (select distinct emplid, sum(fall_midterm_X_grade_ind) as fall_midterm_X_grade_count from fall_midterm_&cohort_year. group by emplid) as e
+					on a.emplid = e.emplid
+				left join (select distinct emplid, sum(fall_midterm_Z_grade_ind) as fall_midterm_Z_grade_count from fall_midterm_&cohort_year. group by emplid) as f
+					on a.emplid = f.emplid
+				left join (select distinct emplid, sum(fall_midterm_W_grade_ind) as fall_midterm_W_grade_count from fall_midterm_&cohort_year. group by emplid) as g
+					on a.emplid = g.emplid
+				left join (select distinct emplid, round(sum(spring_midterm_grade * unt_taken) / sum(unt_taken), .01) as spring_midterm_gpa_avg from spring_midterm_&cohort_year. group by emplid) as h
+					on a.emplid = h.emplid
+				left join (select distinct emplid, sum(spring_midterm_grade_ind) as spring_midterm_grade_count from spring_midterm_&cohort_year. group by emplid) as i
+					on a.emplid = i.emplid
+				left join (select distinct emplid, sum(spring_midterm_S_grade_ind) as spring_midterm_S_grade_count from spring_midterm_&cohort_year. group by emplid) as j
+					on a.emplid = j.emplid
+				left join (select distinct emplid, sum(spring_midterm_X_grade_ind) as spring_midterm_X_grade_count from spring_midterm_&cohort_year. group by emplid) as k
+					on a.emplid = k.emplid
+				left join (select distinct emplid, sum(spring_midterm_Z_grade_ind) as spring_midterm_Z_grade_count from spring_midterm_&cohort_year. group by emplid) as l
+					on a.emplid = l.emplid
+				left join (select distinct emplid, sum(spring_midterm_W_grade_ind) as spring_midterm_W_grade_count from spring_midterm_&cohort_year. group by emplid) as m
+					on a.emplid = m.emplid
 			;quit;
 			
 			proc sql;
@@ -4563,7 +4551,6 @@ class DatasetBuilderProd:
 					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
 					and a.WA_residency ^= 'NON-I'
-				order by a.emplid
 			;quit;
 			
 			proc sql;
@@ -4988,13 +4975,12 @@ class DatasetBuilderProd:
 				where snapshot = 'census'
 					and aid_year = "&cohort_year."
 					and grading_basis_enrl in ('REM','RMS','RMP')
-				order by emplid
 			;quit;
 			
 			proc sql;
 				create table date_&cohort_year. as
 				select distinct
-					min(emplid) as emplid,
+					emplid,
 					min(week_from_term_begin_dt) as min_week_from_term_begin_dt,
 					max(week_from_term_begin_dt) as max_week_from_term_begin_dt,
 					count(week_from_term_begin_dt) as count_week_from_term_begin_dt
@@ -5002,7 +4988,6 @@ class DatasetBuilderProd:
 				where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 					and ugrd_applicant_counting_ind = 1
 				group by emplid
-				order by emplid;
 			;quit;
 			
 			proc sql;
@@ -5246,7 +5231,7 @@ class DatasetBuilderProd:
 				left join (select distinct
 								emplid,
 								sum(unt_taken) as fall_term_gpa_hours,
-								sum(class_gpa * unt_taken) / sum(unt_taken) as fall_term_gpa
+								round(sum(class_gpa * unt_taken) / sum(unt_taken), .01) as fall_term_gpa
 							from class_registration_&cohort_year.
 							where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 								and grading_basis_enrl = 'GRD'
@@ -5294,7 +5279,7 @@ class DatasetBuilderProd:
 				left join (select distinct
 								emplid,
 								sum(unt_taken) as spring_term_gpa_hours,
-								sum(class_gpa * unt_taken) / sum(unt_taken) as spring_term_gpa
+								round(sum(class_gpa * unt_taken) / sum(unt_taken), .01) as spring_term_gpa
 							from class_registration_&cohort_year.
 							where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 								and grading_basis_enrl = 'GRD'
@@ -5326,7 +5311,7 @@ class DatasetBuilderProd:
 				select distinct
 					emplid,
 					sum(unt_taken) as cum_gpa_hours,
-					sum(class_gpa * unt_taken) / sum(unt_taken) as cum_gpa
+					round(sum(class_gpa * unt_taken) / sum(unt_taken), .01) as cum_gpa
 				from class_registration_&cohort_year.
 				where (strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' 
 					or strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3')
@@ -5597,7 +5582,6 @@ class DatasetBuilderProd:
 				where a.snapshot = 'census'
 					and a.full_acad_year = "&cohort_year."
 					and a.grading_basis = 'GRD'
-				order by a.subject_catalog_nbr
 			;quit;
 			
 			proc sql;
@@ -6132,24 +6116,48 @@ class DatasetBuilderProd:
 				where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 					and stdnt_enrl_status = 'E'
 			;quit;
-
+			
 			proc sql;
 				create table midterm_grades_&cohort_year. as
 				select distinct
 					a.emplid,
-					(select distinct sum(b.fall_midterm_grade * b.unt_taken) / sum(b.unt_taken) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_gpa_avg,
-					(select distinct sum(b.fall_midterm_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_grade_count,
-					(select distinct sum(b.fall_midterm_S_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_S_grade_count,
-					(select distinct sum(b.fall_midterm_X_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_X_grade_count,
-					(select distinct sum(b.fall_midterm_Z_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_Z_grade_count,
-					(select distinct sum(b.fall_midterm_W_grade_ind) from fall_midterm_&cohort_year. as b where a.emplid = b.emplid) as fall_midterm_W_grade_count,
-					(select distinct sum(c.spring_midterm_grade * c.unt_taken) / sum(c.unt_taken) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_gpa_avg,
-					(select distinct sum(c.spring_midterm_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_grade_count,
-					(select distinct sum(c.spring_midterm_S_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_S_grade_count,
-					(select distinct sum(c.spring_midterm_X_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_X_grade_count,
-					(select distinct sum(c.spring_midterm_Z_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_Z_grade_count,
-					(select distinct sum(c.spring_midterm_W_grade_ind) from spring_midterm_&cohort_year. as c where a.emplid = c.emplid) as spring_midterm_W_grade_count
+					b.fall_midterm_gpa_avg,
+					c.fall_midterm_grade_count,
+					d.fall_midterm_S_grade_count,
+					e.fall_midterm_X_grade_count,
+					f.fall_midterm_Z_grade_count,
+					g.fall_midterm_W_grade_count,
+					h.spring_midterm_gpa_avg,
+					i.spring_midterm_grade_count,
+					j.spring_midterm_S_grade_count,
+					k.spring_midterm_X_grade_count,
+					l.spring_midterm_Z_grade_count,
+					m.spring_midterm_W_grade_count
 				from cohort_&cohort_year. as a
+				left join (select distinct emplid, round(sum(fall_midterm_grade * unt_taken) / sum(unt_taken), .01) as fall_midterm_gpa_avg from fall_midterm_&cohort_year. group by emplid) as b
+					on a.emplid = b.emplid
+				left join (select distinct emplid, sum(fall_midterm_grade_ind) as fall_midterm_grade_count from fall_midterm_&cohort_year. group by emplid) as c 
+					on a.emplid = c.emplid
+				left join (select distinct emplid, sum(fall_midterm_S_grade_ind) as fall_midterm_S_grade_count from fall_midterm_&cohort_year. group by emplid) as d
+					on a.emplid = d.emplid
+				left join (select distinct emplid, sum(fall_midterm_X_grade_ind) as fall_midterm_X_grade_count from fall_midterm_&cohort_year. group by emplid) as e
+					on a.emplid = e.emplid
+				left join (select distinct emplid, sum(fall_midterm_Z_grade_ind) as fall_midterm_Z_grade_count from fall_midterm_&cohort_year. group by emplid) as f
+					on a.emplid = f.emplid
+				left join (select distinct emplid, sum(fall_midterm_W_grade_ind) as fall_midterm_W_grade_count from fall_midterm_&cohort_year. group by emplid) as g
+					on a.emplid = g.emplid
+				left join (select distinct emplid, round(sum(spring_midterm_grade * unt_taken) / sum(unt_taken), .01) as spring_midterm_gpa_avg from spring_midterm_&cohort_year. group by emplid) as h
+					on a.emplid = h.emplid
+				left join (select distinct emplid, sum(spring_midterm_grade_ind) as spring_midterm_grade_count from spring_midterm_&cohort_year. group by emplid) as i
+					on a.emplid = i.emplid
+				left join (select distinct emplid, sum(spring_midterm_S_grade_ind) as spring_midterm_S_grade_count from spring_midterm_&cohort_year. group by emplid) as j
+					on a.emplid = j.emplid
+				left join (select distinct emplid, sum(spring_midterm_X_grade_ind) as spring_midterm_X_grade_count from spring_midterm_&cohort_year. group by emplid) as k
+					on a.emplid = k.emplid
+				left join (select distinct emplid, sum(spring_midterm_Z_grade_ind) as spring_midterm_Z_grade_count from spring_midterm_&cohort_year. group by emplid) as l
+					on a.emplid = l.emplid
+				left join (select distinct emplid, sum(spring_midterm_W_grade_ind) as spring_midterm_W_grade_count from spring_midterm_&cohort_year. group by emplid) as m
+					on a.emplid = m.emplid
 			;quit;
 			
 			proc sql;
@@ -7022,17 +7030,17 @@ class DatasetBuilderProd:
 		print('Export data from SAS...')
 
 		sas_log = sas.submit("""
-		filename valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\validation_set.csv\" encoding="utf-8";
+		filename valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\frst_validation_set.csv\" encoding="utf-8";
 
 		proc export data=validation_set outfile=valid dbms=csv replace;
 		run;
 
-		filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv\" encoding="utf-8";
+		filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\frst_training_set.csv\" encoding="utf-8";
 
 		proc export data=training_set outfile=training dbms=csv replace;
 		run;
 
-		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv" encoding="utf-8";
+		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\frst_testing_set.csv" encoding="utf-8";
 
 		proc export data=testing_set outfile=testing dbms=csv replace;
 		run;

@@ -81,7 +81,7 @@ if __name__ == '__main__':
         sys.stdout = Logger()
 
         try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\frsh\\sr_prod_sum_frsh_eot.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\frst\\sr_prod_sum_frst_eot.py').read())
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\tran\\sr_prod_sum_tran_eot.py').read())
         except config.EOTError as eot_error:
             print(eot_error)
@@ -99,19 +99,19 @@ if __name__ == '__main__':
         sys.stdout = Logger()
 
         try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_mid.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frst\\sr_prod_spr_frst_mid.py').read())
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_mid.py').read())
         except config.MidError as mid_error:
             print(mid_error)
 
             try:
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_cen.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frst\\sr_prod_spr_frst_cen.py').read())
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_cen.py').read())
             except config.CenError as cen_error:
                 print(cen_error)
             
                 try:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frsh\\sr_prod_spr_frsh_eot.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\frst\\sr_prod_spr_frst_eot.py').read())
                     exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\tran\\sr_prod_spr_tran_eot.py').read())
                 except config.EOTError as eot_error:
                     print(eot_error)
@@ -145,20 +145,22 @@ if __name__ == '__main__':
         sys.stdout = Logger()
 
         try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_mid.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frst\\sr_prod_fal_frst_mid.py').read())
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_mid.py').read())
         except config.MidError as mid_error:
             print(mid_error)
 
             try:
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_cen.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frst\\sr_prod_fal_frst_cen.py').read())
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_cen.py').read())
+                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\soph\\sr_prod_fal_soph_cen.py').read())
             except config.CenError as cen_error:
                 print(cen_error)
 
                 try:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frsh\\sr_prod_fal_frsh_adm.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frst\\sr_prod_fal_frst_adm.py').read())
                     exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_adm.py').read())
+                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\soph\\sr_prod_fal_soph_adm.py').read())
                 except config.AdmError as adm_error:
                     print(adm_error)
 

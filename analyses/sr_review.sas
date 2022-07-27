@@ -6,26 +6,26 @@
 
 libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 
-proc import out=pullm_frsh_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\analyses\pullm_frsh_pred_outcome.csv"
+proc import out=pullm_frst_pred_outcome
+	datafile="Z:\Nathan\Models\student_risk\analyses\pullm_frst_pred_outcome.csv"
 	dbms=CSV REPLACE;
 	getnames=YES;
 run;
 
-proc import out=vanco_frsh_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\analyses\vanco_frsh_pred_outcome.csv"
+proc import out=vanco_frst_pred_outcome
+	datafile="Z:\Nathan\Models\student_risk\analyses\vanco_frst_pred_outcome.csv"
 	dbms=CSV REPLACE;
 	getnames=YES;
 run;
 
-proc import out=trici_frsh_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\analyses\trici_frsh_pred_outcome.csv"
+proc import out=trici_frst_pred_outcome
+	datafile="Z:\Nathan\Models\student_risk\analyses\trici_frst_pred_outcome.csv"
 	dbms=CSV REPLACE;
 	getnames=YES;
 run;
 
-proc import out=univr_frsh_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\analyses\univr_frsh_pred_outcome.csv"
+proc import out=univr_frst_pred_outcome
+	datafile="Z:\Nathan\Models\student_risk\analyses\univr_frst_pred_outcome.csv"
 	dbms=CSV REPLACE;
 	getnames=YES;
 run;
@@ -82,10 +82,10 @@ proc sql;
 
 /* Freshman models */
 
-	from pullm_frsh_pred_outcome as a
-/* 	from vanco_frsh_pred_outcome as a */
-/* 	from trici_frsh_pred_outcome as a */
-/* 	from univr_frsh_pred_outcome as a */
+	from pullm_frst_pred_outcome as a
+/* 	from vanco_frst_pred_outcome as a */
+/* 	from trici_frst_pred_outcome as a */
+/* 	from univr_frst_pred_outcome as a */
 
 /* Transfer models */
 
