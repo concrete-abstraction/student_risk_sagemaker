@@ -261,13 +261,17 @@ pullm_data_vars = [
 pullm_tomek_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 
 # Pullman dataframes
-pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna().drop(columns=['emplid'])
+pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna().drop(columns=['emplid'])
 
-pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
+pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM') 
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
 
-pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
+pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
 
-pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM')][pullm_data_vars].dropna().drop(columns=['enrl_ind'])
+pullm_testing_set = testing_set[(testing_set['campus'] == 'PULLM') 
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna().drop(columns=['enrl_ind'])
 
 pullm_testing_set = pullm_testing_set.reset_index()
 
@@ -464,13 +468,17 @@ vanco_data_vars = [
 vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 
 # Vancouver dataframes
-vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna().drop(columns=['emplid'])
+vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['emplid'])
 
-vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
+vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO') 
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
 
-vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
+vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
 
-vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
+vanco_testing_set = testing_set[(testing_set['campus'] == 'VANCO') 
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
 
 vanco_testing_set = vanco_testing_set.reset_index()
 
@@ -667,13 +675,17 @@ trici_data_vars = [
 trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 
 # Tri-Cities dataframes
-trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna().drop(columns=['emplid'])
+trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['emplid'])
 
-trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
+trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI') 
+								& (validation_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
 
-trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
+trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
+								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
 
-trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
+trici_testing_set = testing_set[(testing_set['campus'] == 'TRICI') 
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
 								
 trici_testing_set = trici_testing_set.reset_index()
 
@@ -876,9 +888,12 @@ univr_validation_set = validation_set[univr_data_vars].dropna()
 
 univr_training_set = training_set[univr_data_vars].dropna()
 
-univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE')) 
-								| ((testing_set['campus'] == 'SPOKA')) 
-								| ((testing_set['campus'] == 'ONLIN'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
+univr_testing_set = testing_set[((testing_set['campus'] == 'EVERE')
+								& (testing_set['adj_admit_type_cat'] == 'FRSH'))  
+								| ((testing_set['campus'] == 'SPOKA') 
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
+								| ((testing_set['campus'] == 'ONLIN')
+								& (testing_set['adj_admit_type_cat'] == 'FRSH'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
 
 univr_testing_set = univr_testing_set.reset_index()
 
