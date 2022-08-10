@@ -18,40 +18,61 @@ sas.submit("""
 %let adm = adm;
 
 libname &adm. odbc dsn=&adm. schema=dbo;
+libname acs \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\\";
+
+proc sort data=adm.xw_term out=work.xw_term;
+	by acad_career strm;
+run;
+
+data work.xw_term;
+	set work.xw_term;
+	by acad_career;
+	if first.acad_career then idx = 1;
+	else idx + 1;
+	where acad_career = 'UGRD';
+run;
 
 proc sql;
-    create table acad_calendar as
-    select distinct
-        *
-        ,day(datepart(term_begin_dt)) as begin_day
-        ,month(datepart(term_begin_dt)) as begin_month
-        ,year(datepart(term_begin_dt)) as begin_year
-        ,day(datepart(term_census_dt)) as census_day
-        ,month(datepart(term_census_dt)) as census_month
-        ,year(datepart(term_census_dt)) as census_year
-        ,day(datepart(term_midterm_dt)) as midterm_day
-        ,month(datepart(term_midterm_dt)) as midterm_month
-        ,year(datepart(term_midterm_dt)) as midterm_year
-        ,day(datepart(term_end_dt)) as end_day
-        ,month(datepart(term_end_dt)) as end_month
-        ,year(datepart(term_end_dt)) as end_year
-    from &adm..xw_term
-    where acad_career = 'UGRD'
-    order by term_code
+	create table acs.adj_term as
+	select
+		base.acad_career,
+		base.term_year,
+        base.term_type,
+        base.strm,
+		base.full_acad_year,
+		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
+		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
+		day(datepart(base.term_begin_dt)) as begin_day,
+		week(datepart(base.term_begin_dt)) as begin_week,
+		month(datepart(base.term_begin_dt)) as begin_month,
+		year(datepart(base.term_begin_dt)) as begin_year,
+        day(datepart(base.term_midterm_dt)) as midterm_day,
+        week(datepart(base.term_midterm_dt)) as midterm_week,
+        month(datepart(base.term_midterm_dt)) as midterm_month,
+        year(datepart(base.term_midterm_dt)) as midterm_year,
+		day(datepart(intnx('dtday', next.term_begin_dt, -1))) as end_day,
+		week(datepart(intnx('dtday', next.term_begin_dt, -1))) as end_week,
+		month(datepart(intnx('dtday', next.term_begin_dt, -1))) as end_month,
+		year(datepart(intnx('dtday', next.term_begin_dt, -1))) as end_year
+	from work.xw_term as base
+	left join work.xw_term as next
+		on base.acad_career = next.acad_career
+		and base.idx = next.idx - 1
 ;quit;
 
-filename calendar \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv\" encoding=\"utf-8\";
+filename adj_term \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv\" encoding=\"utf-8\";
 
-proc export data=acad_calendar outfile=calendar dbms=csv replace;
+proc export data=acs.adj_term outfile=adj_term dbms=csv replace;
 
 proc sql;
-    select max(term_type) into: term_type 
-    from &adm..xw_term 
-    where term_year = year(today())
-        and month(datepart(term_begin_dt)) <= month(today()) 
-        and month(datepart(term_end_dt)) >= month(today()) 
-        and week(datepart(term_begin_dt)) <= week(today())
-        and acad_career = 'UGRD'
+	select term_type into: term_type 
+	from acs.adj_term 
+	where term_year = year(today())
+		and begin_month <= month(today()) 
+		and end_month >= month(today()) 
+		and begin_week <= week(today())
+		and end_week >= week(today())
+		and acad_career = 'UGRD'
 ;quit;
 """)
 

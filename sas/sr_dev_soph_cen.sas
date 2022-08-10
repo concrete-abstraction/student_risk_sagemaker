@@ -17,27 +17,66 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 options sqlreduceput=all sqlremerge;
 run;
 
+/* Calendar fix */
+proc sort data=adm.xw_term out=work.xw_term;
+	by acad_career strm;
+run;
+
+data work.xw_term;
+	set work.xw_term;
+	by acad_career;
+	if first.acad_career then idx = 1;
+	else idx + 1;
+	where acad_career = 'UGRD';
+run;
+
+proc sql;
+	create table work.adj_xw_term as
+	select
+		base.strm,
+		base.term_year,
+		base.acad_career,
+		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
+		base.term_descr15,
+		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
+		base.term_type,
+		base.full_acad_year,
+		day(datepart(base.term_begin_dt)) as begin_day,
+		week(datepart(base.term_begin_dt)) as begin_week,
+		month(datepart(base.term_begin_dt)) as begin_month,
+		year(datepart(base.term_begin_dt)) as begin_year,
+		day(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_day,
+		week(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_week,
+		month(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_month,
+		year(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_year
+	from work.xw_term as base
+	left join work.xw_term as next
+		on base.acad_career = next.acad_career
+		and base.idx = next.idx - 1
+/* 	where base.strm ^= '2227' */
+;quit;
+
 /* Note: Code review needed. */
 
 proc sql;
 	select term_type into: term_type 
-	from &adm..xw_term 
+	from work.adj_xw_term 
 	where term_year = year(today())
-		and month(datepart(term_begin_dt)) <= month(today()) 
-		and month(datepart(term_end_dt)) >= month(today()) 
-		and week(datepart(term_begin_dt)) <= week(today())
-/* 		and week(datepart(term_end_dt)) >= week(today()) */
+		and begin_month <= month(today()) 
+		and switch_month >= month(today()) 
+		and begin_week <= week(today())
+		and switch_week >= week(today())
 		and acad_career = 'UGRD'
 ;quit;
 
 proc sql;
 	select distinct full_acad_year into: full_acad_year 
-	from &adm..xw_term 
+	from work.adj_xw_term 
 	where term_year = year(today())
-		and month(datepart(term_begin_dt)) <= month(today()) 
-		and month(datepart(term_end_dt)) >= month(today()) 
-		and week(datepart(term_begin_dt)) <= week(today())
-/* 		and week(datepart(term_end_dt)) >= week(today()) */
+		and begin_month <= month(today()) 
+		and switch_month >= month(today()) 
+		and begin_week <= week(today())
+		and switch_week >= week(today())
 		and acad_career = 'UGRD'
 ;quit;
 

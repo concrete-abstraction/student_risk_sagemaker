@@ -42,26 +42,24 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		proc sql;
-			select full_acad_year into: full_acad_year 
-			from acs.adj_term 
-			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
-				and acad_career = 'UGRD'
-		;quit;
+            select term_type into: term_type 
+            from &adm..xw_term 
+            where term_year = year(today())
+                and month(datepart(term_begin_dt)) <= month(today()) 
+                and month(datepart(term_end_dt)) >= month(today()) 
+                and week(datepart(term_begin_dt)) <= week(today())
+                and acad_career = 'UGRD'
+        ;quit;
 
-		proc sql;
-			select max(term_type) into: term_type 
-			from acs.adj_term 
-			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
-				and acad_career = 'UGRD'
-		;quit;
+        proc sql;
+            select distinct full_acad_year into: full_acad_year 
+            from &adm..xw_term 
+            where term_year = year(today())
+                and month(datepart(term_begin_dt)) <= month(today()) 
+                and month(datepart(term_end_dt)) >= month(today()) 
+                and week(datepart(term_begin_dt)) <= week(today())
+                and acad_career = 'UGRD'
+        ;quit;
 
         proc sql;
             select distinct a.snapshot into: aid_snapshot
@@ -4859,26 +4857,24 @@ class DatasetBuilderProd:
 		sas.submit("""
 		proc sql;
 			select full_acad_year into: full_acad_year 
-			from acs.adj_term 
+			from &adm..xw_term 
 			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
+				and month(datepart(term_begin_dt)) <= month(today()) 
+				and month(datepart(term_end_dt)) >= month(today())
+				and week(datepart(term_begin_dt)) <= week(today())
 				and acad_career = 'UGRD'
 		;quit;
 
 		proc sql;
 			select max(term_type) into: term_type 
-			from acs.adj_term 
+			from &adm..xw_term 
 			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
+				and month(datepart(term_begin_dt)) <= month(today()) 
+				and month(datepart(term_end_dt)) >= month(today()) 
+				and week(datepart(term_begin_dt)) <= week(today())
 				and acad_career = 'UGRD'
 		;quit;
-        
+
 		proc sql;
 			select distinct a.snapshot into: aid_snapshot
 			from &dsn..fa_award_aid_year_vw as a

@@ -17,27 +17,66 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 options sqlreduceput=all sqlremerge;
 run;
 
+/* Calendar fix */
+proc sort data=adm.xw_term out=work.xw_term;
+	by acad_career strm;
+run;
+
+data work.xw_term;
+	set work.xw_term;
+	by acad_career;
+	if first.acad_career then idx = 1;
+	else idx + 1;
+	where acad_career = 'UGRD';
+run;
+
+proc sql;
+	create table work.adj_xw_term as
+	select
+		base.strm,
+		base.term_year,
+		base.acad_career,
+		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
+		base.term_descr15,
+		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
+		base.term_type,
+		base.full_acad_year,
+		day(datepart(base.term_begin_dt)) as begin_day,
+		week(datepart(base.term_begin_dt)) as begin_week,
+		month(datepart(base.term_begin_dt)) as begin_month,
+		year(datepart(base.term_begin_dt)) as begin_year,
+		day(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_day,
+		week(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_week,
+		month(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_month,
+		year(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_year
+	from work.xw_term as base
+	left join work.xw_term as next
+		on base.acad_career = next.acad_career
+		and base.idx = next.idx - 1
+/* 	where base.strm ^= '2227' */
+;quit;
+
 /* Note: Code review needed. */
 
 proc sql;
-	select term_type into: term_type 
-	from &adm..xw_term 
+	select full_acad_year into: full_acad_year 
+	from acs.adj_term 
 	where term_year = year(today())
-		and month(datepart(term_begin_dt)) <= month(today()) 
-		and month(datepart(term_end_dt)) >= month(today()) 
-		and week(datepart(term_begin_dt)) <= week(today())
-/* 		and week(datepart(term_end_dt)) >= week(today()) */
+		and begin_month <= month(today()) 
+		and end_month >= month(today()) 
+		and begin_week <= week(today())
+		and end_week >= week(today())
 		and acad_career = 'UGRD'
 ;quit;
 
 proc sql;
-	select distinct full_acad_year into: full_acad_year 
-	from &adm..xw_term 
+	select max(term_type) into: term_type 
+	from acs.adj_term 
 	where term_year = year(today())
-		and month(datepart(term_begin_dt)) <= month(today()) 
-		and month(datepart(term_end_dt)) >= month(today()) 
-		and week(datepart(term_begin_dt)) <= week(today())
-/* 		and week(datepart(term_end_dt)) >= week(today()) */
+		and begin_month <= month(today()) 
+		and end_month >= month(today()) 
+		and begin_week <= week(today())
+		and end_week >= week(today())
 		and acad_career = 'UGRD'
 ;quit;
 
@@ -84,8 +123,10 @@ proc sql;
 ;quit;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
+%let end_lag = 3;
+%let start_lag = 0;
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 0);
+%let start_cohort = %eval(&end_cohort. - 6);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -110,6 +151,8 @@ proc sql;
 ;quit;
 
 %macro loop;
+
+%do admit_lag=&start_lag. %to &end_lag.;
 	
 	%do cohort_year=&start_cohort. %to &end_cohort.;
 	
@@ -230,10 +273,10 @@ proc sql;
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		left join cpi as l
 			on input(a.full_acad_year,4.) = l.acs_lag
-		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year. - &admit_lag.), 4.)
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat = 'FRSH'
+			and a.adj_admit_type_cat = 'TRAN'
 /* 			and a.ipeds_full_part_time = 'F' */
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
@@ -288,7 +331,10 @@ proc sql;
 			a.term_code as cont_term,
 			case when b.emplid is not null 	then 1
 											else a.enrl_ind
-											end as enrl_ind
+											end as enrl_ind,
+			case when b.emplid is not null 	then 1
+											else 0
+											end as degr_ind
 		from &dsn..student_enrolled_vw as a
 		full join (select distinct 
 						emplid 
@@ -2120,7 +2166,6 @@ proc sql;
 			on a.emplid = x.emplid
 		left join enrolled_&cohort_year. as c
 			on a.emplid = c.emplid
- 				and a.term_code + 10 = c.cont_term
  		left join plan_&cohort_year. as d
  			on a.emplid = d.emplid
  		left join need_&cohort_year. as e
@@ -2284,10 +2329,10 @@ proc sql;
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
-		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year. - &admit_lag.), 4.)
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat = 'FRSH'
+			and a.adj_admit_type_cat = 'TRAN'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
 			and a.WA_residency ^= 'NON-I'
@@ -4252,11 +4297,19 @@ proc sql;
  			on a.emplid = aa.emplid
 	;quit;
 	
-%mend loop;
+/* 	data dataset_2021; */
+/* 		set dataset_2021_0 - dataset_2021_3; */
+/* 	run; */
 
-%loop;
+/* proc sort data=dataset_2021; */
+/* 	by emplid descending init_strm; */
+/* run; */
+/*  */
+/* proc sort data=dataset_2021 nodupkey dupout=dataset_2021_dups; */
+/* 	by emplid; */
+/* run; */
 
-data validation_set;
+data validation_set_&admit_lag.;
 	set dataset_&start_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
@@ -4436,11 +4489,7 @@ data validation_set;
 	if total_accept = . then total_accept = 0;
 run;
 
-proc sort data=validation_set nodupkey dupout=validation_dups;
-	by emplid;
-run;
-
-data training_set;
+data training_set_&admit_lag.;
 	set dataset_%eval(&start_cohort. + &lag_year.)-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
@@ -4620,11 +4669,7 @@ data training_set;
 	if total_accept = . then total_accept = 0;
 run;
 
-proc sort data=training_set nodupkey dupout=training_dups;
-	by emplid;
-run;
-
-data testing_set;
+data testing_set_&admit_lag.;
 	set dataset_%eval(&end_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
@@ -4803,10 +4848,60 @@ data testing_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
 run;
-		
-proc sort data=testing_set nodupkey dupout=testing_dups;
+
+%end;
+
+%mend loop;
+
+%loop;
+
+data validation_set;
+	set validation_set_&start_lag.-validation_set_&end_lag.;
+run;
+
+proc sort data=validation_set;
+	by emplid descending strm;
+run;
+
+proc sort data=validation_set nodupkey dupout=validation_set_dups;
 	by emplid;
 run;
+
+data training_set;
+	set training_set_&start_lag.-training_set_&end_lag.;
+run;
+
+proc sort data=training_set;
+	by emplid descending strm;
+run;
+
+proc sort data=training_set nodupkey dupout=training_set_dups;
+	by emplid;
+run;
+
+data testing_set;
+	set testing_set_&start_lag.-testing_set_&end_lag.;
+run;
+
+proc sort data=testing_set;
+	by emplid descending strm;
+run;
+
+proc sort data=testing_set nodupkey dupout=testing_set_dups;
+	by emplid;
+run;
+
+proc sql;
+   create table validation_set as
+   select * from validation_set
+   where emplid not in (select emplid from testing_set);
+quit;
+
+proc sql;
+   create table training_set as
+   select * from training_set
+   where emplid not in (select emplid from testing_set);
+quit;
 
 /* data training_set_anon; */
 /* 	set training_set; */
@@ -4838,17 +4933,17 @@ run;
 /* 	title 'AY2021 Data'; */
 /* run; */
 
-filename valid "Z:\Nathan\Models\student_risk\datasets\soph_validation_set.csv" encoding="utf-8";
+filename valid "Z:\Nathan\Models\student_risk\datasets\degr_validation_set.csv" encoding="utf-8";
 
 proc export data=validation_set outfile=valid dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\datasets\soph_training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\datasets\degr_training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\datasets\soph_testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\datasets\degr_testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
