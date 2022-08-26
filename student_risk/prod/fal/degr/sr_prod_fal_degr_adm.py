@@ -52,69 +52,8 @@ run_date = date.today()
 unwanted_vars = ['emplid','enrl_ind']
 
 #%%
-# Census date and snapshot check 
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
-now = datetime.datetime.now()
-
-now_day = now.day
-now_month = now.month
-now_year = now.year
-
-strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
-
-census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
-census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
-census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
-
-if now_year < census_year:
-	raise config.CenError(f'{run_date}: Census year exception, attempting to run if census newest snapshot.')
-
-elif (now_year == census_year and now_month < census_month):
-	raise config.CenError(f'{run_date}: Census month exception, attempting to run if census newest snapshot.')
-
-elif (now_year == census_year and now_month == census_month and now_day < census_day):
-	raise config.CenError(f'{run_date}: Census day exception, attempting to run if census newest snapshot.')
-
-else:
-	sas = saspy.SASsession()
-
-	sas.symput('strm', strm)
-
-	sas.submit("""
-	%let dsn = census;
-
-	libname &dsn. odbc dsn=&dsn. schema=dbo;
-
-	proc sql;
-		select distinct
-			max(case when snapshot = 'census' 	then 1
-				when snapshot = 'midterm' 		then 2
-				when snapshot = 'eot'			then 3
-												else 0
-												end) as snap_order
-			into: snap_check
-			separated by ''
-		from &dsn..class_registration
-		where acad_career = 'UGRD'
-			and strm = (select distinct
-							max(strm)
-						from &dsn..class_registration where acad_career = 'UGRD')
-	;quit;
-	""")
-
-	snap_check = sas.symget('snap_check')
-
-	sas.endsas()
-
-	if snap_check != 1:
-		raise config.CenError(f'{run_date}: No census date exception but snapshot exception, attempting to run from admissions.')
-
-	else:
-		print(f'{run_date}: No census date or snapshot exceptions, running from census.')
-
-#%%
 # SAS dataset builder
-build_degr_prod.DatasetBuilderProd.build_census_prod()
+build_degr_prod.DatasetBuilderProd.build_admissions_prod()
 
 #%%
 # Import pre-split data

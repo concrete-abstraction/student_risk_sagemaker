@@ -41,30 +41,74 @@ class DatasetBuilderProd:
 		print('Set macro variables...')
 
 		sas.submit("""
-		proc sql;
-			select full_acad_year into: full_acad_year 
-			from acs.adj_term 
-			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
-				and acad_career = 'UGRD'
-		;quit;
+		proc sort data=adm.xw_term out=work.xw_term;
+            by acad_career strm;
+        run;
 
-		proc sql;
-			select max(term_type) into: term_type 
-			from acs.adj_term 
-			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
-				and acad_career = 'UGRD'
-		;quit;
+        data work.xw_term;
+            set work.xw_term;
+            by acad_career;
+            if first.acad_career then idx = 1;
+            else idx + 1;
+            where acad_career = 'UGRD';
+        run;
 
         proc sql;
-            select distinct a.snapshot into: aid_snapshot
+            create table acs.adj_term as
+            select
+                base.acad_career,
+                base.term_year,
+                base.term_type,
+                base.strm,
+                base.full_acad_year,
+                datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
+                datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
+                day(datepart(base.term_begin_dt)) as begin_day,
+                week(datepart(base.term_begin_dt)) as begin_week,
+                month(datepart(base.term_begin_dt)) as begin_month,
+                year(datepart(base.term_begin_dt)) as begin_year,
+                day(datepart(base.term_midterm_dt)) as midterm_day,
+                week(datepart(base.term_midterm_dt)) as midterm_week,
+                month(datepart(base.term_midterm_dt)) as midterm_month,
+                year(datepart(base.term_midterm_dt)) as midterm_year,
+                coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_day,
+                coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_week,
+                coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_month,
+                coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_year
+            from work.xw_term as base
+            left join work.xw_term as next
+                on base.acad_career = next.acad_career
+                and base.idx = next.idx - 1
+        ;quit;
+
+        proc sql;
+            select term_type into: term_type 
+            from acs.adj_term 
+            where term_year = year(today())
+                and begin_month <= month(today()) 
+                and end_month >= month(today()) 
+                and begin_week <= week(today())
+                and end_week >= week(today())
+                and begin_day <= day(today())
+                and end_day >= day(today())
+                and acad_career = 'UGRD'
+        ;quit;
+
+        proc sql;
+            select distinct full_acad_year into: full_acad_year 
+            from acs.adj_term 
+            where term_year = year(today())
+                and begin_month <= month(today()) 
+                and end_month >= month(today()) 
+                and begin_week <= week(today())
+                and end_week >= week(today())
+                and begin_day <= day(today())
+                and end_day >= day(today())
+                and acad_career = 'UGRD'
+        ;quit;
+
+        proc sql;
+            select distinct a.snapshot into: aid_check
             from &dsn..fa_award_aid_year_vw as a
             inner join (select distinct 
                             emplid, 
@@ -76,8 +120,15 @@ class DatasetBuilderProd:
                 on a.emplid = b.emplid
                     and a.aid_year = b.aid_year
                     and a.snapshot = b.snapshot
-            where a.aid_year = "&full_acad_year."	
+            where a.aid_year = "&full_acad_year."
         ;quit;
+
+        %if %symexist(aid_check) = 0 %then %do;
+            %let aid_snapshot = 'yrbegin';
+        %end;
+        %else %do;
+            %let aid_snapshot = &aid_check.;
+        %end;
 
         proc sql;
             create table snap_check as
@@ -100,7 +151,7 @@ class DatasetBuilderProd:
                 case when snap_order = 1	then 'census'
                     when snap_order = 2		then 'midterm'
                     when snap_order = 3		then 'eot'
-                                            else '' end
+                                            else 'census' end
                 into: snapshot
             from snap_check
         ;quit;
@@ -150,7 +201,7 @@ class DatasetBuilderProd:
 		print('Create SAS macro...')
 
 		sas.submit("""
-		%macro loop;
+        %macro loop;
 	
             %do cohort_year=&start_cohort. %to &end_cohort.;
             
@@ -286,7 +337,7 @@ class DatasetBuilderProd:
                     emplid,
                     case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
                 from &dsn..fa_award_aid_year_vw
-                where snapshot = "&aid_snapshot."
+                where snapshot = &aid_snapshot.
                     and aid_year = "&cohort_year."
                     and item_type in ('900101001000','900101001010','900101001011')
                     and award_status = 'A'
@@ -321,30 +372,46 @@ class DatasetBuilderProd:
                     and a.ipeds_full_part_time = 'F'
             ;quit;
             
-            proc sql;
-                create table enrolled_&cohort_year. as
-                select distinct 
-                    a.emplid, 
-                    a.term_code as cont_term,
-                    case when b.emplid is not null 	then 1
-                                                    else a.enrl_ind
-                                                    end as enrl_ind
-                from &dsn..student_enrolled_vw as a
-                full join (select distinct 
-                                emplid 
-                            from &dsn..student_degree_vw 
-                            where snapshot = 'degree'
-                                and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
-                                and acad_career = 'UGRD'
-                                and ipeds_award_lvl = 5) as b
-                    on a.emplid = b.emplid
-                where a.snapshot = 'census'
-                    and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-                    and substr(a.strm,4,1) = '7'
-                    and a.acad_career = 'UGRD'
-                    and a.new_continue_status = 'CTU'
-                    and a.term_credit_hours > 0
-            ;quit;
+            %if &cohort_year. < &end_cohort. %then %do;
+                proc sql;
+                    create table enrolled_&cohort_year. as
+                    select distinct 
+                        a.emplid, 
+                        a.term_code as cont_term,
+                        case when b.emplid is not null 	then 1
+                                                        else a.enrl_ind
+                                                        end as enrl_ind
+                    from &dsn..student_enrolled_vw as a
+                    full join (select distinct 
+                                    emplid 
+                                from &dsn..student_degree_vw 
+                                where snapshot = 'degree'
+                                    and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+                                    and acad_career = 'UGRD'
+                                    and ipeds_award_lvl = 5) as b
+                        on a.emplid = b.emplid
+                    where a.snapshot = 'census'
+                        and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+                        and substr(a.strm,4,1) = '7'
+                        and a.acad_career = 'UGRD'
+                        and a.new_continue_status = 'CTU'
+                        and a.term_credit_hours > 0
+                ;quit;
+            %end;
+            
+            %if &cohort_year. = &end_cohort. %then %do;
+                proc sql;
+                    create table enrolled_&cohort_year. as
+                    select distinct 
+                        emplid, 
+                        input(substr(strm, 1, 1) || '0' || substr(strm, 2, 2) || '3', 5.) as cont_term,
+                        enrl_ind as enrl_ind
+                    from acs.enrl_data
+                    where substr(strm,4,1) = '7'
+                        and acad_career = 'UGRD'
+                    order by emplid
+                ;quit;
+            %end;
             
             proc sql;
                 create table race_detail_&cohort_year. as
@@ -510,7 +577,7 @@ class DatasetBuilderProd:
                     fed_efc,
                     fed_need
                 from &dsn..fa_award_period
-                where snapshot = "&aid_snapshot."
+                where snapshot = &aid_snapshot.
                     and aid_year = "&cohort_year."	
                     and award_period = 'A'
                     and efc_status = 'O'
@@ -526,7 +593,7 @@ class DatasetBuilderProd:
                     sum(offer_amt) as total_offer,
                     sum(accept_amt) as total_accept
                 from &dsn..fa_award_aid_year_vw
-                where snapshot = "&aid_snapshot."
+                where snapshot = &aid_snapshot.
                     and aid_year = "&cohort_year."
                     and award_period in ('A','B')
                     and award_status in ('A','O')
@@ -2288,21 +2355,21 @@ class DatasetBuilderProd:
                 left join acs.distance_km as b6
                     on substr(a.last_sch_postal,1,5) = b6.inputid
                         and a.adj_acad_prog_primary_campus = 'ONLIN'
-                left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
+                left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as c
                     on substr(a.last_sch_postal,1,5) = c.geoid
-                left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
+                left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as d
                     on substr(a.last_sch_postal,1,5) = d.geoid
-                left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
+                left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as e
                     on substr(a.last_sch_postal,1,5) = e.geoid
-                left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
+                left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as f
                     on substr(a.last_sch_postal,1,5) = f.geoid
-                left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
+                left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
                     on substr(a.last_sch_postal,1,5) = g.geoid
-                left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
+                left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
                     on substr(a.last_sch_postal,1,5) = h.geoid
-                left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
+                left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
                     on substr(a.last_sch_postal,1,5) = i.geoid
-                left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
+                left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
                     on substr(a.last_sch_postal,1,5) = j.geoid
                 left join acs.edge_locale14_zcta_table as k
                     on substr(a.last_sch_postal,1,5) = k.zcta5ce10
@@ -2321,7 +2388,7 @@ class DatasetBuilderProd:
                     emplid,
                     case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
                 from &dsn..fa_award_aid_year_vw
-                where snapshot = "&aid_snapshot."
+                where snapshot = &aid_snapshot.
                     and aid_year = "&cohort_year."
                     and item_type in ('900101001000','900101001010','900101001011')
                     and award_status = 'A'
@@ -2738,7 +2805,7 @@ class DatasetBuilderProd:
                     and aid_year = "&cohort_year."
                     and grading_basis_enrl in ('REM','RMS','RMP')
             ;quit;
-
+            
             proc sql;
                 create table date_&cohort_year. as
                 select distinct
@@ -3886,7 +3953,7 @@ class DatasetBuilderProd:
                 where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
                     and stdnt_enrl_status = 'E'
             ;quit;
-            
+
             proc sql;
                 create table midterm_grades_&cohort_year. as
                 select distinct
@@ -4923,7 +4990,7 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;
+		%let acs_lag = 4;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 5);

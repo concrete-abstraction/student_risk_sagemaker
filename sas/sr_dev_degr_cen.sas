@@ -6,7 +6,7 @@
 
 %let dsn = census;
 %let adm = adm;
-%let acs_lag = 2;
+%let acs_lag = 4;
 %let lag_year = 1;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -31,29 +31,31 @@ data work.xw_term;
 run;
 
 proc sql;
-	create table work.adj_xw_term as
+	create table acs.adj_term as
 	select
-		base.strm,
-		base.term_year,
 		base.acad_career,
-		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
-		base.term_descr15,
-		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
-		base.term_type,
+		base.term_year,
+        base.term_type,
+        base.strm,
 		base.full_acad_year,
+		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
+		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
 		day(datepart(base.term_begin_dt)) as begin_day,
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
-		day(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_day,
-		week(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_week,
-		month(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_month,
-		year(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_year
+        day(datepart(base.term_midterm_dt)) as midterm_day,
+        week(datepart(base.term_midterm_dt)) as midterm_week,
+        month(datepart(base.term_midterm_dt)) as midterm_month,
+        year(datepart(base.term_midterm_dt)) as midterm_year,
+		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_day,
+		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_week,
+		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_month,
+		coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_year
 	from work.xw_term as base
 	left join work.xw_term as next
 		on base.acad_career = next.acad_career
 		and base.idx = next.idx - 1
-/* 	where base.strm ^= '2227' */
 ;quit;
 
 /* Note: Code review needed. */
@@ -66,6 +68,8 @@ proc sql;
 		and end_month >= month(today()) 
 		and begin_week <= week(today())
 		and end_week >= week(today())
+		and begin_day <= day(today())
+        and end_day >= day(today())
 		and acad_career = 'UGRD'
 ;quit;
 
@@ -77,11 +81,13 @@ proc sql;
 		and end_month >= month(today()) 
 		and begin_week <= week(today())
 		and end_week >= week(today())
+		and begin_day <= day(today())
+        and end_day >= day(today())
 		and acad_career = 'UGRD'
 ;quit;
 
 proc sql;
-	select distinct a.snapshot into: aid_snapshot
+	select distinct a.snapshot into: aid_check
 	from &dsn..fa_award_aid_year_vw as a
 	inner join (select distinct 
 					emplid, 
@@ -93,8 +99,15 @@ proc sql;
 		on a.emplid = b.emplid
 			and a.aid_year = b.aid_year
 			and a.snapshot = b.snapshot
-	where a.aid_year = "&full_acad_year."	
+	where a.aid_year = "&full_acad_year."
 ;quit;
+
+%if %symexist(aid_check) = 0 %then %do;
+	%let aid_snapshot = 'yrbegin';
+%end;
+%else %do;
+	%let aid_snapshot = &aid_check.;
+%end;
 
 proc sql;
 	create table snap_check as
@@ -123,10 +136,10 @@ proc sql;
 ;quit;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
-%let end_lag = 3;
+%let end_lag = 2;
 %let start_lag = 0;
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 6);
+%let start_cohort = %eval(&end_cohort. - 5);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -289,7 +302,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011')
 			and award_status = 'A'
@@ -324,32 +337,74 @@ proc sql;
 			and a.ipeds_full_part_time = 'F'
 	;quit;
 	
+/* 	proc sql; */
+/* 		create table enrolled_&cohort_year. as */
+/* 		select distinct  */
+/* 			a.emplid, */
+/* 			a.term_code as cont_term, */
+/* 			case when b.emplid is not null 	then 1 */
+/* 											else a.enrl_ind */
+/* 											end as enrl_ind, */
+/* 			case when b.emplid is not null 	then 1 */
+/* 											else 0 */
+/* 											end as degr_ind */
+/* 		from &dsn..student_enrolled_vw as a */
+/* 		full join (select distinct  */
+/* 						emplid  */
+/* 					from &dsn..student_degree_vw  */
+/* 					where snapshot = 'degree' */
+/* 						and "&cohort_year." <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.) */
+/* 						and acad_career = 'UGRD' */
+/* 						and ipeds_award_lvl = 5) as b */
+/* 			on a.emplid = b.emplid */
+/* 		where a.snapshot = 'census' */
+/* 			and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.) */
+/* 			and substr(a.strm,4,1) = '7' */
+/* 			and a.acad_career = 'UGRD' */
+/* 			and a.new_continue_status = 'CTU' */
+/* 			and a.term_credit_hours > 0 */
+/* 	;quit; */
+	
 	proc sql;
 		create table enrolled_&cohort_year. as
 		select distinct 
-			a.emplid, 
-			a.term_code as cont_term,
+			a.emplid,
+/* 			a.term_code as cont_term, */
 			case when b.emplid is not null 	then 1
-											else a.enrl_ind
+				when c.emplid is not null 	then 1
+											else 0
 											end as enrl_ind,
-			case when b.emplid is not null 	then 1
+			case when c.emplid is not null 	then 1
 											else 0
 											end as degr_ind
 		from &dsn..student_enrolled_vw as a
+		left join (select distinct
+						emplid
+					from &dsn..student_enrolled_vw 
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+						and acad_career = 'UGRD'
+/* 						and ipeds_full_part_time = 'F' */
+						and ipeds_ind = 1
+						and term_credit_hours > 0
+						and WA_residency ^= 'NON-I') as b
+			on a.emplid = b.emplid
 		full join (select distinct 
-						emplid 
+						emplid
 					from &dsn..student_degree_vw 
 					where snapshot = 'degree'
-						and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+						and "&cohort_year." <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
 						and acad_career = 'UGRD'
-						and ipeds_award_lvl = 5) as b
-			on a.emplid = b.emplid
+						and ipeds_award_lvl = 5) as c
+			on a.emplid = c.emplid
 		where a.snapshot = 'census'
-			and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+			and a.full_acad_year = "&cohort_year."
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.new_continue_status = 'CTU'
+			and a.ipeds_full_part_time = 'F'
+			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
+			and a.WA_residency ^= 'NON-I'
 	;quit;
 	
 	proc sql;
@@ -517,7 +572,7 @@ proc sql;
 			fed_efc,
 			fed_need
 		from &dsn..fa_award_period
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."	
 			and award_period = 'A'
 			and efc_status = 'O'
@@ -533,7 +588,7 @@ proc sql;
 			sum(offer_amt) as total_offer,
 			sum(accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and award_period in ('A','B')
 			and award_status in ('A','O')
@@ -1985,7 +2040,7 @@ proc sql;
 			z.spring_term_grade_count,
 			aa.cum_gpa,
 			aa.cum_gpa_hours,
-			c.cont_term,
+/* 			c.cont_term, */
 			c.enrl_ind,
 			d.acad_plan,
 			d.acad_plan_descr,
@@ -2344,7 +2399,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011')
 			and award_status = 'A'

@@ -46,14 +46,18 @@ proc sql;
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
+        day(datepart(base.term_census_dt)) as census_day,
+		week(datepart(base.term_census_dt)) as census_week,
+		month(datepart(base.term_census_dt)) as census_month,
+		year(datepart(base.term_census_dt)) as census_year,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
         year(datepart(base.term_midterm_dt)) as midterm_year,
-		day(datepart(intnx('dtday', next.term_begin_dt, -1))) as end_day,
-		week(datepart(intnx('dtday', next.term_begin_dt, -1))) as end_week,
-		month(datepart(intnx('dtday', next.term_begin_dt, -1))) as end_month,
-		year(datepart(intnx('dtday', next.term_begin_dt, -1))) as end_year
+		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_day,
+		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_week,
+		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_month,
+		coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_year
 	from work.xw_term as base
 	left join work.xw_term as next
 		on base.acad_career = next.acad_career
@@ -72,6 +76,8 @@ proc sql;
 		and end_month >= month(today()) 
 		and begin_week <= week(today())
 		and end_week >= week(today())
+        and begin_day <= day(today())
+        and end_day >= day(today())
 		and acad_career = 'UGRD'
 ;quit;
 """)
@@ -174,7 +180,8 @@ if __name__ == '__main__':
             try:
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\frst\\sr_prod_fal_frst_cen.py').read())
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\tran\\sr_prod_fal_tran_cen.py').read())
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\soph\\sr_prod_fal_soph_cen.py').read())
+                # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\soph\\sr_prod_fal_soph_cen.py').read())
+                # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\degr\\sr_prod_fal_degr_cen.py').read())
             except config.CenError as cen_error:
                 print(cen_error)
 

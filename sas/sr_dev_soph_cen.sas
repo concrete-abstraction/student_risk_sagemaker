@@ -6,7 +6,7 @@
 
 %let dsn = census;
 %let adm = adm;
-%let acs_lag = 2;
+%let acs_lag = 4;
 %let lag_year = 1;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -31,29 +31,31 @@ data work.xw_term;
 run;
 
 proc sql;
-	create table work.adj_xw_term as
+	create table acs.adj_term as
 	select
-		base.strm,
-		base.term_year,
 		base.acad_career,
-		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
-		base.term_descr15,
-		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
-		base.term_type,
+		base.term_year,
+        base.term_type,
+        base.strm,
 		base.full_acad_year,
+		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
+		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
 		day(datepart(base.term_begin_dt)) as begin_day,
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
-		day(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_day,
-		week(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_week,
-		month(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_month,
-		year(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_year
+        day(datepart(base.term_midterm_dt)) as midterm_day,
+        week(datepart(base.term_midterm_dt)) as midterm_week,
+        month(datepart(base.term_midterm_dt)) as midterm_month,
+        year(datepart(base.term_midterm_dt)) as midterm_year,
+		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_day,
+		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_week,
+		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_month,
+		coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_year
 	from work.xw_term as base
 	left join work.xw_term as next
 		on base.acad_career = next.acad_career
 		and base.idx = next.idx - 1
-/* 	where base.strm ^= '2227' */
 ;quit;
 
 /* Note: Code review needed. */
