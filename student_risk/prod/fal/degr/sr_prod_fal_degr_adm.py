@@ -1746,7 +1746,7 @@ print(univr_vif.round(1).to_string())
 print('\n')
 
 #%%
-print('Run machine learning models for sophmores...\n')
+print('Run machine learning models for sophomores...\n')
 
 # Logistic model
 

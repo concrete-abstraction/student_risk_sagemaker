@@ -1997,10 +1997,10 @@ plt.show()
 # Stochastic gradient descent model
 
 # Pullman SGD
-pullm_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(pullm_x_train, pullm_y_train)
+pullm_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
 
 # Pullman SGD calibration
-# pullm_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(pullm_x_train, pullm_y_train)
+# pullm_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(pullm_x_train, pullm_y_train)
 # pullm_sgd_ccv = CalibratedClassifierCV(pullm_sgd, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_sgd_probs = pullm_sgd_ccv.predict_proba(pullm_x_train)
@@ -2043,10 +2043,10 @@ plt.show()
 
 #%%
 # Vancouver SGD
-vanco_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
+vanco_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
 
 # Vancouver SGD calibration
-# vanco_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(vanco_x_train, vanco_y_train)
+# vanco_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(vanco_x_train, vanco_y_train)
 # vanco_sgd_ccv = CalibratedClassifierCV(vanco_sgd, method='isotonic', cv=5).fit(vanco_x_train, vanco_y_train)
 
 vanco_sgd_probs = vanco_sgd_ccv.predict_proba(vanco_x_train)
@@ -2089,10 +2089,10 @@ plt.show()
 
 #%%
 # Tri-Cities SGD
-trici_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
+trici_sgd_ccv = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
 
 # Tri-Cities SGD calibration
-# trici_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=True).fit(trici_x_train, trici_y_train)
+# trici_sgd = SGDClassifier(loss='modified_huber', penalty='elasticnet', class_weight='balanced', early_stopping=False, max_iter=5000, l1_ratio=0.0, learning_rate='adaptive', eta0=0.0001, tol=0.0001, n_iter_no_change=100, n_jobs=-1, verbose=False).fit(trici_x_train, trici_y_train)
 # trici_sgd_ccv = CalibratedClassifierCV(trici_sgd, method='isotonic', cv=5).fit(trici_x_train, trici_y_train)
 
 trici_sgd_probs = trici_sgd_ccv.predict_proba(trici_x_train)
@@ -2137,10 +2137,10 @@ plt.show()
 # Multi-layer perceptron model
 
 # Pullman MLP
-pullm_mlp_ccv = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=True).fit(pullm_x_train, pullm_y_train)
+pullm_mlp_ccv = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=False).fit(pullm_x_train, pullm_y_train)
 
 # Pullman MLP calibration
-# pullm_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=True)
+# pullm_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=False)
 # pullm_mlp_ccv = CalibratedClassifierCV(pullm_mlp, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_mlp_probs = pullm_mlp_ccv.predict_proba(pullm_x_train)
@@ -2183,7 +2183,7 @@ plt.show()
 
 #%%
 # Vancouver MLP
-vanco_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=True).fit(vanco_x_train, vanco_y_train)
+vanco_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=False).fit(vanco_x_train, vanco_y_train)
 
 vanco_mlp_probs = vanco_mlp.predict_proba(vanco_x_train)
 vanco_mlp_probs = vanco_mlp_probs[:, 1]
@@ -2214,7 +2214,7 @@ plt.show()
 
 #%%
 # Tri-Cities MLP
-trici_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=True).fit(trici_x_train, trici_y_train)
+trici_mlp = MLPClassifier(hidden_layer_sizes=(75,50,25), activation='relu', solver='sgd', alpha=2.5, learning_rate_init=0.001, n_iter_no_change=25, max_iter=5000, verbose=False).fit(trici_x_train, trici_y_train)
 
 trici_mlp_probs = trici_mlp.predict_proba(trici_x_train)
 trici_mlp_probs = trici_mlp_probs[:, 1]

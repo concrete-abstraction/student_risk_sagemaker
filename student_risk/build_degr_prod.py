@@ -158,7 +158,7 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 4;
+		%let acs_lag = 2;
 		%let lag_year = 1;
         %let end_lag = 2;
         %let start_lag = 0;
@@ -5047,7 +5047,7 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 4;
+		%let acs_lag = 2;
 		%let lag_year = 1;
         %let end_lag = 2;
         %let start_lag = 0;

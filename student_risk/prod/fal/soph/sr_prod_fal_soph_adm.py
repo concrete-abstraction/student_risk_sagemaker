@@ -1105,62 +1105,62 @@ pullm_y_cv = pullm_validation_set['enrl_ind']
 # pullm_y_test = pullm_testing_set['enrl_ind']
 
 pullm_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'term_credit_hours',
-						# 'high_school_gpa',
-						'cum_gpa',
-						'cum_gpa_hours',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						# 'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
-						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
-						'fall_lec_count',
-						'fall_lab_count',
-						# 'fall_int_count',
-						'fall_stu_count',
-						# 'fall_sem_count',
-						'fall_oth_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
-						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
-						# 'total_fall_contact_hrs',
-						'total_fall_units',
-						# 'fall_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					# 'high_school_gpa',
+	# 					'cum_gpa',
+	# 					'cum_gpa_hours',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					# 'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					'fall_lec_count',
+	# 					'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					'fall_oth_count',
+	# 					# 'fall_lec_contact_hrs',
+	# 					# 'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					# 'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					# 'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					'total_fall_units',
+	# 					# 'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1231,62 +1231,62 @@ vanco_y_cv = vanco_validation_set['enrl_ind']
 # vanco_y_test = vanco_testing_set['enrl_ind']
 
 vanco_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'term_credit_hours',
-						# 'high_school_gpa',
-						'cum_gpa',
-						'cum_gpa_hours',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						# 'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
-						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
-						# 'fall_lec_count',
-						# 'fall_lab_count',
-						# 'fall_int_count',
-						# 'fall_stu_count',
-						# 'fall_sem_count',
-						# 'fall_oth_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
-						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
-						# 'total_fall_contact_hrs',
-						# 'total_fall_units',
-						# 'fall_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					# 'high_school_gpa',
+	# 					'cum_gpa',
+	# 					'cum_gpa_hours',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					# 'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					# 'fall_lec_count',
+	# 					# 'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					# 'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					# 'fall_oth_count',
+	# 					# 'fall_lec_contact_hrs',
+	# 					# 'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					# 'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					# 'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					# 'total_fall_units',
+	# 					# 'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1357,62 +1357,62 @@ trici_y_cv = trici_validation_set['enrl_ind']
 # trici_y_test = trici_testing_set['enrl_ind']
 
 trici_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'term_credit_hours',
-						# 'high_school_gpa',
-						'cum_gpa',
-						'cum_gpa_hours',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						# 'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
-						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
-						# 'fall_lec_count',
-						# 'fall_lab_count',
-						# 'fall_int_count',
-						# 'fall_stu_count',
-						# 'fall_sem_count',
-						# 'fall_oth_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
-						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
-						# 'total_fall_contact_hrs',
-						# 'total_fall_units',
-						# 'fall_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					# 'high_school_gpa',
+	# 					'cum_gpa',
+	# 					'cum_gpa_hours',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					# 'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					# 'fall_lec_count',
+	# 					# 'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					# 'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					# 'fall_oth_count',
+	# 					# 'fall_lec_contact_hrs',
+	# 					# 'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					# 'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					# 'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					# 'total_fall_units',
+	# 					# 'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1483,62 +1483,62 @@ univr_y_cv = univr_validation_set['enrl_ind']
 # univr_y_test = univr_testing_set['enrl_ind']
 
 univr_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'term_credit_hours',
-						# 'high_school_gpa',
-						'cum_gpa',
-						'cum_gpa_hours',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
-						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
-						'fall_lec_count',
-						'fall_lab_count',
-						# 'fall_int_count',
-						# 'fall_stu_count',
-						# 'fall_sem_count',
-						# 'fall_oth_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
-						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
-						# 'total_fall_contact_hrs',
-						# 'total_fall_units',
-						# 'fall_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					# 'high_school_gpa',
+	# 					'cum_gpa',
+	# 					'cum_gpa_hours',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					'fall_lec_count',
+	# 					'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					# 'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					# 'fall_oth_count',
+	# 					# 'fall_lec_contact_hrs',
+	# 					# 'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					# 'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					# 'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					# 'total_fall_units',
+	# 					# 'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1601,7 +1601,7 @@ univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_
 # Standard logistic model
 
 # Pullman standard model
-print('\nStandard logistic model for Pullman freshmen...\n')
+print('\nStandard logistic model for Pullman sophomores...\n')
 
 try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1623,7 +1623,7 @@ print('\n')
 
 #%%
 # Vancouver standard model
-print('\nStandard logistic model for Vancouver freshmen...\n')
+print('\nStandard logistic model for Vancouver sophomores...\n')
 
 try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1643,7 +1643,7 @@ print('\n')
 
 #%%
 # Tri-Cities standard model
-print('\nStandard logistic model for Tri-Cities freshmen...\n')
+print('\nStandard logistic model for Tri-Cities sophomores...\n')
 
 try:
 	trici_y, trici_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1663,7 +1663,7 @@ print('\n')
 
 #%%
 # University standard model
-print('\nStandard logistic model for University freshmen...\n')
+print('\nStandard logistic model for University sophomores...\n')
 
 try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1728,7 +1728,7 @@ print(univr_vif.round(1).to_string())
 print('\n')
 
 #%%
-print('Run machine learning models for sophmores...\n')
+print('Run machine learning models for sophomores...\n')
 
 # Logistic model
 
@@ -2093,10 +2093,10 @@ pullm_hyperparameters = [{'max_depth': np.linspace(1, 20, 20, dtype=int, endpoin
 pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
-print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}\n')
-
 pullm_stop = time.perf_counter()
-print(f'Trained in {(pullm_stop - pullm_start)/60:.1f} minutes\n')
+print(f'Pullman XGB Random Forest model trained in {(pullm_stop - pullm_start)/60:.1f} minutes')
+
+print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}\n')
 
 #%%
 # Pullman XGBoost Random Forest
@@ -2124,10 +2124,10 @@ vanco_hyperparameters = [{'max_depth': np.linspace(1, 20, 20, dtype=int, endpoin
 vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
-print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}\n')
-
 vanco_stop = time.perf_counter()
-print(f'Trained in {(vanco_stop - vanco_start)/60:.1f} minutes\n')
+print(f'Vancouver XGB Random Forest model trained in {(vanco_stop - vanco_start)/60:.1f} minutes')
+
+print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}\n')
 
 #%%
 # Vancouver XGBoost Random Forest
@@ -2155,10 +2155,10 @@ trici_hyperparameters = [{'max_depth': np.linspace(1, 20, 20, dtype=int, endpoin
 trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
-print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}\n')
-
 trici_stop = time.perf_counter()
-print(f'Trained in {(trici_stop - trici_start)/60:.1f} minutes\n')
+print(f'Tri-Cities XGB Random Forest model trained in {(trici_stop - trici_start)/60:.1f} minutes')
+
+print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}\n')
 
 #%%
 # Tri-Cities XGBoost Random Forest
@@ -2186,10 +2186,10 @@ univr_hyperparameters = [{'max_depth': np.linspace(1, 20, 20, dtype=int, endpoin
 univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', num_parallel_tree=10, subsample=0.8, colsample_bynode=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
-print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}\n')
-
 univr_stop = time.perf_counter()
-print(f'Trained in {(univr_stop - univr_start)/60:.1f} minutes\n')
+print(f'University XGB Random Forest model trained in {(univr_stop - univr_start)/60:.1f} minutes')
+
+print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}\n')
 
 #%%
 # University XGBoost Random Forest
