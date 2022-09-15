@@ -2698,7 +2698,7 @@ plt.show()
 
 # Pullman XGBoost Random Forest tuning
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
@@ -2757,7 +2757,7 @@ plt.show()
 #%%
 # Vancouver XGBoost Random Forest tuning
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
@@ -2817,7 +2817,7 @@ plt.show()
 #%%
 # Tri-Cities XGBoost Random Forest tuning
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
@@ -2877,7 +2877,7 @@ plt.show()
 #%%
 # University XGBoost Random Forest tuning
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_hyperparameters = [{'max_depth': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
