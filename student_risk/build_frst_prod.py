@@ -41,58 +41,23 @@ class DatasetBuilderProd:
 		print('Set macro variables...')
 
 		sas.submit("""
-		proc sort data=adm.xw_term out=work.xw_term;
-			by acad_career strm;
-		run;
-
-		data work.xw_term;
-			set work.xw_term;
-			by acad_career;
-			if first.acad_career then idx = 1;
-			else idx + 1;
-			where acad_career = 'UGRD';
-		run;
-
 		proc sql;
-			create table acs.adj_term as
-			select
-				base.acad_career,
-				base.term_year,
-				base.term_type,
-				base.strm,
-				base.full_acad_year,
-				datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
-				datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
-				day(datepart(base.term_begin_dt)) as begin_day,
-				week(datepart(base.term_begin_dt)) as begin_week,
-				month(datepart(base.term_begin_dt)) as begin_month,
-				year(datepart(base.term_begin_dt)) as begin_year,
-				day(datepart(base.term_midterm_dt)) as midterm_day,
-				week(datepart(base.term_midterm_dt)) as midterm_week,
-				month(datepart(base.term_midterm_dt)) as midterm_month,
-				year(datepart(base.term_midterm_dt)) as midterm_year,
-				coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_day,
-				coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_week,
-				coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_month,
-				coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_year
-			from work.xw_term as base
-			left join work.xw_term as next
-				on base.acad_career = next.acad_career
-				and base.idx = next.idx - 1
-		;quit;
-
-		proc sql;
-			select distinct full_acad_year into: full_acad_year 
+			select term_type into: term_type 
 			from acs.adj_term 
 			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
-				and begin_day <= day(today())
-				and end_day >= day(today())
+				and term_begin_dt <= today()
+				and term_end_dt >= today()
 				and acad_career = 'UGRD'
 		;quit;
+		
+		proc sql;
+            select distinct full_acad_year into: full_acad_year 
+            from acs.adj_term 
+            where term_year = year(today())
+                and term_begin_dt <= today()
+                and term_end_dt >= today()
+                and acad_career = 'UGRD'
+        ;quit;
 
 		proc sql;
 			select distinct a.snapshot into: aid_check
@@ -2144,26 +2109,22 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		proc sql;
-			select full_acad_year into: full_acad_year 
+			select term_type into: term_type 
 			from acs.adj_term 
 			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
+				and term_begin_dt <= today()
+				and term_end_dt >= today()
 				and acad_career = 'UGRD'
 		;quit;
-
+		
 		proc sql;
-			select max(term_type) into: term_type 
-			from acs.adj_term 
-			where term_year = year(today())
-				and begin_month <= month(today()) 
-				and end_month >= month(today()) 
-				and begin_week <= week(today())
-				and end_week >= week(today())
-				and acad_career = 'UGRD'
-		;quit;
+            select distinct full_acad_year into: full_acad_year 
+            from acs.adj_term 
+            where term_year = year(today())
+                and term_begin_dt <= today()
+                and term_end_dt >= today()
+                and acad_career = 'UGRD'
+        ;quit;
 
 		proc sql;
 			select distinct a.snapshot into: aid_snapshot

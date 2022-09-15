@@ -24,7 +24,8 @@ data work.xw_term;
 	by acad_career;
 	if first.acad_career then idx = 1;
 	else idx + 1;
-	where acad_career = 'UGRD';
+	where acad_career = 'UGRD'
+		and term_year <= year(today());
 run;
 
 proc sql;
@@ -35,20 +36,23 @@ proc sql;
         base.term_type,
         base.strm,
 		base.full_acad_year,
-		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
-		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
 		day(datepart(base.term_begin_dt)) as begin_day,
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
+        day(datepart(base.term_census_dt)) as census_day,
+		week(datepart(base.term_census_dt)) as census_week,
+		month(datepart(base.term_census_dt)) as census_month,
+		year(datepart(base.term_census_dt)) as census_year,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
         year(datepart(base.term_midterm_dt)) as midterm_year,
-		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_day,
-		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_week,
-		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_month,
-		coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_year
+        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt,
+		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
+		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
+		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
+		coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_year
 	from work.xw_term as base
 	left join work.xw_term as next
 		on base.acad_career = next.acad_career
@@ -61,12 +65,8 @@ proc sql;
 	select distinct full_acad_year into: full_acad_year 
 	from acs.adj_term 
 	where term_year = year(today())
-		and begin_month <= month(today()) 
-		and end_month >= month(today()) 
-		and begin_week <= week(today())
-		and end_week >= week(today())
-		and begin_day <= day(today())
-        and end_day >= day(today())
+		and term_begin_dt <= today()
+		and term_end_dt >= today()
 		and acad_career = 'UGRD'
 ;quit;
 
@@ -125,7 +125,7 @@ run;
 /* 	Cohort base */
 
 	proc sql;
-		create table cohort_&cohort_year. as
+		create table cohort_&start_lag._&cohort_year. as
 		select distinct a.*,
 			substr(a.last_sch_postal,1,5) as targetid,
 			case when a.sex = 'M' then 1 
@@ -2542,17 +2542,17 @@ data testing_set;
 	if total_accept = . then total_accept = 0;
 run;
 
-filename valid "Z:\Nathan\Models\student_risk\datasets\frst_validation_set.csv" encoding="utf-8";
+filename valid "Z:\Nathan\Models\student_risk\datasets\ugrd_frst_validation_set.csv" encoding="utf-8";
 
 proc export data=validation_set outfile=valid dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\datasets\frst_training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\datasets\ugrd_frst_training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\datasets\frst_testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\datasets\ugrd_frst_testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;
