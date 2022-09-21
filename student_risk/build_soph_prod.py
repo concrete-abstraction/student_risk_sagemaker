@@ -68,7 +68,7 @@ class DatasetBuilderProd:
                             min(snapshot) as snapshot 
                         from &dsn..fa_award_aid_year_vw 
                         where aid_year = "&full_acad_year." 
-                            and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+                            and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
                 on a.emplid = b.emplid
                     and a.aid_year = b.aid_year
                     and a.snapshot = b.snapshot
@@ -110,7 +110,7 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;
+		%let acs_lag = 4;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 5);
@@ -289,7 +289,7 @@ class DatasetBuilderProd:
                     emplid,
                     case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
                 from &dsn..fa_award_aid_year_vw
-                where snapshot = &aid_snapshot.
+                where snapshot = ""&aid_snapshot.""
                     and aid_year = "&cohort_year."
                     and item_type in ('900101001000','900101001010','900101001011')
                     and award_status = 'A'
@@ -529,7 +529,7 @@ class DatasetBuilderProd:
                     fed_efc,
                     fed_need
                 from &dsn..fa_award_period
-                where snapshot = &aid_snapshot.
+                where snapshot = "&aid_snapshot."
                     and aid_year = "&cohort_year."	
                     and award_period = 'A'
                     and efc_status = 'O'
@@ -545,7 +545,7 @@ class DatasetBuilderProd:
                     sum(offer_amt) as total_offer,
                     sum(accept_amt) as total_accept
                 from &dsn..fa_award_aid_year_vw
-                where snapshot = &aid_snapshot.
+                where snapshot = "&aid_snapshot."
                     and aid_year = "&cohort_year."
                     and award_period in ('A','B')
                     and award_status in ('A','O')
@@ -2307,21 +2307,21 @@ class DatasetBuilderProd:
                 left join acs.distance_km as b6
                     on substr(a.last_sch_postal,1,5) = b6.inputid
                         and a.adj_acad_prog_primary_campus = 'ONLIN'
-                left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as c
+                left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
                     on substr(a.last_sch_postal,1,5) = c.geoid
-                left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as d
+                left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
                     on substr(a.last_sch_postal,1,5) = d.geoid
-                left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as e
+                left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
                     on substr(a.last_sch_postal,1,5) = e.geoid
-                left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as f
+                left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
                     on substr(a.last_sch_postal,1,5) = f.geoid
-                left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
+                left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
                     on substr(a.last_sch_postal,1,5) = g.geoid
-                left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
+                left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
                     on substr(a.last_sch_postal,1,5) = h.geoid
-                left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
+                left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
                     on substr(a.last_sch_postal,1,5) = i.geoid
-                left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
+                left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
                     on substr(a.last_sch_postal,1,5) = j.geoid
                 left join acs.edge_locale14_zcta_table as k
                     on substr(a.last_sch_postal,1,5) = k.zcta5ce10
@@ -2340,7 +2340,7 @@ class DatasetBuilderProd:
                     emplid,
                     case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
                 from &dsn..fa_award_aid_year_vw
-                where snapshot = &aid_snapshot.
+                where snapshot = "&aid_snapshot."
                     and aid_year = "&cohort_year."
                     and item_type in ('900101001000','900101001010','900101001011')
                     and award_status = 'A'
@@ -4886,59 +4886,59 @@ class DatasetBuilderProd:
         ;quit;
 
         proc sql;
-            select distinct full_acad_year into: full_acad_year 
+            select full_acad_year into: full_acad_year 
             from acs.adj_term 
             where term_year = year(today())
                 and term_begin_dt <= today()
                 and term_end_dt >= today()
                 and acad_career = 'UGRD'
         ;quit;
-        
-		proc sql;
-			select distinct a.snapshot into: aid_snapshot
-			from &dsn..fa_award_aid_year_vw as a
-			inner join (select distinct 
-							emplid, 
-							aid_year, 
-							min(snapshot) as snapshot 
-						from &dsn..fa_award_aid_year_vw 
-						where aid_year = "&full_acad_year." 
-							and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
-				on a.emplid = b.emplid
-					and a.aid_year = b.aid_year
-					and a.snapshot = b.snapshot
-			where a.aid_year = "&full_acad_year."	
-		;quit;
 
-		proc sql;
-			create table snap_check as
-			select distinct
-				max(case when snapshot = 'census' 	then 1
-					when snapshot = 'midterm' 		then 2
-					when snapshot = 'eot'			then 3
-													else 0
-													end) as snap_order
-			from &dsn..class_registration_vw
-			where acad_career = 'UGRD'
-				and strm = (select distinct
-								max(strm)
-							from &dsn..class_registration_vw where acad_career = 'UGRD')
-				and full_acad_year = "&full_acad_year."
-		;quit;
+        proc sql;
+            select distinct a.snapshot into: aid_snapshot
+            from &dsn..fa_award_aid_year_vw as a
+            inner join (select distinct 
+                            emplid, 
+                            aid_year, 
+                            min(snapshot) as snapshot 
+                        from &dsn..fa_award_aid_year_vw 
+                        where aid_year = "&full_acad_year." 
+                            and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+                on a.emplid = b.emplid
+                    and a.aid_year = b.aid_year
+                    and a.snapshot = b.snapshot
+            where a.aid_year = "&full_acad_year."	
+        ;quit;
 
-		proc sql;
-			select distinct 
-				case when snap_order = 1	then 'census'
-					when snap_order = 2		then 'midterm'
-					when snap_order = 3		then 'eot'
-											else '' end
-				into: snapshot
-			from snap_check
-		;quit;
+        proc sql;
+            create table snap_check as
+            select distinct
+                max(case when snapshot = 'census' 	then 1
+                    when snapshot = 'midterm' 		then 2
+                    when snapshot = 'eot'			then 3
+                                                    else 0
+                                                    end) as snap_order
+            from &dsn..class_registration_vw
+            where acad_career = 'UGRD'
+                and strm = (select distinct
+                                max(strm)
+                            from &dsn..class_registration_vw where acad_career = 'UGRD')
+                and full_acad_year = "&full_acad_year."
+        ;quit;
+
+        proc sql;
+            select distinct 
+                case when snap_order = 1	then 'census'
+                    when snap_order = 2		then 'midterm'
+                    when snap_order = 3		then 'eot'
+                                            else 'census' end
+                into: snapshot
+            from snap_check
+        ;quit;
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;
+		%let acs_lag = 4;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 5);
@@ -4981,8 +4981,8 @@ class DatasetBuilderProd:
 		print('Create SAS macro...')
 
 		sas.submit("""
-		%macro loop;
-	
+        %macro loop;
+            
             %do cohort_year=&start_cohort. %to &end_cohort.;
             
             proc sql;
@@ -9601,17 +9601,17 @@ class DatasetBuilderProd:
 		print('Export data from SAS...')
 
 		sas_log = sas.submit("""
-		filename valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\soph_validation_set.csv\" encoding="utf-8";
+		filename valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\soph_validation_set.csv\" encoding=\"utf-8\";
 
 		proc export data=validation_set outfile=valid dbms=csv replace;
 		run;
 
-		filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\soph_training_set.csv\" encoding="utf-8";
+		filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\soph_training_set.csv\" encoding=\"utf-8\";
 
 		proc export data=training_set outfile=training dbms=csv replace;
 		run;
 
-		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\soph_testing_set.csv" encoding="utf-8";
+		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\soph_testing_set.csv\" encoding=\"utf-8\";
 
 		proc export data=testing_set outfile=testing dbms=csv replace;
 		run;

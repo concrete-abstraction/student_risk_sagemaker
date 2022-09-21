@@ -79,7 +79,7 @@ proc sql;
 					min(snapshot) as snapshot 
 				from &dsn..fa_award_aid_year_vw 
 				where aid_year = "&full_acad_year." 
-					and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+					and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 		on a.emplid = b.emplid
 			and a.aid_year = b.aid_year
 			and a.snapshot = b.snapshot

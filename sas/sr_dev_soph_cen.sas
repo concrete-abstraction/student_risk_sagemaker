@@ -6,7 +6,7 @@
 
 %let dsn = census;
 %let adm = adm;
-%let acs_lag = 2;
+%let acs_lag = 4;
 %let lag_year = 1;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -39,19 +39,23 @@ proc sql;
         base.strm,
 		base.full_acad_year,
 		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
-		datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
 		day(datepart(base.term_begin_dt)) as begin_day,
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
+        day(datepart(base.term_census_dt)) as census_day,
+		week(datepart(base.term_census_dt)) as census_week,
+		month(datepart(base.term_census_dt)) as census_month,
+		year(datepart(base.term_census_dt)) as census_year,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
         year(datepart(base.term_midterm_dt)) as midterm_year,
-		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_day,
-		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_week,
-		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_month,
-		coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),9999) as end_year
+        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt,
+		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
+		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
+		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
+		coalesce(year(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_year
 	from work.xw_term as base
 	left join work.xw_term as next
 		on base.acad_career = next.acad_career
@@ -62,23 +66,19 @@ proc sql;
 
 proc sql;
 	select term_type into: term_type 
-	from work.adj_xw_term 
+	from acs.adj_term 
 	where term_year = year(today())
-		and begin_month <= month(today()) 
-		and switch_month >= month(today()) 
-		and begin_week <= week(today())
-		and switch_week >= week(today())
+		and term_begin_dt <= today()
+		and term_end_dt >= today()
 		and acad_career = 'UGRD'
 ;quit;
 
 proc sql;
-	select distinct full_acad_year into: full_acad_year 
-	from work.adj_xw_term 
+	select full_acad_year into: full_acad_year 
+	from acs.adj_term 
 	where term_year = year(today())
-		and begin_month <= month(today()) 
-		and switch_month >= month(today()) 
-		and begin_week <= week(today())
-		and switch_week >= week(today())
+		and term_begin_dt <= today()
+		and term_end_dt >= today()
 		and acad_career = 'UGRD'
 ;quit;
 
@@ -91,7 +91,7 @@ proc sql;
 					min(snapshot) as snapshot 
 				from &dsn..fa_award_aid_year_vw 
 				where aid_year = "&full_acad_year." 
-					and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+					and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 		on a.emplid = b.emplid
 			and a.aid_year = b.aid_year
 			and a.snapshot = b.snapshot
@@ -119,14 +119,14 @@ proc sql;
 		case when snap_order = 1	then 'census'
 			when snap_order = 2		then 'midterm'
 			when snap_order = 3		then 'eot'
-									else '' end
+									else 'census' end
 		into: snapshot
 	from snap_check
 ;quit;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 0);
+%let start_cohort = %eval(&end_cohort. - 5);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"

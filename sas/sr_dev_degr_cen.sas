@@ -6,7 +6,7 @@
 
 %let dsn = census;
 %let adm = adm;
-%let acs_lag = 2;
+%let acs_lag = 4;
 %let lag_year = 1;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
@@ -91,7 +91,7 @@ proc sql;
 					min(snapshot) as snapshot 
 				from &dsn..fa_award_aid_year_vw 
 				where aid_year = "&full_acad_year." 
-					and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+					and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 		on a.emplid = b.emplid
 			and a.aid_year = b.aid_year
 			and a.snapshot = b.snapshot
@@ -298,7 +298,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = &aid_snapshot.
+		where snapshot = "&aid_snapshot."
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011')
 			and award_status = 'A'
@@ -568,7 +568,7 @@ proc sql;
 			fed_efc,
 			fed_need
 		from &dsn..fa_award_period
-		where snapshot = &aid_snapshot.
+		where snapshot = "&aid_snapshot."
 			and aid_year = "&cohort_year."	
 			and award_period = 'A'
 			and efc_status = 'O'
@@ -584,7 +584,7 @@ proc sql;
 			sum(offer_amt) as total_offer,
 			sum(accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = &aid_snapshot.
+		where snapshot = "&aid_snapshot."
 			and aid_year = "&cohort_year."
 			and award_period in ('A','B')
 			and award_status in ('A','O')
@@ -2395,7 +2395,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = &aid_snapshot.
+		where snapshot = "&aid_snapshot."
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011')
 			and award_status = 'A'

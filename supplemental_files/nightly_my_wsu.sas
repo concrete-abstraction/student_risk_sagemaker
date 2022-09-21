@@ -294,7 +294,7 @@ proc sql noprint;
 
 proc sql; 
 %include "&passthru."; 
-create table subcatnbr_data as 
+create table &my_data1. as 
 select * from connection to oracle 
 (
 SELECT DISTINCT A.STRM, A.EMPLID, B.SUBJECT, B.CATALOG_NBR, B.SSR_COMPONENT, B.CRSE_ID, B.CLASS_NBR, A.UNT_TAKEN, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate

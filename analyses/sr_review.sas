@@ -96,6 +96,7 @@ proc sql;
 
 	left join enrollment as b
 		on a.emplid = input(b.emplid, z9.)
+	where 
 ;quit;
 
 proc sql;

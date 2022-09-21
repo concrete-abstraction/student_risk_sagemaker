@@ -3,6 +3,7 @@ import csv
 import datetime
 import os
 import pathlib
+import time
 import urllib
 from datetime import date
 from itertools import islice
@@ -50,67 +51,6 @@ top_N = 5
 model_id = 2
 run_date = date.today()
 unwanted_vars = ['emplid','enrl_ind']
-
-#%%
-# Census date and snapshot check 
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
-now = datetime.datetime.now()
-
-now_day = now.day
-now_month = now.month
-now_year = now.year
-
-strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
-
-census_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_day'].values[0]
-census_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_month'].values[0]
-census_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['census_year'].values[0]
-
-if now_year < census_year:
-	raise config.CenError(f'{run_date}: Census year exception, attempting to run if census newest snapshot.')
-
-elif (now_year == census_year and now_month < census_month):
-	raise config.CenError(f'{run_date}: Census month exception, attempting to run if census newest snapshot.')
-
-elif (now_year == census_year and now_month == census_month and now_day < census_day):
-	raise config.CenError(f'{run_date}: Census day exception, attempting to run if census newest snapshot.')
-
-else:
-	sas = saspy.SASsession()
-
-	sas.symput('strm', strm)
-
-	sas.submit("""
-	%let dsn = census;
-
-	libname &dsn. odbc dsn=&dsn. schema=dbo;
-
-	proc sql;
-		select distinct
-			max(case when snapshot = 'census' 	then 1
-				when snapshot = 'midterm' 		then 2
-				when snapshot = 'eot'			then 3
-												else 0
-												end) as snap_order
-			into: snap_check
-			separated by ''
-		from &dsn..class_registration
-		where acad_career = 'UGRD'
-			and strm = (select distinct
-							max(strm)
-						from &dsn..class_registration where acad_career = 'UGRD')
-	;quit;
-	""")
-
-	snap_check = sas.symget('snap_check')
-
-	sas.endsas()
-
-	if snap_check != 1:
-		raise config.CenError(f'{run_date}: No census date exception but snapshot exception, attempting to run from admissions.')
-
-	else:
-		print(f'{run_date}: No census date or snapshot exceptions, running from census.')
 
 #%%
 # SAS dataset builder
@@ -218,17 +158,18 @@ pullm_data_vars = [
 # 'rural_fringe',
 # 'rural_distant',
 # 'rural_remote',
-'AD_DTA',
-'AD_AST',
-'AP',
-'RS',
-'CHS',
+# 'AD_DTA',
+# 'AD_AST',
+# 'AP',
+# 'RS',
+# 'CHS',
 # 'IB',
 # 'AICE',
-'IB_AICE', 
+# 'IB_AICE', 
 # 'term_credit_hours',
 'total_fall_units',
 'fall_withdrawn_hours',
+'fall_withdrawn_ind',
 # 'athlete',
 'remedial',
 # 'ACAD_PLAN',
@@ -435,6 +376,7 @@ vanco_data_vars = [
 # 'term_credit_hours',
 'total_fall_units',
 'fall_withdrawn_hours',
+'fall_withdrawn_ind',
 # 'athlete',
 'remedial',
 # 'ACAD_PLAN',
@@ -640,6 +582,7 @@ trici_data_vars = [
 # 'term_credit_hours',
 'total_fall_units',
 'fall_withdrawn_hours',
+'fall_withdrawn_ind',
 # 'athlete',
 'remedial',
 # 'ACAD_PLAN',
@@ -845,6 +788,7 @@ univr_data_vars = [
 # 'term_credit_hours',
 'total_fall_units',
 'fall_withdrawn_hours',
+'fall_withdrawn_ind',
 # 'athlete',
 'remedial',
 # 'ACAD_PLAN',
@@ -1166,62 +1110,62 @@ pullm_y_cv = pullm_validation_set['enrl_ind']
 # pullm_y_test = pullm_testing_set['enrl_ind']
 
 pullm_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'term_credit_hours',
-						# 'high_school_gpa',
-						'cum_gpa',
-						'cum_gpa_hours',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
-						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
-						'fall_lec_count',
-						'fall_lab_count',
-						# 'fall_int_count',
-						'fall_stu_count',
-						# 'fall_sem_count',
-						'fall_oth_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
-						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
-						# 'total_fall_contact_hrs',
-						'total_fall_units',
-						'fall_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					# 'high_school_gpa',
+	# 					'cum_gpa',
+	# 					'cum_gpa_hours',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					'fall_lec_count',
+	# 					'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					'fall_oth_count',
+	# 					# 'fall_lec_contact_hrs',
+	# 					# 'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					# 'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					# 'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					'total_fall_units',
+	# 					'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1292,62 +1236,62 @@ vanco_y_cv = vanco_validation_set['enrl_ind']
 # vanco_y_test = vanco_testing_set['enrl_ind']
 
 vanco_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'term_credit_hours',
-						# 'high_school_gpa',
-						'cum_gpa',
-						'cum_gpa_hours',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
-						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
-						'fall_lec_count',
-						'fall_lab_count',
-						# 'fall_int_count',
-						# 'fall_stu_count',
-						# 'fall_sem_count',
-						# 'fall_oth_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
-						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
-						# 'total_fall_contact_hrs',
-						'total_fall_units',
-						'fall_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					# 'high_school_gpa',
+	# 					'cum_gpa',
+	# 					'cum_gpa_hours',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					'fall_lec_count',
+	# 					'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					# 'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					# 'fall_oth_count',
+	# 					# 'fall_lec_contact_hrs',
+	# 					# 'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					# 'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					# 'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					'total_fall_units',
+	# 					'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1418,62 +1362,62 @@ trici_y_cv = trici_validation_set['enrl_ind']
 # trici_y_test = trici_testing_set['enrl_ind']
 
 trici_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'term_credit_hours',
-						# 'high_school_gpa',
-						'cum_gpa',
-						'cum_gpa_hours',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
-						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
-						'fall_lec_count',
-						'fall_lab_count',
-						# 'fall_int_count',
-						# 'fall_stu_count',
-						# 'fall_sem_count',
-						# 'fall_oth_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
-						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
-						# 'total_fall_contact_hrs',
-						'total_fall_units',
-						'fall_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					# 'high_school_gpa',
+	# 					'cum_gpa',
+	# 					'cum_gpa_hours',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					'fall_lec_count',
+	# 					'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					# 'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					# 'fall_oth_count',
+	# 					# 'fall_lec_contact_hrs',
+	# 					# 'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					# 'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					# 'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					'total_fall_units',
+	# 					'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1544,62 +1488,62 @@ univr_y_cv = univr_validation_set['enrl_ind']
 # univr_y_test = univr_testing_set['enrl_ind']
 
 univr_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'term_credit_hours',
-						# 'high_school_gpa',
-						'cum_gpa',
-						'cum_gpa_hours',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'fall_avg_difficulty',
-						# 'fall_avg_pct_withdrawn',
-						# 'fall_avg_pct_CDFW',
-						# 'fall_avg_pct_CDF',
-						'fall_lec_count',
-						'fall_lab_count',
-						# 'fall_int_count',
-						# 'fall_stu_count',
-						# 'fall_sem_count',
-						# 'fall_oth_count',
-						# 'fall_lec_contact_hrs',
-						# 'fall_lab_contact_hrs',
-						# 'fall_int_contact_hrs',
-						# 'fall_stu_contact_hrs',
-						# 'fall_sem_contact_hrs',
-						# 'fall_oth_contact_hrs',
-						# 'total_fall_contact_hrs',
-						'total_fall_units',
-						'fall_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'term_credit_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					# 'high_school_gpa',
+	# 					'cum_gpa',
+	# 					'cum_gpa_hours',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					'fall_lec_count',
+	# 					'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					# 'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					# 'fall_oth_count',
+	# 					# 'fall_lec_contact_hrs',
+	# 					# 'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					# 'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					# 'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					'total_fall_units',
+	# 					'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1662,7 +1606,7 @@ univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_
 # Standard logistic model
 
 # Pullman standard model
-print('\nStandard logistic model for Pullman freshmen...\n')
+print('\nStandard logistic model for Pullman sophomores...\n')
 
 try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1691,7 +1635,7 @@ print('\n')
 
 #%%
 # Vancouver standard model
-print('\nStandard logistic model for Vancouver freshmen...\n')
+print('\nStandard logistic model for Vancouver sophomores...\n')
 
 try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1716,7 +1660,7 @@ print('\n')
 
 #%%
 # Tri-Cities standard model
-print('\nStandard logistic model for Tri-Cities freshmen...\n')
+print('\nStandard logistic model for Tri-Cities sophomores...\n')
 
 try:
 	trici_y, trici_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1741,7 +1685,7 @@ print('\n')
 
 #%%
 # University standard model
-print('\nStandard logistic model for University freshmen...\n')
+print('\nStandard logistic model for University sophomores...\n')
 
 try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
@@ -1960,7 +1904,7 @@ print('Run machine learning models for sophomores...\n')
 # Pullman XGBoost tuning
 # pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 # pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
+# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 # 						'learning_rate': [0.01, 0.5, 1.0]}]
 
 # pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
@@ -1986,7 +1930,7 @@ print('Run machine learning models for sophomores...\n')
 # Vancouver XGBoost tuning
 # vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 # vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
+# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 # 						'learning_rate': [0.01, 0.5, 1.0]}]
 
 # vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
@@ -2012,7 +1956,7 @@ print('Run machine learning models for sophomores...\n')
 # Tri-Cities XGBoost tuning
 # trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 # trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
+# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 # 						'learning_rate': [0.01, 0.5, 1.0]}]
 
 # trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
@@ -2038,7 +1982,7 @@ print('Run machine learning models for sophomores...\n')
 # University XGBoost tuning
 # univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 # univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
+# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 # 						'learning_rate': [0.01, 0.5, 1.0]}]
 
 # univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
@@ -2064,7 +2008,7 @@ print('Run machine learning models for sophomores...\n')
 # Pullman Random Forest tuning
 # pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 # pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True)}]
+# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True)}]
 
 # pullm_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 # pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
@@ -2089,7 +2033,7 @@ print('Run machine learning models for sophomores...\n')
 # Vancouver Random Forest tuning
 # vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 # vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True)}]
+# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True)}]
 
 # vanco_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 # vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
@@ -2114,7 +2058,7 @@ print('Run machine learning models for sophomores...\n')
 # Tri-Cities Random Forest tuning
 # trici_class_weight = trici_y_cv[trici_y_cv == 0].count() / trici_y_cv[trici_y_cv == 1].count()
 # trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True)}]
+# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True)}]
 
 # trici_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 # trici_best_model = trici_gridsearch.fit(trici_x_cv, trici_y_cv)
@@ -2139,7 +2083,7 @@ print('Run machine learning models for sophomores...\n')
 # University Random Forest tuning
 # univr_class_weight = univr_y_cv[univr_y_cv == 0].count() / univr_y_cv[univr_y_cv == 1].count()
 # univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True)}]
+# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True)}]
 
 # univr_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 # univr_best_model = univr_gridsearch.fit(univr_x_cv, univr_y_cv)
@@ -2162,20 +2106,25 @@ print('Run machine learning models for sophomores...\n')
 
 #%%
 # Pullman XGBoost Random Forest tuning
+pullm_start = time.perf_counter()
+
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
+						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=12, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
+pullm_stop = time.perf_counter()
+
+print(f'Pullman XGB Random Forest model trained in {(pullm_stop - pullm_start)/60:.1f} minutes')
 print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
 
 #%%
 # Pullman XGBoost Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, 
+pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
 pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
@@ -2188,20 +2137,25 @@ print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pull
 
 #%%
 # Vancouver XGBoost Random Forest tuning
+vanco_start = time.perf_counter()
+
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
+						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=12, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
+vanco_stop = time.perf_counter()
+
+print(f'Vancouver XGB Random Forest model trained in {(vanco_stop - vanco_start)/60:.1f} minutes')
 print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
 
 #%%
 # Vancouver XGBoost Random Forest
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, 
+vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, 
 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 
 vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
@@ -2214,20 +2168,25 @@ print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {va
 
 #%%
 # Tri-Cities XGBoost Random Forest tuning
+trici_start = time.perf_counter()
+
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
+						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=12, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
+trici_stop = time.perf_counter()
+
+print(f'Tri-Cities XGB Random Forest model trained in {(trici_stop - trici_start)/60:.1f} minutes')
 print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
 
 #%%
 # Tri-Cities XGBoost Random Forest
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, 
+trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, 
 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
 
 trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
@@ -2240,20 +2199,25 @@ print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {t
 
 #%%
 # University XGBoost Random Forest tuning
+univr_start = time.perf_counter()
+
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(0, 15, 16, dtype=int, endpoint=True),
+						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=12, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
+univr_stop = time.perf_counter()
+
+print(f'University XGB Random Forest model trained in {(univr_stop - univr_start)/60:.1f} minutes')
 print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
 
 #%%
 # University XGBoost Random Forest
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, 
+univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
 
 univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)

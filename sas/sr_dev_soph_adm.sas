@@ -38,6 +38,7 @@ proc sql;
         base.term_type,
         base.strm,
 		base.full_acad_year,
+		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
 		day(datepart(base.term_begin_dt)) as begin_day,
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
@@ -73,7 +74,7 @@ proc sql;
 ;quit;
 
 proc sql;
-	select distinct full_acad_year into: full_acad_year 
+	select full_acad_year into: full_acad_year 
 	from acs.adj_term 
 	where term_year = year(today())
 		and term_begin_dt <= today()
@@ -90,7 +91,7 @@ proc sql;
 					min(snapshot) as snapshot 
 				from &dsn..fa_award_aid_year_vw 
 				where aid_year = "&full_acad_year." 
-					and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+					and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 		on a.emplid = b.emplid
 			and a.aid_year = b.aid_year
 			and a.snapshot = b.snapshot
@@ -293,7 +294,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = &aid_snapshot.
+		where snapshot = "&aid_snapshot."
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011')
 			and award_status = 'A'
@@ -534,7 +535,7 @@ proc sql;
 			fed_efc,
 			fed_need
 		from &dsn..fa_award_period
-		where snapshot = &aid_snapshot.
+		where snapshot = "&aid_snapshot."
 			and aid_year = "&cohort_year."	
 			and award_period = 'A'
 			and efc_status = 'O'
@@ -550,7 +551,7 @@ proc sql;
 			sum(offer_amt) as total_offer,
 			sum(accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = &aid_snapshot.
+		where snapshot = "&aid_snapshot."
 			and aid_year = "&cohort_year."
 			and award_period in ('A','B')
 			and award_status in ('A','O')
@@ -2387,7 +2388,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = &aid_snapshot.
+		where snapshot = "&aid_snapshot."
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011')
 			and award_status = 'A'

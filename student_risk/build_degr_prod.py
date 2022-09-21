@@ -68,7 +68,7 @@ class DatasetBuilderProd:
                             min(snapshot) as snapshot 
                         from &dsn..fa_award_aid_year_vw 
                         where aid_year = "&full_acad_year." 
-                            and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+                            and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
                 on a.emplid = b.emplid
                     and a.aid_year = b.aid_year
                     and a.snapshot = b.snapshot
@@ -103,14 +103,14 @@ class DatasetBuilderProd:
                 case when snap_order = 1	then 'census'
                     when snap_order = 2		then 'midterm'
                     when snap_order = 3		then 'eot'
-                                            else '' end
+                                            else 'census' end
                 into: snapshot
             from snap_check
         ;quit;
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;
+		%let acs_lag = 4;
 		%let lag_year = 1;
         %let end_lag = 3;
         %let start_lag = 1;
@@ -2286,21 +2286,21 @@ class DatasetBuilderProd:
                 left join acs.distance_km as b6
                     on substr(a.last_sch_postal,1,5) = b6.inputid
                         and a.adj_acad_prog_primary_campus = 'ONLIN'
-                left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as c
+                left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
                     on substr(a.last_sch_postal,1,5) = c.geoid
-                left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as d
+                left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
                     on substr(a.last_sch_postal,1,5) = d.geoid
-                left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as e
+                left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
                     on substr(a.last_sch_postal,1,5) = e.geoid
-                left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as f
+                left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
                     on substr(a.last_sch_postal,1,5) = f.geoid
-                left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
+                left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
                     on substr(a.last_sch_postal,1,5) = g.geoid
-                left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
+                left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
                     on substr(a.last_sch_postal,1,5) = h.geoid
-                left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
+                left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
                     on substr(a.last_sch_postal,1,5) = i.geoid
-                left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
+                left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
                     on substr(a.last_sch_postal,1,5) = j.geoid
                 left join acs.edge_locale14_zcta_table as k
                     on substr(a.last_sch_postal,1,5) = k.zcta5ce10
@@ -4868,43 +4868,6 @@ class DatasetBuilderProd:
 		print('Set macro variables...')
 
 		sas.submit("""
-        proc sort data=adm.xw_term out=work.xw_term;
-            by acad_career strm;
-        run;
-
-        data work.xw_term;
-            set work.xw_term;
-            by acad_career;
-            if first.acad_career then idx = 1;
-            else idx + 1;
-            where acad_career = 'UGRD';
-        run;
-
-        proc sql;
-            create table work.adj_xw_term as
-            select
-                base.strm,
-                base.term_year,
-                base.acad_career,
-                datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
-                base.term_descr15,
-                datepart(intnx('dtday', next.term_begin_dt, -1)) as term_switch_dt format=mmddyyd10.,
-                base.term_type,
-                base.full_acad_year,
-                day(datepart(base.term_begin_dt)) as begin_day,
-                week(datepart(base.term_begin_dt)) as begin_week,
-                month(datepart(base.term_begin_dt)) as begin_month,
-                year(datepart(base.term_begin_dt)) as begin_year,
-                day(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_day,
-                week(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_week,
-                month(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_month,
-                year(datepart(intnx('dtday', next.term_begin_dt, -1))) as switch_year
-            from work.xw_term as base
-            left join work.xw_term as next
-                on base.acad_career = next.acad_career
-                and base.idx = next.idx - 1
-        ;quit;
-
         proc sql;
             select full_acad_year into: full_acad_year 
             from acs.adj_term 
@@ -4936,7 +4899,7 @@ class DatasetBuilderProd:
                             min(snapshot) as snapshot 
                         from &dsn..fa_award_aid_year_vw 
                         where aid_year = "&full_acad_year." 
-                            and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+                            and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
                 on a.emplid = b.emplid
                     and a.aid_year = b.aid_year
                     and a.snapshot = b.snapshot
@@ -4964,14 +4927,14 @@ class DatasetBuilderProd:
                 case when snap_order = 1	then 'census'
                     when snap_order = 2		then 'midterm'
                     when snap_order = 3		then 'eot'
-                                            else '' end
+                                            else 'census' end
                 into: snapshot
             from snap_check
         ;quit;
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;
+		%let acs_lag = 4;
 		%let lag_year = 1;
         %let end_lag = 2;
         %let start_lag = 0;

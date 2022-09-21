@@ -68,7 +68,7 @@ class DatasetBuilderProd:
 							min(snapshot) as snapshot 
 						from &dsn..fa_award_aid_year_vw 
 						where aid_year = "&full_acad_year." 
-							and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+							and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 				on a.emplid = b.emplid
 					and a.aid_year = b.aid_year
 					and a.snapshot = b.snapshot
@@ -84,7 +84,7 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;
+		%let acs_lag = 4;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 5);
@@ -1053,21 +1053,21 @@ class DatasetBuilderProd:
 					on a.sid_ext_org_id = e.sid_ext_org_id
 				left join acs.distance as f
 					on substr(e.ext_org_postal,1,5) = f.targetid
-				left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
+				left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as g
 					on substr(e.ext_org_postal,1,5) = g.geoid
-				left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
+				left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as h
 					on substr(e.ext_org_postal,1,5) = h.geoid
-				left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
+				left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as i
 					on substr(e.ext_org_postal,1,5) = i.geoid
-				left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
+				left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as j
 					on substr(e.ext_org_postal,1,5) = j.geoid
-				left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k
+				left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as k
 					on substr(e.ext_org_postal,1,5) = k.geoid
-				left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l
+				left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as l
 					on substr(e.ext_org_postal,1,5) = l.geoid
-				left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m
+				left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as m
 					on substr(e.ext_org_postal,1,5) = m.geoid
-				left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n
+				left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as n
 					on substr(e.ext_org_postal,1,5) = n.geoid
 				left join acs.edge_locale14_zcta_table as o
 					on substr(e.ext_org_postal,1,5) = o.zcta5ce10
@@ -2135,7 +2135,7 @@ class DatasetBuilderProd:
 							min(snapshot) as snapshot 
 						from &dsn..fa_award_aid_year_vw 
 						where aid_year = "&full_acad_year." 
-							and snapshot in ('yrbegin', 'usnews', 'budreq', 'aidyear')) as b
+							and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
 				on a.emplid = b.emplid
 					and a.aid_year = b.aid_year
 					and a.snapshot = b.snapshot
@@ -2170,7 +2170,7 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;
+		%let acs_lag = 4;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 5);
