@@ -45,12 +45,22 @@ metadata_engine = MetaData(engine.execution_options(autocommit=True, isolation_l
 student_shap = Table('student_shap', metadata_engine, autoload=True)
 
 #%%
-# Global variable intialization
+# Global variable initializaiton
 strm = None
 top_N = 5
 model_id = 2
 run_date = date.today()
 unwanted_vars = ['emplid','enrl_ind']
+
+#%%
+# Global XGBoost hyperparameter initialization
+min_child_weight = 5
+max_bin = 32
+num_parallel_tree = 64
+subsample = 0.8
+colsample_bytree = 0.8
+colsample_bynode = 0.8
+verbose = False
 
 #%%
 # SAS dataset builder
@@ -171,7 +181,7 @@ pullm_data_vars = [
 'fall_withdrawn_hours',
 'fall_withdrawn_ind',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 'business',
@@ -378,7 +388,7 @@ vanco_data_vars = [
 'fall_withdrawn_hours',
 'fall_withdrawn_ind',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -584,7 +594,7 @@ trici_data_vars = [
 'fall_withdrawn_hours',
 'fall_withdrawn_ind',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -790,7 +800,7 @@ univr_data_vars = [
 'fall_withdrawn_hours',
 'fall_withdrawn_ind',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -1615,12 +1625,12 @@ try:
 					+ cum_gpa + cum_gpa_hours \
 					+ total_fall_units \
 					+ fall_withdrawn_hours \
+					+ fall_withdrawn_ind \
 					+ honors_program_ind \
 					+ business + comm + education + medicine + nursing + vet_med \
 					+ cahnrs_anml + cahnrs_econ + cahnrext \
 					+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
 					+ vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
-					+ remedial \
 					+ cum_adj_transfer_hours \
 					+ resident \
 					+ unmet_need_ofr + unmet_need_ofr_mi', data=pullm_logit_df, return_type='dataframe')
@@ -1644,7 +1654,7 @@ try:
 					+ cum_gpa + cum_gpa_hours \
 					+ total_fall_units \
 					+ fall_withdrawn_hours \
-					+ remedial \
+					+ fall_withdrawn_ind \
 					+ cum_adj_transfer_hours \
 					+ resident \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -1669,7 +1679,7 @@ try:
 					+ cum_gpa + cum_gpa_hours \
 					+ total_fall_units \
 					+ fall_withdrawn_hours \
-					+ remedial \
+					+ fall_withdrawn_ind \
 					+ cum_adj_transfer_hours \
 					+ resident \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -1694,7 +1704,7 @@ try:
 					+ cum_gpa + cum_gpa_hours \
 					+ total_fall_units \
 					+ fall_withdrawn_hours \
-					+ remedial \
+					+ fall_withdrawn_ind \
 					+ cum_adj_transfer_hours \
 					+ resident \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
@@ -1904,10 +1914,10 @@ print('Run machine learning models for sophomores...\n')
 # Pullman XGBoost tuning
 # pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 # pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+# 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 # 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-# pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+# pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 # pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 # print(f'Best Pullman XGB parameters: {pullm_gridsearch.best_params_}')
@@ -1930,10 +1940,10 @@ print('Run machine learning models for sophomores...\n')
 # Vancouver XGBoost tuning
 # vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 # vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+# 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 # 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-# vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+# vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 # vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 # print(f'Best Vancouver XGB parameters: {vanco_gridsearch.best_params_}')
@@ -1956,10 +1966,10 @@ print('Run machine learning models for sophomores...\n')
 # Tri-Cities XGBoost tuning
 # trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 # trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+# 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 # 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-# trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+# trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 # trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 # print(f'Best Tri-Cities XGB parameters: {trici_gridsearch.best_params_}')
@@ -1982,10 +1992,10 @@ print('Run machine learning models for sophomores...\n')
 # University XGBoost tuning
 # univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 # univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+# 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 # 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-# univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+# univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 # univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 # print(f'Best University XGB parameters: {univr_gridsearch.best_params_}')
@@ -2008,9 +2018,9 @@ print('Run machine learning models for sophomores...\n')
 # Pullman Random Forest tuning
 # pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 # pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True)}]
+# 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True)}]
 
-# pullm_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+# pullm_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 # pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 # print(f'Best Pullman Random Forest parameters: {pullm_gridsearch.best_params_}')
@@ -2033,9 +2043,9 @@ print('Run machine learning models for sophomores...\n')
 # Vancouver Random Forest tuning
 # vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 # vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True)}]
+# 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True)}]
 
-# vanco_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+# vanco_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 # vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 # print(f'Best Vancouver Random Forest parameters: {vanco_gridsearch.best_params_}')
@@ -2058,9 +2068,9 @@ print('Run machine learning models for sophomores...\n')
 # Tri-Cities Random Forest tuning
 # trici_class_weight = trici_y_cv[trici_y_cv == 0].count() / trici_y_cv[trici_y_cv == 1].count()
 # trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True)}]
+# 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True)}]
 
-# trici_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+# trici_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 # trici_best_model = trici_gridsearch.fit(trici_x_cv, trici_y_cv)
 
 # print(f'Best Tri-Cities Random Forest parameters: {trici_gridsearch.best_params_}')
@@ -2083,9 +2093,9 @@ print('Run machine learning models for sophomores...\n')
 # University Random Forest tuning
 # univr_class_weight = univr_y_cv[univr_y_cv == 0].count() / univr_y_cv[univr_y_cv == 1].count()
 # univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-# 						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True)}]
+# 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True)}]
 
-# univr_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+# univr_gridsearch = HalvingGridSearchCV(XGBRFClassifier(tree_method='hist', grow_policy='depthwise', subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 # univr_best_model = univr_gridsearch.fit(univr_x_cv, univr_y_cv)
 
 # print(f'Best University Random Forest parameters: {univr_gridsearch.best_params_}')
@@ -2110,10 +2120,10 @@ pullm_start = time.perf_counter()
 
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 pullm_stop = time.perf_counter()
@@ -2124,7 +2134,7 @@ print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params
 #%%
 # Pullman XGBoost Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=pullm_class_weight, 
+pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
 pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
@@ -2141,10 +2151,10 @@ vanco_start = time.perf_counter()
 
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 vanco_stop = time.perf_counter()
@@ -2155,7 +2165,7 @@ print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_para
 #%%
 # Vancouver XGBoost Random Forest
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=vanco_class_weight, 
+vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, 
 								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 
 vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
@@ -2172,10 +2182,10 @@ trici_start = time.perf_counter()
 
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 trici_stop = time.perf_counter()
@@ -2186,7 +2196,7 @@ print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_par
 #%%
 # Tri-Cities XGBoost Random Forest
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=trici_class_weight, 
+trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, 
 								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
 
 trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
@@ -2203,10 +2213,10 @@ univr_start = time.perf_counter()
 
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 15, 15, dtype=int, endpoint=True),
+						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 univr_stop = time.perf_counter()
@@ -2217,7 +2227,7 @@ print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_par
 #%%
 # University XGBoost Random Forest
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=15, max_bin=32, num_parallel_tree=64, subsample=0.8, colsample_bytree=0.8, scale_pos_weight=univr_class_weight, 
+univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, 
 								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
 
 univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)

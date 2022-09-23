@@ -1517,7 +1517,7 @@ run;
 				and a.class_nbr = p.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&cohort_year.
+					from midterm_class_registration_&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'STU' and enrl_status_reason ^= 'WDRW') as q
 			on a.emplid = q.emplid
@@ -1607,7 +1607,7 @@ run;
 			sum(m.oth_contact_hrs) as spring_oth_contact_hrs,
 			coalesce(calculated spring_lec_contact_hrs, 0) + coalesce(calculated spring_lab_contact_hrs, 0) + coalesce(calculated spring_int_contact_hrs, 0) 
 				+ coalesce(calculated spring_stu_contact_hrs, 0) + coalesce(calculated spring_sem_contact_hrs, 0) + coalesce(calculated spring_oth_contact_hrs, 0) as total_spring_contact_hrs
-		from class_registration_&cohort_year. as a
+		from midterm_class_registration_&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
 						max(term_contact_hrs) as lec_contact_hrs,

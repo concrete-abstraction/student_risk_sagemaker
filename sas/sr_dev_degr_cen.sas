@@ -911,6 +911,72 @@ proc sql;
 	;quit;
 	
 	proc sql;
+		create table midterm_class_registration_&admit_lag._&cohort_year. as
+		select distinct
+			strm,
+			emplid,
+			class_nbr,
+			crse_id,
+			ssr_component,
+			unt_taken,
+			grading_basis_enrl,
+			enrl_status_reason,
+			enrl_ind,
+			class_grade_points as grade_points,
+			class_grade_points_per_unit as grd_pts_per_unit,
+			subject_catalog_nbr,
+			crse_grade_off as crse_grade,
+			case when crse_grade_off = 'A' 	then 4.0
+				when crse_grade_off = 'A-'	then 3.7
+				when crse_grade_off = 'B+'	then 3.3
+				when crse_grade_off = 'B'	then 3.0
+				when crse_grade_off = 'B-'	then 2.7
+				when crse_grade_off = 'C+'	then 2.3
+				when crse_grade_off = 'C'	then 2.0
+				when crse_grade_off = 'C-'	then 1.7
+				when crse_grade_off = 'D+'	then 1.3
+				when crse_grade_off = 'D'	then 1.0
+				when crse_grade_off = 'F'	then 0.0
+											else .
+											end as class_gpa,
+			case when crse_grade_off = 'D' 	then 1
+											else 0
+											end as D_grade_ind,
+			case when crse_grade_off = 'F' 	then 1
+											else 0
+											end as F_grade_ind,
+			case when crse_grade_off = 'W' 	then 1
+											else 0
+											end as W_grade_ind,
+			case when crse_grade_off = 'I' 	then 1
+											else 0
+											end as I_grade_ind,
+			case when crse_grade_off = 'X' 	then 1
+											else 0
+											end as X_grade_ind,
+			case when crse_grade_off = 'U' 	then 1
+											else 0
+											end as U_grade_ind,
+			case when crse_grade_off = 'S' 	then 1
+											else 0
+											end as S_grade_ind,
+			case when crse_grade_off = 'P' 	then 1
+											else 0
+											end as P_grade_ind,
+			case when crse_grade_input = 'Z'	then 1
+												else 0
+												end as Z_grade_ind,
+			case when unt_taken is not null and enrl_status_reason ^= 'WDRW'	then 1
+																				else 0
+																				end as term_grade_ind
+		from &dsn..class_registration_vw
+		where snapshot = 'midterm'
+			and full_acad_year = "&cohort_year."
+			and subject_catalog_nbr ^= 'NURS 399'
+			and stdnt_enrl_status = 'E'
+	;quit;
+	
+	proc sql;
 		create table eot_class_registration_&admit_lag._&cohort_year. as
 		select distinct
 			strm,
@@ -1366,7 +1432,7 @@ proc sql;
 			avg(c.pct_CDF) as spring_avg_pct_CDF,
 			avg(c.pct_DFW) as spring_avg_pct_DFW,
 			avg(c.pct_DF) as spring_avg_pct_DF
-		from class_registration_&admit_lag._&cohort_year. as a
+		from midterm_class_registration_&admit_lag._&cohort_year. as a
 		left join class_difficulty_&admit_lag._&cohort_year. as b
 			on a.subject_catalog_nbr = b.subject_catalog_nbr
 				and a.ssr_component = b.ssr_component
@@ -1411,45 +1477,45 @@ proc sql;
 			sum(y.unt_taken) as spring_oth_units,
 			coalesce(calculated spring_lec_units, 0) + coalesce(calculated spring_lab_units, 0) + coalesce(calculated spring_int_units, 0) 
 				+ coalesce(calculated spring_stu_units, 0) + coalesce(calculated spring_sem_units, 0) + coalesce(calculated spring_oth_units, 0) as total_spring_units
-		from class_registration_&admit_lag._&cohort_year. as a
+		from midterm_class_registration_&admit_lag._&cohort_year. as a
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LEC' and enrl_status_reason ^= 'WDRW') as b
 			on a.emplid = b.emplid
 				and a.class_nbr = b.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LAB' and enrl_status_reason ^= 'WDRW') as c
 			on a.emplid = c.emplid
 				and a.class_nbr = c.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'INT' and enrl_status_reason ^= 'WDRW') as d
 			on a.emplid = d.emplid
 				and a.class_nbr = d.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'STU' and enrl_status_reason ^= 'WDRW') as e
 			on a.emplid = e.emplid
 				and a.class_nbr = e.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'SEM' and enrl_status_reason ^= 'WDRW') as f
 			on a.emplid = f.emplid
 				and a.class_nbr = f.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM') and enrl_status_reason ^= 'WDRW') as g
 			on a.emplid = g.emplid
@@ -1457,7 +1523,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LEC' and enrl_status_reason ^= 'WDRW') as h
 			on a.emplid = h.emplid
@@ -1465,7 +1531,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'LAB' and enrl_status_reason ^= 'WDRW') as i
 			on a.emplid = i.emplid
@@ -1473,7 +1539,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'INT' and enrl_status_reason ^= 'WDRW') as j
 			on a.emplid = j.emplid
@@ -1481,7 +1547,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'STU' and enrl_status_reason ^= 'WDRW') as k
 			on a.emplid = k.emplid
@@ -1489,7 +1555,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component = 'SEM' and enrl_status_reason ^= 'WDRW') as l
 			on a.emplid = l.emplid
@@ -1497,49 +1563,49 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM') and enrl_status_reason ^= 'WDRW') as m
 			on a.emplid = m.emplid
 				and a.class_nbr = m.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LEC' and enrl_status_reason ^= 'WDRW') as n
 			on a.emplid = n.emplid
 				and a.class_nbr = n.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LAB' and enrl_status_reason ^= 'WDRW') as o
 			on a.emplid = o.emplid
 				and a.class_nbr = o.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'INT' and enrl_status_reason ^= 'WDRW') as p
 			on a.emplid = p.emplid
 				and a.class_nbr = p.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'STU' and enrl_status_reason ^= 'WDRW') as q
 			on a.emplid = q.emplid
 				and a.class_nbr = q.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'SEM' and enrl_status_reason ^= 'WDRW') as r
 			on a.emplid = r.emplid
 				and a.class_nbr = r.class_nbr
 		left join (select distinct emplid, 
 						class_nbr
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM') and enrl_status_reason ^= 'WDRW') as s
 			on a.emplid = s.emplid
@@ -1547,7 +1613,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LEC' and enrl_status_reason ^= 'WDRW') as t
 			on a.emplid = t.emplid
@@ -1555,7 +1621,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'LAB' and enrl_status_reason ^= 'WDRW') as u
 			on a.emplid = u.emplid
@@ -1563,7 +1629,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'INT' and enrl_status_reason ^= 'WDRW') as v
 			on a.emplid = v.emplid
@@ -1571,7 +1637,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'STU' and enrl_status_reason ^= 'WDRW') as w
 			on a.emplid = w.emplid
@@ -1579,7 +1645,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component = 'SEM' and enrl_status_reason ^= 'WDRW') as x
 			on a.emplid = x.emplid
@@ -1587,7 +1653,7 @@ proc sql;
 		left join (select distinct emplid, 
 						class_nbr,
 						unt_taken
-					from class_registration_&admit_lag._&cohort_year.
+					from midterm_class_registration_&admit_lag._&cohort_year.
 					where strm = substr(put(&cohort_year., 4.), 1, 1) || substr(put(&cohort_year., 4.), 3, 2) || '3'
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM') and enrl_status_reason ^= 'WDRW') as y
 			on a.emplid = y.emplid
@@ -1615,7 +1681,7 @@ proc sql;
 			sum(m.oth_contact_hrs) as spring_oth_contact_hrs,
 			coalesce(calculated spring_lec_contact_hrs, 0) + coalesce(calculated spring_lab_contact_hrs, 0) + coalesce(calculated spring_int_contact_hrs, 0) 
 				+ coalesce(calculated spring_stu_contact_hrs, 0) + coalesce(calculated spring_sem_contact_hrs, 0) + coalesce(calculated spring_oth_contact_hrs, 0) as total_spring_contact_hrs
-		from class_registration_&admit_lag._&cohort_year. as a
+		from midterm_class_registration_&admit_lag._&cohort_year. as a
 		left join (select distinct
 						subject_catalog_nbr,
 						max(term_contact_hrs) as lec_contact_hrs,
