@@ -19,7 +19,7 @@ libname UD_t_o_i odbc dsn=UDtabsql_or_int schema=dbo;
 libname dir "&ir_fs.\Nathan\Models\student_risk\supplemental_files";
 /**/
 /*%INCLUDE "\\ad.wsu.edu\POIS\IR\SAS\SAS-process\control\user\jon\determine_WSUNCT1T.sas";*/
-%INCLUDE "&ir_fs.\SAS\SAS-process\control\erp\determine_WSUNCPRD.sas";
+%INCLUDE "&ir_fs.\SAS\SAS-process\control\erp\determine_AWSCSPRD.sas"; /* AWS Prod: */
 %INCLUDE "&ir_fs.\SAS\SAS-process\control\sql\determine_oracle_int_prod.sas";
 
 /* Monitor if this will work in batch job if not do not stress about it, just comment it out */
@@ -123,7 +123,7 @@ run;
 
 %global curlib;
 %global passthru;
-%let curlib = WSUNCPRD;
+%let curlib = AWSCSPRD;
 %put &curlib.;
 
 /* check for errors now */
@@ -270,8 +270,8 @@ proc sql noprint;
 %PUT "******* status of the job is: &status_cd. *****";
 
 %macro passthrulib;
-%if &curlib. = WSUNCPRD %then %do;
-		%let passthru = %bquote('&ir_fs.\SAS\SAS-process\control\erp\determine_WSUNCPRD_pass_through.sas');
+%if &curlib. = AWSCSPRD %then %do;
+		%let passthru = %bquote('&ir_fs.\SAS\SAS-process\control\erp\determine_AWSCSPRD_pass_through.sas');
 	%end;
 %else %do;
 		%let passthru = %bquote('&ir_fs.\SAS\SAS-process\control\user\jon\determine_WSUNCT1T_pass_through.sas');
@@ -317,7 +317,7 @@ proc sql;
 create table &my_data2. as 
 select * from connection to oracle 
 (
-SELECT  A.EMPLID, A.INSTITUTION, A.AID_YEAR,A.AWARD_PERIOD, A.ACAD_CAREER, SUM(A.OFFER_AMOUNT) AS TOTAL_OFFER, B.FED_NEED, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
+SELECT  A.EMPLID, A.INSTITUTION, A.AID_YEAR,A.AWARD_PERIOD, A.ACAD_CAREER, SUM(A.OFFER_AMOUNT) AS TOTAL_OFFER, SUM(A.ACCEPT_AMOUNT) AS TOTAL_ACCEPT, B.FED_NEED, TO_CHAR(sysdate, 'yyyy/mm/dd') systemdate 
 FROM PS_STDNT_AWARDS A 
 LEFT OUTER JOIN  PS_STDNT_AWD_PER B ON  A.EMPLID = B.EMPLID AND A.INSTITUTION = B.INSTITUTION AND A.AID_YEAR = B.AID_YEAR AND B.AWARD_PERIOD = A.AWARD_PERIOD
 WHERE (A.AID_YEAR in %bquote(('&list_of_aid_years.'))  AND A.AWARD_STATUS in ('O','A') AND A.AWARD_PERIOD in ('A','B') AND A.ACAD_CAREER = 'UGRD' )
