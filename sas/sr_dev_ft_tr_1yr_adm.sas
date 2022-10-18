@@ -1,6 +1,6 @@
 * ------------------------------------------------------------------------------- ;
 *                                                                                 ;
-*                             STUDENT RISK (1 OF 8)                               ;
+*                             STUDENT RISK (5 OF 8)                               ;
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
@@ -217,7 +217,7 @@ run;
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat in ('FRSH')
+			and a.adj_admit_type_cat in ('TRAN')
 			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
@@ -429,7 +429,7 @@ run;
 /* 			and full_acad_year = "&cohort_year." */
 /* 			and substr(strm, 4, 1) = '7' */
 /* 			and acad_career = 'UGRD' */
-/* 			and adj_admit_type_cat in ('FRSH') */
+/* 			and adj_admit_type_cat in ('TRAN') */
 /* 			and WA_residency ^= 'NON-I' */
 /* 			and primary_plan_flag = 'Y' */
 /* 			and calculated split_plan = 0 */
@@ -1236,7 +1236,7 @@ run;
 /* 		where snapshot = 'census' */
 /* 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' */
 /* 			and acad_career = 'UGRD' */
-/* 			and adj_admit_type_cat in ('FRSH') */
+/* 			and adj_admit_type_cat in ('TRAN') */
 /* 	;quit; */
 	
 /* 	Housing detail */
@@ -1535,7 +1535,7 @@ run;
 								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
 			and a.acad_career = 'UGRD' 
 			and a.enrolled = 1
-			and q.adj_admit_type_cat in ('FRSH')
+			and q.adj_admit_type_cat in ('TRAN')
 			and r.wa_residency ^= 'NON-I'
 	;quit;
 

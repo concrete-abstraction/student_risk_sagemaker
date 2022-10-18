@@ -1,6 +1,6 @@
 * ------------------------------------------------------------------------------- ;
 *                                                                                 ;
-*                             STUDENT RISK (5 OF 6)                               ;
+*                             STUDENT RISK (7 OF 8)                               ;
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
@@ -2602,7 +2602,8 @@ proc sql;
 		select distinct
 			emplid,
 			aid_year,
-			sum(total_offer) as total_offer
+			sum(total_offer) as total_offer,
+			sum(total_accept) as total_accept
 		from acs.finaid_data
  			where aid_year = "&cohort_year."
  		group by emplid, aid_year
@@ -4161,6 +4162,7 @@ proc sql;
       		v.stdnt_agi_blank,
 			d.fed_need,
 			e.total_offer,
+			e.total_accept,
 			f.best,
 			f.bestr,
 			f.qvalue,
@@ -4540,6 +4542,8 @@ proc sql;
 		spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 		unmet_need_disb = fed_need - total_disb;
 		unmet_need_acpt = fed_need - total_accept;
+	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 		unmet_need_ofr = fed_need - total_offer;
 		if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 		if unmet_need_ofr < 0 then unmet_need_ofr = 0;
@@ -4720,6 +4724,8 @@ proc sql;
 		spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 		unmet_need_disb = fed_need - total_disb;
 		unmet_need_acpt = fed_need - total_accept;
+	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 		unmet_need_ofr = fed_need - total_offer;
 		if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 		if unmet_need_ofr < 0 then unmet_need_ofr = 0;
@@ -4900,6 +4906,8 @@ proc sql;
 		spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 		unmet_need_disb = fed_need - total_disb;
 		unmet_need_acpt = fed_need - total_accept;
+	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 		unmet_need_ofr = fed_need - total_offer;
 		if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 		if unmet_need_ofr < 0 then unmet_need_ofr = 0;

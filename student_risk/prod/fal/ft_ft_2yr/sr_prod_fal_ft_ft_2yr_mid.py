@@ -60,7 +60,7 @@ num_parallel_tree = 64
 subsample = 0.8
 colsample_bytree = 0.8
 colsample_bynode = 0.8
-verbose = False
+verbose = True
 
 #%%
 # SAS dataset builder
@@ -247,6 +247,8 @@ pullm_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
+# 'unmet_need_acpt',
+# 'unmet_need_acpt_mi',
 'unmet_need_ofr',
 'unmet_need_ofr_mi'
 ]
@@ -1641,7 +1643,6 @@ try:
 					+ cum_gpa + cum_gpa_hours \
 					+ total_fall_units \
 					+ fall_withdrawn_hours \
-					+ fall_withdrawn_ind \
 					+ honors_program_ind \
 					+ business + comm + education + medicine + nursing + vet_med \
 					+ cahnrs_anml + cahnrs_econ + cahnrext \
@@ -1649,7 +1650,9 @@ try:
 					+ vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
 					+ cum_adj_transfer_hours \
 					+ resident \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=pullm_logit_df, return_type='dataframe')
+					+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
+					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
+					+ unmet_need_acpt + unmet_need_acpt_mi', data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
 	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -1670,9 +1673,10 @@ try:
 					+ cum_gpa + cum_gpa_hours \
 					+ total_fall_units \
 					+ fall_withdrawn_hours \
-					+ fall_withdrawn_ind \
 					+ cum_adj_transfer_hours \
 					+ resident \
+					+ fall_midterm_gpa_avg \
+					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
 					+ unmet_need_ofr + unmet_need_ofr_mi', data=vanco_logit_df, return_type='dataframe')
 
@@ -1695,9 +1699,10 @@ try:
 					+ cum_gpa + cum_gpa_hours \
 					+ total_fall_units \
 					+ fall_withdrawn_hours \
-					+ fall_withdrawn_ind \
 					+ cum_adj_transfer_hours \
 					+ resident \
+					+ fall_midterm_gpa_avg \
+					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
 					+ unmet_need_ofr + unmet_need_ofr_mi', data=trici_logit_df, return_type='dataframe')
 
@@ -1720,9 +1725,10 @@ try:
 					+ cum_gpa + cum_gpa_hours \
 					+ total_fall_units \
 					+ fall_withdrawn_hours \
-					+ fall_withdrawn_ind \
 					+ cum_adj_transfer_hours \
 					+ resident \
+					+ fall_midterm_gpa_avg \
+					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
 					+ unmet_need_ofr + unmet_need_ofr_mi', data=univr_logit_df, return_type='dataframe')
 

@@ -171,6 +171,7 @@ if __name__ == '__main__':
         try:
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_mid.py').read())
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_mid.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_mid.py').read())
         except config.MidError as mid_error:
             print(mid_error)
 

@@ -1,6 +1,6 @@
 * ------------------------------------------------------------------------------- ;
 *                                                                                 ;
-*                             STUDENT RISK (2 OF 6)                               ;
+*                             STUDENT RISK (2 OF 8)                               ;
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
@@ -257,7 +257,7 @@ run;
 		where a.full_acad_year = "&cohort_year."
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat in ('FRSH','TRAN')
+			and a.adj_admit_type_cat in ('FRSH')
 			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
@@ -271,7 +271,7 @@ run;
 			pell_recipient_ind
 		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_type_cat in ('FRSH','TRAN')
+			and adj_admit_type_cat in ('FRSH')
 			and ipeds_full_part_time = 'F'
 			and WA_residency ^= 'NON-I'
 	;quit;
@@ -478,7 +478,7 @@ run;
 			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat in ('FRSH','TRAN')
+			and adj_admit_type_cat in ('FRSH')
 			and WA_residency ^= 'NON-I'
 			and primary_plan_flag = 'Y'
 			and primary_prog_flag = 'Y'
@@ -1976,7 +1976,7 @@ run;
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat in ('FRSH','TRAN')
+			and adj_admit_type_cat in ('FRSH')
 	;quit;
 	
 	proc sql;
@@ -2364,7 +2364,7 @@ run;
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm, 4 , 1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat in ('FRSH','TRAN')
+			and a.adj_admit_type_cat in ('FRSH')
 			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
@@ -2378,7 +2378,7 @@ run;
 			pell_recipient_ind
 		from &dsn..new_student_profile_ugrd_cs
 		where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
-			and adj_admit_type_cat in ('FRSH','TRAN')
+			and adj_admit_type_cat in ('FRSH')
 			and ipeds_full_part_time = 'F'
 			and WA_residency ^= 'NON-I'
 	;quit;
@@ -2560,7 +2560,7 @@ run;
 			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat in ('FRSH','TRAN')
+			and adj_admit_type_cat in ('FRSH')
 			and WA_residency ^= 'NON-I'
 			and primary_plan_flag = 'Y'
 			and primary_prog_flag = 'Y'
@@ -2583,7 +2583,8 @@ run;
 		select distinct
 			emplid,
 			aid_year,
-			sum(total_offer) as total_offer
+			sum(total_offer) as total_offer,
+			sum(total_accept) as total_accept
 		from acs.finaid_data
  			where aid_year = "&cohort_year."
  		group by emplid, aid_year
@@ -4047,7 +4048,7 @@ run;
 		where snapshot = 'census'
 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			and acad_career = 'UGRD'
-			and adj_admit_type_cat in ('FRSH','TRAN')
+			and adj_admit_type_cat in ('FRSH')
 	;quit;
 	
 	proc sql;
@@ -4142,6 +4143,7 @@ run;
       		v.stdnt_agi_blank,
 			d.fed_need,
 			e.total_offer,
+			e.total_accept,
 			f.best,
 			f.bestr,
 			f.qvalue,
@@ -4503,6 +4505,8 @@ data validation_set;
 	spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
+	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 	unmet_need_ofr = fed_need - total_offer;
 	if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
@@ -4687,6 +4691,8 @@ data training_set;
 	spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
+	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 	unmet_need_ofr = fed_need - total_offer;
 	if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
@@ -4871,6 +4877,8 @@ data testing_set;
 	spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 	unmet_need_disb = fed_need - total_disb;
 	unmet_need_acpt = fed_need - total_accept;
+	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 	unmet_need_ofr = fed_need - total_offer;
 	if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 	if unmet_need_ofr < 0 then unmet_need_ofr = 0;
