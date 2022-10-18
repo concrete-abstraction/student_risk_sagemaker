@@ -132,7 +132,7 @@ proc sql;
 ;quit;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
-%let admit_lag = 0;
+%let admit_lag = 2;
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
 %let start_cohort = %eval(&end_cohort. - 5);
 
@@ -4963,17 +4963,17 @@ data testing_set;
 	if total_accept = . then total_accept = 0;
 run;
 
-filename valid "Z:\Nathan\Models\student_risk\datasets\ft_tr_2yr_validation_set.csv" encoding="utf-8";
+filename valid "Z:\Nathan\Models\student_risk\datasets\ft_tr_4yr_validation_set.csv" encoding="utf-8";
 
 proc export data=validation_set outfile=valid dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\datasets\ft_tr_2yr_training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\datasets\ft_tr_4yr_training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\datasets\ft_tr_2yr_testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\datasets\ft_tr_4yr_testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;

@@ -2146,7 +2146,7 @@ class DatasetBuilderDev:
 		proc export data=training_set outfile=training dbms=csv replace;
 		run;
 
-		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv" encoding="utf-8";
+		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv\" encoding="utf-8";
 
 		proc export data=testing_set outfile=testing dbms=csv replace;
 		run;
@@ -6880,7 +6880,7 @@ class DatasetBuilderDev:
 		proc export data=training_set outfile=training dbms=csv replace;
 		run;
 
-		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv" encoding="utf-8";
+		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv\" encoding="utf-8";
 
 		proc export data=testing_set outfile=testing dbms=csv replace;
 		run;
