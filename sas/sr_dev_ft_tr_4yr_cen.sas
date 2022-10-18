@@ -132,7 +132,7 @@ proc sql;
 ;quit;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
-%let admit_lag = 0;
+%let admit_lag = 2;
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
 %let start_cohort = %eval(&end_cohort. - 5);
 
@@ -330,33 +330,33 @@ proc sql;
 			and a.ipeds_full_part_time = 'F'
 	;quit;
 	
-	proc sql;
-		create table enrolled_&cohort_year. as
-		select distinct 
-			a.emplid,
-			a.term_code as cont_term,
-			case when b.emplid is not null 	then 1
-											else a.enrl_ind
-											end as enrl_ind,
-			case when b.emplid is not null 	then 1
-											else 0
-											end as degr_ind
-		from &dsn..student_enrolled_vw as a
-		full join (select distinct 
-						emplid 
-					from &dsn..student_degree_vw 
-					where snapshot = 'degree'
-						and "&cohort_year." <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
-						and acad_career = 'UGRD'
-						and ipeds_award_lvl = 5) as b
-			on a.emplid = b.emplid
-		where a.snapshot = 'census'
-			and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-			and substr(a.strm,4,1) = '7'
-			and a.acad_career = 'UGRD'
-			and a.new_continue_status = 'CTU'
-			and a.term_credit_hours > 0
-	;quit;
+/* 	proc sql; */
+/* 		create table enrolled_&cohort_year. as */
+/* 		select distinct  */
+/* 			a.emplid, */
+/* 			a.term_code as cont_term, */
+/* 			case when b.emplid is not null 	then 1 */
+/* 											else a.enrl_ind */
+/* 											end as enrl_ind, */
+/* 			case when b.emplid is not null 	then 1 */
+/* 											else 0 */
+/* 											end as degr_ind */
+/* 		from &dsn..student_enrolled_vw as a */
+/* 		full join (select distinct  */
+/* 						emplid  */
+/* 					from &dsn..student_degree_vw  */
+/* 					where snapshot = 'degree' */
+/* 						and "&cohort_year." <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.) */
+/* 						and acad_career = 'UGRD' */
+/* 						and ipeds_award_lvl = 5) as b */
+/* 			on a.emplid = b.emplid */
+/* 		where a.snapshot = 'census' */
+/* 			and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.) */
+/* 			and substr(a.strm,4,1) = '7' */
+/* 			and a.acad_career = 'UGRD' */
+/* 			and a.new_continue_status = 'CTU' */
+/* 			and a.term_credit_hours > 0 */
+/* 	;quit; */
 	
 	proc sql;
 		create table enrolled_&cohort_year. as
@@ -4963,17 +4963,17 @@ data testing_set;
 	if total_accept = . then total_accept = 0;
 run;
 
-filename valid "Z:\Nathan\Models\student_risk\datasets\ft_tr_2yr_validation_set.csv" encoding="utf-8";
+filename valid "Z:\Nathan\Models\student_risk\datasets\ft_tr_4yr_validation_set.csv" encoding="utf-8";
 
 proc export data=validation_set outfile=valid dbms=csv replace;
 run;
 
-filename training "Z:\Nathan\Models\student_risk\datasets\ft_tr_2yr_training_set.csv" encoding="utf-8";
+filename training "Z:\Nathan\Models\student_risk\datasets\ft_tr_4yr_training_set.csv" encoding="utf-8";
 
 proc export data=training_set outfile=training dbms=csv replace;
 run;
 
-filename testing "Z:\Nathan\Models\student_risk\datasets\ft_tr_2yr_testing_set.csv" encoding="utf-8";
+filename testing "Z:\Nathan\Models\student_risk\datasets\ft_tr_4yr_testing_set.csv" encoding="utf-8";
 
 proc export data=testing_set outfile=testing dbms=csv replace;
 run;

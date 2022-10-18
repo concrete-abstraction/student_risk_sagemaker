@@ -172,6 +172,9 @@ if __name__ == '__main__':
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_mid.py').read())
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_mid.py').read())
             exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_mid.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_mid.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_3yr_mid.py').read())
+            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_4yr_mid.py').read())
         except config.MidError as mid_error:
             print(mid_error)
 
@@ -179,7 +182,7 @@ if __name__ == '__main__':
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_cen.py').read())
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_cen.py').read())
                 exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_cen.py').read())
-                # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\degr\\sr_prod_fal_degr_cen.py').read())
+                # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_cen.py').read())
             except config.CenError as cen_error:
                 print(cen_error)
 
@@ -187,7 +190,7 @@ if __name__ == '__main__':
                     exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_adm.py').read())
                     exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_adm.py').read())
                     exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_adm.py').read())
-                    # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\degr\\sr_prod_fal_degr_adm.py').read())
+                    # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_adm.py').read())
 
                 except config.AdmError as adm_error:
                     print(adm_error)
