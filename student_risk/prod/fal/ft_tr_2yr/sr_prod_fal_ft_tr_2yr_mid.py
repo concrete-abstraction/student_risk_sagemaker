@@ -1180,7 +1180,6 @@ pullm_tomek_prep = make_column_transformer(
 	# 					'unmet_need_ofr'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
-									'acad_level_bot_descr', 
 									# 'race_hispanic',
 									# 'race_american_indian',
 									# 'race_alaska',
