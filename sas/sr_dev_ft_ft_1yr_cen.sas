@@ -590,7 +590,7 @@ run;
 			1 as ind
 		from &dsn..student_ext_acad_subj
 		where snapshot = 'census'
-			and ext_subject_area in ('CHS','RS', 'AP','IB','AICE')
+			and ext_subject_area in ('CHS','RS','AP','IB','AICE')
 		order by emplid
 	;quit;
 	

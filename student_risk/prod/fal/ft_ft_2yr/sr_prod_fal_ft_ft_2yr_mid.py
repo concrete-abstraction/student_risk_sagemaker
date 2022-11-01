@@ -249,8 +249,8 @@ pullm_data_vars = [
 # 'fed_need',
 # 'unmet_need_acpt',
 # 'unmet_need_acpt_mi',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 pullm_tomek_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
@@ -460,8 +460,8 @@ vanco_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
@@ -670,8 +670,8 @@ trici_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
@@ -880,8 +880,8 @@ univr_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 univr_tomek_vars = [x for x in univr_data_vars if x not in unwanted_vars]
@@ -1192,7 +1192,7 @@ pullm_tomek_prep = make_column_transformer(
 	# 					# 'term_credit_hours',
 	# 					# 'fed_efc',
 	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
+	# 					'unmet_need_acpt'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
@@ -1318,7 +1318,7 @@ vanco_tomek_prep = make_column_transformer(
 	# 					# 'term_credit_hours',
 	# 					# 'fed_efc',
 	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
+	# 					'unmet_need_acpt'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
@@ -1444,7 +1444,7 @@ trici_tomek_prep = make_column_transformer(
 	# 					# 'term_credit_hours',
 	# 					# 'fed_efc',
 	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
+	# 					'unmet_need_acpt'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
@@ -1570,7 +1570,7 @@ univr_tomek_prep = make_column_transformer(
 	# 					# 'term_credit_hours',
 	# 					# 'fed_efc',
 	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
+	# 					'unmet_need_acpt'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
@@ -1678,7 +1678,7 @@ try:
 					+ fall_midterm_gpa_avg \
 					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=vanco_logit_df, return_type='dataframe')
+					+ unmet_need_acpt + unmet_need_acpt_mi', data=vanco_logit_df, return_type='dataframe')
 
 	vanco_logit_mod = Logit(vanco_y, vanco_x)
 	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
@@ -1704,7 +1704,7 @@ try:
 					+ fall_midterm_gpa_avg \
 					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=trici_logit_df, return_type='dataframe')
+					+ unmet_need_acpt + unmet_need_acpt_mi', data=trici_logit_df, return_type='dataframe')
 
 	trici_logit_mod = Logit(trici_y, trici_x)
 	trici_logit_res = trici_logit_mod.fit(maxiter=500)
@@ -1730,7 +1730,7 @@ try:
 					+ fall_midterm_gpa_avg \
 					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=univr_logit_df, return_type='dataframe')
+					+ unmet_need_acpt + unmet_need_acpt_mi', data=univr_logit_df, return_type='dataframe')
 
 	univr_logit_mod = Logit(univr_y, univr_x)
 	univr_logit_res = univr_logit_mod.fit(maxiter=500)

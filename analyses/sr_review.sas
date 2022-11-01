@@ -5,98 +5,41 @@
 * ----------------------------------------------------------------------------- ;
 
 libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
+libname tableau odbc dsn=oracle_int schema = dbo;
 
-proc import out=pullm_frst_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\predictions\pullm\pullm_frst_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
-
-proc import out=vanco_frst_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\predictions\vanco\vanco_frst_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
-
-proc import out=trici_frst_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\predictions\trici\trici_frst_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
-
-proc import out=univr_frst_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\predictions\univr\univr_frst_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
-
-proc import out=pullm_tran_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\analyses\pullm_tran_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
-
-proc import out=vanco_tran_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\predictions\vanco\vanco_tran_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
-
-proc import out=trici_tran_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\predictions\trici\trici_tran_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
-
-proc import out=univr_tran_pred_outcome
-	datafile="Z:\Nathan\Models\student_risk\predictions\univr\univr_tran_pred_outcome.csv"
-	dbms=CSV REPLACE;
-	getnames=YES;
-run;
+%let strm = 2227;
+%let full_acad_year = 2022;
 
 proc sql;
 	create table enrollment as 
 	select distinct
 		emplid
 	from acs.crse_grade_data
-	where strm = '2227'
+	where strm = "&strm."
 ;quit;
 
 proc sql;
 	create table return as
 	select distinct
 		a.emplid,
-		a.xgbrf_pred,
-		case when a.xgbrf_pred = 1 and a.emplid = input(b.emplid, z9.)	then 1
+		a.risk_prob,
+		a.date,
+		case when a.risk_prob <= .5 and a.emplid = b.emplid				then 1
 																		else 0
 																		end as enroll_match,
-		case when a.xgbrf_pred = 1 and b.emplid is null					then 1
+		case when a.risk_prob <= .5 and b.emplid is null				then 1
 																		else 0
 																		end as enroll_nonmatch,
-		case when a.xgbrf_pred = 0 and b.emplid is null				 	then 1
+		case when a.risk_prob > .5 and b.emplid is null				 	then 1
 																		else 0
 																		end as nonenroll_match,
-		case when a.xgbrf_pred = 0 and a.emplid = input(b.emplid, z9.)	then 1
+		case when a.risk_prob > .5 and a.emplid = b.emplid				then 1
 																		else 0
 																		end as nonenroll_nonmatch
-
-/* Freshman models */
-
-/* 	from pullm_frst_pred_outcome as a */
-/* 	from vanco_frst_pred_outcome as a */
-/* 	from trici_frst_pred_outcome as a */
-/* 	from univr_frst_pred_outcome as a */
-
-/* Transfer models */
-
-/* 	from pullm_tran_pred_outcome as a */
-/* 	from vanco_tran_pred_outcome as a */
-/* 	from trici_tran_pred_outcome as a */
-/* 	from univr_tran_pred_outcome as a */
-
-	left join enrollment as b
-		on a.emplid = input(b.emplid, z9.)
-	where 
+	from (select *, max(date) as max_date from tableau.outcome_archive) as a
+	left join enrollment as b	
+		on a.emplid = b.emplid
+/* 	where date = max_date */
 ;quit;
 
 proc sql;
@@ -104,9 +47,20 @@ proc sql;
 	select distinct
 	 	(sum(enroll_match) + sum(nonenroll_match))/(sum(enroll_match) + sum(enroll_nonmatch) + sum(nonenroll_match) + sum(nonenroll_nonmatch)) as overall_accuracy,
 		sum(enroll_match)/(sum(enroll_match) + sum(enroll_nonmatch)) as enroll_accuracy,
-		sum(nonenroll_match)/(sum(nonenroll_match) + sum(nonenroll_nonmatch)) as nonenroll_accuracy
+		sum(enroll_match) as enroll_match,
+		sum(enroll_nonmatch) as enroll_nonmatch,
+		sum(nonenroll_match)/(sum(nonenroll_match) + sum(nonenroll_nonmatch)) as nonenroll_accuracy,
+		sum(nonenroll_match) as nonenroll_match,
+		sum(nonenroll_nonmatch) as nonenroll_nonmatch,
+		date
 	from return
+	group by date
+	order by date
 ;quit;
+
+data acs.sr_review_&full_acad_year.;
+	set stats;
+run;
 
 proc sql;
 	create table confusion_matrix as

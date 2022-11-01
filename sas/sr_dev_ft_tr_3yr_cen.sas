@@ -2101,6 +2101,7 @@ proc sql;
 			aa.cum_gpa_hours,
 /* 			c.cont_term, */
 			c.enrl_ind,
+			c.degr_ind,
 			d.acad_plan,
 			d.acad_plan_descr,
 			d.plan_owner_org,

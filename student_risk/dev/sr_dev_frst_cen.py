@@ -35,14 +35,24 @@ plt.rcParams['figure.figsize'] = [15, 10]
 plt.rcParams['font.size'] = '24'
 
 #%%
+# Global XGBoost hyperparameter initialization
+min_child_weight = 5
+max_bin = 32
+num_parallel_tree = 64
+subsample = 0.8
+colsample_bytree = 0.8
+colsample_bynode = 0.8
+verbose = False
+
+#%%
 # SAS dataset builder
 build_frst_dev.DatasetBuilderDev.build_census_dev()
 
 #%%
 # Import pre-split data
-validation_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\validation_set.csv', encoding='utf-8', low_memory=False)
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8', low_memory=False)
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
+validation_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_validation_set.csv', encoding='utf-8', low_memory=False)
+training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_training_set.csv', encoding='utf-8', low_memory=False)
+testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_testing_set.csv', encoding='utf-8', low_memory=False)
 
 #%%
 # Training AWE instrumental variable
@@ -245,65 +255,50 @@ pullm_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-# 'count_week_from_term_begin_dt',
+'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
-'underrep_minority',
+'underrep_minority', 
 # 'ipeds_ethnic_group_descrshort',
-'pell_eligibility_ind', 
+'pell_eligibility_ind',
 # 'pell_recipient_ind',
-'first_gen_flag', 
-'first_gen_flag_mi',
+'first_gen_flag',
+'first_gen_flag_mi', 
 # 'LSAMP_STEM_Flag',
 # 'anywhere_STEM_Flag',
 'honors_program_ind',
 # 'afl_greek_indicator',
-# 'high_school_gpa',
-'fall_term_gpa',
-'fall_term_gpa_mi',
-# 'fall_term_D_grade_count',
-# 'fall_term_F_grade_count',
-# 'fall_term_S_grade_count',
-# 'fall_term_W_grade_count',
-'spring_term_gpa',
-'spring_term_gpa_mi',
-'spring_term_D_grade_count',
-'spring_term_F_grade_count',
-# 'spring_term_S_grade_count',
-# 'spring_term_W_grade_count',
-# 'spring_midterm_gpa_change',
+'high_school_gpa',
+'high_school_gpa_mi',
+'fall_midterm_gpa_avg',
+'fall_midterm_gpa_avg_mi',
+'fall_midterm_grade_count',
+'fall_midterm_S_grade_count',
+'fall_midterm_W_grade_count',
 # 'awe_instrument',
 # 'cdi_instrument',
-# 'fall_avg_difficulty',
-# 'fall_avg_pct_withdrawn',
+'fall_avg_difficulty',
+'fall_avg_pct_withdrawn',
 # 'fall_avg_pct_CDFW',
-# 'fall_avg_pct_CDF',
+'fall_avg_pct_CDF',
 # 'fall_avg_pct_DFW',
 # 'fall_avg_pct_DF',
-'spring_avg_difficulty',
-'spring_avg_pct_withdrawn',
-# 'spring_avg_pct_CDFW',
-'spring_avg_pct_CDF',
-# 'spring_avg_pct_DFW',
-# 'spring_avg_pct_DF',
-# 'fall_lec_count',
-# 'fall_lab_count',
+# 'fall_crse_mi',
+'fall_lec_count',
+'fall_lab_count',
+# 'fall_int_count',
+'fall_stu_count',
+# 'fall_sem_count',
+'fall_oth_count',
 # 'fall_lec_contact_hrs',
 # 'fall_lab_contact_hrs',
-'spring_lec_count',
-'spring_lab_count',
-'spring_stu_count',
-'spring_oth_count',
-# 'spring_lec_contact_hrs',
-# 'spring_lab_contact_hrs',
+# 'fall_int_contact_hrs',
+# 'fall_stu_contact_hrs',
+# 'fall_sem_contact_hrs',
+# 'fall_oth_contact_hrs',
 # 'total_fall_contact_hrs',
-# 'total_spring_contact_hrs',
-# 'fall_midterm_gpa_avg',
-# 'fall_midterm_gpa_avg_ind',
-# 'spring_midterm_gpa_avg',
-# 'spring_midterm_gpa_avg_mi',
 'cum_adj_transfer_hours',
 'resident',
 # 'father_wsu_flag',
@@ -344,9 +339,10 @@ pullm_data_vars = [
 # 'IB',
 # 'AICE',
 'IB_AICE', 
-'spring_credit_hours',
-# 'total_spring_units',
-'spring_withdrawn_hours',
+'fall_credit_hours',
+# 'total_fall_units',
+'fall_withdrawn_hours',
+# 'fall_withdrawn_ind',
 # 'athlete',
 'remedial',
 # 'ACAD_PLAN',
@@ -1339,76 +1335,60 @@ pullm_y_cv = pullm_validation_set['enrl_ind']
 pullm_y_test = pullm_testing_set['enrl_ind']
 
 pullm_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'high_school_gpa',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_mi',
-						# 'spring_midterm_grade_count',
-						# 'spring_midterm_S_grade_count',
-						# 'spring_midterm_W_grade_count',
-						# 'fall_term_gpa',
-						# 'fall_term_gpa_mi',
-						# 'fall_term_D_grade_count',
-						# 'fall_term_F_grade_count',
-						# 'fall_term_S_grade_count',
-						# 'fall_term_W_grade_count',
-						'spring_term_gpa',
-						# 'spring_term_gpa_mi',
-						'spring_term_D_grade_count',
-						'spring_term_F_grade_count',
-						# 'spring_term_S_grade_count',
-						# 'spring_term_W_grade_count',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						'spring_lec_count',
-						'spring_lab_count',
-						# 'spring_int_count',
-						'spring_stu_count',
-						# 'spring_sem_count',
-						'spring_oth_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
-						# 'spring_int_contact_hrs',
-						# 'spring_stu_contact_hrs',
-						# 'spring_sem_contact_hrs',
-						# 'spring_oth_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'total_spring_units',
-						'spring_credit_hours',
-						'spring_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					'median_inc',
+	# 					# 'pvrt_rate',
+	# 					'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'term_credit_hours',
+	# 					'high_school_gpa',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'fall_avg_difficulty',
+	# 					# 'fall_avg_pct_withdrawn',
+	# 					# 'fall_avg_pct_CDFW',
+	# 					# 'fall_avg_pct_CDF',
+	# 					'fall_lec_count',
+	# 					'fall_lab_count',
+	# 					# 'fall_int_count',
+	# 					'fall_stu_count',
+	# 					# 'fall_sem_count',
+	# 					'fall_oth_count',
+	# 					'fall_lec_contact_hrs',
+	# 					'fall_lab_contact_hrs',
+	# 					# 'fall_int_contact_hrs',
+	# 					'fall_stu_contact_hrs',
+	# 					# 'fall_sem_contact_hrs',
+	# 					'fall_oth_contact_hrs',
+	# 					# 'total_fall_contact_hrs',
+	# 					'total_fall_units',
+	# 					'fall_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'term_credit_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1463,9 +1443,9 @@ pullm_training_set = pullm_training_set.reset_index(drop=True)
 pullm_validation_set = pullm_validation_set.reset_index(drop=True)
 
 pullm_tomek_train_set = pullm_training_set.drop(pullm_tomek_train_index)
-pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_tomek_training_set.csv', encoding='utf-8', index=False)
+pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_ft_ft_1yr_tomek_training_set.csv', encoding='utf-8', index=False)
 pullm_tomek_valid_set = pullm_validation_set.drop(pullm_tomek_valid_index)
-pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
+pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_ft_ft_1yr_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver undersample
@@ -1893,29 +1873,33 @@ univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_
 # Pullman standard model
 print('\nStandard logistic model for Pullman freshmen...\n')
 
-pullm_y, pullm_x = dmatrices('enrl_ind ~ \
-			+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-			+ spring_lec_count + spring_lab_count + spring_stu_count + spring_oth_count \
-			+ spring_credit_hours \
-			+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
-			+ spring_withdrawn_hours \
-			+ honors_program_ind \
-			+ business + comm + education + medicine + nursing + vet_med \
-			+ cahnrs_anml + cahnrs_econ + cahnrext \
-			+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
-			+ vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
-			+ remedial \
-			+ cum_adj_transfer_hours \
-			+ resident \
-			+ fall_term_gpa + fall_term_gpa_mi \
-			+ spring_term_gpa + spring_term_gpa_mi \
-			+ spring_term_D_grade_count + spring_term_F_grade_count \
-			+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-			+ unmet_need_ofr + unmet_need_ofr_mi', data=pullm_logit_df, return_type='dataframe')
+try:
+	pullm_y, pullm_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
+					+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
+					+ fall_lec_count + fall_lab_count + fall_stu_count + fall_oth_count \
+					+ fall_credit_hours \
+					+ fall_withdrawn_hours \
+					+ honors_program_ind \
+					+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
+					+ business + comm + education + medicine + nursing + vet_med \
+					+ cahnrs_anml + cahnrs_econ + cahnrext \
+					+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
+					+ vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
+					+ remedial \
+					+ cum_adj_transfer_hours \
+					+ resident \
+					+ high_school_gpa + high_school_gpa_mi \
+					+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
+					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
+					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
+					+ unmet_need_ofr + unmet_need_ofr_mi \
+					+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
 
-pullm_logit_mod = Logit(pullm_y, pullm_x)
-pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
-print(pullm_logit_res.summary())
+	pullm_logit_mod = Logit(pullm_y, pullm_x)
+	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
+	print(pullm_logit_res.summary())
+except:
+	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -2702,7 +2686,7 @@ pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoin
 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -2710,13 +2694,8 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 #%%
 # Pullman XGB Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf_ccv = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=pullm_class_weight, 
+pullm_xgbrf_ccv = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
-
-# Pullman XGB Random Forest calibration
-# pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=pullm_class_weight, 
-# 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
-# pullm_xgbrf_ccv = CalibratedClassifierCV(pullm_xgbrf, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgbrf_probs = pullm_xgbrf_ccv.predict_proba(pullm_x_train)
 pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]

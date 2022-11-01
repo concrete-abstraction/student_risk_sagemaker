@@ -3,6 +3,7 @@ import csv
 import datetime
 import os
 import pathlib
+import time
 import urllib
 from datetime import date
 from itertools import islice
@@ -243,8 +244,8 @@ pullm_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 pullm_tomek_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
@@ -383,7 +384,7 @@ vanco_data_vars = [
 'CHS',
 # 'IB',
 # 'AICE',
-'IB_AICE', 
+# 'IB_AICE', 
 'fall_credit_hours',
 # 'total_fall_units',
 'fall_withdrawn_hours',
@@ -451,8 +452,8 @@ vanco_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
@@ -658,8 +659,8 @@ trici_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
@@ -797,7 +798,7 @@ univr_data_vars = [
 'CHS',
 # 'IB',
 # 'AICE',
-'IB_AICE', 
+# 'IB_AICE', 
 'fall_credit_hours',
 # 'total_fall_units',
 'fall_withdrawn_hours',
@@ -865,8 +866,8 @@ univr_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 univr_tomek_vars = [x for x in univr_data_vars if x not in unwanted_vars]
@@ -1177,7 +1178,7 @@ pullm_tomek_prep = make_column_transformer(
 	# 					# 'term_credit_hours',
 	# 					# 'fed_efc',
 	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
+	# 					'unmet_need_acpt'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
@@ -1303,7 +1304,7 @@ vanco_tomek_prep = make_column_transformer(
 	# 					# 'term_credit_hours',
 	# 					# 'fed_efc',
 	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
+	# 					'unmet_need_acpt'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
@@ -1429,7 +1430,7 @@ trici_tomek_prep = make_column_transformer(
 	# 					# 'term_credit_hours',
 	# 					# 'fed_efc',
 	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
+	# 					'unmet_need_acpt'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
@@ -1555,7 +1556,7 @@ univr_tomek_prep = make_column_transformer(
 	# 					# 'term_credit_hours',
 	# 					# 'fed_efc',
 	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
+	# 					'unmet_need_acpt'
 	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
@@ -1634,7 +1635,7 @@ try:
 					+ fall_midterm_grade_count + fall_midterm_S_grade_count + fall_midterm_W_grade_count \
 					+ cum_adj_transfer_hours \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=pullm_logit_df, return_type='dataframe')
+					+ unmet_need_acpt + unmet_need_acpt_mi', data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
 	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -1654,14 +1655,14 @@ try:
 					+ fall_lec_count + fall_lab_count \
 					+ fall_credit_hours \
 					+ fall_withdrawn_hours \
-					+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
+					+ AD_DTA + AD_AST + AP + RS + CHS  \
 					+ resident \
 					+ cum_gpa + cum_gpa_hours \
 					+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
 					+ fall_midterm_grade_count + fall_midterm_S_grade_count \
 					+ cum_adj_transfer_hours \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=vanco_logit_df, return_type='dataframe')
+					+ unmet_need_acpt + unmet_need_acpt_mi', data=vanco_logit_df, return_type='dataframe')
 
 	vanco_logit_mod = Logit(vanco_y, vanco_x)
 	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
@@ -1688,7 +1689,7 @@ try:
 					+ fall_midterm_grade_count + fall_midterm_S_grade_count \
 					+ cum_adj_transfer_hours \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=trici_logit_df, return_type='dataframe')
+					+ unmet_need_acpt + unmet_need_acpt_mi', data=trici_logit_df, return_type='dataframe')
 
 	trici_logit_mod = Logit(trici_y, trici_x)
 	trici_logit_res = trici_logit_mod.fit(maxiter=500)
@@ -1708,14 +1709,14 @@ try:
 					+ fall_lec_count + fall_lab_count \
 					+ fall_credit_hours \
 					+ fall_withdrawn_hours \
-					+ AD_DTA + AD_AST + AP + RS + CHS + IB_AICE \
+					+ AD_DTA + AD_AST + AP + RS + CHS \
 					+ resident \
 					+ cum_gpa + cum_gpa_hours \
 					+ fall_midterm_gpa_avg + fall_midterm_gpa_avg_mi \
 					+ fall_midterm_grade_count + fall_midterm_S_grade_count \
 					+ cum_adj_transfer_hours \
 					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=univr_logit_df, return_type='dataframe')
+					+ unmet_need_acpt + unmet_need_acpt_mi', data=univr_logit_df, return_type='dataframe')
 
 	univr_logit_mod = Logit(univr_y, univr_x)
 	univr_logit_res = univr_logit_mod.fit(maxiter=500)
@@ -2123,6 +2124,8 @@ print('Run machine learning models for second-year transfers...\n')
 
 #%%
 # Pullman XGBoost Random Forest tuning
+pullm_start = time.perf_counter()
+
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
@@ -2131,6 +2134,9 @@ pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoin
 pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
+pullm_stop = time.perf_counter()
+
+print(f'Pullman XGB Random Forest model trained in {(pullm_stop - pullm_start)/60:.1f} minutes')
 print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
 
 #%%
@@ -2149,6 +2155,8 @@ print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pull
 
 #%%
 # Vancouver XGBoost Random Forest tuning
+vanco_start = time.perf_counter()
+
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
 vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
@@ -2157,6 +2165,9 @@ vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoin
 vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
+vanco_stop = time.perf_counter()
+
+print(f'Vancouver XGB Random Forest model trained in {(vanco_stop - vanco_start)/60:.1f} minutes')
 print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
 
 #%%
@@ -2175,6 +2186,8 @@ print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {va
 
 #%%
 # Tri-Cities XGBoost Random Forest tuning
+trici_start = time.perf_counter()
+
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
@@ -2183,6 +2196,9 @@ trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoin
 trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
+trici_stop = time.perf_counter()
+
+print(f'Tri-Cities XGB Random Forest model trained in {(trici_stop - trici_start)/60:.1f} minutes')
 print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
 
 #%%
@@ -2201,6 +2217,8 @@ print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {t
 
 #%%
 # University XGBoost Random Forest tuning
+univr_start = time.perf_counter()
+
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
 						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
@@ -2209,6 +2227,9 @@ univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoin
 univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
+univr_stop = time.perf_counter()
+
+print(f'University XGB Random Forest model trained in {(univr_stop - univr_start)/60:.1f} minutes')
 print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
 
 #%%

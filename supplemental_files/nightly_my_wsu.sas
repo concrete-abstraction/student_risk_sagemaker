@@ -8,7 +8,7 @@
 %let status_cd=&syscc.;
 %PUT "******* status of the job is: &status_cd. *****";
 
-%global IR_FS; %let ir_fs=\\ad.wsu.edu\POIS\IR; %put &ir_fs.;
+%global IR_FS; %let ir_fs=\\ospafileserver.ad.wsu.edu\ir; %put &ir_fs.;
 %INCLUDE "&ir_fs.\SAS\Global_Macros\xd_file_update_macros.sas";
 
 options mlogic mprint merror symbolgen ;
@@ -18,7 +18,7 @@ libname UD_t_o_i odbc dsn=UDtabsql_or_int schema=dbo;
 
 libname dir "&ir_fs.\Nathan\Models\student_risk\supplemental_files";
 /**/
-/*%INCLUDE "\\ad.wsu.edu\POIS\IR\SAS\SAS-process\control\user\jon\determine_WSUNCT1T.sas";*/
+/*%INCLUDE "\\ospafileserver.ad.wsu.edu\IR\SAS\SAS-process\control\user\jon\determine_WSUNCT1T.sas";*/
 %INCLUDE "&ir_fs.\SAS\SAS-process\control\erp\determine_AWSCSPRD.sas"; /* AWS Prod: */
 %INCLUDE "&ir_fs.\SAS\SAS-process\control\sql\determine_oracle_int_prod.sas";
 
@@ -75,7 +75,7 @@ run;
 			put "Program: &pgmname..";
 			put "Processing date/time was: &tdate.";
 			put "Check session log files for more information.";
-			put '\\ad.wsu.edu\POIS\IR\Nathan\Models\student_risk\supplemental_files\log\';
+			put '\\ospafileserver.ad.wsu.edu\IR\Nathan\Models\student_risk\supplemental_files\log\';
 			put "End:";
 		run;
 %mend send_mail_g;
@@ -95,7 +95,7 @@ run;
 	put "table: &table_name4. count: &cnt4.";
 	put "Error date/time was: &tdate.";
 	put "Check session log files for more information.";
-	put '\\ad.wsu.edu\POIS\IR\Nathan\Models\student_risk\supplemental_files\log\';
+	put '\\ospafileserver.ad.wsu.edu\IR\Nathan\Models\student_risk\supplemental_files\log\';
 		put "End:";
 	RUN;
 %mend send_mail_b1;
@@ -115,7 +115,7 @@ run;
 	put "Error date/time was: &tdate.";
 	put "Error date/time was: &tdate.";
 	put "Check session log files for more information.";
-	put '\\ad.wsu.edu\POIS\IR\Nathan\Models\student_risk\supplemental_files\log\';
+	put '\\ospafileserver.ad.wsu.edu\IR\Nathan\Models\student_risk\supplemental_files\log\';
 	put "End:";
 	RUN;
 %mend send_mail_b2;
