@@ -36,7 +36,7 @@ plt.rcParams['font.size'] = '24'
 
 #%%
 # Global XGBoost hyperparameter initialization
-min_child_weight = 5
+min_child_weight = 8
 max_bin = 32
 num_parallel_tree = 64
 subsample = 0.8
