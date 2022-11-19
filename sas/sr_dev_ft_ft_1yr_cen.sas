@@ -4923,17 +4923,92 @@ run;
 /* 	title 'AY2021 Data'; */
 /* run; */
 
-filename valid "Z:\Nathan\Models\student_risk\datasets\frst_validation_set.csv" encoding="utf-8";
+libname valid "Z:\Nathan\Models\student_risk\datasets\";
 
-proc export data=validation_set outfile=valid dbms=csv replace;
-run;
+%let valid_pass = 0;
 
-filename training "Z:\Nathan\Models\student_risk\datasets\frst_training_set.csv" encoding="utf-8";
+%if %sysfunc(exist(valid.ft_ft_1yr_validation_set)) 
+	%then %do;
+		data work.validation_set_compare;
+			set valid.ft_ft_1yr_validation_set;
+		run;
+	%end;
+	
+	%else %do;
+		data valid.ft_ft_1yr_validation_set;
+			set work.validation_set;
+		run;
+	%end;
 
-proc export data=training_set outfile=training dbms=csv replace;
-run;
+proc compare data=validation_set compare=validation_set_compare;
+	
+%if &sysinfo != 0 
+	%then %do;
+		data valid.ft_ft_1yr_validation_set;
+			set work.validation_set;
+		run;
+	%end;
+	
+	%else %do;
+		%let valid_pass = 1;
+	%end;
 
-filename testing "Z:\Nathan\Models\student_risk\datasets\frst_testing_set.csv" encoding="utf-8";
+libname training "Z:\Nathan\Models\student_risk\datasets\";
 
-proc export data=testing_set outfile=testing dbms=csv replace;
-run;
+%let training_pass = 0;
+
+%if %sysfunc(exist(training.ft_ft_1yr_training_set)) 
+	%then %do;
+		data work.training_set_compare;
+			set training.ft_ft_1yr_training_set;
+		run;
+	%end;
+	
+	%else %do;
+		data training.ft_ft_1yr_training_set;
+			set work.training_set;
+		run;
+	%end;
+
+proc compare data=training_set compare=training_set_compare;
+	
+%if &sysinfo != 0 
+	%then %do;
+		data training.ft_ft_1yr_training_set;
+			set work.training_set;
+		run;
+	%end;
+	
+	%else %do;
+		%let training_pass = 1;
+	%end;
+	
+libname testing "Z:\Nathan\Models\student_risk\datasets\";
+
+%let testing_pass = 0;
+
+%if %sysfunc(exist(testing.ft_ft_1yr_testing_set)) 
+	%then %do;
+		data work.testing_set_compare;
+			set testing.ft_ft_1yr_testing_set;
+		run;
+	%end;
+	
+	%else %do;
+		data testing.ft_ft_1yr_testing_set;
+			set work.testing_set;
+		run;
+	%end;
+
+proc compare data=testing_set compare=testing_set_compare;
+	
+%if &sysinfo != 0 
+	%then %do;
+		data testing.ft_ft_1yr_testing_set;
+			set work.testing_set;
+		run;
+	%end;
+	
+	%else %do;
+		%let testing_pass = 1;
+	%end;
