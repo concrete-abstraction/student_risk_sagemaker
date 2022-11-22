@@ -68,9 +68,9 @@ build_ft_ft_2yr_prod.DatasetBuilderProd.build_census_prod()
 
 #%%
 # Import pre-split data
-validation_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_validation_set.sas7bdat', encoding='utf-8')
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_training_set.sas7bdat', encoding='utf-8')
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_testing_set.sas7bdat', encoding='utf-8')
+validation_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_validation_set.sas7bdat')
+training_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_training_set.sas7bdat')
+testing_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_testing_set.sas7bdat')
 
 #%%
 # Prepare dataframes
