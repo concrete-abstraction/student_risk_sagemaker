@@ -6900,15 +6900,15 @@ class DatasetBuilderProd:
 
 		%let valid_pass = 0;
 
-		%if %sysfunc(exist(valid.ft_ft_1yr_validation_set)) 
+		%if %sysfunc(exist(valid.ft_tr_1yr_validation_set)) 
 			%then %do;
 				data work.validation_set_compare;
-					set valid.ft_ft_1yr_validation_set;
+					set valid.ft_tr_1yr_validation_set;
 				run;
 			%end;
 			
 			%else %do;
-				data valid.ft_ft_1yr_validation_set;
+				data valid.ft_tr_1yr_validation_set;
 					set work.validation_set;
 				run;
 			%end;
@@ -6917,7 +6917,7 @@ class DatasetBuilderProd:
 			
 		%if &sysinfo != 0 
 			%then %do;
-				data valid.ft_ft_1yr_validation_set;
+				data valid.ft_tr_1yr_validation_set;
 					set work.validation_set;
 				run;
 			%end;
@@ -6930,15 +6930,15 @@ class DatasetBuilderProd:
 
 		%let training_pass = 0;
 
-		%if %sysfunc(exist(training.ft_ft_1yr_training_set)) 
+		%if %sysfunc(exist(training.ft_tr_1yr_training_set)) 
 			%then %do;
 				data work.training_set_compare;
-					set training.ft_ft_1yr_training_set;
+					set training.ft_tr_1yr_training_set;
 				run;
 			%end;
 			
 			%else %do;
-				data training.ft_ft_1yr_training_set;
+				data training.ft_tr_1yr_training_set;
 					set work.training_set;
 				run;
 			%end;
@@ -6947,7 +6947,7 @@ class DatasetBuilderProd:
 			
 		%if &sysinfo != 0 
 			%then %do;
-				data training.ft_ft_1yr_training_set;
+				data training.ft_tr_1yr_training_set;
 					set work.training_set;
 				run;
 			%end;
@@ -6960,15 +6960,15 @@ class DatasetBuilderProd:
 
 		%let testing_pass = 0;
 
-		%if %sysfunc(exist(testing.ft_ft_1yr_testing_set)) 
+		%if %sysfunc(exist(testing.ft_tr_1yr_testing_set)) 
 			%then %do;
 				data work.testing_set_compare;
-					set testing.ft_ft_1yr_testing_set;
+					set testing.ft_tr_1yr_testing_set;
 				run;
 			%end;
 			
 			%else %do;
-				data testing.ft_ft_1yr_testing_set;
+				data testing.ft_tr_1yr_testing_set;
 					set work.testing_set;
 				run;
 			%end;
@@ -6977,7 +6977,7 @@ class DatasetBuilderProd:
 			
 		%if &sysinfo != 0 
 			%then %do;
-				data testing.ft_ft_1yr_testing_set;
+				data testing.ft_tr_1yr_testing_set;
 					set work.testing_set;
 				run;
 			%end;
