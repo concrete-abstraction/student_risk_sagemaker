@@ -2124,7 +2124,7 @@ print('Run machine learning models for second-year transfers...\n')
 
 #%%
 # Pullman XGBoost Random Forest model selection
-if build_ft_tr_2yr_prod.DatasetBuilderProd.valid_pass == 0 or build_ft_tr_2yr_prod.DatasetBuilderProd.training_pass == 0:
+if build_ft_tr_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_2yr_prod.DatasetBuilderProd.training_pass == 0:
 	pullm_start = time.perf_counter()
 
 	pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
@@ -2165,7 +2165,7 @@ else:
 
 #%%
 # Vancouver XGBoost Random Forest model selection
-if build_ft_tr_2yr_prod.DatasetBuilderProd.valid_pass == 0 or build_ft_tr_2yr_prod.DatasetBuilderProd.training_pass == 0:
+if build_ft_tr_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_2yr_prod.DatasetBuilderProd.training_pass == 0:
 	vanco_start = time.perf_counter()
 
 	vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
@@ -2206,7 +2206,7 @@ else:
 
 #%%
 # Tri-Cities XGBoost Random Forest model selection
-if build_ft_tr_2yr_prod.DatasetBuilderProd.valid_pass == 0 or build_ft_tr_2yr_prod.DatasetBuilderProd.training_pass == 0:
+if build_ft_tr_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_2yr_prod.DatasetBuilderProd.training_pass == 0:
 	trici_start = time.perf_counter()
 
 	trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
@@ -2247,7 +2247,7 @@ else:
 
 #%%
 # University XGBoost Random Forest model selection
-if build_ft_tr_2yr_prod.DatasetBuilderProd.valid_pass == 0 or build_ft_tr_2yr_prod.DatasetBuilderProd.training_pass == 0:
+if build_ft_tr_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_2yr_prod.DatasetBuilderProd.training_pass == 0:
 	univr_start = time.perf_counter()
 
 	univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
