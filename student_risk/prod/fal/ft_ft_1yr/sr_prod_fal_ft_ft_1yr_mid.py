@@ -1083,6 +1083,7 @@ vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_s
 vanco_training_set = vanco_training_set.drop(columns='mask')
 vanco_validation_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == -1].index)
 vanco_validation_set = vanco_validation_set.drop(columns='mask')
+
 #%%
 # Tri-Cities outliers
 trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
