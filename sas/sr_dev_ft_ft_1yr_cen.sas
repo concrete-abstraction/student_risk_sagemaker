@@ -4941,8 +4941,9 @@ libname valid "Z:\Nathan\Models\student_risk\datasets\";
 	%end;
 
 proc compare data=validation_set compare=validation_set_compare;
-	
-%if &sysinfo != 0 
+run;
+
+%if &sysinfo. ^= 0
 	%then %do;
 		data valid.ft_ft_1yr_validation_set;
 			set work.validation_set;
@@ -4972,7 +4973,7 @@ libname training "Z:\Nathan\Models\student_risk\datasets\";
 
 proc compare data=training_set compare=training_set_compare;
 	
-%if &sysinfo != 0 
+%if &sysinfo ^= 0 
 	%then %do;
 		data training.ft_ft_1yr_training_set;
 			set work.training_set;
@@ -5001,8 +5002,9 @@ libname testing "Z:\Nathan\Models\student_risk\datasets\";
 	%end;
 
 proc compare data=testing_set compare=testing_set_compare;
-	
-%if &sysinfo != 0 
+run;
+
+%if sysinfo ^= 0 
 	%then %do;
 		data testing.ft_ft_1yr_testing_set;
 			set work.testing_set;

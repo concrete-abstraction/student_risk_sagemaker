@@ -1,9 +1,9 @@
-options nosytaxcheck;
+options nosyntaxcheck;
 
 libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 
-%let start_year = 2013;
-%let end_year = 2018;
+%let start_year = 2019;
+%let end_year = 2020;
 
 /* Define character to numeric macro */
 
@@ -93,7 +93,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 		
 	/* Demographic data */
 	proc import out=acs_demo_&year. (keep=geoid B01001e1)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_demo.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_X01_AGE_AND_SEX.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=100;
@@ -111,7 +111,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 	
 	/* Area data */
 	proc import out=acs_area_&year. (keep=geoid_data aland10)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_area.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_ACS_&year._5YR_ZCTA.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=100;
@@ -129,7 +129,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 	
 	/* Poverty data */
 	proc import out=acs_poverty_&year. (keep=geoid B17001e1 B17001e2)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_poverty.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_X17_POVERTY.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=100;
@@ -148,7 +148,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 	
 	/* Income data */
 	proc import out=acs_income_&year. (keep=geoid B19013e1 B19083e1)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_income.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_X19_INCOME.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=100;
@@ -167,7 +167,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 	
 	/* Housing data */
 	proc import out=acs_housing_&year. (keep=geoid B25077e1)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_housing.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_X25_HOUSING_CHARACTERISTICS.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=100;
@@ -185,7 +185,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 	
 	/* Education data */
 	proc import out=acs_education_&year. (keep=geoid B15002e1 B15012e1)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_education.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_X15_EDUCATIONAL_ATTAINMENT.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=100;
@@ -205,7 +205,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 	
 	/* Race data */
 	proc import out=acs_race_&year. (keep=geoid B02001e1 B02001e3 B02001e4 B02001e5 B02001e6 B02001e7 B02001e8)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_race.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_X02_RACE.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=100;
@@ -229,7 +229,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 	
 	/* Ethnicity data */
 	proc import out=acs_ethnicity_&year. (keep=geoid B03001e1 B03001e3)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_ethnicity.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_X03_HISPANIC_OR_LATINO_ORIGIN.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=100;
@@ -258,7 +258,7 @@ libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 	
 	/* Education data */
 	proc import out=acs_education_&year. (keep=geoid B15002e1 B15012e1)
-		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_education.csv"
+		datafile="C:\Users\nathan.lindstedt\Desktop\acs_raw\acs_&year._5yr_zcta_X15_EDUCATIONAL_ATTAINMENT.csv"
 		dbms=CSV REPLACE;
 		getnames=YES;
 		guessingrows=2000;
