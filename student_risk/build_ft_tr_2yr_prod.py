@@ -114,7 +114,8 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 4;
+		%let acs_lag = 2;
+			
 		%let lag_year = 1;
         %let end_lag = 3;
         %let start_lag = 1;
@@ -4945,7 +4946,8 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 4;
+		%let acs_lag = 2;
+			
 		%let lag_year = 1;
         %let admit_lag = 0;
         %let end_cohort = %eval(&full_acad_year. - &lag_year.);
