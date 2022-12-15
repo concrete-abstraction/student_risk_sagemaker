@@ -9713,7 +9713,7 @@ class DatasetBuilderProd:
 				run;
 			%end;
 
-		proc compare data=validation_set compare=validation_set_compare;
+		proc compare data=validation_set compare=validation_set_compare method=absolute;
 		run;
 
 		%if &sysinfo ^= 0
@@ -9745,7 +9745,7 @@ class DatasetBuilderProd:
 				run;
 			%end;
 
-		proc compare data=training_set compare=training_set_compare;
+		proc compare data=training_set compare=training_set_compare method=absolute;
 		run;
 
 		%if &sysinfo ^= 0
@@ -9777,7 +9777,7 @@ class DatasetBuilderProd:
 				run;
 			%end;
 
-		proc compare data=testing_set compare=testing_set_compare;
+		proc compare data=testing_set compare=testing_set_compare method=absolute;
 		run;
         	
 		%if &sysinfo ^= 0
