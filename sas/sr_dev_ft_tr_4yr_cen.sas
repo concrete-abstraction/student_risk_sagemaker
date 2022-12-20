@@ -7,7 +7,6 @@
 %let dsn = census;
 %let adm = adm;
 %let acs_lag = 2;
-			
 %let lag_year = 1;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
