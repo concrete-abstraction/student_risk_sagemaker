@@ -30,7 +30,7 @@ data work.xw_term;
 	if first.acad_career then idx = 1;
 	else idx + 1;
 	where acad_career = 'UGRD'
-        and term_year <= year(today());
+		and term_year <= year(today());
 run;
 
 proc sql;
@@ -38,23 +38,23 @@ proc sql;
 	select
 		base.acad_career,
 		base.term_year,
-        base.term_type,
-        base.strm,
+		base.term_type,
+		base.strm,
 		base.full_acad_year,
 		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
 		day(datepart(base.term_begin_dt)) as begin_day,
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
-        day(datepart(base.term_census_dt)) as census_day,
+		day(datepart(base.term_census_dt)) as census_day,
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
-        day(datepart(base.term_midterm_dt)) as midterm_day,
-        week(datepart(base.term_midterm_dt)) as midterm_week,
-        month(datepart(base.term_midterm_dt)) as midterm_month,
-        year(datepart(base.term_midterm_dt)) as midterm_year,
-        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt,
+		day(datepart(base.term_midterm_dt)) as midterm_day,
+		week(datepart(base.term_midterm_dt)) as midterm_week,
+		month(datepart(base.term_midterm_dt)) as midterm_month,
+		year(datepart(base.term_midterm_dt)) as midterm_year,
+		coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
 		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
 		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
 		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
@@ -72,8 +72,7 @@ proc export data=acs.adj_term outfile=adj_term dbms=csv replace;
 proc sql;
 	select term_type into: term_type 
 	from acs.adj_term 
-	where term_year = year(today())
-		and term_begin_dt <= today()
+	where term_begin_dt <= today()
 		and term_end_dt >= today()
 		and acad_career = 'UGRD'
 ;quit;
@@ -85,136 +84,136 @@ sas.endsas()
 
 #%%
 class Logger(object):
-    def __init__(self):
-        self.terminal = sys.stdout
-        self.log = open(f'Z:\\Nathan\\Models\\student_risk\\logs\\main\\log_{date.today()}.log', 'w')
+	def __init__(self):
+		self.terminal = sys.stdout
+		self.log = open(f'Z:\\Nathan\\Models\\student_risk\\logs\\main\\log_{date.today()}.log', 'w')
 
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)  
+	def write(self, message):
+		self.terminal.write(message)
+		self.log.write(message)  
 
-    def flush(self):
-        pass
+	def flush(self):
+		pass
 
 
 #%%
 if __name__ == '__main__':
 
-    if term_type == 'SUM':
-        
-        sys.stdout = Logger()
+	if term_type == 'SUM':
+		
+		sys.stdout = Logger()
 
-        try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_ft_1yr\\sr_prod_sum_ft_ft_1yr_eot.py').read())
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_tr_1yr\\sr_prod_sum_ft_tr_1yr_eot.py').read())
-        except config.EOTError as eot_error:
-            print(eot_error)
+		try:
+			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_ft_1yr\\sr_prod_sum_ft_ft_1yr_eot.py').read())
+			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_tr_1yr\\sr_prod_sum_ft_tr_1yr_eot.py').read())
+		except config.EOTError as eot_error:
+			print(eot_error)
 
-        except KeyError as key_error:
-            print(key_error)
-        except:
-            traceback.print_exc(file=sys.stdout)
-        else:
-            stop = time.perf_counter()
-            print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+		except KeyError as key_error:
+			print(key_error)
+		except:
+			traceback.print_exc(file=sys.stdout)
+		else:
+			stop = time.perf_counter()
+			print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-    if term_type == 'SPR':
+	if term_type == 'SPR':
 
-        sys.stdout = Logger()
+		sys.stdout = Logger()
 
-        try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_mid.py').read())
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_mid.py').read())
-        except config.MidError as mid_error:
-            print(mid_error)
+		try:
+			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_mid.py').read())
+			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_mid.py').read())
+		except config.MidError as mid_error:
+			print(mid_error)
 
-            try:
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_cen.py').read())
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_cen.py').read())
-            except config.CenError as cen_error:
-                print(cen_error)
-            
-                try:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_eot.py').read())
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_eot.py').read())
-                except config.EOTError as eot_error:
-                    print(eot_error)
+			try:
+				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_cen.py').read())
+				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_cen.py').read())
+			except config.CenError as cen_error:
+				print(cen_error)
+			
+				try:
+					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_eot.py').read())
+					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_eot.py').read())
+				except config.EOTError as eot_error:
+					print(eot_error)
 
-                except KeyError as key_error:
-                    print(key_error)
-                except:
-                    traceback.print_exc(file=sys.stdout)
-                else:
-                    stop = time.perf_counter()
-                    print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+				except KeyError as key_error:
+					print(key_error)
+				except:
+					traceback.print_exc(file=sys.stdout)
+				else:
+					stop = time.perf_counter()
+					print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-            except KeyError as key_error:
-                print(key_error)
-            except:
-                traceback.print_exc(file=sys.stdout)
-            else:
-                stop = time.perf_counter()
-                print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+			except KeyError as key_error:
+				print(key_error)
+			except:
+				traceback.print_exc(file=sys.stdout)
+			else:
+				stop = time.perf_counter()
+				print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-        except KeyError as key_error:
-            print(key_error)
-        except:
-            traceback.print_exc(file=sys.stdout)
-        else:
-            stop = time.perf_counter()
-            print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+		except KeyError as key_error:
+			print(key_error)
+		except:
+			traceback.print_exc(file=sys.stdout)
+		else:
+			stop = time.perf_counter()
+			print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-    if term_type == 'FAL':
-        
-        sys.stdout = Logger()
+	if term_type == 'FAL':
+		
+		sys.stdout = Logger()
 
-        try:
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_mid.py').read())
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_mid.py').read())
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_mid.py').read())
-            exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_mid.py').read())
-            # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_3yr\\sr_prod_fal_ft_tr_3yr_mid.py').read())
-            # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_4yr\\sr_prod_fal_ft_tr_4yr_mid.py').read())
-        except config.MidError as mid_error:
-            print(mid_error)
+		try:
+			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_mid.py').read())
+			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_mid.py').read())
+			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_mid.py').read())
+			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_mid.py').read())
+			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_3yr\\sr_prod_fal_ft_tr_3yr_mid.py').read())
+			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_4yr\\sr_prod_fal_ft_tr_4yr_mid.py').read())
+		except config.MidError as mid_error:
+			print(mid_error)
 
-            try:
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_cen.py').read())
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_cen.py').read())
-                exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_cen.py').read())
-                # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_cen.py').read())
-            except config.CenError as cen_error:
-                print(cen_error)
+			try:
+				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_cen.py').read())
+				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_cen.py').read())
+				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_cen.py').read())
+				# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_cen.py').read())
+			except config.CenError as cen_error:
+				print(cen_error)
 
-                try:
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_adm.py').read())
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_adm.py').read())
-                    exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_adm.py').read())
-                    # exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_adm.py').read())
+				try:
+					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_adm.py').read())
+					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_adm.py').read())
+					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_adm.py').read())
+					# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_adm.py').read())
 
-                except config.AdmError as adm_error:
-                    print(adm_error)
+				except config.AdmError as adm_error:
+					print(adm_error)
 
-                except KeyError as key_error:
-                    print(key_error)
-                except:
-                    traceback.print_exc(file=sys.stdout)
-                else:
-                    stop = time.perf_counter()
-                    print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+				except KeyError as key_error:
+					print(key_error)
+				except:
+					traceback.print_exc(file=sys.stdout)
+				else:
+					stop = time.perf_counter()
+					print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-            except KeyError as key_error:
-                print(key_error)
-            except:
-                traceback.print_exc(file=sys.stdout)
-            else:
-                stop = time.perf_counter()
-                print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+			except KeyError as key_error:
+				print(key_error)
+			except:
+				traceback.print_exc(file=sys.stdout)
+			else:
+				stop = time.perf_counter()
+				print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-        except KeyError as key_error:
-            print(key_error)
-        except:
-            traceback.print_exc(file=sys.stdout)
-        else:
-            stop = time.perf_counter()
-            print(f'Completed in {(stop - start)/60:.1f} minutes\n')
+		except KeyError as key_error:
+			print(key_error)
+		except:
+			traceback.print_exc(file=sys.stdout)
+		else:
+			stop = time.perf_counter()
+			print(f'Completed in {(stop - start)/60:.1f} minutes\n')

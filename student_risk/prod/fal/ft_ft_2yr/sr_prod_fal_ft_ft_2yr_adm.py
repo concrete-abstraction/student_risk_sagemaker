@@ -262,23 +262,23 @@ pullm_testing_set = pullm_testing_set.reset_index()
 pullm_shap_outcome = pullm_testing_set['emplid'].copy(deep=True).values.tolist()
 
 pullm_pred_outcome = pullm_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							'emplid',
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 pullm_aggregate_outcome = pullm_testing_set[[ 
-                            'emplid',
+							'emplid',
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
 							'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 pullm_current_outcome = pullm_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							'emplid',
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 #%%
 # Vancouver variables
@@ -467,23 +467,23 @@ vanco_testing_set = vanco_testing_set.reset_index()
 vanco_shap_outcome = vanco_testing_set['emplid'].copy(deep=True).values.tolist()
 
 vanco_pred_outcome = vanco_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							'emplid',
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 vanco_aggregate_outcome = vanco_testing_set[[ 
-                            'emplid',
+							'emplid',
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
 							'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 vanco_current_outcome = vanco_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							'emplid',
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 #%%
 # Tri-Cities variables
@@ -672,23 +672,23 @@ trici_testing_set = trici_testing_set.reset_index()
 trici_shap_outcome = trici_testing_set['emplid'].copy(deep=True).values.tolist()
 
 trici_pred_outcome = trici_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							'emplid',
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 trici_aggregate_outcome = trici_testing_set[[ 
-                            'emplid',
+							'emplid',
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
 							'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 trici_current_outcome = trici_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							'emplid',
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 #%%
 # University variables
@@ -879,23 +879,23 @@ univr_testing_set = univr_testing_set.reset_index()
 univr_shap_outcome = univr_testing_set['emplid'].copy(deep=True).values.tolist()
 
 univr_pred_outcome = univr_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							'emplid',
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 univr_aggregate_outcome = univr_testing_set[[ 
-                            'emplid',
+							'emplid',
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
 							'resident'
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 univr_current_outcome = univr_testing_set[[ 
-                            'emplid',
-                            # 'enrl_ind'
-                            ]].copy(deep=True)
+							'emplid',
+							# 'enrl_ind'
+							]].copy(deep=True)
 
 
 #%%
@@ -907,7 +907,7 @@ pullm_x_training_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid']
 pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
 pullm_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
+	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
 									# 'race_alaska',
@@ -915,21 +915,21 @@ pullm_outlier_prep = make_column_transformer(
 									# 'race_black',
 									# 'race_native_hawaiian',
 									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
+									# 'acad_year', 
+									# 'age_group',
+									# 'marital_status',
+									'first_gen_flag',
+									# 'LSAMP_STEM_Flag',
+									# 'anywhere_STEM_Flag',
+									# 'afl_greek_indicator',
+									# 'ACAD_PLAN',
+									# 'plan_owner_org',
+									# 'ipeds_ethnic_group_descrshort',
+									# 'last_sch_proprietorship', 
+									'parent1_highest_educ_lvl',
+									'parent2_highest_educ_lvl'
+									]),
+	remainder='passthrough'
 )
 
 pullm_x_training_outlier = pullm_outlier_prep.fit_transform(pullm_x_training_outlier)
@@ -957,7 +957,7 @@ vanco_x_training_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid']
 vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
 vanco_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
+	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
 									# 'race_alaska',
@@ -965,21 +965,21 @@ vanco_outlier_prep = make_column_transformer(
 									# 'race_black',
 									# 'race_native_hawaiian',
 									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
+									# 'acad_year', 
+									# 'age_group',
+									# 'marital_status',
+									'first_gen_flag',
+									# 'LSAMP_STEM_Flag',
+									# 'anywhere_STEM_Flag',
+									# 'afl_greek_indicator',
+									# 'ACAD_PLAN',
+									# 'plan_owner_org',
+									# 'ipeds_ethnic_group_descrshort',
+									# 'last_sch_proprietorship', 
+									'parent1_highest_educ_lvl',
+									'parent2_highest_educ_lvl'
+									]),
+	remainder='passthrough'
 )
 
 vanco_x_training_outlier = vanco_outlier_prep.fit_transform(vanco_x_training_outlier)
@@ -1007,7 +1007,7 @@ trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','emplid']
 trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
 trici_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
+	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
 									# 'race_alaska',
@@ -1015,21 +1015,21 @@ trici_outlier_prep = make_column_transformer(
 									# 'race_black',
 									# 'race_native_hawaiian',
 									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
+									# 'acad_year', 
+									# 'age_group',
+									# 'marital_status',
+									'first_gen_flag',
+									# 'LSAMP_STEM_Flag',
+									# 'anywhere_STEM_Flag',
+									# 'afl_greek_indicator',
+									# 'ACAD_PLAN',
+									# 'plan_owner_org',
+									# 'ipeds_ethnic_group_descrshort',
+									# 'last_sch_proprietorship', 
+									'parent1_highest_educ_lvl',
+									'parent2_highest_educ_lvl'
+									]),
+	remainder='passthrough'
 )
 
 trici_x_training_outlier = trici_outlier_prep.fit_transform(trici_x_training_outlier)
@@ -1057,7 +1057,7 @@ univr_x_training_outlier = univr_training_set.drop(columns=['enrl_ind','emplid']
 univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
 univr_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
+	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
 									# 'race_alaska',
@@ -1065,21 +1065,21 @@ univr_outlier_prep = make_column_transformer(
 									# 'race_black',
 									# 'race_native_hawaiian',
 									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
+									# 'acad_year', 
+									# 'age_group',
+									# 'marital_status',
+									'first_gen_flag',
+									# 'LSAMP_STEM_Flag',
+									# 'anywhere_STEM_Flag',
+									# 'afl_greek_indicator',
+									# 'ACAD_PLAN',
+									# 'plan_owner_org',
+									# 'ipeds_ethnic_group_descrshort',
+									# 'last_sch_proprietorship', 
+									'parent1_highest_educ_lvl',
+									'parent2_highest_educ_lvl'
+									]),
+	remainder='passthrough'
 )
 
 univr_x_training_outlier = univr_outlier_prep.fit_transform(univr_x_training_outlier)
@@ -1179,21 +1179,21 @@ pullm_tomek_prep = make_column_transformer(
 									# 'race_black',
 									# 'race_native_hawaiian',
 									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
+									# 'acad_year', 
+									# 'age_group',
+									# 'marital_status',
+									'first_gen_flag',
+									# 'LSAMP_STEM_Flag',
+									# 'anywhere_STEM_Flag',
+									# 'afl_greek_indicator',
+									# 'ACAD_PLAN',
+									# 'plan_owner_org',
+									# 'ipeds_ethnic_group_descrshort',
+									# 'last_sch_proprietorship', 
+									'parent1_highest_educ_lvl',
+									'parent2_highest_educ_lvl'
+									]),
+	remainder='passthrough'
 )
 
 pullm_x_train = pullm_tomek_prep.fit_transform(pullm_x_train)
@@ -1305,21 +1305,21 @@ vanco_tomek_prep = make_column_transformer(
 									# 'race_black',
 									# 'race_native_hawaiian',
 									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
+									# 'acad_year', 
+									# 'age_group',
+									# 'marital_status',
+									'first_gen_flag',
+									# 'LSAMP_STEM_Flag',
+									# 'anywhere_STEM_Flag',
+									# 'afl_greek_indicator',
+									# 'ACAD_PLAN',
+									# 'plan_owner_org',
+									# 'ipeds_ethnic_group_descrshort',
+									# 'last_sch_proprietorship', 
+									'parent1_highest_educ_lvl',
+									'parent2_highest_educ_lvl'
+									]),
+	remainder='passthrough'
 )
 
 vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
@@ -1431,21 +1431,21 @@ trici_tomek_prep = make_column_transformer(
 									# 'race_black',
 									# 'race_native_hawaiian',
 									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
+									# 'acad_year', 
+									# 'age_group',
+									# 'marital_status',
+									'first_gen_flag',
+									# 'LSAMP_STEM_Flag',
+									# 'anywhere_STEM_Flag',
+									# 'afl_greek_indicator',
+									# 'ACAD_PLAN',
+									# 'plan_owner_org',
+									# 'ipeds_ethnic_group_descrshort',
+									# 'last_sch_proprietorship', 
+									'parent1_highest_educ_lvl',
+									'parent2_highest_educ_lvl'
+									]),
+	remainder='passthrough'
 )
 
 trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
@@ -1557,21 +1557,21 @@ univr_tomek_prep = make_column_transformer(
 									# 'race_black',
 									# 'race_native_hawaiian',
 									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
-    remainder='passthrough'
+									# 'acad_year', 
+									# 'age_group',
+									# 'marital_status',
+									'first_gen_flag',
+									# 'LSAMP_STEM_Flag',
+									# 'anywhere_STEM_Flag',
+									# 'afl_greek_indicator',
+									# 'ACAD_PLAN',
+									# 'plan_owner_org',
+									# 'ipeds_ethnic_group_descrshort',
+									# 'last_sch_proprietorship', 
+									'parent1_highest_educ_lvl',
+									'parent2_highest_educ_lvl'
+									]),
+	remainder='passthrough'
 )
 
 univr_x_train = univr_tomek_prep.fit_transform(univr_x_train)

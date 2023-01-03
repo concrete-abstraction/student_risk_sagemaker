@@ -48,20 +48,18 @@ class DatasetBuilderProd:
 		proc sql;
 			select term_type into: term_type 
 			from acs.adj_term 
-			where term_year = year(today())
-				and term_begin_dt <= today()
+			where term_begin_dt <= today()
 				and term_end_dt >= today()
 				and acad_career = 'UGRD'
 		;quit;
 		
 		proc sql;
-            select distinct full_acad_year into: full_acad_year 
-            from acs.adj_term 
-            where term_year = year(today())
-                and term_begin_dt <= today()
-                and term_end_dt >= today()
-                and acad_career = 'UGRD'
-        ;quit;
+			select distinct full_acad_year into: full_acad_year 
+			from acs.adj_term 
+			where term_begin_dt <= today()
+				and term_end_dt >= today()
+				and acad_career = 'UGRD'
+		;quit;
 
 		proc sql;
 			select distinct a.snapshot into: aid_check
@@ -2122,20 +2120,18 @@ class DatasetBuilderProd:
 		proc sql;
 			select term_type into: term_type 
 			from acs.adj_term 
-			where term_year = year(today())
-				and term_begin_dt <= today()
+			where term_begin_dt <= today()
 				and term_end_dt >= today()
 				and acad_career = 'UGRD'
 		;quit;
 		
 		proc sql;
-            select distinct full_acad_year into: full_acad_year 
-            from acs.adj_term 
-            where term_year = year(today())
-                and term_begin_dt <= today()
-                and term_end_dt >= today()
-                and acad_career = 'UGRD'
-        ;quit;
+			select distinct full_acad_year into: full_acad_year 
+			from acs.adj_term 
+			where term_begin_dt <= today()
+				and term_end_dt >= today()
+				and acad_career = 'UGRD'
+		;quit;
 
 		proc sql;
 			select distinct a.snapshot into: aid_snapshot
