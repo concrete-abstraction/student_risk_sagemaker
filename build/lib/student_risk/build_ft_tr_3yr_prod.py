@@ -8,10 +8,6 @@ from IPython.display import HTML
 #%%
 class DatasetBuilderProd:
 
-	valid_pass = None
-	training_pass = None
-	testing_pass = None
-
 	@staticmethod
 	def build_admissions_prod():
 		
@@ -4878,18 +4874,24 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		proc sql;
-			select term_type into: term_type 
+			select full_acad_year into: full_acad_year 
 			from acs.adj_term 
-			where term_begin_dt <= today()
-				and term_end_dt >= today()
+			where term_year = year(today())
+				and begin_month <= month(today()) 
+				and end_month >= month(today()) 
+				and begin_week <= week(today())
+				and end_week >= week(today())
 				and acad_career = 'UGRD'
 		;quit;
-		
+
 		proc sql;
-			select distinct full_acad_year into: full_acad_year 
+			select max(term_type) into: term_type 
 			from acs.adj_term 
-			where term_begin_dt <= today()
-				and term_end_dt >= today()
+			where term_year = year(today())
+				and begin_month <= month(today()) 
+				and end_month >= month(today()) 
+				and begin_week <= week(today())
+				and end_week >= week(today())
 				and acad_career = 'UGRD'
 		;quit;
 
@@ -4938,9 +4940,8 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		%let acs_lag = 2;
-			
 		%let lag_year = 1;
-		%let admit_lag = 0;
+		%let admit_lag = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 5);
 		""")
@@ -9689,106 +9690,21 @@ class DatasetBuilderProd:
 		print('Export data from SAS...')
 
 		sas_log = sas.submit("""
-		libname valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+		filename valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_3yr_validation_set.csv\" encoding="utf-8";
 
-		%let valid_pass = 0;
-
-		%if %sysfunc(exist(valid.ft_tr_2yr_validation_set)) 
-			%then %do;
-				data work.validation_set_compare;
-					set valid.ft_tr_2yr_validation_set;
-				run;
-			%end;
-			
-			%else %do;
-				data valid.ft_tr_2yr_validation_set;
-					set work.validation_set;
-				run;
-			%end;
-
-		proc compare data=validation_set compare=validation_set_compare method=absolute;
+		proc export data=validation_set outfile=valid dbms=csv replace;
 		run;
 
-		%if &sysinfo ^= 0
-			 
-			%then %do;
-				data valid.ft_tr_2yr_validation_set;
-					set work.validation_set;
-				run;
-			%end;
-			
-			%else %do;
-				%let valid_pass = 1;
-			%end;
+		filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_3yr_training_set.csv\" encoding="utf-8";
 
-		libname training \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
-
-		%let training_pass = 0;
-
-		%if %sysfunc(exist(training.ft_tr_2yr_training_set)) 
-			%then %do;
-				data work.training_set_compare;
-					set training.ft_tr_2yr_training_set;
-				run;
-			%end;
-			
-			%else %do;
-				data training.ft_tr_2yr_training_set;
-					set work.training_set;
-				run;
-			%end;
-
-		proc compare data=training_set compare=training_set_compare method=absolute;
+		proc export data=training_set outfile=training dbms=csv replace;
 		run;
 
-		%if &sysinfo ^= 0
-			 
-			%then %do;
-				data training.ft_tr_2yr_training_set;
-					set work.training_set;
-				run;
-			%end;
-			
-			%else %do;
-				%let training_pass = 1;
-			%end;
-			
-		libname testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+		filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_3yr_testing_set.csv\" encoding="utf-8";
 
-		%let testing_pass = 0;
-
-		%if %sysfunc(exist(testing.ft_tr_2yr_testing_set)) 
-			%then %do;
-				data work.testing_set_compare;
-					set testing.ft_tr_2yr_testing_set;
-				run;
-			%end;
-			
-			%else %do;
-				data testing.ft_tr_2yr_testing_set;
-					set work.testing_set;
-				run;
-			%end;
-
-		proc compare data=testing_set compare=testing_set_compare method=absolute;
+		proc export data=testing_set outfile=testing dbms=csv replace;
 		run;
-			
-		%if &sysinfo ^= 0
-			 
-			%then %do;
-				data testing.ft_tr_2yr_testing_set;
-					set work.testing_set;
-				run;
-			%end;
-			
-			%else %do;
-				%let testing_pass = 1;
-			%end;
 		""")
-
-		DatasetBuilderProd.valid_pass = sas.symget('valid_pass')
-		DatasetBuilderProd.training_pass = sas.symget('training_pass')
-		DatasetBuilderProd.testing_pass = sas.symget('testing_pass')
 
 		HTML(sas_log['LOG'])
 

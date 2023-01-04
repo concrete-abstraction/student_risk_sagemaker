@@ -26,3 +26,4 @@ supplemental_files/SAS_batch_nightly_my_wsu.bat
 supplemental_files/nightly_my_wsu_v2.sas
 supplemental_files/nightly_my_wsu_error_checking_in_log_files.sas
 committee
+student_risk.egg-info

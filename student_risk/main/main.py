@@ -50,6 +50,7 @@ proc sql;
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
+		datepart(base.term_begin_dt) as midterm_begin_dt format=mmddyyd10.,
 		day(datepart(base.term_midterm_dt)) as midterm_day,
 		week(datepart(base.term_midterm_dt)) as midterm_week,
 		month(datepart(base.term_midterm_dt)) as midterm_month,
@@ -168,9 +169,9 @@ if __name__ == '__main__':
 		sys.stdout = Logger()
 
 		try:
-			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_mid.py').read())
-			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_mid.py').read())
-			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_mid.py').read())
+			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_mid.py').read())
+			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_mid.py').read())
+			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_mid.py').read())
 			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_mid.py').read())
 			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_3yr\\sr_prod_fal_ft_tr_3yr_mid.py').read())
 			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_4yr\\sr_prod_fal_ft_tr_4yr_mid.py').read())

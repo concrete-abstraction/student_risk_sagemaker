@@ -65,15 +65,17 @@ verbose = False
 #%%
 # Precensus date check
 calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
+
 now = datetime.datetime.now()
+now_dt = datetime.datetime.strptime(f'{now.month:02}-{now.day:02}-{now.year:04}', '%m-%d-%Y')
 
 now_day = now.day
 now_month = now.month
 now_year = now.year
 
-adm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_day'].values[0]
-adm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_month'].values[0]
-adm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['begin_year'].values[0]
+adm_day = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['begin_day'].values[0]
+adm_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['begin_month'].values[0]
+adm_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['begin_year'].values[0]
 
 if now_year < adm_year:
 	raise config.AdmError(f'{date.today()}: Admissions year exception, outside of date range.')
