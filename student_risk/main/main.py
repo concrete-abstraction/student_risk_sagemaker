@@ -1,4 +1,5 @@
 #%%
+import runpy
 import sys
 import time
 import traceback
@@ -105,8 +106,14 @@ if __name__ == '__main__':
 		sys.stdout = Logger()
 
 		try:
-			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_ft_1yr\\sr_prod_sum_ft_ft_1yr_eot.py').read())
-			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_tr_1yr\\sr_prod_sum_ft_tr_1yr_eot.py').read())
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_ft_1yr\\sr_prod_sum_ft_ft_1yr_eot.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_tr_1yr\\sr_prod_sum_ft_tr_1yr_eot.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_ft_2yr\\sr_prod_sum_ft_ft_2yr_eot.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_tr_2yr\\sr_prod_sum_ft_tr_2yr_eot.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_ft_3yr\\sr_prod_sum_ft_ft_3yr_eot.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_tr_3yr\\sr_prod_sum_ft_tr_3yr_eot.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_ft_4yr\\sr_prod_sum_ft_ft_4yr_eot.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\sum\\ft_tr_4yr\\sr_prod_sum_ft_tr_4yr_eot.py')
 		except config.EOTError as eot_error:
 			print(eot_error)
 
@@ -123,20 +130,38 @@ if __name__ == '__main__':
 		sys.stdout = Logger()
 
 		try:
-			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_mid.py').read())
-			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_mid.py').read())
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_mid.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_mid.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_2yr\\sr_prod_spr_ft_ft_2yr_mid.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_2yr\\sr_prod_spr_ft_tr_2yr_mid.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_3yr\\sr_prod_spr_ft_ft_3yr_mid.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_3yr\\sr_prod_spr_ft_tr_3yr_mid.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_4yr\\sr_prod_spr_ft_ft_4yr_mid.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_4yr\\sr_prod_spr_ft_tr_4yr_mid.py')
 		except config.MidError as mid_error:
 			print(mid_error)
 
 			try:
-				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_cen.py').read())
-				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_cen.py').read())
+				runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_cen.py')
+				runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_cen.py')
+				runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_2yr\\sr_prod_spr_ft_ft_2yr_cen.py')
+				runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_2yr\\sr_prod_spr_ft_tr_2yr_cen.py')
+				# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_3yr\\sr_prod_spr_ft_ft_3yr_cen.py')
+				# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_3yr\\sr_prod_spr_ft_tr_3yr_cen.py')
+				# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_4yr\\sr_prod_spr_ft_ft_4yr_cen.py')
+				# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_4yr\\sr_prod_spr_ft_tr_4yr_cen.py')
 			except config.CenError as cen_error:
 				print(cen_error)
 			
 				try:
-					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_eot.py').read())
-					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_eot.py').read())
+					runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_eot.py')
+					runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_eot.py')
+					runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_2yr\\sr_prod_spr_ft_ft_2yr_eot.py')
+					runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_2yr\\sr_prod_spr_ft_tr_2yr_eot.py')
+					# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_3yr\\sr_prod_spr_ft_ft_3yr_eot.py')
+					# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_3yr\\sr_prod_spr_ft_tr_3yr_eot.py')
+					# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_4yr\\sr_prod_spr_ft_ft_4yr_eot.py')
+					# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_4yr\\sr_prod_spr_ft_tr_4yr_eot.py')
 				except config.EOTError as eot_error:
 					print(eot_error)
 
@@ -169,29 +194,38 @@ if __name__ == '__main__':
 		sys.stdout = Logger()
 
 		try:
-			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_mid.py').read())
-			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_mid.py').read())
-			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_mid.py').read())
-			exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_mid.py').read())
-			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_3yr\\sr_prod_fal_ft_tr_3yr_mid.py').read())
-			# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_4yr\\sr_prod_fal_ft_tr_4yr_mid.py').read())
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_mid.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_mid.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_mid.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_mid.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_3yr\\sr_prod_fal_ft_ft_3yr_mid.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_3yr\\sr_prod_fal_ft_tr_3yr_mid.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_4yr\\sr_prod_fal_ft_ft_4yr_mid.py')
+			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_4yr\\sr_prod_fal_ft_tr_4yr_mid.py')
 		except config.MidError as mid_error:
 			print(mid_error)
 
 			try:
-				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_cen.py').read())
-				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_cen.py').read())
-				exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_cen.py').read())
-				# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_cen.py').read())
+				runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_cen.py')
+				runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_cen.py')
+				runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_cen.py')
+				runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_cen.py')
+				# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_3yr\\sr_prod_fal_ft_ft_3yr_cen.py')
+				# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_3yr\\sr_prod_fal_ft_tr_3yr_cen.py')
+				# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_4yr\\sr_prod_fal_ft_ft_4yr_cen.py')
+				# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_4yr\\sr_prod_fal_ft_tr_4yr_cen.py')
 			except config.CenError as cen_error:
 				print(cen_error)
 
 				try:
-					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_adm.py').read())
-					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_adm.py').read())
-					exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_adm.py').read())
-					# exec(open('Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_adm.py').read())
-
+					runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_1yr\\sr_prod_fal_ft_ft_1yr_adm.py')
+					runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_1yr\\sr_prod_fal_ft_tr_1yr_adm.py')
+					runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_2yr\\sr_prod_fal_ft_ft_2yr_adm.py')
+					runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_2yr\\sr_prod_fal_ft_tr_2yr_adm.py')
+					# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_3yr\\sr_prod_fal_ft_ft_3yr_adm.py')
+					# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_3yr\\sr_prod_fal_ft_tr_3yr_adm.py')
+					# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_ft_4yr\\sr_prod_fal_ft_ft_4yr_adm.py')
+					# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\fal\\ft_tr_4yr\\sr_prod_fal_ft_tr_4yr_adm.py')
 				except config.AdmError as adm_error:
 					print(adm_error)
 
