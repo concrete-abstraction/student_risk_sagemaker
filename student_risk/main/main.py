@@ -125,7 +125,7 @@ if __name__ == '__main__':
 			stop = time.perf_counter()
 			print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-	if term_type == 'SPR':
+	elif term_type == 'SPR':
 
 		sys.stdout = Logger()
 
@@ -189,7 +189,7 @@ if __name__ == '__main__':
 			stop = time.perf_counter()
 			print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-	if term_type == 'FAL':
+	elif term_type == 'FAL':
 		
 		sys.stdout = Logger()
 
