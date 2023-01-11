@@ -1614,14 +1614,7 @@ univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_
 print('\nStandard logistic model for Pullman sophomores...\n')
 
 try:
-	pullm_y, pullm_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ fall_lec_count + fall_lab_count + fall_stu_count + fall_oth_count \
-					+ total_fall_units \
-					+ cum_gpa + cum_gpa_hours \
-					+ honors_program_ind \
-					+ cum_adj_transfer_hours \
-					+ resident \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=pullm_logit_df, return_type='dataframe')
+	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_tomek_vars), data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
 	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -1636,12 +1629,7 @@ print('\n')
 print('\nStandard logistic model for Vancouver sophomores...\n')
 
 try:
-	vanco_y, vanco_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ cum_gpa + cum_gpa_hours \
-					+ cum_adj_transfer_hours \
-					+ resident \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=vanco_logit_df, return_type='dataframe')
+	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_tomek_vars), data=vanco_logit_df, return_type='dataframe')
 
 	vanco_logit_mod = Logit(vanco_y, vanco_x)
 	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
@@ -1656,12 +1644,7 @@ print('\n')
 print('\nStandard logistic model for Tri-Cities sophomores...\n')
 
 try:
-	trici_y, trici_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ cum_gpa + cum_gpa_hours \
-					+ cum_adj_transfer_hours \
-					+ resident \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=trici_logit_df, return_type='dataframe')
+	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_tomek_vars), data=trici_logit_df, return_type='dataframe')
 
 	trici_logit_mod = Logit(trici_y, trici_x)
 	trici_logit_res = trici_logit_mod.fit(maxiter=500)
@@ -1676,14 +1659,7 @@ print('\n')
 print('\nStandard logistic model for University sophomores...\n')
 
 try:
-	univr_y, univr_x = dmatrices('enrl_ind ~ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ fall_lec_count + fall_lab_count \
-					+ total_fall_units \
-					+ cum_gpa + cum_gpa_hours \
-					+ cum_adj_transfer_hours \
-					+ resident \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi', data=univr_logit_df, return_type='dataframe')
+	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_tomek_vars), data=univr_logit_df, return_type='dataframe')
 
 	univr_logit_mod = Logit(univr_y, univr_x)
 	univr_logit_res = univr_logit_mod.fit(maxiter=500)

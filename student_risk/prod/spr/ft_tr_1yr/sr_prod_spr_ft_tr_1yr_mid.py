@@ -1584,25 +1584,7 @@ univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_t
 print('\nStandard logistic model for Pullman transfers...\n')
 
 try:
-	pullm_y, pullm_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
-					+ spring_lec_count + spring_lab_count + spring_stu_count + spring_oth_count \
-					+ spring_credit_hours \
-					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
-					+ spring_withdrawn_hours \
-					+ honors_program_ind \
-					+ business + comm + education + medicine + nursing + vet_med \
-					+ cahnrs_anml + cahnrs_econ + cahnrext \
-					+ cas_chem + cas_crim + cas_math + cas_psyc + cas_biol + cas_engl + cas_phys + cas \
-					+ vcea_bioe + vcea_cive + vcea_desn + vcea_eecs + vcea_mech + vcea \
-					+ remedial \
-					+ cum_adj_transfer_hours \
-					+ resident \
-					+ fall_term_gpa + fall_term_gpa_mi \
-					+ spring_midterm_gpa_avg + spring_midterm_gpa_avg_mi \
-					+ fall_term_D_grade_count + fall_term_F_grade_count \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_acpt + unmet_need_acpt_mi', data=pullm_logit_df, return_type='dataframe')
+	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_tomek_vars), data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
 	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -1617,20 +1599,7 @@ print('\n')
 print('\nStandard logistic model for Vancouver transfers...\n')
 
 try:
-	vanco_y, vanco_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
-					+ spring_lec_count + spring_lab_count \
-					+ spring_credit_hours \
-					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
-					+ spring_withdrawn_hours \
-					+ remedial \
-					+ cum_adj_transfer_hours \
-					+ resident \
-					+ fall_term_gpa + fall_term_gpa_mi \
-					+ spring_midterm_gpa_avg + spring_midterm_gpa_avg_mi \
-					+ fall_term_D_grade_count + fall_term_F_grade_count \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_acpt + unmet_need_acpt_mi', data=vanco_logit_df, return_type='dataframe')
+	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_tomek_vars), data=vanco_logit_df, return_type='dataframe')
 
 	vanco_logit_mod = Logit(vanco_y, vanco_x)
 	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
@@ -1645,20 +1614,8 @@ print('\n')
 print('\nStandard logistic model for Tri-Cities transfers...\n')
 
 try:
-	trici_y, trici_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
-					+ spring_lec_count + spring_lab_count \
-					+ spring_credit_hours \
-					+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
-					+ spring_withdrawn_hours \
-					+ remedial \
-					+ cum_adj_transfer_hours \
-					+ resident \
-					+ fall_term_gpa + fall_term_gpa_mi \
-					+ spring_midterm_gpa_avg + spring_midterm_gpa_avg_mi \
-					+ fall_term_D_grade_count + fall_term_F_grade_count \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_acpt + unmet_need_acpt_mi', data=trici_logit_df, return_type='dataframe')
+	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_tomek_vars), data=trici_logit_df, return_type='dataframe')
+
 	trici_logit_mod = Logit(trici_y, trici_x)
 	trici_logit_res = trici_logit_mod.fit(maxiter=500)
 	print(trici_logit_res.summary())
@@ -1672,20 +1629,8 @@ print('\n')
 print('\nStandard logistic model for University transfers...\n')
 
 try:
-	univr_y, univr_x = dmatrices('enrl_ind ~ \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi + acad_level_bot_descr \
-					+ spring_lec_count + spring_lab_count \
-					+ spring_credit_hours \
-					+ spring_withdrawn_hours \
-					+ remedial \
-					+ cum_adj_transfer_hours \
-					+ resident \
-					+ fall_term_gpa + fall_term_gpa_mi \
-					+ spring_midterm_gpa_avg + spring_midterm_gpa_avg_mi \
-					+ fall_term_D_grade_count + fall_term_F_grade_count \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_acpt + unmet_need_acpt_mi', data=univr_logit_df, return_type='dataframe')
-	
+	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_tomek_vars), data=univr_logit_df, return_type='dataframe')
+
 	univr_logit_mod = Logit(univr_y, univr_x)
 	univr_logit_res = univr_logit_mod.fit(maxiter=500)
 	print(univr_logit_res.summary())

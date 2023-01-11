@@ -1637,18 +1637,7 @@ univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_
 print('\nStandard logistic model for Pullman freshmen...\n')
 
 try:
-	pullm_y, pullm_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-					+ pct_blk + pct_ai + pct_hawi + pct_two + pct_hisp \
-					+ gini_indx + median_inc + median_value + acs_mi \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-					+ fall_lec_count + fall_lab_count + fall_stu_count + fall_oth_count \
-					+ total_fall_units \
-					+ resident \
-					+ high_school_gpa + high_school_gpa_mi \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi \
-					+ count_week_from_term_begin_dt', data=pullm_logit_df, return_type='dataframe')
+	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_tomek_vars), data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
 	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -1663,18 +1652,7 @@ print('\n')
 print('\nStandard logistic model for Vancouver freshmen...\n')
 
 try:
-	vanco_y, vanco_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-					+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
-					+ gini_indx + median_inc + median_value + acs_mi \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-					+ fall_lec_count + fall_lab_count  \
-					+ total_fall_units \
-					+ resident \
-					+ high_school_gpa + high_school_gpa_mi \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi \
-					+ count_week_from_term_begin_dt', data=vanco_logit_df, return_type='dataframe')
+	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_tomek_vars), data=vanco_logit_df, return_type='dataframe')
 
 	vanco_logit_mod = Logit(vanco_y, vanco_x)
 	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
@@ -1689,18 +1667,7 @@ print('\n')
 print('\nStandard logistic model for Tri-Cities freshmen...\n')
 
 try:
-	trici_y, trici_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-					+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
-					+ gini_indx + median_inc + median_value + acs_mi \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-					+ fall_lec_count + fall_lab_count \
-					+ total_fall_units \
-					+ resident \
-					+ high_school_gpa + high_school_gpa_mi \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi \
-					+ count_week_from_term_begin_dt', data=trici_logit_df, return_type='dataframe')
+	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_tomek_vars), data=trici_logit_df, return_type='dataframe')
 
 	trici_logit_mod = Logit(trici_y, trici_x)
 	trici_logit_res = trici_logit_mod.fit(maxiter=500)
@@ -1715,18 +1682,7 @@ print('\n')
 print('\nStandard logistic model for University freshmen...\n')
 
 try:
-	univr_y, univr_x = dmatrices('enrl_ind ~ distance + pvrt_rate + pop_dens + educ_rate \
-					+ pct_blk + pct_ai + pct_asn + pct_hawi + pct_two + pct_hisp + pct_oth \
-					+ gini_indx + median_inc + median_value + acs_mi \
-					+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-					+ fall_avg_difficulty + fall_avg_pct_CDF + fall_avg_pct_withdrawn \
-					+ fall_lec_count + fall_lab_count \
-					+ total_fall_units \
-					+ resident \
-					+ high_school_gpa + high_school_gpa_mi \
-					+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-					+ unmet_need_ofr + unmet_need_ofr_mi \
-					+ count_week_from_term_begin_dt', data=univr_logit_df, return_type='dataframe')
+	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_tomek_vars), data=univr_logit_df, return_type='dataframe')
 
 	univr_logit_mod = Logit(univr_y, univr_x)
 	univr_logit_res = univr_logit_mod.fit(maxiter=500)
