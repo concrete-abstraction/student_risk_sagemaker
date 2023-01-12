@@ -35,7 +35,7 @@ from xgboost import XGBClassifier, XGBRFClassifier
 import shap
 from student_risk import build_ft_tr_2yr_prod, config
 
- #%%
+#%%
 # Database connection
 cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
 params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
@@ -113,8 +113,15 @@ pullm_data_vars = [
 'fall_midterm_gpa_avg',
 'fall_midterm_gpa_avg_mi',
 'fall_midterm_grade_count',
+# 'fall_midterm_F_grade_count',
 'fall_midterm_S_grade_count',
 'fall_midterm_W_grade_count',
+# 'fall_term_gpa',
+# 'fall_term_gpa_mi',
+# 'fall_term_no_letter_count',
+# 'fall_term_F_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
 # 'awe_instrument',
 # 'cdi_instrument',
 'fall_avg_difficulty',
@@ -182,7 +189,7 @@ pullm_data_vars = [
 'fall_withdrawn_hours',
 # 'fall_withdrawn_ind',
 # 'athlete',
-# 'remedial',
+'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -282,7 +289,6 @@ pullm_current_outcome = pullm_testing_set[[
 							# 'enrl_ind'
 							]].copy(deep=True)
 
-
 #%%
 # Vancouver variables
 vanco_data_vars = [
@@ -321,8 +327,15 @@ vanco_data_vars = [
 'fall_midterm_gpa_avg',
 'fall_midterm_gpa_avg_mi',
 'fall_midterm_grade_count',
+# 'fall_midterm_F_grade_count',
 'fall_midterm_S_grade_count',
 # 'fall_midterm_W_grade_count',
+# 'fall_term_gpa',
+# 'fall_term_gpa_mi',
+# 'fall_term_no_letter_count',
+# 'fall_term_F_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
 # 'awe_instrument',
 # 'cdi_instrument',
 'fall_avg_difficulty',
@@ -528,8 +541,15 @@ trici_data_vars = [
 'fall_midterm_gpa_avg',
 # 'fall_midterm_gpa_avg_mi',
 'fall_midterm_grade_count',
+# 'fall_midterm_F_grade_count',
 'fall_midterm_S_grade_count',
 # 'fall_midterm_W_grade_count',
+# 'fall_term_gpa',
+# 'fall_term_gpa_mi',
+# 'fall_term_no_letter_count',
+# 'fall_term_F_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
 # 'awe_instrument',
 # 'cdi_instrument',
 'fall_avg_difficulty',
@@ -735,8 +755,15 @@ univr_data_vars = [
 'fall_midterm_gpa_avg',
 'fall_midterm_gpa_avg_mi',
 'fall_midterm_grade_count',
+# 'fall_midterm_F_grade_count',
 'fall_midterm_S_grade_count',
 # 'fall_midterm_W_grade_count',
+# 'fall_term_gpa',
+# 'fall_term_gpa_mi',
+# 'fall_term_no_letter_count',
+# 'fall_term_F_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
 # 'awe_instrument',
 # 'cdi_instrument',
 'fall_avg_difficulty',
@@ -905,7 +932,6 @@ univr_current_outcome = univr_testing_set[[
 							'emplid',
 							# 'enrl_ind'
 							]].copy(deep=True)
-
 
 #%%
 # Detect and remove outliers

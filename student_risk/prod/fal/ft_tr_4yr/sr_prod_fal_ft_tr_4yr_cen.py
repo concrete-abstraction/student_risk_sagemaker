@@ -34,7 +34,7 @@ from xgboost import XGBClassifier, XGBRFClassifier
 import shap
 from student_risk import build_ft_tr_2yr_prod, config
 
- #%%
+#%%
 # Database connection
 cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
 params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
