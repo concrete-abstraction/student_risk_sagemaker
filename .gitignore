@@ -3,6 +3,8 @@ reference_files/*.sas
 *.csv
 *.R
 *.json
+*.docx
+*.pptx
 *.code-workspace
 *.qgz
 *.zip
