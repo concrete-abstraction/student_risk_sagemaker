@@ -27,5 +27,5 @@ supplemental_files/nightly_my_wsu_v2.sas
 supplemental_files/nightly_my_wsu_error_checking_in_log_files.sas
 committee
 student_risk.egg-info
-student_risk/prod/fal/ft_tr_3yr/
-student_risk/prod/fal/ft_tr_4yr/
+student_risk/prod/fal/ft_tr_3yr
+student_risk/prod/fal/ft_tr_4yr
