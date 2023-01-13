@@ -103,7 +103,7 @@ class Logger(object):
 if __name__ == '__main__':
 
 	if date.today().weekday() == 6:
-		
+
 		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_validation_set.sas7bdat')
 		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_training_set.sas7bdat')
 		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_testing_set.sas7bdat')
@@ -116,6 +116,12 @@ if __name__ == '__main__':
 		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_2yr_validation_set.sas7bdat')
 		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_2yr_training_set.sas7bdat')
 		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_2yr_testing_set.sas7bdat')
+		# os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_3yr_validation_set.sas7bdat')
+		# os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_3yr_training_set.sas7bdat')
+		# os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_3yr_testing_set.sas7bdat')
+		# os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_4yr_validation_set.sas7bdat')
+		# os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_4yr_training_set.sas7bdat')
+		# os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_4yr_testing_set.sas7bdat')
 
 	if term_type == 'SUM':
 		
