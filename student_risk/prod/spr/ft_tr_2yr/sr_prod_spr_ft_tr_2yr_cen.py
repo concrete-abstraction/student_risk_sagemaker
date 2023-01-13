@@ -1587,6 +1587,12 @@ univr_training_set = univr_training_set.reset_index(drop=True)
 univr_tomek_set = univr_training_set.drop(univr_tomek_index)
 univr_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_tran_tomek_set.csv', encoding='utf-8', index=False)
 
+#%%
+# Standard logistic model
+
+# Pullman standard model
+print('\nStandard logistic model for Pullman second-year transfers...\n')
+
 try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_tomek_vars), data=pullm_logit_df, return_type='dataframe')
 
@@ -1610,7 +1616,7 @@ print('\n')
 
 #%%
 # Vancouver standard model
-print('\nStandard logistic model for Vancouver transfers...\n')
+print('\nStandard logistic model for Vancouver second-year transfers...\n')
 
 try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_tomek_vars), data=vanco_logit_df, return_type='dataframe')
@@ -1635,7 +1641,7 @@ print('\n')
 
 #%%
 # Tri-Cities standard model
-print('\nStandard logistic model for Tri-Cities transfers...\n')
+print('\nStandard logistic model for Tri-Cities second-year transfers...\n')
 
 try:
 	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_tomek_vars), data=trici_logit_df, return_type='dataframe')
@@ -1660,7 +1666,7 @@ print('\n')
 
 #%%
 # University standard model
-print('\nStandard logistic model for University transfers...\n')
+print('\nStandard logistic model for University second-year transfers...\n')
 
 try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_tomek_vars), data=univr_logit_df, return_type='dataframe')

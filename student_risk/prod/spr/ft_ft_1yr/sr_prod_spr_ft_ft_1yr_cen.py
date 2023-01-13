@@ -1745,8 +1745,6 @@ except:
 
 print('\n')
 
-
-
 #%%
 print('Run machine learning models for freshmen...\n')
 
