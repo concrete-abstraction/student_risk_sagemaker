@@ -1628,7 +1628,7 @@ try:
 	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
 	print(pullm_logit_res.summary())
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1643,7 +1643,7 @@ try:
 	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
 	print(vanco_logit_res.summary())
 except:
-	print('\nFailed to converge: Linear combination, singular matrix, divide by zero, or separation')
+	print('\nFailed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation')
 
 print('\n')
 
@@ -1658,7 +1658,7 @@ try:
 	trici_logit_res = trici_logit_mod.fit(maxiter=500)
 	print(trici_logit_res.summary())
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1673,51 +1673,11 @@ try:
 	univr_logit_res = univr_logit_mod.fit(maxiter=500)
 	print(univr_logit_res.summary())
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
-#%%
-# VIF diagnostic
 
-# Pullman VIF
-print('VIF for Pullman...\n')
-pullm_vif = pd.DataFrame()
-pullm_vif['vif factor'] = [variance_inflation_factor(pullm_x.values, i) for i in range(pullm_x.shape[1])]
-pullm_vif['features'] = pullm_x.columns
-pullm_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
-print(pullm_vif.round(1).to_string())
-print('\n')
-
-#%%
-# Vancouver VIF
-print('VIF for Vancouver...\n')
-vanco_vif = pd.DataFrame()
-vanco_vif['vif factor'] = [variance_inflation_factor(vanco_x.values, i) for i in range(vanco_x.shape[1])]
-vanco_vif['features'] = vanco_x.columns
-vanco_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
-print(vanco_vif.round(1).to_string())
-print('\n')
-
-#%%
-# Tri-Cities VIF
-print('VIF for Tri-Cities...\n')
-trici_vif = pd.DataFrame()
-trici_vif['vif factor'] = [variance_inflation_factor(trici_x.values, i) for i in range(trici_x.shape[1])]
-trici_vif['features'] = trici_x.columns
-trici_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
-print(trici_vif.round(1).to_string())
-print('\n')
-
-#%%
-# University VIF
-print('VIF for University...\n')
-univr_vif = pd.DataFrame()
-univr_vif['vif factor'] = [variance_inflation_factor(univr_x.values, i) for i in range(univr_x.shape[1])]
-univr_vif['features'] = univr_x.columns
-univr_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
-print(univr_vif.round(1).to_string())
-print('\n')
 
 #%%
 print('Run machine learning models for third-year transfers...\n')

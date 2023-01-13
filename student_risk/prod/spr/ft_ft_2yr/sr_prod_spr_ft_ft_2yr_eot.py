@@ -60,7 +60,7 @@ num_parallel_tree = 64
 subsample = 0.8
 colsample_bytree = 0.8
 colsample_bynode = 0.8
-verbose = True
+verbose = False
 
 #%%
 # End of term date and snapshot check 
@@ -392,7 +392,7 @@ vanco_data_vars = [
 'fall_midterm_gpa_avg',
 'fall_midterm_gpa_avg_mi',
 'fall_midterm_grade_count',
-'fall_midterm_F_grade_count',
+# 'fall_midterm_F_grade_count',
 'fall_midterm_S_grade_count',
 'fall_midterm_W_grade_count',
 'fall_term_gpa',
@@ -596,7 +596,7 @@ trici_data_vars = [
 'pell_eligibility_ind',
 # 'pell_recipient_ind',
 'first_gen_flag',
-'first_gen_flag_mi', 
+# 'first_gen_flag_mi', 
 # 'LSAMP_STEM_Flag',
 # 'anywhere_STEM_Flag',
 # 'honors_program_ind',
@@ -604,7 +604,7 @@ trici_data_vars = [
 'cum_gpa',
 'cum_gpa_hours',
 'fall_midterm_gpa_avg',
-'fall_midterm_gpa_avg_mi',
+# 'fall_midterm_gpa_avg_mi',
 'fall_midterm_grade_count',
 # 'fall_midterm_F_grade_count',
 'fall_midterm_S_grade_count',
@@ -680,7 +680,7 @@ trici_data_vars = [
 # 'term_credit_hours',
 'total_fall_units',
 'fall_withdrawn_hours',
-'fall_withdrawn_ind',
+# 'fall_withdrawn_ind',
 # 'athlete',
 # 'remedial',
 # 'ACAD_PLAN',
@@ -800,7 +800,7 @@ univr_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
@@ -810,7 +810,7 @@ univr_data_vars = [
 'pell_eligibility_ind',
 # 'pell_recipient_ind',
 'first_gen_flag',
-'first_gen_flag_mi', 
+# 'first_gen_flag_mi', 
 # 'LSAMP_STEM_Flag',
 # 'anywhere_STEM_Flag',
 # 'honors_program_ind',
@@ -821,12 +821,12 @@ univr_data_vars = [
 'fall_midterm_gpa_avg_mi',
 'fall_midterm_grade_count',
 # 'fall_midterm_F_grade_count',
-'fall_midterm_S_grade_count',
-'fall_midterm_W_grade_count',
+# 'fall_midterm_S_grade_count',
+# 'fall_midterm_W_grade_count',
 'fall_term_gpa',
 'fall_term_gpa_mi',
 # 'fall_term_no_letter_count',
-'fall_term_F_grade_count',
+# 'fall_term_F_grade_count',
 # 'fall_term_S_grade_count',
 # 'fall_term_W_grade_count',
 # 'awe_instrument',
@@ -894,7 +894,7 @@ univr_data_vars = [
 # 'term_credit_hours',
 'total_fall_units',
 'fall_withdrawn_hours',
-'fall_withdrawn_ind',
+# 'fall_withdrawn_ind',
 # 'athlete',
 # 'remedial',
 # 'ACAD_PLAN',
@@ -1743,7 +1743,7 @@ univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_
 # Standard logistic model
 
 # Pullman standard model
-print('\nStandard logistic model for Pullman freshmen...\n')
+print('\nStandard logistic model for Pullman sophomores...\n')
 
 try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_tomek_vars), data=pullm_logit_df, return_type='dataframe')
@@ -1762,13 +1762,13 @@ try:
 	print('\n')
 	
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
 #%%
 # Vancouver standard model
-print('\nStandard logistic model for Vancouver freshmen...\n')
+print('\nStandard logistic model for Vancouver sophomores...\n')
 
 try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_tomek_vars), data=vanco_logit_df, return_type='dataframe')
@@ -1787,13 +1787,13 @@ try:
 	print('\n')
 
 except:
-	print('\nFailed to converge: Linear combination, singular matrix, divide by zero, or separation')
+	print('\nFailed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation')
 
 print('\n')
 
 #%%
 # Tri-Cities standard model
-print('\nStandard logistic model for Tri-Cities freshmen...\n')
+print('\nStandard logistic model for Tri-Cities sophomores...\n')
 
 try:
 	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_tomek_vars), data=trici_logit_df, return_type='dataframe')
@@ -1812,13 +1812,13 @@ try:
 	print('\n')
 	
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
 #%%
 # University standard model
-print('\nStandard logistic model for University freshmen...\n')
+print('\nStandard logistic model for University sophomores...\n')
 
 try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_tomek_vars), data=univr_logit_df, return_type='dataframe')
@@ -1837,12 +1837,12 @@ try:
 	print('\n')
 
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
 #%%
-print('Run machine learning models for freshmen...\n')
+print('Run machine learning models for sophomores...\n')
 
 # Logistic model
 

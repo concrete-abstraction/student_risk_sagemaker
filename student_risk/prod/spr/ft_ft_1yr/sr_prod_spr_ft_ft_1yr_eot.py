@@ -60,7 +60,7 @@ num_parallel_tree = 64
 subsample = 0.8
 colsample_bytree = 0.8
 colsample_bynode = 0.8
-verbose = True
+verbose = False
 
 #%%
 # End of term date and snapshot check 
@@ -1770,7 +1770,7 @@ try:
 	print('\n')
 	
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1795,7 +1795,7 @@ try:
 	print('\n')
 
 except:
-	print('\nFailed to converge: Linear combination, singular matrix, divide by zero, or separation')
+	print('\nFailed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation')
 
 print('\n')
 
@@ -1820,7 +1820,7 @@ try:
 	print('\n')
 	
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1845,7 +1845,7 @@ try:
 	print('\n')
 
 except:
-	print('Failed to converge: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
