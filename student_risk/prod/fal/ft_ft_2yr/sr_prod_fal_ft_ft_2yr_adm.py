@@ -68,9 +68,9 @@ build_ft_ft_2yr_prod.DatasetBuilderProd.build_admissions_prod()
 
 #%%
 # Import pre-split data
-validation_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_validation_set.csv', encoding='utf-8', low_memory=False)
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_training_set.csv', encoding='utf-8', low_memory=False)
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_testing_set.csv', encoding='utf-8', low_memory=False)
+validation_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_validation_set.sas7bdat', encoding='latin1')
+training_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_training_set.sas7bdat', encoding='latin1')
+testing_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_testing_set.sas7bdat', encoding='latin1')
 
 #%%
 # Prepare dataframes

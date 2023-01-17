@@ -3,10 +3,12 @@ import csv
 import datetime
 import os
 import pathlib
+import time
 import urllib
 from datetime import date
 from itertools import islice
 
+import gower
 import joblib
 import numpy as np
 import pandas as pd
@@ -18,9 +20,10 @@ from imblearn.under_sampling import NearMiss, TomekLinks
 from patsy import dmatrices
 from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier
+from sklearn.experimental import enable_halving_search_cv
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.metrics import roc_auc_score, roc_curve
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import HalvingGridSearchCV, train_test_split
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -50,19 +53,31 @@ run_date = date.today()
 unwanted_vars = ['emplid','enrl_ind']
 
 #%%
+# Global XGBoost hyperparameter initialization
+min_child_weight = 6
+max_bin = 32
+num_parallel_tree = 64
+subsample = 0.8
+colsample_bytree = 0.8
+colsample_bynode = 0.8
+verbose = False
+
+#%%
 # Midterm date and snapshot check
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=True).fillna(9999)
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=['term_begin_dt', 'midterm_begin_dt', 'term_end_dt']).fillna(9999)
+
 now = datetime.datetime.now()
+now_dt = datetime.datetime.strptime(f'{now.month:02}-{now.day:02}-{now.year:04}', '%m-%d-%Y')
 
 now_day = now.day
 now_month = now.month
 now_year = now.year
 
-strm = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['STRM'].values[0]
+strm = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['STRM'].values[0]
 
-midterm_day = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_day'].values[0]
-midterm_month = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_month'].values[0]
-midterm_year = calendar[(calendar['term_year'] == now_year) & (calendar['begin_month'] <= now_month) & (calendar['end_month'] >= now_month)]['midterm_year'].values[0]
+midterm_day = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_day'].values[0]
+midterm_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_month'].values[0]
+midterm_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_year'].values[0]
 
 if now_year < midterm_year:
 	raise config.MidError(f'{date.today()}: Midterm year exception, attempting to run if midterm newest snapshot.')
@@ -116,8 +131,9 @@ build_ft_ft_1yr_prod.DatasetBuilderProd.build_census_prod()
 
 #%%
 # Import pre-split data
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\training_set.csv', encoding='utf-8', low_memory=False)
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\testing_set.csv', encoding='utf-8', low_memory=False)
+validation_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_validation_set.sas7bdat', encoding='latin1')
+training_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_training_set.sas7bdat', encoding='latin1')
+testing_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_testing_set.sas7bdat', encoding='latin1')
 
 #%%
 # Prepare dataframes
