@@ -3,6 +3,7 @@ import csv
 import datetime
 import os
 import pathlib
+import time
 import urllib
 from datetime import date
 from itertools import islice
@@ -1738,7 +1739,7 @@ univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_
 # Standard logistic model
 
 # Pullman standard model
-print('\nStandard logistic model for Pullman freshmen...\n')
+print('\nStandard logistic model for Pullman sophomores...\n')
 
 try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_tomek_vars), data=pullm_logit_df, return_type='dataframe')
@@ -1763,7 +1764,7 @@ print('\n')
 
 #%%
 # Vancouver standard model
-print('\nStandard logistic model for Vancouver freshmen...\n')
+print('\nStandard logistic model for Vancouver sophomores...\n')
 
 try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_tomek_vars), data=vanco_logit_df, return_type='dataframe')
@@ -1788,7 +1789,7 @@ print('\n')
 
 #%%
 # Tri-Cities standard model
-print('\nStandard logistic model for Tri-Cities freshmen...\n')
+print('\nStandard logistic model for Tri-Cities sophomores...\n')
 
 try:
 	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_tomek_vars), data=trici_logit_df, return_type='dataframe')
@@ -1813,7 +1814,7 @@ print('\n')
 
 #%%
 # University standard model
-print('\nStandard logistic model for University freshmen...\n')
+print('\nStandard logistic model for University sophomores...\n')
 
 try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_tomek_vars), data=univr_logit_df, return_type='dataframe')
@@ -1837,7 +1838,7 @@ except:
 print('\n')
 
 #%%
-print('Run machine learning models for freshmen...\n')
+print('Run machine learning models for sophomores...\n')
 
 # Logistic model
 
@@ -2191,108 +2192,168 @@ print('Run machine learning models for freshmen...\n')
 # print(f'Overall accuracy for University Random Forest model (validation): {univr_rf.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
-# Pullman XGBoost Random Forest tuning
-pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'learning_rate': [0.01, 0.5, 1.0]}]
+# Pullman XGBoost Random Forest model selection
+if build_ft_ft_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_2yr_prod.DatasetBuilderProd.training_pass == 0:
+	pullm_start = time.perf_counter()
 
-pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
-pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+	pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+	pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'learning_rate': [0.01, 0.5, 1.0]}]
 
-print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
+	pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+	pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
-#%%
-# Pullman XGBoost Random Forest
-pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=pullm_class_weight, 
-								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
+	pullm_stop = time.perf_counter()
 
-pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
-pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
-pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
+	print(f'Pullman XGB Random Forest model trained in {(pullm_stop - pullm_start)/60:.1f} minutes')
+	print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
 
-print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
-print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
+	pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+	pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
+									eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
-#%%
-# Vancouver XGBoost Random Forest tuning
-vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'learning_rate': [0.01, 0.5, 1.0]}]
+	pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
+	pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
+	pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
 
-vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
-vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+	print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
+	print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
-print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
+else:
+	pullm_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_ft_ft_2yr_model_v{sklearn.__version__}.pkl')
 
-#%%
-# Vancouver XGBoost Random Forest
-vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=vanco_class_weight, 
-								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
+	pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
+	pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
+	pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
 
-vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
-vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
-vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
-
-print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
-print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
+	print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
+	print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 #%%
-# Tri-Cities XGBoost Random Forest tuning
-trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'learning_rate': [0.01, 0.5, 1.0]}]
+# Vancouver XGBoost Random Forest model selection
+if build_ft_ft_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_2yr_prod.DatasetBuilderProd.training_pass == 0:
+	vanco_start = time.perf_counter()
 
-trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
-trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+	vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+	vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'learning_rate': [0.01, 0.5, 1.0]}]
 
-print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
+	vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+	vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+
+	vanco_stop = time.perf_counter()
+
+	print(f'Vancouver XGB Random Forest model trained in {(vanco_stop - vanco_start)/60:.1f} minutes')
+	print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
+
+	vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+	vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, 
+									eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
+
+	vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
+	vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
+	vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
+
+	print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
+	print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
+
+else:
+	vanco_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_ft_ft_2yr_model_v{sklearn.__version__}.pkl')
+
+	vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
+	vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
+	vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
+
+	print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
+	print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 #%%
-# Tri-Cities XGBoost Random Forest
-trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=trici_class_weight, 
-								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
+# Tri-Cities XGBoost Random Forest model selection
+if build_ft_ft_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_2yr_prod.DatasetBuilderProd.training_pass == 0:
+	trici_start = time.perf_counter()
 
-trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
-trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
-trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+	trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+	trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'learning_rate': [0.01, 0.5, 1.0]}]
 
-print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
-print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
+	trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+	trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+
+	trici_stop = time.perf_counter()
+
+	print(f'Tri-Cities XGB Random Forest model trained in {(trici_stop - trici_start)/60:.1f} minutes')
+	print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
+
+	trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+	trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, 
+									eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
+
+	trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
+	trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
+	trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+
+	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
+	print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
+
+else:
+	trici_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\trici_ft_ft_2yr_model_v{sklearn.__version__}.pkl')
+
+	trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
+	trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
+	trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+
+	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
+	print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 #%%
-# University XGBoost Random Forest tuning
-univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'learning_rate': [0.01, 0.5, 1.0]}]
+# University XGBoost Random Forest model selection
+if build_ft_ft_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_2yr_prod.DatasetBuilderProd.training_pass == 0:
+	univr_start = time.perf_counter()
 
-univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
-univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
+	univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+	univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'learning_rate': [0.01, 0.5, 1.0]}]
 
-print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
+	univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+	univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
-#%%
-# University XGBoost Random Forest
-univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=8, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=univr_class_weight, 
-								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
+	univr_stop = time.perf_counter()
 
-univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
-univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
-univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+	print(f'University XGB Random Forest model trained in {(univr_stop - univr_start)/60:.1f} minutes')
+	print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
 
-print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
-print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
+	univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+	univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, 
+									eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
+
+	univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
+	univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
+	univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+
+	print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
+	print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
+
+else:
+	univr_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\univr_ft_ft_2yr_model_v{sklearn.__version__}.pkl')
+
+	univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
+	univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
+	univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+
+	print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
+	print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
 # Ensemble model
