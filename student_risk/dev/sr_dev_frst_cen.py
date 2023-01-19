@@ -24,7 +24,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier
 
 import shap
-from student_risk import build_frst_dev
+from student_risk import build_dev
 
 #%%
 # Global variables
@@ -46,13 +46,13 @@ verbose = False
 
 #%%
 # SAS dataset builder
-build_frst_dev.DatasetBuilderDev.build_census_dev()
+build_dev.DatasetBuilderDev.build_census_dev()
 
 #%%
 # Import pre-split data
-validation_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_validation_set.csv', encoding='utf-8', low_memory=False)
-training_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_training_set.csv', encoding='utf-8', low_memory=False)
-testing_set = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_testing_set.csv', encoding='utf-8', low_memory=False)
+validation_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_validation_set.sas7bdat', encoding='latin1')
+training_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_training_set.sas7bdat', encoding='latin1')
+testing_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_testing_set.sas7bdat', encoding='latin1')
 
 #%%
 # Training AWE instrumental variable
@@ -1459,76 +1459,76 @@ vanco_y_cv = vanco_validation_set['enrl_ind']
 vanco_y_test = vanco_testing_set['enrl_ind']
 
 vanco_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'high_school_gpa',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_mi',
-						# 'spring_midterm_grade_count',
-						# 'spring_midterm_S_grade_count',
-						# 'spring_midterm_W_grade_count',
-						# 'fall_term_gpa',
-						# 'fall_term_gpa_mi',
-						# 'fall_term_D_grade_count',
-						# 'fall_term_F_grade_count',
-						# 'fall_term_S_grade_count',
-						# 'fall_term_W_grade_count',
-						'spring_term_gpa',
-						# 'spring_term_gpa_mi',
-						'spring_term_D_grade_count',
-						'spring_term_F_grade_count',
-						# 'spring_term_S_grade_count',
-						# 'spring_term_W_grade_count',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						'spring_lec_count',
-						'spring_lab_count',
-						# 'spring_int_count',
-						# 'spring_stu_count',
-						# 'spring_sem_count',
-						# 'spring_oth_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
-						# 'spring_int_contact_hrs',
-						# 'spring_stu_contact_hrs',
-						# 'spring_sem_contact_hrs',
-						# 'spring_oth_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'total_spring_units',
-						'spring_credit_hours',
-						'spring_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'high_school_gpa',
+	# 					# 'spring_midterm_gpa_avg',
+	# 					# 'spring_midterm_gpa_avg_mi',
+	# 					# 'spring_midterm_grade_count',
+	# 					# 'spring_midterm_S_grade_count',
+	# 					# 'spring_midterm_W_grade_count',
+	# 					# 'fall_term_gpa',
+	# 					# 'fall_term_gpa_mi',
+	# 					# 'fall_term_D_grade_count',
+	# 					# 'fall_term_F_grade_count',
+	# 					# 'fall_term_S_grade_count',
+	# 					# 'fall_term_W_grade_count',
+	# 					'spring_term_gpa',
+	# 					# 'spring_term_gpa_mi',
+	# 					'spring_term_D_grade_count',
+	# 					'spring_term_F_grade_count',
+	# 					# 'spring_term_S_grade_count',
+	# 					# 'spring_term_W_grade_count',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'spring_avg_difficulty',
+	# 					# 'spring_avg_pct_withdrawn',
+	# 					# 'spring_avg_pct_CDFW',
+	# 					# 'spring_avg_pct_CDF',
+	# 					'spring_lec_count',
+	# 					'spring_lab_count',
+	# 					# 'spring_int_count',
+	# 					# 'spring_stu_count',
+	# 					# 'spring_sem_count',
+	# 					# 'spring_oth_count',
+	# 					# 'spring_lec_contact_hrs',
+	# 					# 'spring_lab_contact_hrs',
+	# 					# 'spring_int_contact_hrs',
+	# 					# 'spring_stu_contact_hrs',
+	# 					# 'spring_sem_contact_hrs',
+	# 					# 'spring_oth_contact_hrs',
+	# 					# 'total_spring_contact_hrs',
+	# 					# 'total_spring_units',
+	# 					'spring_credit_hours',
+	# 					'spring_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1599,76 +1599,76 @@ trici_y_cv = trici_validation_set['enrl_ind']
 trici_y_test = trici_testing_set['enrl_ind']
 
 trici_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'high_school_gpa',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_mi',
-						# 'spring_midterm_grade_count',
-						# 'spring_midterm_S_grade_count',
-						# 'spring_midterm_W_grade_count',
-						# 'fall_term_gpa',
-						# 'fall_term_gpa_mi',
-						# 'fall_term_D_grade_count',
-						# 'fall_term_F_grade_count',
-						# 'fall_term_S_grade_count',
-						# 'fall_term_W_grade_count',
-						'spring_term_gpa',
-						# 'spring_term_gpa_mi',
-						'spring_term_D_grade_count',
-						'spring_term_F_grade_count',
-						# 'spring_term_S_grade_count',
-						# 'spring_term_W_grade_count',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						'spring_lec_count',
-						'spring_lab_count',
-						# 'spring_int_count',
-						# 'spring_stu_count',
-						# 'spring_sem_count',
-						# 'spring_oth_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
-						# 'spring_int_contact_hrs',
-						# 'spring_stu_contact_hrs',
-						# 'spring_sem_contact_hrs',
-						# 'spring_oth_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'total_spring_units',
-						'spring_credit_hours',
-						'spring_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'high_school_gpa',
+	# 					# 'spring_midterm_gpa_avg',
+	# 					# 'spring_midterm_gpa_avg_mi',
+	# 					# 'spring_midterm_grade_count',
+	# 					# 'spring_midterm_S_grade_count',
+	# 					# 'spring_midterm_W_grade_count',
+	# 					# 'fall_term_gpa',
+	# 					# 'fall_term_gpa_mi',
+	# 					# 'fall_term_D_grade_count',
+	# 					# 'fall_term_F_grade_count',
+	# 					# 'fall_term_S_grade_count',
+	# 					# 'fall_term_W_grade_count',
+	# 					'spring_term_gpa',
+	# 					# 'spring_term_gpa_mi',
+	# 					'spring_term_D_grade_count',
+	# 					'spring_term_F_grade_count',
+	# 					# 'spring_term_S_grade_count',
+	# 					# 'spring_term_W_grade_count',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'spring_avg_difficulty',
+	# 					# 'spring_avg_pct_withdrawn',
+	# 					# 'spring_avg_pct_CDFW',
+	# 					# 'spring_avg_pct_CDF',
+	# 					'spring_lec_count',
+	# 					'spring_lab_count',
+	# 					# 'spring_int_count',
+	# 					# 'spring_stu_count',
+	# 					# 'spring_sem_count',
+	# 					# 'spring_oth_count',
+	# 					# 'spring_lec_contact_hrs',
+	# 					# 'spring_lab_contact_hrs',
+	# 					# 'spring_int_contact_hrs',
+	# 					# 'spring_stu_contact_hrs',
+	# 					# 'spring_sem_contact_hrs',
+	# 					# 'spring_oth_contact_hrs',
+	# 					# 'total_spring_contact_hrs',
+	# 					# 'total_spring_units',
+	# 					'spring_credit_hours',
+	# 					'spring_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1739,76 +1739,76 @@ univr_y_cv = univr_validation_set['enrl_ind']
 univr_y_test = univr_testing_set['enrl_ind']
 
 univr_tomek_prep = make_column_transformer(
-	(StandardScaler(), [
-						# 'distance',
-						# 'age',
-						# 'min_week_from_term_begin_dt',
-						# 'max_week_from_term_begin_dt',
-						# 'count_week_from_term_begin_dt',
-						# 'sat_erws',
-						# 'sat_mss',
-						# 'sat_comp',
-						# 'attendee_total_visits',
-						# 'pop_dens', 
-						# 'qvalue', 
-						# 'gini_indx',
-						# 'median_inc',
-						# 'pvrt_rate',
-						# 'median_value',
-						# 'educ_rate',
-						# 'pct_blk',
-						# 'pct_ai',
-						# 'pct_asn',
-						# 'pct_hawi',
-						# 'pct_oth',
-						# 'pct_two',
-						# 'pct_non',
-						# 'pct_hisp',
-						# 'high_school_gpa',
-						# 'spring_midterm_gpa_avg',
-						# 'spring_midterm_gpa_avg_mi',
-						# 'spring_midterm_grade_count',
-						# 'spring_midterm_S_grade_count',
-						# 'spring_midterm_W_grade_count',
-						# 'fall_term_gpa',
-						# 'fall_term_gpa_mi',
-						# 'fall_term_D_grade_count',
-						# 'fall_term_F_grade_count',
-						# 'fall_term_S_grade_count',
-						# 'fall_term_W_grade_count',
-						'spring_term_gpa',
-						# 'spring_term_gpa_mi',
-						'spring_term_D_grade_count',
-						'spring_term_F_grade_count',
-						# 'spring_term_S_grade_count',
-						# 'spring_term_W_grade_count',
-						# 'awe_instrument',
-						# 'cdi_instrument',
-						'spring_avg_difficulty',
-						# 'spring_avg_pct_withdrawn',
-						# 'spring_avg_pct_CDFW',
-						# 'spring_avg_pct_CDF',
-						'spring_lec_count',
-						'spring_lab_count',
-						# 'spring_int_count',
-						# 'spring_stu_count',
-						# 'spring_sem_count',
-						# 'spring_oth_count',
-						# 'spring_lec_contact_hrs',
-						# 'spring_lab_contact_hrs',
-						# 'spring_int_contact_hrs',
-						# 'spring_stu_contact_hrs',
-						# 'spring_sem_contact_hrs',
-						# 'spring_oth_contact_hrs',
-						# 'total_spring_contact_hrs',
-						# 'total_spring_units',
-						'spring_credit_hours',
-						'spring_withdrawn_hours',
-						'cum_adj_transfer_hours',
-						# 'fed_efc',
-						# 'fed_need', 
-						'unmet_need_ofr'
-						]),
+	# (StandardScaler(), [
+	# 					# 'distance',
+	# 					# 'age',
+	# 					# 'min_week_from_term_begin_dt',
+	# 					# 'max_week_from_term_begin_dt',
+	# 					# 'count_week_from_term_begin_dt',
+	# 					# 'sat_erws',
+	# 					# 'sat_mss',
+	# 					# 'sat_comp',
+	# 					# 'attendee_total_visits',
+	# 					# 'pop_dens', 
+	# 					# 'qvalue', 
+	# 					# 'gini_indx',
+	# 					# 'median_inc',
+	# 					# 'pvrt_rate',
+	# 					# 'median_value',
+	# 					# 'educ_rate',
+	# 					# 'pct_blk',
+	# 					# 'pct_ai',
+	# 					# 'pct_asn',
+	# 					# 'pct_hawi',
+	# 					# 'pct_oth',
+	# 					# 'pct_two',
+	# 					# 'pct_non',
+	# 					# 'pct_hisp',
+	# 					# 'high_school_gpa',
+	# 					# 'spring_midterm_gpa_avg',
+	# 					# 'spring_midterm_gpa_avg_mi',
+	# 					# 'spring_midterm_grade_count',
+	# 					# 'spring_midterm_S_grade_count',
+	# 					# 'spring_midterm_W_grade_count',
+	# 					# 'fall_term_gpa',
+	# 					# 'fall_term_gpa_mi',
+	# 					# 'fall_term_D_grade_count',
+	# 					# 'fall_term_F_grade_count',
+	# 					# 'fall_term_S_grade_count',
+	# 					# 'fall_term_W_grade_count',
+	# 					'spring_term_gpa',
+	# 					# 'spring_term_gpa_mi',
+	# 					'spring_term_D_grade_count',
+	# 					'spring_term_F_grade_count',
+	# 					# 'spring_term_S_grade_count',
+	# 					# 'spring_term_W_grade_count',
+	# 					# 'awe_instrument',
+	# 					# 'cdi_instrument',
+	# 					'spring_avg_difficulty',
+	# 					# 'spring_avg_pct_withdrawn',
+	# 					# 'spring_avg_pct_CDFW',
+	# 					# 'spring_avg_pct_CDF',
+	# 					'spring_lec_count',
+	# 					'spring_lab_count',
+	# 					# 'spring_int_count',
+	# 					# 'spring_stu_count',
+	# 					# 'spring_sem_count',
+	# 					# 'spring_oth_count',
+	# 					# 'spring_lec_contact_hrs',
+	# 					# 'spring_lab_contact_hrs',
+	# 					# 'spring_int_contact_hrs',
+	# 					# 'spring_stu_contact_hrs',
+	# 					# 'spring_sem_contact_hrs',
+	# 					# 'spring_oth_contact_hrs',
+	# 					# 'total_spring_contact_hrs',
+	# 					# 'total_spring_units',
+	# 					'spring_credit_hours',
+	# 					'spring_withdrawn_hours',
+	# 					'cum_adj_transfer_hours',
+	# 					# 'fed_efc',
+	# 					# 'fed_need', 
+	# 					'unmet_need_ofr'
+	# 					]),
 	(OneHotEncoder(drop='first'), [
 									# 'race_hispanic',
 									# 'race_american_indian',
@@ -1879,6 +1879,16 @@ try:
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
 	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
 	print(pullm_logit_res.summary())
+
+	# Pullman VIF
+	print('\nVIF for Pullman...\n')
+	pullm_vif = pd.DataFrame()
+	pullm_vif['vif factor'] = [variance_inflation_factor(pullm_x.values, i) for i in range(pullm_x.shape[1])]
+	pullm_vif['features'] = pullm_x.columns
+	pullm_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+	print(pullm_vif.round(1).to_string())
+	print('\n')
+	
 except:
 	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
@@ -1888,24 +1898,24 @@ print('\n')
 # Vancouver standard model
 print('\nStandard logistic model for Vancouver freshmen...\n')
 
-vanco_y, vanco_x = dmatrices('enrl_ind ~ \
-				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-				+ spring_lec_count + spring_lab_count \
-				+ spring_credit_hours \
-				+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
-				+ spring_withdrawn_hours \
-				+ remedial \
-				+ cum_adj_transfer_hours \
-				+ resident \
-				+ fall_term_gpa + fall_term_gpa_mi \
-				+ spring_term_gpa + spring_term_gpa_mi \
-				+ spring_term_D_grade_count + spring_term_F_grade_count \
-				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-				+ unmet_need_ofr + unmet_need_ofr_mi', data=vanco_logit_df, return_type='dataframe')
+try:
+	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_x_vars), data=vanco_logit_df, return_type='dataframe')
 
-vanco_logit_mod = Logit(vanco_y, vanco_x)
-vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
-print(vanco_logit_res.summary())
+	vanco_logit_mod = Logit(vanco_y, vanco_x)
+	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
+	print(vanco_logit_res.summary())
+
+	# Vancouver VIF
+	print('\nVIF for Vancouver...\n')
+	vanco_vif = pd.DataFrame()
+	vanco_vif['vif factor'] = [variance_inflation_factor(vanco_x.values, i) for i in range(vanco_x.shape[1])]
+	vanco_vif['features'] = vanco_x.columns
+	vanco_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+	print(vanco_vif.round(1).to_string())
+	print('\n')
+
+except:
+	print('\nFailed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation')
 
 print('\n')
 
@@ -1913,24 +1923,24 @@ print('\n')
 # Tri-Cities standard model
 print('\nStandard logistic model for Tri-Cities freshmen...\n')
 
-trici_y, trici_x = dmatrices('enrl_ind ~ \
-				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-				+ spring_lec_count + spring_lab_count \
-				+ spring_credit_hours \
-				+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
-				+ spring_withdrawn_hours \
-				+ remedial \
-				+ cum_adj_transfer_hours \
-				+ resident \
-				+ fall_term_gpa + fall_term_gpa_mi \
-				+ spring_term_gpa + spring_term_gpa_mi \
-				+ spring_term_D_grade_count + spring_term_F_grade_count \
-				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-				+ unmet_need_ofr + unmet_need_ofr_mi', data=trici_logit_df, return_type='dataframe')
+try:
+	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_x_vars), data=trici_logit_df, return_type='dataframe')
 
-trici_logit_mod = Logit(trici_y, trici_x)
-trici_logit_res = trici_logit_mod.fit(maxiter=500)
-print(trici_logit_res.summary())
+	trici_logit_mod = Logit(trici_y, trici_x)
+	trici_logit_res = trici_logit_mod.fit(maxiter=500)
+	print(trici_logit_res.summary())
+
+	# Tri-Cities VIF
+	print('\nVIF for Tri-Cities...\n')
+	trici_vif = pd.DataFrame()
+	trici_vif['vif factor'] = [variance_inflation_factor(trici_x.values, i) for i in range(trici_x.shape[1])]
+	trici_vif['features'] = trici_x.columns
+	trici_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+	print(trici_vif.round(1).to_string())
+	print('\n')
+	
+except:
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1938,28 +1948,26 @@ print('\n')
 # University standard model
 print('\nStandard logistic model for University freshmen...\n')
 
-univr_y, univr_x = dmatrices('enrl_ind ~ \
-				+ male + underrep_minority + pell_eligibility_ind + first_gen_flag + first_gen_flag_mi \
-				+ spring_lec_count + spring_lab_count \
-				+ spring_credit_hours \
-				+ spring_avg_difficulty + spring_avg_pct_withdrawn + spring_avg_pct_CDF \
-				+ spring_withdrawn_hours \
-				+ remedial \
-				+ cum_adj_transfer_hours \
-				+ resident \
-				+ fall_term_gpa + fall_term_gpa_mi \
-				+ spring_term_gpa + spring_term_gpa_mi \
-				+ spring_term_D_grade_count + spring_term_F_grade_count \
-				+ parent1_highest_educ_lvl + parent2_highest_educ_lvl \
-				+ unmet_need_ofr + unmet_need_ofr_mi', data=univr_logit_df, return_type='dataframe')
+try:
+	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_x_vars), data=univr_logit_df, return_type='dataframe')
 
-univr_logit_mod = Logit(univr_y, univr_x)
-univr_logit_res = univr_logit_mod.fit(maxiter=500)
-print(univr_logit_res.summary())
+	univr_logit_mod = Logit(univr_y, univr_x)
+	univr_logit_res = univr_logit_mod.fit(maxiter=500)
+	print(univr_logit_res.summary())
+
+	# University VIF
+	print('\nVIF for University...\n')
+	univr_vif = pd.DataFrame()
+	univr_vif['vif factor'] = [variance_inflation_factor(univr_x.values, i) for i in range(univr_x.shape[1])]
+	univr_vif['features'] = univr_x.columns
+	univr_vif.sort_values(by=['vif factor'], ascending=False, inplace=True, ignore_index=True)
+	print(univr_vif.round(1).to_string())
+	print('\n')
+
+except:
+	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
-
-
 
 #%%
 # Logistic model

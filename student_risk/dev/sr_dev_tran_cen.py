@@ -23,7 +23,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier
 
 import shap
-from student_risk import build_frst_dev
+from student_risk import build_dev
 
 #%%
 # Global variables
@@ -33,7 +33,7 @@ unwanted_vars = ['emplid','enrl_ind']
 
 #%%
 # SAS dataset builder
-build_frst_dev.DatasetBuilderDev.build_census_dev()
+build_dev.DatasetBuilderDev.build_census_dev()
 
 #%%
 # Import pre-split data
