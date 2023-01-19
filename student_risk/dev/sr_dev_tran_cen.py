@@ -401,7 +401,7 @@ pullm_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
-pullm_tomek_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
+pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 
 # Pullman dataframes
 pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
@@ -600,7 +600,7 @@ vanco_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
-vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
+vanco_x_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 
 # Vancouver dataframes
 vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
@@ -799,7 +799,7 @@ trici_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
-trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
+trici_x_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 
 # Tri-Cities dataframes
 trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
@@ -998,7 +998,7 @@ univr_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
-univr_tomek_vars = [x for x in univr_data_vars if x not in unwanted_vars]
+univr_x_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 
 # University dataframes
 univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna().drop(columns=['emplid'])
@@ -1192,7 +1192,7 @@ univr_training_set = univr_training_set.drop(columns='mask')
 # Pullman undersample
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 
-pullm_x_test = pullm_testing_set[pullm_tomek_vars]
+pullm_x_test = pullm_testing_set[pullm_x_vars]
 
 pullm_y_train = pullm_training_set['enrl_ind']
 pullm_y_test = pullm_testing_set['enrl_ind']
@@ -1317,7 +1317,7 @@ pullm_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_tran_t
 # Vancouver undersample
 vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 
-vanco_x_test = vanco_testing_set[vanco_tomek_vars]
+vanco_x_test = vanco_testing_set[vanco_x_vars]
 
 vanco_y_train = vanco_training_set['enrl_ind']
 vanco_y_test = vanco_testing_set['enrl_ind']
@@ -1440,7 +1440,7 @@ vanco_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_t
 # Tri-Cities undersample
 trici_x_train = trici_training_set.drop(columns=['enrl_ind','emplid'])
 
-trici_x_test = trici_testing_set[trici_tomek_vars]
+trici_x_test = trici_testing_set[trici_x_vars]
 
 trici_y_train = trici_training_set['enrl_ind']
 trici_y_test = trici_testing_set['enrl_ind']
@@ -1563,7 +1563,7 @@ trici_tomek_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_t
 # University undersample
 univr_x_train = univr_training_set.drop(columns=['enrl_ind','emplid'])
 
-univr_x_test = univr_testing_set[univr_tomek_vars]
+univr_x_test = univr_testing_set[univr_x_vars]
 
 univr_y_train = univr_training_set['enrl_ind']
 univr_y_test = univr_testing_set['enrl_ind']

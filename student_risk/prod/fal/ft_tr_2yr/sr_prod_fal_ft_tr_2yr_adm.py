@@ -247,7 +247,7 @@ pullm_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
-pullm_tomek_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
+pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 
 # Pullman dataframes
 pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna().drop(columns=['emplid'])
@@ -453,7 +453,7 @@ vanco_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
-vanco_tomek_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
+vanco_x_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 
 # Vancouver dataframes
 vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna().drop(columns=['emplid'])
@@ -658,7 +658,7 @@ trici_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
-trici_tomek_vars = [x for x in trici_data_vars if x not in unwanted_vars]
+trici_x_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 
 # Tri-Cities dataframes
 trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna().drop(columns=['emplid'])
@@ -863,7 +863,7 @@ univr_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
-univr_tomek_vars = [x for x in univr_data_vars if x not in unwanted_vars]
+univr_x_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 
 # University dataframes
 univr_logit_df = training_set[univr_data_vars].dropna().drop(columns=['emplid'])
@@ -1110,7 +1110,7 @@ univr_validation_set = univr_validation_set.drop(columns='mask')
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 pullm_x_cv = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
-pullm_x_test = pullm_testing_set[pullm_tomek_vars]
+pullm_x_test = pullm_testing_set[pullm_x_vars]
 
 pullm_y_train = pullm_training_set['enrl_ind']
 pullm_y_cv = pullm_validation_set['enrl_ind']
@@ -1237,7 +1237,7 @@ pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_
 vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 vanco_x_cv = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
-vanco_x_test = vanco_testing_set[vanco_tomek_vars]
+vanco_x_test = vanco_testing_set[vanco_x_vars]
 
 vanco_y_train = vanco_training_set['enrl_ind']
 vanco_y_cv = vanco_validation_set['enrl_ind']
@@ -1363,7 +1363,7 @@ vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_
 trici_x_train = trici_training_set.drop(columns=['enrl_ind','emplid'])
 trici_x_cv = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
-trici_x_test = trici_testing_set[trici_tomek_vars]
+trici_x_test = trici_testing_set[trici_x_vars]
 
 trici_y_train = trici_training_set['enrl_ind']
 trici_y_cv = trici_validation_set['enrl_ind']
@@ -1489,7 +1489,7 @@ trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_
 univr_x_train = univr_training_set.drop(columns=['enrl_ind','emplid'])
 univr_x_cv = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
-univr_x_test = univr_testing_set[univr_tomek_vars]
+univr_x_test = univr_testing_set[univr_x_vars]
 
 univr_y_train = univr_training_set['enrl_ind']
 univr_y_cv = univr_validation_set['enrl_ind']
@@ -1617,7 +1617,7 @@ univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_
 print('\nStandard logistic model for Pullman second-year transfers...\n')
 
 try:
-	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_tomek_vars), data=pullm_logit_df, return_type='dataframe')
+	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_x_vars), data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
 	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
@@ -1642,7 +1642,7 @@ print('\n')
 print('\nStandard logistic model for Vancouver second-year transfers...\n')
 
 try:
-	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_tomek_vars), data=vanco_logit_df, return_type='dataframe')
+	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_x_vars), data=vanco_logit_df, return_type='dataframe')
 
 	vanco_logit_mod = Logit(vanco_y, vanco_x)
 	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
@@ -1667,7 +1667,7 @@ print('\n')
 print('\nStandard logistic model for Tri-Cities second-year transfers...\n')
 
 try:
-	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_tomek_vars), data=trici_logit_df, return_type='dataframe')
+	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_x_vars), data=trici_logit_df, return_type='dataframe')
 
 	trici_logit_mod = Logit(trici_y, trici_x)
 	trici_logit_res = trici_logit_mod.fit(maxiter=500)
@@ -1692,7 +1692,7 @@ print('\n')
 print('\nStandard logistic model for University second-year transfers...\n')
 
 try:
-	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_tomek_vars), data=univr_logit_df, return_type='dataframe')
+	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_x_vars), data=univr_logit_df, return_type='dataframe')
 
 	univr_logit_mod = Logit(univr_y, univr_x)
 	univr_logit_res = univr_logit_mod.fit(maxiter=500)
