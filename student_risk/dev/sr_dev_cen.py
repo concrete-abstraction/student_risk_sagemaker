@@ -277,6 +277,12 @@ pullm_data_vars = [
 'fall_midterm_grade_count',
 'fall_midterm_S_grade_count',
 'fall_midterm_W_grade_count',
+'fall_term_gpa',
+'fall_term_gpa_mi',
+# 'fall_term_no_letter_count',
+'fall_term_F_grade_count',
+'fall_term_S_grade_count',
+'fall_term_W_grade_count',
 # 'awe_instrument',
 # 'cdi_instrument',
 'fall_avg_difficulty',
@@ -406,8 +412,8 @@ pullm_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
-'unmet_need_ofr_mi'
+'unmet_need_acpt',
+'unmet_need_acpt_mi'
 ]
 
 pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
