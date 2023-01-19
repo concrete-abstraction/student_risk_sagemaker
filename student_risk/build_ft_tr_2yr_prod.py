@@ -4811,30 +4811,101 @@ class DatasetBuilderProd:
 		print('Export data from SAS...')
 
 		sas_log = sas.submit("""
-		%macro export;
+		libname valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
 
-		%do admit_lag=&start_lag. %to &end_lag.;
+		%let valid_pass = 0;
 
-			filename valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\tran_%eval(&admit_lag. + &lag_year.)_validation_set.csv\" encoding=\"utf-8\";
+		%if %sysfunc(exist(valid.ft_tr_2yr_validation_set)) 
+			%then %do;
+				data work.validation_set_compare;
+					set valid.ft_tr_2yr_validation_set;
+				run;
+			%end;
 			
-			proc export data=validation_set_&admit_lag. outfile=valid dbms=csv replace;
-			run;
-			
-			filename training \"Z:\\Nathan\\Models\\student_risk\\datasets\\tran_%eval(&admit_lag. + &lag_year.)_training_set.csv\" encoding=\"utf-8\";
-			
-			proc export data=training_set_&admit_lag. outfile=training dbms=csv replace;
-			run;
-			
-			filename testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\tran_%eval(&admit_lag. + &lag_year.)_testing_set.csv\" encoding=\"utf-8\";
-			
-			proc export data=testing_set_&admit_lag. outfile=testing dbms=csv replace;
-			run;
+			%else %do;
+				data valid.ft_tr_2yr_validation_set;
+					set work.validation_set;
+				run;
+			%end;
 
-		%end;
-		
-		%mend export;
-		
-		%export;
+		proc compare data=validation_set compare=validation_set_compare method=absolute;
+		run;
+
+		%if &sysinfo ^= 0
+			 
+			%then %do;
+				data valid.ft_tr_2yr_validation_set;
+					set work.validation_set;
+				run;
+			%end;
+			
+			%else %do;
+				%let valid_pass = 1;
+			%end;
+
+		libname training \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+
+		%let training_pass = 0;
+
+		%if %sysfunc(exist(training.ft_tr_2yr_training_set)) 
+			%then %do;
+				data work.training_set_compare;
+					set training.ft_tr_2yr_training_set;
+				run;
+			%end;
+			
+			%else %do;
+				data training.ft_tr_2yr_training_set;
+					set work.training_set;
+				run;
+			%end;
+
+		proc compare data=training_set compare=training_set_compare method=absolute;
+		run;
+
+		%if &sysinfo ^= 0
+			 
+			%then %do;
+				data training.ft_tr_2yr_training_set;
+					set work.training_set;
+				run;
+			%end;
+			
+			%else %do;
+				%let training_pass = 1;
+			%end;
+			
+		libname testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+
+		%let testing_pass = 0;
+
+		%if %sysfunc(exist(testing.ft_tr_2yr_testing_set)) 
+			%then %do;
+				data work.testing_set_compare;
+					set testing.ft_tr_2yr_testing_set;
+				run;
+			%end;
+			
+			%else %do;
+				data testing.ft_tr_2yr_testing_set;
+					set work.testing_set;
+				run;
+			%end;
+
+		proc compare data=testing_set compare=testing_set_compare method=absolute;
+		run;
+			
+		%if &sysinfo ^= 0
+			 
+			%then %do;
+				data testing.ft_tr_2yr_testing_set;
+					set work.testing_set;
+				run;
+			%end;
+			
+			%else %do;
+				%let testing_pass = 1;
+			%end;
 		""")
 
 		HTML(sas_log['LOG'])
