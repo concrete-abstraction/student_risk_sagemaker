@@ -2167,128 +2167,168 @@ print('Run machine learning models for freshmen...\n')
 # print(f'Overall accuracy for University Random Forest model (validation): {univr_rf.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
-# Pullman XGBoost Random Forest tuning
-pullm_start = time.perf_counter()
+# Pullman XGBoost Random Forest model selection
+if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_prod.DatasetBuilderProd.training_pass == 0:
+	pullm_start = time.perf_counter()
 
-pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'learning_rate': [0.01, 0.5, 1.0]}]
+	pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+	pullm_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'learning_rate': [0.01, 0.5, 1.0]}]
 
-pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
-pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+	pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+	pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
-pullm_stop = time.perf_counter()
+	pullm_stop = time.perf_counter()
 
-print(f'Pullman XGB Random Forest model trained in {(pullm_stop - pullm_start)/60:.1f} minutes')
-print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
+	print(f'Pullman XGB Random Forest model trained in {(pullm_stop - pullm_start)/60:.1f} minutes')
+	print(f'Best Pullman XGB Random Forest parameters: {pullm_gridsearch.best_params_}')
 
-#%%
-# Pullman XGBoost Random Forest
-pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
-								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
+	pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
+	pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
+									eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
-pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
-pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
-pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
+	pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
+	pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
+	pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
 
-print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
-print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
-print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
+	print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
+	print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
-#%%
-# Vancouver XGBoost Random Forest tuning
-vanco_start = time.perf_counter()
+else:
+	pullm_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
 
-vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'learning_rate': [0.01, 0.5, 1.0]}]
+	pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
+	pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
+	pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
 
-vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
-vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
-
-vanco_stop = time.perf_counter()
-
-print(f'Vancouver XGB Random Forest model trained in {(vanco_stop - vanco_start)/60:.1f} minutes')
-print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
+	print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
+	print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 #%%
-# Vancouver XGBoost Random Forest
-vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
-vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, 
-								eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
+# Vancouver XGBoost Random Forest model selection
+if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_prod.DatasetBuilderProd.training_pass == 0:
+	vanco_start = time.perf_counter()
 
-vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
-vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
-vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
+	vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+	vanco_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'learning_rate': [0.01, 0.5, 1.0]}]
 
-print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
-print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
-print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
+	vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+	vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
-#%%
-# Tri-Cities XGBoost Random Forest tuning
-trici_start = time.perf_counter()
+	vanco_stop = time.perf_counter()
 
-trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'learning_rate': [0.01, 0.5, 1.0]}]
+	print(f'Vancouver XGB Random Forest model trained in {(vanco_stop - vanco_start)/60:.1f} minutes')
+	print(f'Best Vancouver XGB Random Forest parameters: {vanco_gridsearch.best_params_}')
 
-trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
-trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+	vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
+	vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, 
+									eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 
-trici_stop = time.perf_counter()
+	vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
+	vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
+	vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
 
-print(f'Tri-Cities XGB Random Forest model trained in {(trici_stop - trici_start)/60:.1f} minutes')
-print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
+	print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
+	print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
-#%%
-# Tri-Cities XGBoost Random Forest
-trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
-trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, 
-								eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
+else:
+	vanco_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
 
-trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
-trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
-trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+	vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
+	vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
+	vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
 
-print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
-print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
-print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
+	print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
+	print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 #%%
-# University XGBoost Random Forest tuning
-univr_start = time.perf_counter()
+# Tri-Cities XGBoost Random Forest model selection
+if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_prod.DatasetBuilderProd.training_pass == 0:
+	trici_start = time.perf_counter()
 
-univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
-						'learning_rate': [0.01, 0.5, 1.0]}]
+	trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+	trici_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'learning_rate': [0.01, 0.5, 1.0]}]
 
-univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
-univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
+	trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+	trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
-univr_stop = time.perf_counter()
+	trici_stop = time.perf_counter()
 
-print(f'University XGB Random Forest model trained in {(univr_stop - univr_start)/60:.1f} minutes')
-print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
+	print(f'Tri-Cities XGB Random Forest model trained in {(trici_stop - trici_start)/60:.1f} minutes')
+	print(f'Best Tri-Cities XGB Random Forest parameters: {trici_gridsearch.best_params_}')
+
+	trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
+	trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, 
+									eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
+
+	trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
+	trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
+	trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+
+	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
+	print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
+
+else:
+	trici_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\trici_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
+
+	trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
+	trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
+	trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
+
+	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
+	print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 #%%
-# University XGBoost Random Forest
-univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
-univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, 
-								eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
+# University XGBoost Random Forest model selection
+if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_prod.DatasetBuilderProd.training_pass == 0:
+	univr_start = time.perf_counter()
 
-univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
-univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
-univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+	univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+	univr_hyperparameters = [{'max_depth': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'gamma': np.linspace(1, 10, 10, dtype=int, endpoint=True),
+							'learning_rate': [0.01, 0.5, 1.0]}]
 
-print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
-print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
-print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
+	univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+	univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
+
+	univr_stop = time.perf_counter()
+
+	print(f'University XGB Random Forest model trained in {(univr_stop - univr_start)/60:.1f} minutes')
+	print(f'Best University XGB Random Forest parameters: {univr_gridsearch.best_params_}')
+
+	univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
+	univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, 
+									eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
+
+	univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
+	univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
+	univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+
+	print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
+	print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
+
+else:
+	univr_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\univr_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
+
+	univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
+	univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
+	univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
+
+	print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
+	print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
+	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 #%%
 # Ensemble model
@@ -2516,7 +2556,7 @@ pullm_pred_outcome['xgbrf_pred'] = pullm_xgbrf.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 # pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 # pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
-pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_pred_outcome.csv', encoding='utf-8', index=False)
+pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_ft_1yr_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver predicted outcome
@@ -2534,7 +2574,7 @@ vanco_pred_outcome['xgbrf_pred'] = vanco_xgbrf.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 # vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
 # vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
-vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_pred_outcome.csv', encoding='utf-8', index=False)
+vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_ft_1yr_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities predicted outcome
@@ -2552,7 +2592,7 @@ trici_pred_outcome['xgbrf_pred'] = trici_xgbrf.predict(trici_x_test)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 # trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 # trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
-trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_pred_outcome.csv', encoding='utf-8', index=False)
+trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_ft_1yr_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # University predicted outcome
@@ -2570,7 +2610,7 @@ univr_pred_outcome['xgbrf_pred'] = univr_xgbrf.predict(univr_x_test)
 # univr_pred_outcome['mlp_pred'] = univr_mlp.predict(univr_x_test)
 # univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)
 # univr_pred_outcome['vcf_pred'] = univr_vcf.predict(univr_x_test)
-univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_pred_outcome.csv', encoding='utf-8', index=False)
+univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_ft_1yr_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman aggregate outcome
@@ -2596,7 +2636,7 @@ pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"first_gen_fla
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
+pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_ft_1yr_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver aggregate outcome
@@ -2622,7 +2662,7 @@ vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"first_gen_fla
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
+vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_ft_1yr_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities aggregate outcome
@@ -2648,7 +2688,7 @@ trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"first_gen_fla
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
+trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_ft_1yr_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # University aggregate outcome
@@ -2674,7 +2714,7 @@ univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"first_gen_fla
 univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
 univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
 
-univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_aggregate_outcome.csv', encoding='utf-8', index=False)
+univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_ft_1yr_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Pullman current outcome
@@ -2710,55 +2750,55 @@ univr_current_outcome['model_id'] = model_id
 
 #%%
 # Pullman to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv'):
-	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_ft_1yr_student_outcome.csv'):
+	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_ft_1yr_student_outcome.csv', encoding='utf-8', index=False)
 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
-	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_backup.csv', encoding='utf-8', index=False)
+	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_ft_1yr_student_outcome.csv', encoding='utf-8', low_memory=False)
+	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_ft_1yr_student_backup.csv', encoding='utf-8', index=False)
 	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
-	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_frst_student_outcome.csv', encoding='utf-8', index=False)
+	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_ft_1yr_student_outcome.csv', encoding='utf-8', index=False)
 	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Vancouver to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv'):
-	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_ft_1yr_student_outcome.csv'):
+	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_ft_1yr_student_outcome.csv', encoding='utf-8', index=False)
 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
-	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_backup.csv', encoding='utf-8', index=False)
+	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_ft_1yr_student_outcome.csv', encoding='utf-8', low_memory=False)
+	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_ft_1yr_student_backup.csv', encoding='utf-8', index=False)
 	vanco_student_outcome = pd.concat([vanco_prior_outcome, vanco_current_outcome])
-	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_frst_student_outcome.csv', encoding='utf-8', index=False)
+	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_ft_1yr_student_outcome.csv', encoding='utf-8', index=False)
 	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Tri-Cities to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv'):
-	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_ft_1yr_student_outcome.csv'):
+	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_ft_1yr_student_outcome.csv', encoding='utf-8', index=False)
 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
-	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_backup.csv', encoding='utf-8', index=False)
+	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_ft_1yr_student_outcome.csv', encoding='utf-8', low_memory=False)
+	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_ft_1yr_student_backup.csv', encoding='utf-8', index=False)
 	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
-	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_frst_student_outcome.csv', encoding='utf-8', index=False)
+	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_ft_1yr_student_outcome.csv', encoding='utf-8', index=False)
 	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # University to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv'):
-	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', index=False)
+if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_ft_1yr_student_outcome.csv'):
+	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_ft_1yr_student_outcome.csv', encoding='utf-8', index=False)
 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 else:
-	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', low_memory=False)
-	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_backup.csv', encoding='utf-8', index=False)
+	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_ft_1yr_student_outcome.csv', encoding='utf-8', low_memory=False)
+	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_ft_1yr_student_backup.csv', encoding='utf-8', index=False)
 	univr_student_outcome = pd.concat([univr_prior_outcome, univr_current_outcome])
-	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_frst_student_outcome.csv', encoding='utf-8', index=False)
+	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_ft_1yr_student_outcome.csv', encoding='utf-8', index=False)
 	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 #%%
 # Pullman top-N SHAP values to csv and to sql
-pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_frst_shap.csv', 'w', newline='')
+pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_ft_ft_1yr_shap.csv', 'w', newline='')
 pullm_shap_writer = csv.writer(pullm_shap_file)
 pullm_shap_insert = []
 
@@ -2789,7 +2829,7 @@ while pullm_shap_insert:
 
 #%%
 # Vancouver top-N SHAP values to csv and to sql
-vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_frst_shap.csv', 'w', newline='')
+vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_ft_ft_1yr_shap.csv', 'w', newline='')
 vanco_shap_writer = csv.writer(vanco_shap_file)
 vanco_shap_insert = []
 
@@ -2820,7 +2860,7 @@ while vanco_shap_insert:
 
 #%%
 # Tri-Cities top-N SHAP values to csv and to sql
-trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_frst_shap.csv', 'w', newline='')
+trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_ft_ft_1yr_shap.csv', 'w', newline='')
 trici_shap_writer = csv.writer(trici_shap_file)
 trici_shap_insert = []
 
@@ -2851,7 +2891,7 @@ while trici_shap_insert:
 
 #%%
 # University top-N SHAP values to csv and to sql
-univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\univr\\univr_frst_shap.csv', 'w', newline='')
+univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\univr\\univr_ft_ft_1yr_shap.csv', 'w', newline='')
 univr_shap_writer = csv.writer(univr_shap_file)
 univr_shap_insert = []
 
@@ -2884,18 +2924,18 @@ while univr_shap_insert:
 # Output model
 
 # Pullman model output
-joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_frst_model_v{sklearn.__version__}.pkl')
+joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver model output
-joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_frst_model_v{sklearn.__version__}.pkl')
+joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities model output
-joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_frst_model_v{sklearn.__version__}.pkl')
+joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
 
 #%%
 # University model output
-joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_frst_model_v{sklearn.__version__}.pkl')
+joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')
