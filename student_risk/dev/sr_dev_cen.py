@@ -1340,8 +1340,10 @@ pullm_y_train = pullm_training_set['enrl_ind']
 pullm_y_cv = pullm_validation_set['enrl_ind']
 pullm_y_test = pullm_testing_set['enrl_ind']
 
-pullm_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl','male']
-pullm_centered_vars = [b for b in pullm_x_vars if all(a not in b for a in pullm_onehot_vars)]
+pullm_binary_vars = list(pullm_x_train.columns[pullm_x_train.isin([0,1]).all()])
+pullm_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+pullm_filter_vars = pullm_binary_vars + pullm_onehot_vars
+pullm_centered_vars = [b for b in pullm_x_vars if all(a not in b for a in pullm_filter_vars)]
 
 pullm_tomek_prep = make_column_transformer(
 	(StandardScaler(), pullm_centered_vars),
@@ -1393,8 +1395,10 @@ vanco_y_train = vanco_training_set['enrl_ind']
 vanco_y_cv = vanco_validation_set['enrl_ind']
 vanco_y_test = vanco_testing_set['enrl_ind']
 
-vanco_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl','male']
-vanco_centered_vars = [b for b in vanco_x_vars if all(a not in b for a in vanco_onehot_vars)]
+vanco_binary_vars = list(vanco_x_train.columns[vanco_x_train.isin([0,1]).all()])
+vanco_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+vanco_filter_vars = vanco_binary_vars + vanco_onehot_vars
+vanco_centered_vars = [b for b in vanco_x_vars if all(a not in b for a in vanco_filter_vars)]
 
 vanco_tomek_prep = make_column_transformer(
 	(StandardScaler(), vanco_centered_vars),
@@ -1446,8 +1450,10 @@ trici_y_train = trici_training_set['enrl_ind']
 trici_y_cv = trici_validation_set['enrl_ind']
 trici_y_test = trici_testing_set['enrl_ind']
 
-trici_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl','male']
-trici_centered_vars = [b for b in trici_x_vars if all(a not in b for a in trici_onehot_vars)]
+trici_binary_vars = list(trici_x_train.columns[trici_x_train.isin([0,1]).all()])
+trici_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+trici_filter_vars = trici_binary_vars + trici_onehot_vars
+trici_centered_vars = [b for b in trici_x_vars if all(a not in b for a in trici_filter_vars)]
 
 trici_tomek_prep = make_column_transformer(
 	(StandardScaler(), trici_centered_vars),
@@ -1499,8 +1505,10 @@ univr_y_train = univr_training_set['enrl_ind']
 univr_y_cv = univr_validation_set['enrl_ind']
 univr_y_test = univr_testing_set['enrl_ind']
 
-univr_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl','male']
-univr_centered_vars = [b for b in univr_x_vars if all(a not in b for a in univr_onehot_vars)]
+univr_binary_vars = list(univr_x_train.columns[univr_x_train.isin([0,1]).all()])
+univr_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+univr_filter_vars = univr_binary_vars + univr_onehot_vars
+univr_centered_vars = [b for b in univr_x_vars if all(a not in b for a in univr_filter_vars)]
 
 univr_tomek_prep = make_column_transformer(
 	(StandardScaler(), univr_centered_vars),
