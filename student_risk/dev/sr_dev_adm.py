@@ -651,7 +651,7 @@ vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
 
 vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
 
 vanco_testing_set = vanco_testing_set.reset_index()
 
@@ -874,7 +874,7 @@ trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] 
 								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
 
 trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
+								& (testing_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
 								
 trici_testing_set = trici_testing_set.reset_index()
 
@@ -1098,7 +1098,7 @@ univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] ==
 								| ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
 								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
 								| ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
+								& (testing_set['adj_admit_type_cat'] == 'FRSH'))][univr_data_vars].dropna()
 
 univr_testing_set = univr_testing_set.reset_index()
 
