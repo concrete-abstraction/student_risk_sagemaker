@@ -147,32 +147,32 @@ testing_set = testing_set.join(testing_awe_pred.set_index('emplid'), on='emplid'
 training_cdi = training_set[[
                             'emplid',
                             'high_school_gpa',
-                            'class_count',
+                            'fall_lec_count',
                             'sat_erws',
                             'sat_mss',
                             'underrep_minority',
                             'male',
                             'median_inc',
-                            'avg_pct_withdrawn',
-                            'avg_difficulty'                
+                            'fall_avg_pct_withdrawn',
+                            'fall_avg_difficulty'                
                             ]].dropna()
 
 cdi_x_train = training_cdi[[
                             'high_school_gpa',
-                            'class_count',
+                            'fall_lec_count',
                             'sat_erws',
                             'sat_mss',
                             'underrep_minority',
                             'male',
                             'median_inc',
-                            'avg_pct_withdrawn'
+                            'fall_avg_pct_withdrawn'
                             ]]
 
 cdi_y_train = training_cdi[[
-                            'avg_difficulty'
+                            'fall_avg_difficulty'
                             ]]
 
-y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=training_cdi, return_type='dataframe')
+y, x = dmatrices('fall_avg_difficulty ~ high_school_gpa + fall_lec_count + fall_avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=training_cdi, return_type='dataframe')
 reg_mod = OLS(y, x)
 reg_res = reg_mod.fit()
 print(reg_res.summary())
@@ -182,7 +182,7 @@ reg.fit(cdi_x_train, cdi_y_train)
 
 training_cdi_pred = pd.DataFrame()
 training_cdi_pred['emplid'] = training_cdi['emplid']
-training_cdi_pred['cdi_actual'] = training_cdi['avg_difficulty']
+training_cdi_pred['cdi_actual'] = training_cdi['fall_avg_difficulty']
 training_cdi_pred['cdi_predicted'] = reg.predict(cdi_x_train)
 training_cdi_pred['cdi_instrument'] = training_cdi_pred['cdi_actual'] - training_cdi_pred['cdi_predicted']
 
@@ -193,32 +193,32 @@ training_set = training_set.join(training_cdi_pred.set_index('emplid'), on='empl
 testing_cdi = testing_set[[
                             'emplid',
                             'high_school_gpa',
-                            'class_count',
+                            'fall_lec_count',
                             'sat_erws',
                             'sat_mss',
                             'underrep_minority',
                             'male',
                             'median_inc',
-                            'avg_pct_withdrawn',
-                            'avg_difficulty'                
+                            'fall_avg_pct_withdrawn',
+                            'fall_avg_difficulty'                 
                             ]].dropna()
 
 cdi_x_test = testing_cdi[[
                             'high_school_gpa',
-                            'class_count',
+                            'fall_lec_count',
                             'sat_erws',
                             'sat_mss',
                             'underrep_minority',
                             'male',
                             'median_inc',
-                            'avg_pct_withdrawn' 
+                            'fall_avg_pct_withdrawn' 
                             ]]
 
 cdi_y_test = testing_cdi[[
                             'avg_difficulty'
                             ]]
 
-y, x = dmatrices('avg_difficulty ~ high_school_gpa + class_count + avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=testing_cdi, return_type='dataframe')
+y, x = dmatrices('fall_avg_difficulty ~ high_school_gpa + fall_lec_count + fall_avg_pct_withdrawn + sat_erws + sat_mss + underrep_minority + male + median_inc', data=training_cdi, return_type='dataframe')
 reg_mod = OLS(y, x)
 reg_res = reg_mod.fit()
 print(reg_res.summary())
