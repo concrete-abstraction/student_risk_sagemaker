@@ -248,17 +248,13 @@ pullm_data_vars = [
 pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 
 # Pullman dataframes
-pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna().drop(columns=['emplid'])
+pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna().drop(columns=['emplid'])
 
-pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (validation_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna()
+pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
 
-pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna()
+pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
 
-pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')][pullm_data_vars].dropna().drop(columns=['enrl_ind'])
+pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna().drop(columns=['enrl_ind'])
 
 pullm_testing_set = pullm_testing_set.reset_index()
 
@@ -456,17 +452,13 @@ vanco_data_vars = [
 vanco_x_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 
 # Vancouver dataframes
-vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna().drop(columns=['emplid'])
+vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna().drop(columns=['emplid'])
 
-vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (validation_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna()
+vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
 
-vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna()
+vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
 
-vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
+vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
 
 vanco_testing_set = vanco_testing_set.reset_index()
 
@@ -664,17 +656,13 @@ trici_data_vars = [
 trici_x_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 
 # Tri-Cities dataframes
-trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna().drop(columns=['emplid'])
+trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna().drop(columns=['emplid'])
 
-trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (validation_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna()
+trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
 
-trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (training_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna()
+trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
 
-trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
+trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
 								
 trici_testing_set = trici_testing_set.reset_index()
 
@@ -872,18 +860,15 @@ univr_data_vars = [
 univr_x_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 
 # University dataframes
-univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna().drop(columns=['emplid'])
+univr_logit_df = training_set[univr_data_vars].dropna().drop(columns=['emplid'])
 
-univr_validation_set = validation_set[(validation_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna()
+univr_validation_set = validation_set[univr_data_vars].dropna()
 
-univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'TRAN')][univr_data_vars].dropna()
+univr_training_set = training_set[univr_data_vars].dropna()
 
-univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')) 
-								| ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN')) 
-								| ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') 
-								& (testing_set['adj_admit_type_cat'] == 'TRAN'))][univr_data_vars].dropna().drop(columns=['enrl_ind'])
+univr_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'EVERE')
+								| (testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
+								| (testing_set['adj_acad_prog_primary_campus'] == 'ONLIN')][univr_data_vars].dropna().drop(columns=['enrl_ind'])
 
 univr_testing_set = univr_testing_set.reset_index()
 
@@ -916,30 +901,11 @@ print('\nDetect and remove outliers...')
 pullm_x_training_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
+pullm_onehot_vars = pullm_x_training_outlier.select_dtypes(include='object').columns.tolist()
+
 pullm_outlier_prep = make_column_transformer(
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-									# 'acad_year', 
-									# 'age_group',
-									# 'marital_status',
-									'first_gen_flag',
-									# 'LSAMP_STEM_Flag',
-									# 'anywhere_STEM_Flag',
-									# 'afl_greek_indicator',
-									# 'ACAD_PLAN',
-									# 'plan_owner_org',
-									# 'ipeds_ethnic_group_descrshort',
-									# 'last_sch_proprietorship', 
-									'parent1_highest_educ_lvl',
-									'parent2_highest_educ_lvl'
-									]),
-	remainder='passthrough'
+    (OneHotEncoder(drop='first'), pullm_onehot_vars),
+    remainder='passthrough'
 )
 
 pullm_x_training_outlier = pullm_outlier_prep.fit_transform(pullm_x_training_outlier)
@@ -966,30 +932,11 @@ pullm_validation_set = pullm_validation_set.drop(columns='mask')
 vanco_x_training_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
+vanco_onehot_vars = vanco_x_training_outlier.select_dtypes(include='object').columns.tolist()
+
 vanco_outlier_prep = make_column_transformer(
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-									# 'acad_year', 
-									# 'age_group',
-									# 'marital_status',
-									'first_gen_flag',
-									# 'LSAMP_STEM_Flag',
-									# 'anywhere_STEM_Flag',
-									# 'afl_greek_indicator',
-									# 'ACAD_PLAN',
-									# 'plan_owner_org',
-									# 'ipeds_ethnic_group_descrshort',
-									# 'last_sch_proprietorship', 
-									'parent1_highest_educ_lvl',
-									'parent2_highest_educ_lvl'
-									]),
-	remainder='passthrough'
+    (OneHotEncoder(drop='first'), vanco_onehot_vars),
+    remainder='passthrough'
 )
 
 vanco_x_training_outlier = vanco_outlier_prep.fit_transform(vanco_x_training_outlier)
@@ -1016,30 +963,11 @@ vanco_validation_set = vanco_validation_set.drop(columns='mask')
 trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
 trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
+trici_onehot_vars = trici_x_training_outlier.select_dtypes(include='object').columns.tolist()
+
 trici_outlier_prep = make_column_transformer(
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-									# 'acad_year', 
-									# 'age_group',
-									# 'marital_status',
-									'first_gen_flag',
-									# 'LSAMP_STEM_Flag',
-									# 'anywhere_STEM_Flag',
-									# 'afl_greek_indicator',
-									# 'ACAD_PLAN',
-									# 'plan_owner_org',
-									# 'ipeds_ethnic_group_descrshort',
-									# 'last_sch_proprietorship', 
-									'parent1_highest_educ_lvl',
-									'parent2_highest_educ_lvl'
-									]),
-	remainder='passthrough'
+    (OneHotEncoder(drop='first'), trici_onehot_vars),
+    remainder='passthrough'
 )
 
 trici_x_training_outlier = trici_outlier_prep.fit_transform(trici_x_training_outlier)
@@ -1066,30 +994,11 @@ trici_validation_set = trici_validation_set.drop(columns='mask')
 univr_x_training_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
 univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
+univr_onehot_vars = univr_x_training_outlier.select_dtypes(include='object').columns.tolist()
+
 univr_outlier_prep = make_column_transformer(
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-									# 'acad_year', 
-									# 'age_group',
-									# 'marital_status',
-									'first_gen_flag',
-									# 'LSAMP_STEM_Flag',
-									# 'anywhere_STEM_Flag',
-									# 'afl_greek_indicator',
-									# 'ACAD_PLAN',
-									# 'plan_owner_org',
-									# 'ipeds_ethnic_group_descrshort',
-									# 'last_sch_proprietorship', 
-									'parent1_highest_educ_lvl',
-									'parent2_highest_educ_lvl'
-									]),
-	remainder='passthrough'
+    (OneHotEncoder(drop='first'), univr_onehot_vars),
+    remainder='passthrough'
 )
 
 univr_x_training_outlier = univr_outlier_prep.fit_transform(univr_x_training_outlier)
@@ -1124,84 +1033,14 @@ pullm_y_train = pullm_training_set['enrl_ind']
 pullm_y_cv = pullm_validation_set['enrl_ind']
 # pullm_y_test = pullm_testing_set['enrl_ind']
 
+pullm_binary_vars = pullm_x_train.columns[pullm_x_train.isin([0,1]).all()].tolist()
+pullm_filter_vars = pullm_binary_vars + pullm_onehot_vars
+pullm_centered_vars = [b for b in pullm_x_vars if all(a not in b for a in pullm_filter_vars)]
+
 pullm_tomek_prep = make_column_transformer(
-	# (StandardScaler(), [
-	# 					'distance',
-	# 					# 'age',
-	# 					# 'min_week_from_term_begin_dt',
-	# 					# 'max_week_from_term_begin_dt',
-	# 					'count_week_from_term_begin_dt',
-	# 					# 'sat_erws',
-	# 					# 'sat_mss',
-	# 					# 'sat_comp',
-	# 					# 'attendee_total_visits',
-	# 					'pop_dens', 
-	# 					# 'qvalue', 
-	# 					# 'gini_indx',
-	# 					'median_inc',
-	# 					# 'pvrt_rate',
-	# 					'median_value',
-	# 					# 'educ_rate',
-	# 					# 'pct_blk',
-	# 					# 'pct_ai',
-	# 					# 'pct_asn',
-	# 					# 'pct_hawi',
-	# 					# 'pct_oth',
-	# 					# 'pct_two',
-	# 					# 'pct_non',
-	# 					# 'pct_hisp',
-	# 					# 'term_credit_hours',
-	# 					'transfer_gpa',
-	# 					# 'awe_instrument',
-	# 					# 'cdi_instrument',
-	# 					'fall_avg_difficulty',
-	# 					# 'fall_avg_pct_withdrawn',
-	# 					# 'fall_avg_pct_CDFW',
-	# 					# 'fall_avg_pct_CDF',
-	# 					'fall_lec_count',
-	# 					'fall_lab_count',
-	# 					# 'fall_int_count',
-	# 					'fall_stu_count',
-	# 					# 'fall_sem_count',
-	# 					'fall_oth_count',
-	# 					'fall_lec_contact_hrs',
-	# 					'fall_lab_contact_hrs',
-	# 					# 'fall_int_contact_hrs',
-	# 					'fall_stu_contact_hrs',
-	# 					# 'fall_sem_contact_hrs',
-	# 					'fall_oth_contact_hrs',
-	# 					# 'total_fall_contact_hrs',
-	# 					'total_fall_units',
-	# 					'fall_withdrawn_hours',
-	# 					'cum_adj_transfer_hours',
-	# 					# 'term_credit_hours',
-	# 					# 'fed_efc',
-	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
-	# 					]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-									# 'acad_year', 
-									# 'age_group',
-									# 'marital_status',
-									'first_gen_flag',
-									# 'LSAMP_STEM_Flag',
-									# 'anywhere_STEM_Flag',
-									# 'afl_greek_indicator',
-									# 'ACAD_PLAN',
-									# 'plan_owner_org',
-									# 'ipeds_ethnic_group_descrshort',
-									# 'last_sch_proprietorship', 
-									'parent1_highest_educ_lvl',
-									'parent2_highest_educ_lvl'
-									]),
-	remainder='passthrough'
+	# (StandardScaler(), pullm_centered_vars),
+	(OneHotEncoder(drop='first'), pullm_onehot_vars),
+    remainder='passthrough'
 )
 
 pullm_x_train = pullm_tomek_prep.fit_transform(pullm_x_train)
@@ -1248,84 +1087,14 @@ vanco_y_train = vanco_training_set['enrl_ind']
 vanco_y_cv = vanco_validation_set['enrl_ind']
 # vanco_y_test = vanco_testing_set['enrl_ind']
 
+vanco_binary_vars = vanco_x_train.columns[vanco_x_train.isin([0,1]).all()].to_list()
+vanco_filter_vars = vanco_binary_vars + vanco_onehot_vars
+vanco_centered_vars = [b for b in vanco_x_vars if all(a not in b for a in vanco_filter_vars)]
+
 vanco_tomek_prep = make_column_transformer(
-	# (StandardScaler(), [
-	# 					'distance',
-	# 					# 'age',
-	# 					# 'min_week_from_term_begin_dt',
-	# 					# 'max_week_from_term_begin_dt',
-	# 					'count_week_from_term_begin_dt',
-	# 					# 'sat_erws',
-	# 					# 'sat_mss',
-	# 					# 'sat_comp',
-	# 					# 'attendee_total_visits',
-	# 					'pop_dens', 
-	# 					# 'qvalue', 
-	# 					# 'gini_indx',
-	# 					'median_inc',
-	# 					# 'pvrt_rate',
-	# 					'median_value',
-	# 					# 'educ_rate',
-	# 					# 'pct_blk',
-	# 					# 'pct_ai',
-	# 					# 'pct_asn',
-	# 					# 'pct_hawi',
-	# 					# 'pct_oth',
-	# 					# 'pct_two',
-	# 					# 'pct_non',
-	# 					# 'pct_hisp',
-	# 					# 'term_credit_hours',
-	# 					'transfer_gpa',
-	# 					# 'awe_instrument',
-	# 					# 'cdi_instrument',
-	# 					'fall_avg_difficulty',
-	# 					# 'fall_avg_pct_withdrawn',
-	# 					# 'fall_avg_pct_CDFW',
-	# 					# 'fall_avg_pct_CDF',
-	# 					'fall_lec_count',
-	# 					'fall_lab_count',
-	# 					# 'fall_int_count',
-	# 					# 'fall_stu_count',
-	# 					# 'fall_sem_count',
-	# 					# 'fall_oth_count',
-	# 					'fall_lec_contact_hrs',
-	# 					'fall_lab_contact_hrs',
-	# 					# 'fall_int_contact_hrs',
-	# 					# 'fall_stu_contact_hrs',
-	# 					# 'fall_sem_contact_hrs',
-	# 					# 'fall_oth_contact_hrs',
-	# 					# 'total_fall_contact_hrs',
-	# 					'total_fall_units',
-	# 					'fall_withdrawn_hours',
-	# 					'cum_adj_transfer_hours',
-	# 					# 'term_credit_hours',
-	# 					# 'fed_efc',
-	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
-	# 					]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-									# 'acad_year', 
-									# 'age_group',
-									# 'marital_status',
-									'first_gen_flag',
-									# 'LSAMP_STEM_Flag',
-									# 'anywhere_STEM_Flag',
-									# 'afl_greek_indicator',
-									# 'ACAD_PLAN',
-									# 'plan_owner_org',
-									# 'ipeds_ethnic_group_descrshort',
-									# 'last_sch_proprietorship', 
-									'parent1_highest_educ_lvl',
-									'parent2_highest_educ_lvl'
-									]),
-	remainder='passthrough'
+	# (StandardScaler(), vanco_centered_vars),
+	(OneHotEncoder(drop='first'), vanco_onehot_vars),
+    remainder='passthrough'
 )
 
 vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
@@ -1372,84 +1141,14 @@ trici_y_train = trici_training_set['enrl_ind']
 trici_y_cv = trici_validation_set['enrl_ind']
 # trici_y_test = trici_testing_set['enrl_ind']
 
+trici_binary_vars = trici_x_train.columns[trici_x_train.isin([0,1]).all()].to_list()
+trici_filter_vars = trici_binary_vars + trici_onehot_vars
+trici_centered_vars = [b for b in trici_x_vars if all(a not in b for a in trici_filter_vars)]
+
 trici_tomek_prep = make_column_transformer(
-	# (StandardScaler(), [
-	# 					'distance',
-	# 					# 'age',
-	# 					# 'min_week_from_term_begin_dt',
-	# 					# 'max_week_from_term_begin_dt',
-	# 					'count_week_from_term_begin_dt',
-	# 					# 'sat_erws',
-	# 					# 'sat_mss',
-	# 					# 'sat_comp',
-	# 					# 'attendee_total_visits',
-	# 					'pop_dens', 
-	# 					# 'qvalue', 
-	# 					# 'gini_indx',
-	# 					'median_inc',
-	# 					# 'pvrt_rate',
-	# 					'median_value',
-	# 					# 'educ_rate',
-	# 					# 'pct_blk',
-	# 					# 'pct_ai',
-	# 					# 'pct_asn',
-	# 					# 'pct_hawi',
-	# 					# 'pct_oth',
-	# 					# 'pct_two',
-	# 					# 'pct_non',
-	# 					# 'pct_hisp',
-	# 					# 'term_credit_hours',
-	# 					'transfer_gpa',
-	# 					# 'awe_instrument',
-	# 					# 'cdi_instrument',
-	# 					'fall_avg_difficulty',
-	# 					# 'fall_avg_pct_withdrawn',
-	# 					# 'fall_avg_pct_CDFW',
-	# 					# 'fall_avg_pct_CDF',
-	# 					'fall_lec_count',
-	# 					'fall_lab_count',
-	# 					# 'fall_int_count',
-	# 					# 'fall_stu_count',
-	# 					# 'fall_sem_count',
-	# 					# 'fall_oth_count',
-	# 					'fall_lec_contact_hrs',
-	# 					'fall_lab_contact_hrs',
-	# 					# 'fall_int_contact_hrs',
-	# 					# 'fall_stu_contact_hrs',
-	# 					# 'fall_sem_contact_hrs',
-	# 					# 'fall_oth_contact_hrs',
-	# 					# 'total_fall_contact_hrs',
-	# 					'total_fall_units',
-	# 					'fall_withdrawn_hours',
-	# 					'cum_adj_transfer_hours',
-	# 					# 'term_credit_hours',
-	# 					# 'fed_efc',
-	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
-	# 					]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-									# 'acad_year', 
-									# 'age_group',
-									# 'marital_status',
-									'first_gen_flag',
-									# 'LSAMP_STEM_Flag',
-									# 'anywhere_STEM_Flag',
-									# 'afl_greek_indicator',
-									# 'ACAD_PLAN',
-									# 'plan_owner_org',
-									# 'ipeds_ethnic_group_descrshort',
-									# 'last_sch_proprietorship', 
-									'parent1_highest_educ_lvl',
-									'parent2_highest_educ_lvl'
-									]),
-	remainder='passthrough'
+	# (StandardScaler(), trici_centered_vars),
+	(OneHotEncoder(drop='first'), trici_onehot_vars),
+    remainder='passthrough'
 )
 
 trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
@@ -1496,84 +1195,14 @@ univr_y_train = univr_training_set['enrl_ind']
 univr_y_cv = univr_validation_set['enrl_ind']
 # univr_y_test = univr_testing_set['enrl_ind']
 
+univr_binary_vars = univr_x_train.columns[univr_x_train.isin([0,1]).all()].to_list()
+univr_filter_vars = univr_binary_vars + univr_onehot_vars
+univr_centered_vars = [b for b in univr_x_vars if all(a not in b for a in univr_filter_vars)]
+
 univr_tomek_prep = make_column_transformer(
-	# (StandardScaler(), [
-	# 					'distance',
-	# 					# 'age',
-	# 					# 'min_week_from_term_begin_dt',
-	# 					# 'max_week_from_term_begin_dt',
-	# 					'count_week_from_term_begin_dt',
-	# 					# 'sat_erws',
-	# 					# 'sat_mss',
-	# 					# 'sat_comp',
-	# 					# 'attendee_total_visits',
-	# 					'pop_dens', 
-	# 					# 'qvalue', 
-	# 					# 'gini_indx',
-	# 					'median_inc',
-	# 					# 'pvrt_rate',
-	# 					'median_value',
-	# 					# 'educ_rate',
-	# 					# 'pct_blk',
-	# 					# 'pct_ai',
-	# 					# 'pct_asn',
-	# 					# 'pct_hawi',
-	# 					# 'pct_oth',
-	# 					# 'pct_two',
-	# 					# 'pct_non',
-	# 					# 'pct_hisp',
-	# 					# 'term_credit_hours',
-	# 					'transfer_gpa',
-	# 					# 'awe_instrument',
-	# 					# 'cdi_instrument',
-	# 					'fall_avg_difficulty',
-	# 					# 'fall_avg_pct_withdrawn',
-	# 					# 'fall_avg_pct_CDFW',
-	# 					# 'fall_avg_pct_CDF',
-	# 					'fall_lec_count',
-	# 					'fall_lab_count',
-	# 					# 'fall_int_count',
-	# 					# 'fall_stu_count',
-	# 					# 'fall_sem_count',
-	# 					# 'fall_oth_count',
-	# 					'fall_lec_contact_hrs',
-	# 					'fall_lab_contact_hrs',
-	# 					# 'fall_int_contact_hrs',
-	# 					# 'fall_stu_contact_hrs',
-	# 					# 'fall_sem_contact_hrs',
-	# 					# 'fall_oth_contact_hrs',
-	# 					# 'total_fall_contact_hrs',
-	# 					'total_fall_units',
-	# 					'fall_withdrawn_hours',
-	# 					'cum_adj_transfer_hours',
-	# 					# 'term_credit_hours',
-	# 					# 'fed_efc',
-	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
-	# 					]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-									# 'acad_year', 
-									# 'age_group',
-									# 'marital_status',
-									'first_gen_flag',
-									# 'LSAMP_STEM_Flag',
-									# 'anywhere_STEM_Flag',
-									# 'afl_greek_indicator',
-									# 'ACAD_PLAN',
-									# 'plan_owner_org',
-									# 'ipeds_ethnic_group_descrshort',
-									# 'last_sch_proprietorship', 
-									'parent1_highest_educ_lvl',
-									'parent2_highest_educ_lvl'
-									]),
-	remainder='passthrough'
+	# (StandardScaler(), univr_centered_vars),
+	(OneHotEncoder(drop='first'), univr_onehot_vars),
+    remainder='passthrough'
 )
 
 univr_x_train = univr_tomek_prep.fit_transform(univr_x_train)

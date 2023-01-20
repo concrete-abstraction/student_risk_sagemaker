@@ -419,17 +419,13 @@ pullm_data_vars = [
 pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 
 # Pullman dataframes
-pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna().drop(columns=['emplid'])
+pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna().drop(columns=['emplid'])
 
-pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (validation_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
+pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
 
-pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
+pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
 
-pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][pullm_data_vars].dropna()
+pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
 
 pullm_testing_set = pullm_testing_set.reset_index()
 
@@ -642,17 +638,13 @@ vanco_data_vars = [
 vanco_x_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 
 # Vancouver dataframes
-vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna().drop(columns=['emplid'])
+vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna().drop(columns=['emplid'])
 
-vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (validation_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
+vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
 
-vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
+vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
 
-vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][vanco_data_vars].dropna()
+vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
 
 vanco_testing_set = vanco_testing_set.reset_index()
 
@@ -865,17 +857,13 @@ trici_data_vars = [
 trici_x_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 
 # Tri-Cities dataframes
-trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna().drop(columns=['emplid'])
+trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna().drop(columns=['emplid'])
 
-trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (validation_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
+trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
 
-trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (training_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
+trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
 
-trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')][trici_data_vars].dropna()
+trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
 								
 trici_testing_set = trici_testing_set.reset_index()
 
@@ -1088,18 +1076,15 @@ univr_data_vars = [
 univr_x_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 
 # University dataframes
-univr_logit_df = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna().drop(columns=['emplid'])
+univr_logit_df = training_set[univr_data_vars].dropna().drop(columns=['emplid'])
 
-univr_validation_set = validation_set[(validation_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna()
+univr_validation_set = validation_set[univr_data_vars].dropna()
 
-univr_training_set = training_set[(training_set['adj_admit_type_cat'] == 'FRSH')][univr_data_vars].dropna()
+univr_training_set = training_set[univr_data_vars].dropna()
 
-univr_testing_set = testing_set[((testing_set['adj_acad_prog_primary_campus'] == 'EVERE') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
-								| ((testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH')) 
-								| ((testing_set['adj_acad_prog_primary_campus'] == 'ONLIN') 
-								& (testing_set['adj_admit_type_cat'] == 'FRSH'))][univr_data_vars].dropna()
+univr_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'EVERE')
+								| (testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
+								| (testing_set['adj_acad_prog_primary_campus'] == 'ONLIN')][univr_data_vars].dropna()
 
 univr_testing_set = univr_testing_set.reset_index()
 
@@ -1132,7 +1117,7 @@ print('\nDetect and remove outliers...')
 pullm_x_training_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
-pullm_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+pullm_onehot_vars = pullm_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
 pullm_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), pullm_onehot_vars),
@@ -1149,9 +1134,9 @@ pullm_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 pullm_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_validation_gower)
 
 pullm_training_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_training_outlier_set.csv', encoding='utf-8', index=False)
+pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_ft_ft_1yr_training_outlier_set.csv', encoding='utf-8', index=False)
 pullm_validation_outlier_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == 1].index)
-pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
+pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_ft_ft_1yr_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
 pullm_training_set = pullm_training_set.drop(columns='mask')
@@ -1163,7 +1148,7 @@ pullm_validation_set = pullm_validation_set.drop(columns='mask')
 vanco_x_training_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
-vanco_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+vanco_onehot_vars = vanco_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
 vanco_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), vanco_onehot_vars),
@@ -1180,9 +1165,9 @@ vanco_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 vanco_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_validation_gower)
 
 vanco_training_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_training_outlier_set.csv', encoding='utf-8', index=False)
+vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_ft_ft_1yr_training_outlier_set.csv', encoding='utf-8', index=False)
 vanco_validation_outlier_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == 1].index)
-vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
+vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_ft_ft_1yr_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
 vanco_training_set = vanco_training_set.drop(columns='mask')
@@ -1194,7 +1179,7 @@ vanco_validation_set = vanco_validation_set.drop(columns='mask')
 trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
 trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
-trici_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+trici_onehot_vars = trici_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
 trici_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), trici_onehot_vars),
@@ -1211,9 +1196,9 @@ trici_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 trici_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_validation_gower)
 
 trici_training_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_training_outlier_set.csv', encoding='utf-8', index=False)
+trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_ft_ft_1yr_training_outlier_set.csv', encoding='utf-8', index=False)
 trici_validation_outlier_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == 1].index)
-trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
+trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_ft_ft_1yr_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
 trici_training_set = trici_training_set.drop(columns='mask')
@@ -1225,7 +1210,7 @@ trici_validation_set = trici_validation_set.drop(columns='mask')
 univr_x_training_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
 univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
-univr_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+univr_onehot_vars = univr_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
 univr_outlier_prep = make_column_transformer(
     (OneHotEncoder(drop='first'), univr_onehot_vars),
@@ -1242,9 +1227,9 @@ univr_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1)
 univr_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_validation_gower)
 
 univr_training_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
-univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_training_outlier_set.csv', encoding='utf-8', index=False)
+univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_ft_ft_1yr_training_outlier_set.csv', encoding='utf-8', index=False)
 univr_validation_outlier_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == 1].index)
-univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_validation_outlier_set.csv', encoding='utf-8', index=False)
+univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_ft_ft_1yr_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 univr_training_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == -1].index)
 univr_training_set = univr_training_set.drop(columns='mask')
@@ -1264,7 +1249,7 @@ pullm_y_train = pullm_training_set['enrl_ind']
 pullm_y_cv = pullm_validation_set['enrl_ind']
 pullm_y_test = pullm_testing_set['enrl_ind']
 
-pullm_binary_vars = list(pullm_x_train.columns[pullm_x_train.isin([0,1]).all()])
+pullm_binary_vars = pullm_x_train.columns[pullm_x_train.isin([0,1]).all()].tolist()
 pullm_filter_vars = pullm_binary_vars + pullm_onehot_vars
 pullm_centered_vars = [b for b in pullm_x_vars if all(a not in b for a in pullm_filter_vars)]
 
@@ -1318,7 +1303,7 @@ vanco_y_train = vanco_training_set['enrl_ind']
 vanco_y_cv = vanco_validation_set['enrl_ind']
 vanco_y_test = vanco_testing_set['enrl_ind']
 
-vanco_binary_vars = list(vanco_x_train.columns[vanco_x_train.isin([0,1]).all()])
+vanco_binary_vars = vanco_x_train.columns[vanco_x_train.isin([0,1]).all()].to_list()
 vanco_filter_vars = vanco_binary_vars + vanco_onehot_vars
 vanco_centered_vars = [b for b in vanco_x_vars if all(a not in b for a in vanco_filter_vars)]
 
@@ -1357,9 +1342,9 @@ vanco_training_set = vanco_training_set.reset_index(drop=True)
 vanco_validation_set = vanco_validation_set.reset_index(drop=True)
 
 vanco_tomek_train_set = vanco_training_set.drop(vanco_tomek_train_index)
-vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_tomek_training_set.csv', encoding='utf-8', index=False)
+vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_ft_ft_1yr_tomek_training_set.csv', encoding='utf-8', index=False)
 vanco_tomek_valid_set = vanco_validation_set.drop(vanco_tomek_valid_index)
-vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
+vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_ft_ft_1yr_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities undersample
@@ -1372,7 +1357,7 @@ trici_y_train = trici_training_set['enrl_ind']
 trici_y_cv = trici_validation_set['enrl_ind']
 trici_y_test = trici_testing_set['enrl_ind']
 
-trici_binary_vars = list(trici_x_train.columns[trici_x_train.isin([0,1]).all()])
+trici_binary_vars = trici_x_train.columns[trici_x_train.isin([0,1]).all()].to_list()
 trici_filter_vars = trici_binary_vars + trici_onehot_vars
 trici_centered_vars = [b for b in trici_x_vars if all(a not in b for a in trici_filter_vars)]
 
@@ -1411,9 +1396,9 @@ trici_training_set = trici_training_set.reset_index(drop=True)
 trici_validation_set = trici_validation_set.reset_index(drop=True)
 
 trici_tomek_train_set = trici_training_set.drop(trici_tomek_train_index)
-trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_tomek_training_set.csv', encoding='utf-8', index=False)
+trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_ft_ft_1yr_tomek_training_set.csv', encoding='utf-8', index=False)
 trici_tomek_valid_set = trici_validation_set.drop(trici_tomek_valid_index)
-trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
+trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_ft_ft_1yr_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # University undersample
@@ -1426,7 +1411,7 @@ univr_y_train = univr_training_set['enrl_ind']
 univr_y_cv = univr_validation_set['enrl_ind']
 univr_y_test = univr_testing_set['enrl_ind']
 
-univr_binary_vars = list(univr_x_train.columns[univr_x_train.isin([0,1]).all()])
+univr_binary_vars = univr_x_train.columns[univr_x_train.isin([0,1]).all()].to_list()
 univr_filter_vars = univr_binary_vars + univr_onehot_vars
 univr_centered_vars = [b for b in univr_x_vars if all(a not in b for a in univr_filter_vars)]
 
@@ -1465,9 +1450,9 @@ univr_training_set = univr_training_set.reset_index(drop=True)
 univr_validation_set = univr_validation_set.reset_index(drop=True)
 
 univr_tomek_train_set = univr_training_set.drop(univr_tomek_train_index)
-univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_tomek_training_set.csv', encoding='utf-8', index=False)
+univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_ft_ft_1yr_tomek_training_set.csv', encoding='utf-8', index=False)
 univr_tomek_valid_set = univr_validation_set.drop(univr_tomek_valid_index)
-univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_frst_tomek_validation_set.csv', encoding='utf-8', index=False)
+univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_ft_ft_1yr_tomek_validation_set.csv', encoding='utf-8', index=False)
 
 #%%
 # Standard logistic model
