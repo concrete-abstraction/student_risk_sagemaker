@@ -1340,83 +1340,12 @@ pullm_y_train = pullm_training_set['enrl_ind']
 pullm_y_cv = pullm_validation_set['enrl_ind']
 pullm_y_test = pullm_testing_set['enrl_ind']
 
+pullm_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl','male']
+pullm_centered_vars = [b for b in pullm_x_vars if all(a not in b for a in pullm_onehot_vars)]
+
 pullm_tomek_prep = make_column_transformer(
-	# (StandardScaler(), [
-	# 					'distance',
-	# 					# 'age',
-	# 					# 'min_week_from_term_begin_dt',
-	# 					# 'max_week_from_term_begin_dt',
-	# 					'count_week_from_term_begin_dt',
-	# 					# 'sat_erws',
-	# 					# 'sat_mss',
-	# 					# 'sat_comp',
-	# 					# 'attendee_total_visits',
-	# 					'pop_dens', 
-	# 					# 'qvalue', 
-	# 					# 'gini_indx',
-	# 					'median_inc',
-	# 					# 'pvrt_rate',
-	# 					'median_value',
-	# 					# 'educ_rate',
-	# 					# 'pct_blk',
-	# 					# 'pct_ai',
-	# 					# 'pct_asn',
-	# 					# 'pct_hawi',
-	# 					# 'pct_oth',
-	# 					# 'pct_two',
-	# 					# 'pct_non',
-	# 					# 'pct_hisp',
-	# 					# 'term_credit_hours',
-	# 					'high_school_gpa',
-	# 					# 'awe_instrument',
-	# 					# 'cdi_instrument',
-	# 					'fall_avg_difficulty',
-	# 					# 'fall_avg_pct_withdrawn',
-	# 					# 'fall_avg_pct_CDFW',
-	# 					# 'fall_avg_pct_CDF',
-	# 					'fall_lec_count',
-	# 					'fall_lab_count',
-	# 					# 'fall_int_count',
-	# 					'fall_stu_count',
-	# 					# 'fall_sem_count',
-	# 					'fall_oth_count',
-	# 					'fall_lec_contact_hrs',
-	# 					'fall_lab_contact_hrs',
-	# 					# 'fall_int_contact_hrs',
-	# 					'fall_stu_contact_hrs',
-	# 					# 'fall_sem_contact_hrs',
-	# 					'fall_oth_contact_hrs',
-	# 					# 'total_fall_contact_hrs',
-	# 					'total_fall_units',
-	# 					'fall_withdrawn_hours',
-	# 					'cum_adj_transfer_hours',
-	# 					# 'term_credit_hours',
-	# 					# 'fed_efc',
-	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
-	# 					]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
+	(StandardScaler(), pullm_centered_vars),
+	(OneHotEncoder(drop='first'), pullm_onehot_vars),
     remainder='passthrough'
 )
 
@@ -1464,99 +1393,12 @@ vanco_y_train = vanco_training_set['enrl_ind']
 vanco_y_cv = vanco_validation_set['enrl_ind']
 vanco_y_test = vanco_testing_set['enrl_ind']
 
+vanco_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl','male']
+vanco_centered_vars = [b for b in vanco_x_vars if all(a not in b for a in vanco_onehot_vars)]
+
 vanco_tomek_prep = make_column_transformer(
-	# (StandardScaler(), [
-	# 					# 'distance',
-	# 					# 'age',
-	# 					# 'min_week_from_term_begin_dt',
-	# 					# 'max_week_from_term_begin_dt',
-	# 					# 'count_week_from_term_begin_dt',
-	# 					# 'sat_erws',
-	# 					# 'sat_mss',
-	# 					# 'sat_comp',
-	# 					# 'attendee_total_visits',
-	# 					# 'pop_dens', 
-	# 					# 'qvalue', 
-	# 					# 'gini_indx',
-	# 					# 'median_inc',
-	# 					# 'pvrt_rate',
-	# 					# 'median_value',
-	# 					# 'educ_rate',
-	# 					# 'pct_blk',
-	# 					# 'pct_ai',
-	# 					# 'pct_asn',
-	# 					# 'pct_hawi',
-	# 					# 'pct_oth',
-	# 					# 'pct_two',
-	# 					# 'pct_non',
-	# 					# 'pct_hisp',
-	# 					# 'high_school_gpa',
-	# 					# 'spring_midterm_gpa_avg',
-	# 					# 'spring_midterm_gpa_avg_mi',
-	# 					# 'spring_midterm_grade_count',
-	# 					# 'spring_midterm_S_grade_count',
-	# 					# 'spring_midterm_W_grade_count',
-	# 					# 'fall_term_gpa',
-	# 					# 'fall_term_gpa_mi',
-	# 					# 'fall_term_D_grade_count',
-	# 					# 'fall_term_F_grade_count',
-	# 					# 'fall_term_S_grade_count',
-	# 					# 'fall_term_W_grade_count',
-	# 					'spring_term_gpa',
-	# 					# 'spring_term_gpa_mi',
-	# 					'spring_term_D_grade_count',
-	# 					'spring_term_F_grade_count',
-	# 					# 'spring_term_S_grade_count',
-	# 					# 'spring_term_W_grade_count',
-	# 					# 'awe_instrument',
-	# 					# 'cdi_instrument',
-	# 					'spring_avg_difficulty',
-	# 					# 'spring_avg_pct_withdrawn',
-	# 					# 'spring_avg_pct_CDFW',
-	# 					# 'spring_avg_pct_CDF',
-	# 					'spring_lec_count',
-	# 					'spring_lab_count',
-	# 					# 'spring_int_count',
-	# 					# 'spring_stu_count',
-	# 					# 'spring_sem_count',
-	# 					# 'spring_oth_count',
-	# 					# 'spring_lec_contact_hrs',
-	# 					# 'spring_lab_contact_hrs',
-	# 					# 'spring_int_contact_hrs',
-	# 					# 'spring_stu_contact_hrs',
-	# 					# 'spring_sem_contact_hrs',
-	# 					# 'spring_oth_contact_hrs',
-	# 					# 'total_spring_contact_hrs',
-	# 					# 'total_spring_units',
-	# 					'spring_credit_hours',
-	# 					'spring_withdrawn_hours',
-	# 					'cum_adj_transfer_hours',
-	# 					# 'fed_efc',
-	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
-	# 					]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
+	(StandardScaler(), vanco_centered_vars),
+	(OneHotEncoder(drop='first'), vanco_onehot_vars),
     remainder='passthrough'
 )
 
@@ -1604,99 +1446,12 @@ trici_y_train = trici_training_set['enrl_ind']
 trici_y_cv = trici_validation_set['enrl_ind']
 trici_y_test = trici_testing_set['enrl_ind']
 
+trici_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl','male']
+trici_centered_vars = [b for b in trici_x_vars if all(a not in b for a in trici_onehot_vars)]
+
 trici_tomek_prep = make_column_transformer(
-	# (StandardScaler(), [
-	# 					# 'distance',
-	# 					# 'age',
-	# 					# 'min_week_from_term_begin_dt',
-	# 					# 'max_week_from_term_begin_dt',
-	# 					# 'count_week_from_term_begin_dt',
-	# 					# 'sat_erws',
-	# 					# 'sat_mss',
-	# 					# 'sat_comp',
-	# 					# 'attendee_total_visits',
-	# 					# 'pop_dens', 
-	# 					# 'qvalue', 
-	# 					# 'gini_indx',
-	# 					# 'median_inc',
-	# 					# 'pvrt_rate',
-	# 					# 'median_value',
-	# 					# 'educ_rate',
-	# 					# 'pct_blk',
-	# 					# 'pct_ai',
-	# 					# 'pct_asn',
-	# 					# 'pct_hawi',
-	# 					# 'pct_oth',
-	# 					# 'pct_two',
-	# 					# 'pct_non',
-	# 					# 'pct_hisp',
-	# 					# 'high_school_gpa',
-	# 					# 'spring_midterm_gpa_avg',
-	# 					# 'spring_midterm_gpa_avg_mi',
-	# 					# 'spring_midterm_grade_count',
-	# 					# 'spring_midterm_S_grade_count',
-	# 					# 'spring_midterm_W_grade_count',
-	# 					# 'fall_term_gpa',
-	# 					# 'fall_term_gpa_mi',
-	# 					# 'fall_term_D_grade_count',
-	# 					# 'fall_term_F_grade_count',
-	# 					# 'fall_term_S_grade_count',
-	# 					# 'fall_term_W_grade_count',
-	# 					'spring_term_gpa',
-	# 					# 'spring_term_gpa_mi',
-	# 					'spring_term_D_grade_count',
-	# 					'spring_term_F_grade_count',
-	# 					# 'spring_term_S_grade_count',
-	# 					# 'spring_term_W_grade_count',
-	# 					# 'awe_instrument',
-	# 					# 'cdi_instrument',
-	# 					'spring_avg_difficulty',
-	# 					# 'spring_avg_pct_withdrawn',
-	# 					# 'spring_avg_pct_CDFW',
-	# 					# 'spring_avg_pct_CDF',
-	# 					'spring_lec_count',
-	# 					'spring_lab_count',
-	# 					# 'spring_int_count',
-	# 					# 'spring_stu_count',
-	# 					# 'spring_sem_count',
-	# 					# 'spring_oth_count',
-	# 					# 'spring_lec_contact_hrs',
-	# 					# 'spring_lab_contact_hrs',
-	# 					# 'spring_int_contact_hrs',
-	# 					# 'spring_stu_contact_hrs',
-	# 					# 'spring_sem_contact_hrs',
-	# 					# 'spring_oth_contact_hrs',
-	# 					# 'total_spring_contact_hrs',
-	# 					# 'total_spring_units',
-	# 					'spring_credit_hours',
-	# 					'spring_withdrawn_hours',
-	# 					'cum_adj_transfer_hours',
-	# 					# 'fed_efc',
-	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
-	# 					]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
+	(StandardScaler(), trici_centered_vars),
+	(OneHotEncoder(drop='first'), trici_onehot_vars),
     remainder='passthrough'
 )
 
@@ -1744,99 +1499,12 @@ univr_y_train = univr_training_set['enrl_ind']
 univr_y_cv = univr_validation_set['enrl_ind']
 univr_y_test = univr_testing_set['enrl_ind']
 
+univr_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl','male']
+univr_centered_vars = [b for b in univr_x_vars if all(a not in b for a in univr_onehot_vars)]
+
 univr_tomek_prep = make_column_transformer(
-	# (StandardScaler(), [
-	# 					# 'distance',
-	# 					# 'age',
-	# 					# 'min_week_from_term_begin_dt',
-	# 					# 'max_week_from_term_begin_dt',
-	# 					# 'count_week_from_term_begin_dt',
-	# 					# 'sat_erws',
-	# 					# 'sat_mss',
-	# 					# 'sat_comp',
-	# 					# 'attendee_total_visits',
-	# 					# 'pop_dens', 
-	# 					# 'qvalue', 
-	# 					# 'gini_indx',
-	# 					# 'median_inc',
-	# 					# 'pvrt_rate',
-	# 					# 'median_value',
-	# 					# 'educ_rate',
-	# 					# 'pct_blk',
-	# 					# 'pct_ai',
-	# 					# 'pct_asn',
-	# 					# 'pct_hawi',
-	# 					# 'pct_oth',
-	# 					# 'pct_two',
-	# 					# 'pct_non',
-	# 					# 'pct_hisp',
-	# 					# 'high_school_gpa',
-	# 					# 'spring_midterm_gpa_avg',
-	# 					# 'spring_midterm_gpa_avg_mi',
-	# 					# 'spring_midterm_grade_count',
-	# 					# 'spring_midterm_S_grade_count',
-	# 					# 'spring_midterm_W_grade_count',
-	# 					# 'fall_term_gpa',
-	# 					# 'fall_term_gpa_mi',
-	# 					# 'fall_term_D_grade_count',
-	# 					# 'fall_term_F_grade_count',
-	# 					# 'fall_term_S_grade_count',
-	# 					# 'fall_term_W_grade_count',
-	# 					'spring_term_gpa',
-	# 					# 'spring_term_gpa_mi',
-	# 					'spring_term_D_grade_count',
-	# 					'spring_term_F_grade_count',
-	# 					# 'spring_term_S_grade_count',
-	# 					# 'spring_term_W_grade_count',
-	# 					# 'awe_instrument',
-	# 					# 'cdi_instrument',
-	# 					'spring_avg_difficulty',
-	# 					# 'spring_avg_pct_withdrawn',
-	# 					# 'spring_avg_pct_CDFW',
-	# 					# 'spring_avg_pct_CDF',
-	# 					'spring_lec_count',
-	# 					'spring_lab_count',
-	# 					# 'spring_int_count',
-	# 					# 'spring_stu_count',
-	# 					# 'spring_sem_count',
-	# 					# 'spring_oth_count',
-	# 					# 'spring_lec_contact_hrs',
-	# 					# 'spring_lab_contact_hrs',
-	# 					# 'spring_int_contact_hrs',
-	# 					# 'spring_stu_contact_hrs',
-	# 					# 'spring_sem_contact_hrs',
-	# 					# 'spring_oth_contact_hrs',
-	# 					# 'total_spring_contact_hrs',
-	# 					# 'total_spring_units',
-	# 					'spring_credit_hours',
-	# 					'spring_withdrawn_hours',
-	# 					'cum_adj_transfer_hours',
-	# 					# 'fed_efc',
-	# 					# 'fed_need', 
-	# 					'unmet_need_ofr'
-	# 					]),
-	(OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
+	(StandardScaler(), univr_centered_vars),
+	(OneHotEncoder(drop='first'), univr_onehot_vars),
     remainder='passthrough'
 )
 
@@ -1896,7 +1564,7 @@ try:
 	print('\n')
 	
 except:
-	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or model misspecification: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1921,7 +1589,7 @@ try:
 	print('\n')
 
 except:
-	print('\nFailed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation')
+	print('\nFailed to converge or model misspecification: Linear combination, singular matrix, divide by zero, or separation')
 
 print('\n')
 
@@ -1946,7 +1614,7 @@ try:
 	print('\n')
 	
 except:
-	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or model misspecification: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1971,7 +1639,7 @@ try:
 	print('\n')
 
 except:
-	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or model misspecification: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 

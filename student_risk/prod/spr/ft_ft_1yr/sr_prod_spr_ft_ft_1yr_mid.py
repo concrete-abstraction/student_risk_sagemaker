@@ -1773,7 +1773,7 @@ try:
 	print('\n')
 	
 except:
-	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or model misspecification: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1798,7 +1798,7 @@ try:
 	print('\n')
 
 except:
-	print('\nFailed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation')
+	print('\nFailed to converge or model misspecification: Linear combination, singular matrix, divide by zero, or separation')
 
 print('\n')
 
@@ -1823,7 +1823,7 @@ try:
 	print('\n')
 	
 except:
-	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or model misspecification: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
@@ -1848,7 +1848,7 @@ try:
 	print('\n')
 
 except:
-	print('Failed to converge or misspecified: Linear combination, singular matrix, divide by zero, or separation\n')
+	print('Failed to converge or model misspecification: Linear combination, singular matrix, divide by zero, or separation\n')
 
 print('\n')
 
