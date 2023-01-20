@@ -1132,29 +1132,10 @@ print('\nDetect and remove outliers...')
 pullm_x_training_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
 pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
 
+pullm_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+
 pullm_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
+    (OneHotEncoder(drop='first'), pullm_onehot_vars),
     remainder='passthrough'
 )
 
@@ -1182,29 +1163,10 @@ pullm_validation_set = pullm_validation_set.drop(columns='mask')
 vanco_x_training_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
 vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
 
+vanco_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+
 vanco_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
+    (OneHotEncoder(drop='first'), vanco_onehot_vars),
     remainder='passthrough'
 )
 
@@ -1232,29 +1194,10 @@ vanco_validation_set = vanco_validation_set.drop(columns='mask')
 trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
 trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','emplid'])
 
+trici_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+
 trici_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
+    (OneHotEncoder(drop='first'), trici_onehot_vars),
     remainder='passthrough'
 )
 
@@ -1282,29 +1225,10 @@ trici_validation_set = trici_validation_set.drop(columns='mask')
 univr_x_training_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
 univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','emplid'])
 
+univr_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
+
 univr_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), [
-									# 'race_hispanic',
-									# 'race_american_indian',
-									# 'race_alaska',
-									# 'race_asian',
-									# 'race_black',
-									# 'race_native_hawaiian',
-									# 'race_white',
-                                    # 'acad_year', 
-                                    # 'age_group',
-                                    # 'marital_status',
-                                    'first_gen_flag',
-                                    # 'LSAMP_STEM_Flag',
-                                    # 'anywhere_STEM_Flag',
-                                    # 'afl_greek_indicator',
-                                    # 'ACAD_PLAN',
-                                    # 'plan_owner_org',
-                                    # 'ipeds_ethnic_group_descrshort',
-                                    # 'last_sch_proprietorship', 
-                                    'parent1_highest_educ_lvl',
-                                    'parent2_highest_educ_lvl'
-                                    ]),
+    (OneHotEncoder(drop='first'), univr_onehot_vars),
     remainder='passthrough'
 )
 
@@ -1341,7 +1265,6 @@ pullm_y_cv = pullm_validation_set['enrl_ind']
 pullm_y_test = pullm_testing_set['enrl_ind']
 
 pullm_binary_vars = list(pullm_x_train.columns[pullm_x_train.isin([0,1]).all()])
-pullm_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
 pullm_filter_vars = pullm_binary_vars + pullm_onehot_vars
 pullm_centered_vars = [b for b in pullm_x_vars if all(a not in b for a in pullm_filter_vars)]
 
@@ -1396,7 +1319,6 @@ vanco_y_cv = vanco_validation_set['enrl_ind']
 vanco_y_test = vanco_testing_set['enrl_ind']
 
 vanco_binary_vars = list(vanco_x_train.columns[vanco_x_train.isin([0,1]).all()])
-vanco_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
 vanco_filter_vars = vanco_binary_vars + vanco_onehot_vars
 vanco_centered_vars = [b for b in vanco_x_vars if all(a not in b for a in vanco_filter_vars)]
 
@@ -1451,7 +1373,6 @@ trici_y_cv = trici_validation_set['enrl_ind']
 trici_y_test = trici_testing_set['enrl_ind']
 
 trici_binary_vars = list(trici_x_train.columns[trici_x_train.isin([0,1]).all()])
-trici_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
 trici_filter_vars = trici_binary_vars + trici_onehot_vars
 trici_centered_vars = [b for b in trici_x_vars if all(a not in b for a in trici_filter_vars)]
 
@@ -1506,7 +1427,6 @@ univr_y_cv = univr_validation_set['enrl_ind']
 univr_y_test = univr_testing_set['enrl_ind']
 
 univr_binary_vars = list(univr_x_train.columns[univr_x_train.isin([0,1]).all()])
-univr_onehot_vars = ['first_gen_flag','parent1_highest_educ_lvl','parent2_highest_educ_lvl']
 univr_filter_vars = univr_binary_vars + univr_onehot_vars
 univr_centered_vars = [b for b in univr_x_vars if all(a not in b for a in univr_filter_vars)]
 
