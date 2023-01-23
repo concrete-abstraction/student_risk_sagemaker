@@ -22,7 +22,6 @@ reference_files/*.sas
 *.svg
 *.yml
 documentation/resources/Thumbs.db
-student_risk/dev/.ipynb_checkpoints/sr_dev_frst_cen-checkpoint.ipynb
 reference_files/dummy_encoding.ipynb
 supplemental_files/SAS_batch_nightly_my_wsu.bat
 supplemental_files/nightly_my_wsu_v2.sas
@@ -33,3 +32,5 @@ student_risk/prod/fal/ft_tr_3yr
 student_risk/prod/fal/ft_tr_4yr
 student_risk/build_ft_tr_3yr_prod.py
 student_risk/build_ft_tr_4yr_prod.py
+sas/sr_dev_ft_tr_3yr_cen.sas
+sas/sr_dev_ft_tr_4yr_cen.sas
