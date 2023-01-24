@@ -126,7 +126,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 0);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -1584,6 +1584,30 @@ run;
 						and ssr_component not in ('LAB','LEC','INT','STU','SEM') and enrl_status_reason ^= 'WDRW') as y
 			on a.emplid = y.emplid
 				and a.class_nbr = y.class_nbr
+		group by a.emplid
+	;quit;
+	
+	proc sql;
+		create table class_size_&cohort_year. as
+		select distinct
+			a.emplid
+			,sum(b.total_enrl_hc) as fall_enrl_sum
+			,avg(b.total_enrl_hc) as fall_enrl_avg
+			,sum(c.total_enrl_hc) as spring_enrl_sum
+			,avg(c.total_enrl_hc) as spring_enrl_avg
+		from class_registration_&cohort_year. as a
+		left join &dsn..class_vw as b
+			on a.class_nbr = b.class_nbr
+				and b.snapshot = 'census'
+				and b.full_acad_year = "&cohort_year."
+				and b.class_acad_career = 'UGRD'
+				and substr(b.strm, 4, 1) = '7'
+		left join &dsn..class_vw as c
+			on a.class_nbr = c.class_nbr
+				and c.snapshot = 'census'
+				and c.full_acad_year = "&cohort_year."
+				and c.class_acad_career = 'UGRD'
+				and substr(c.strm, 4, 1) = '3'
 		group by a.emplid
 	;quit;
 
@@ -3662,6 +3686,30 @@ run;
 	;quit;
 
 	proc sql;
+		create table class_size_&cohort_year. as
+		select distinct
+			a.emplid
+			,sum(b.total_enrl_hc) as fall_enrl_sum
+			,avg(b.total_enrl_hc) as fall_enrl_avg
+			,sum(c.total_enrl_hc) as spring_enrl_sum
+			,avg(c.total_enrl_hc) as spring_enrl_avg
+		from class_registration_&cohort_year. as a
+		left join &dsn..class_vw as b
+			on a.class_nbr = b.class_nbr
+				and b.snapshot = 'census'
+				and b.full_acad_year = "&cohort_year."
+				and b.class_acad_career = 'UGRD'
+				and substr(b.strm, 4, 1) = '7'
+		left join &dsn..class_vw as c
+			on a.class_nbr = c.class_nbr
+				and c.snapshot = 'census'
+				and c.full_acad_year = "&cohort_year."
+				and c.class_acad_career = 'UGRD'
+				and substr(c.strm, 4, 1) = '3'
+		group by a.emplid
+	;quit;
+	
+	proc sql;
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
 			a.emplid,
@@ -4327,7 +4375,7 @@ run;
  			on a.emplid = y.emplid
  		left join eot_spring_term_grades_&cohort_year. as z
  			on a.emplid = z.emplid
- 		 left join eot_cum_grades_&cohort_year. as aa
+ 		left join eot_cum_grades_&cohort_year. as aa
  			on a.emplid = aa.emplid
 	;quit;
 	
