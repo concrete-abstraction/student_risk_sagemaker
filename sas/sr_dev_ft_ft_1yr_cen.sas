@@ -126,7 +126,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 0);
+%let start_cohort = %eval(&end_cohort. - 5);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -2194,6 +2194,10 @@ run;
 			o.spring_sem_contact_hrs,
 			o.spring_oth_contact_hrs,
 			o.total_spring_contact_hrs,
+			bb.fall_enrl_sum,
+			bb.fall_enrl_avg,
+			bb.spring_enrl_sum,
+			bb.spring_enrl_avg,
 			p.sat_sup_rwc,
 			p.sat_sup_ce,
 			p.sat_sup_ha,
@@ -2282,6 +2286,8 @@ run;
  			on a.emplid = z.emplid
  		left join eot_cum_grades_&cohort_year. as aa
  			on a.emplid = aa.emplid
+ 		left join class_size_&cohort_year. as bb
+ 			on a.emplid = bb.emplid
 	;quit;
 		
 	%end;
@@ -4286,6 +4292,10 @@ run;
 			n.spring_sem_contact_hrs,
 			n.spring_oth_contact_hrs,
 			n.total_spring_contact_hrs,
+			bb.fall_enrl_sum,
+			bb.fall_enrl_avg,
+			bb.spring_enrl_sum,
+			bb.spring_enrl_avg,
 			o.sat_sup_rwc,
 			o.sat_sup_ce,
 			o.sat_sup_ha,
@@ -4377,6 +4387,8 @@ run;
  			on a.emplid = z.emplid
  		left join eot_cum_grades_&cohort_year. as aa
  			on a.emplid = aa.emplid
+ 		left join class_size_&cohort_year. as bb
+ 			on a.emplid = bb.emplid
 	;quit;
 	
 %mend loop;
@@ -4465,16 +4477,18 @@ data validation_set;
 	if spring_sem_contact_hrs = . then spring_sem_contact_hrs = 0;
 	if spring_oth_contact_hrs = . then spring_oth_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if fall_enrl_sum = . then fall_enrl_sum_mi = 1; else fall_enrl_sum_mi = 0;
+	if fall_enrl_avg = . then fall_enrl_avg_mi = 1; else fall_enrl_avg_mi = 0;
+	if spring_enrl_sum = . then spring_enrl_sum_mi = 1; else spring_enrl_sum_mi = 0;
+	if spring_enrl_avg = . then spring_enrl_avg_mi = 1; else spring_enrl_avg_mi = 0;
+	if fall_enrl_sum = . then fall_enrl_sum = 0;
+	if fall_enrl_avg = . then fall_enrl_avg = 0;
+	if spring_enrl_sum = . then spring_enrl_sum = 0;
+	if spring_enrl_avg = . then spring_enrl_avg = 0;
 	if total_fall_units = . then total_fall_units = 0;
 	if total_spring_units = . then total_spring_units = 0;
 	if fall_credit_hours = . then fall_credit_hours = 0;
 	if spring_credit_hours = . then spring_credit_hours = 0;
-	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
-	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
-	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
-	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
-	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
-	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 1; else fall_midterm_gpa_avg_mi = 0;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
 	if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
@@ -4651,16 +4665,18 @@ data training_set;
 	if spring_sem_contact_hrs = . then spring_sem_contact_hrs = 0;
 	if spring_oth_contact_hrs = . then spring_oth_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if fall_enrl_sum = . then fall_enrl_sum_mi = 1; else fall_enrl_sum_mi = 0;
+	if fall_enrl_avg = . then fall_enrl_avg_mi = 1; else fall_enrl_avg_mi = 0;
+	if spring_enrl_sum = . then spring_enrl_sum_mi = 1; else spring_enrl_sum_mi = 0;
+	if spring_enrl_avg = . then spring_enrl_avg_mi = 1; else spring_enrl_avg_mi = 0;
+	if fall_enrl_sum = . then fall_enrl_sum = 0;
+	if fall_enrl_avg = . then fall_enrl_avg = 0;
+	if spring_enrl_sum = . then spring_enrl_sum = 0;
+	if spring_enrl_avg = . then spring_enrl_avg = 0;
 	if total_fall_units = . then total_fall_units = 0;
 	if total_spring_units = . then total_spring_units = 0;
 	if fall_credit_hours = . then fall_credit_hours = 0;
 	if spring_credit_hours = . then spring_credit_hours = 0;
-	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
-	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
-	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
-	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
-	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
-	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 1; else fall_midterm_gpa_avg_mi = 0;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
 	if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
@@ -4837,16 +4853,18 @@ data testing_set;
 	if spring_sem_contact_hrs = . then spring_sem_contact_hrs = 0;
 	if spring_oth_contact_hrs = . then spring_oth_contact_hrs = 0;
 	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+	if fall_enrl_sum = . then fall_enrl_sum_mi = 1; else fall_enrl_sum_mi = 0;
+	if fall_enrl_avg = . then fall_enrl_avg_mi = 1; else fall_enrl_avg_mi = 0;
+	if spring_enrl_sum = . then spring_enrl_sum_mi = 1; else spring_enrl_sum_mi = 0;
+	if spring_enrl_avg = . then spring_enrl_avg_mi = 1; else spring_enrl_avg_mi = 0;
+	if fall_enrl_sum = . then fall_enrl_sum = 0;
+	if fall_enrl_avg = . then fall_enrl_avg = 0;
+	if spring_enrl_sum = . then spring_enrl_sum = 0;
+	if spring_enrl_avg = . then spring_enrl_avg = 0;
 	if total_fall_units = . then total_fall_units = 0;
 	if total_spring_units = . then total_spring_units = 0;
 	if fall_credit_hours = . then fall_credit_hours = 0;
 	if spring_credit_hours = . then spring_credit_hours = 0;
-	if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
-	if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
-	if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
-	if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
-	if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
-	if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 1; else fall_midterm_gpa_avg_mi = 0;
 	if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
 	if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;

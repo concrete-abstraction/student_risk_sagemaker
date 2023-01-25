@@ -120,6 +120,8 @@ pullm_data_vars = [
 # 'fall_avg_pct_CDF',
 # 'fall_avg_pct_DFW',
 # 'fall_avg_pct_DF',
+'spring_enrl_avg',
+'spring_enrl_avg_mi',
 'spring_avg_difficulty',
 'spring_avg_pct_withdrawn',
 # 'spring_avg_pct_CDFW',
