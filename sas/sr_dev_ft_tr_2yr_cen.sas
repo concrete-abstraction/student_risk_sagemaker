@@ -1660,6 +1660,30 @@ proc sql;
 				and a.class_nbr = y.class_nbr
 		group by a.emplid
 	;quit;
+	
+	proc sql;
+		create table class_size_&cohort_year. as
+		select distinct
+			a.emplid
+			,sum(b.total_enrl_hc) as fall_enrl_sum
+			,avg(b.total_enrl_hc) as fall_enrl_avg
+			,sum(c.total_enrl_hc) as spring_enrl_sum
+			,avg(c.total_enrl_hc) as spring_enrl_avg
+		from class_registration_&cohort_year. as a
+		left join &dsn..class_vw as b
+			on a.class_nbr = b.class_nbr
+				and b.snapshot = 'census'
+				and b.full_acad_year = "&cohort_year."
+				and b.class_acad_career = 'UGRD'
+				and substr(b.strm, 4, 1) = '7'
+		left join &dsn..class_vw as c
+			on a.class_nbr = c.class_nbr
+				and c.snapshot = 'census'
+				and c.full_acad_year = "&cohort_year."
+				and c.class_acad_career = 'UGRD'
+				and substr(c.strm, 4, 1) = '3'
+		group by a.emplid
+	;quit;
 
 	proc sql;
 		create table term_contact_hrs_&admit_lag._&cohort_year. as
@@ -2244,6 +2268,10 @@ proc sql;
 			o.spring_sem_contact_hrs,
 			o.spring_oth_contact_hrs,
 			o.total_spring_contact_hrs,
+			bb.fall_enrl_sum,
+			bb.fall_enrl_avg,
+			bb.spring_enrl_sum,
+			bb.spring_enrl_avg,
 			p.sat_sup_rwc,
 			p.sat_sup_ce,
 			p.sat_sup_ha,
@@ -2331,6 +2359,8 @@ proc sql;
  			on a.emplid = z.emplid
  		left join eot_cum_grades_&admit_lag._&cohort_year. as aa
  			on a.emplid = aa.emplid
+		left join class_size_&cohort_year. as bb
+ 			on a.emplid = bb.emplid
 	;quit;
 		
 	%end;
@@ -3745,6 +3775,30 @@ proc sql;
 				and a.class_nbr = y.class_nbr
 		group by a.emplid
 	;quit;
+	
+	proc sql;
+		create table class_size_&cohort_year. as
+		select distinct
+			a.emplid
+			,sum(b.total_enrl_hc) as fall_enrl_sum
+			,avg(b.total_enrl_hc) as fall_enrl_avg
+			,sum(c.total_enrl_hc) as spring_enrl_sum
+			,avg(c.total_enrl_hc) as spring_enrl_avg
+		from class_registration_&cohort_year. as a
+		left join &dsn..class_vw as b
+			on a.class_nbr = b.class_nbr
+				and b.snapshot = 'census'
+				and b.full_acad_year = "&cohort_year."
+				and b.class_acad_career = 'UGRD'
+				and substr(b.strm, 4, 1) = '7'
+		left join &dsn..class_vw as c
+			on a.class_nbr = c.class_nbr
+				and c.snapshot = 'census'
+				and c.full_acad_year = "&cohort_year."
+				and c.class_acad_career = 'UGRD'
+				and substr(c.strm, 4, 1) = '3'
+		group by a.emplid
+	;quit;
 
 	proc sql;
 		create table term_contact_hrs_&admit_lag._&cohort_year. as
@@ -4323,6 +4377,10 @@ proc sql;
 			n.spring_sem_contact_hrs,
 			n.spring_oth_contact_hrs,
 			n.total_spring_contact_hrs,
+			bb.fall_enrl_sum,
+			bb.fall_enrl_avg,
+			bb.spring_enrl_sum,
+			bb.spring_enrl_avg,
 			o.sat_sup_rwc,
 			o.sat_sup_ce,
 			o.sat_sup_ha,
@@ -4412,8 +4470,10 @@ proc sql;
  			on a.emplid = y.emplid
  		left join eot_spring_term_grades_&admit_lag._&cohort_year. as z
  			on a.emplid = z.emplid
- 		 left join eot_cum_grades_&admit_lag._&cohort_year. as aa
+ 		left join eot_cum_grades_&admit_lag._&cohort_year. as aa
  			on a.emplid = aa.emplid
+		left join class_size_&cohort_year. as bb
+ 			on a.emplid = bb.emplid
 	;quit;
 
 %end;
@@ -4508,16 +4568,18 @@ proc sql;
 		if spring_sem_contact_hrs = . then spring_sem_contact_hrs = 0;
 		if spring_oth_contact_hrs = . then spring_oth_contact_hrs = 0;
 		if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+		if fall_enrl_sum = . then fall_enrl_sum_mi = 1; else fall_enrl_sum_mi = 0;
+		if fall_enrl_avg = . then fall_enrl_avg_mi = 1; else fall_enrl_avg_mi = 0;
+		if spring_enrl_sum = . then spring_enrl_sum_mi = 1; else spring_enrl_sum_mi = 0;
+		if spring_enrl_avg = . then spring_enrl_avg_mi = 1; else spring_enrl_avg_mi = 0;
+		if fall_enrl_sum = . then fall_enrl_sum = 0;
+		if fall_enrl_avg = . then fall_enrl_avg = 0;
+		if spring_enrl_sum = . then spring_enrl_sum = 0;
+		if spring_enrl_avg = . then spring_enrl_avg = 0;
 		if total_fall_units = . then total_fall_units = 0;
 		if total_spring_units = . then total_spring_units = 0;
 		if fall_credit_hours = . then fall_credit_hours = 0;
 		if spring_credit_hours = . then spring_credit_hours = 0;
-		if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
-		if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
-		if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
-		if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
-		if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
-		if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 		if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 1; else fall_midterm_gpa_avg_mi = 0;
 		if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
 		if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
@@ -4596,8 +4658,8 @@ proc sql;
 		spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 		unmet_need_disb = fed_need - total_disb;
 		unmet_need_acpt = fed_need - total_accept;
-	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
-	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
+		if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+		if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 		unmet_need_ofr = fed_need - total_offer;
 		if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 		if unmet_need_ofr < 0 then unmet_need_ofr = 0;
@@ -4690,16 +4752,18 @@ proc sql;
 		if spring_sem_contact_hrs = . then spring_sem_contact_hrs = 0;
 		if spring_oth_contact_hrs = . then spring_oth_contact_hrs = 0;
 		if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+		if fall_enrl_sum = . then fall_enrl_sum_mi = 1; else fall_enrl_sum_mi = 0;
+		if fall_enrl_avg = . then fall_enrl_avg_mi = 1; else fall_enrl_avg_mi = 0;
+		if spring_enrl_sum = . then spring_enrl_sum_mi = 1; else spring_enrl_sum_mi = 0;
+		if spring_enrl_avg = . then spring_enrl_avg_mi = 1; else spring_enrl_avg_mi = 0;
+		if fall_enrl_sum = . then fall_enrl_sum = 0;
+		if fall_enrl_avg = . then fall_enrl_avg = 0;
+		if spring_enrl_sum = . then spring_enrl_sum = 0;
+		if spring_enrl_avg = . then spring_enrl_avg = 0;
 		if total_fall_units = . then total_fall_units = 0;
 		if total_spring_units = . then total_spring_units = 0;
 		if fall_credit_hours = . then fall_credit_hours = 0;
 		if spring_credit_hours = . then spring_credit_hours = 0;
-		if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
-		if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
-		if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
-		if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
-		if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
-		if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 		if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 1; else fall_midterm_gpa_avg_mi = 0;
 		if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
 		if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
@@ -4778,8 +4842,8 @@ proc sql;
 		spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 		unmet_need_disb = fed_need - total_disb;
 		unmet_need_acpt = fed_need - total_accept;
-	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
-	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
+		if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+		if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 		unmet_need_ofr = fed_need - total_offer;
 		if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 		if unmet_need_ofr < 0 then unmet_need_ofr = 0;
@@ -4872,16 +4936,18 @@ proc sql;
 		if spring_sem_contact_hrs = . then spring_sem_contact_hrs = 0;
 		if spring_oth_contact_hrs = . then spring_oth_contact_hrs = 0;
 		if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
+		if fall_enrl_sum = . then fall_enrl_sum_mi = 1; else fall_enrl_sum_mi = 0;
+		if fall_enrl_avg = . then fall_enrl_avg_mi = 1; else fall_enrl_avg_mi = 0;
+		if spring_enrl_sum = . then spring_enrl_sum_mi = 1; else spring_enrl_sum_mi = 0;
+		if spring_enrl_avg = . then spring_enrl_avg_mi = 1; else spring_enrl_avg_mi = 0;
+		if fall_enrl_sum = . then fall_enrl_sum = 0;
+		if fall_enrl_avg = . then fall_enrl_avg = 0;
+		if spring_enrl_sum = . then spring_enrl_sum = 0;
+		if spring_enrl_avg = . then spring_enrl_avg = 0;
 		if total_fall_units = . then total_fall_units = 0;
 		if total_spring_units = . then total_spring_units = 0;
 		if fall_credit_hours = . then fall_credit_hours = 0;
 		if spring_credit_hours = . then spring_credit_hours = 0;
-		if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
-		if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
-		if spring_lec_contact_hrs = . then spring_lec_contact_hrs = 0;
-		if spring_lab_contact_hrs = . then spring_lab_contact_hrs = 0;
-		if total_fall_contact_hrs = . then total_fall_contact_hrs = 0;
-		if total_spring_contact_hrs = . then total_spring_contact_hrs = 0;
 		if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg_mi = 1; else fall_midterm_gpa_avg_mi = 0;
 		if fall_midterm_gpa_avg = . then fall_midterm_gpa_avg = 0;
 		if fall_midterm_grade_count = . then fall_midterm_grade_count = 0;
@@ -4960,8 +5026,8 @@ proc sql;
 		spring_midterm_gpa_change = spring_midterm_gpa_avg - fall_cum_gpa;
 		unmet_need_disb = fed_need - total_disb;
 		unmet_need_acpt = fed_need - total_accept;
-	if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
-	if unmet_need_acpt < 0 then unmet_need_acpt = 0;
+		if unmet_need_acpt = . then unmet_need_acpt_mi = 1; else unmet_need_acpt_mi = 0;
+		if unmet_need_acpt < 0 then unmet_need_acpt = 0;
 		unmet_need_ofr = fed_need - total_offer;
 		if unmet_need_ofr = . then unmet_need_ofr_mi = 1; else unmet_need_ofr_mi = 0;
 		if unmet_need_ofr < 0 then unmet_need_ofr = 0;
