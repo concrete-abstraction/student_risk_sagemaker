@@ -89,41 +89,7 @@ elif (now_year == census_year and now_month == census_month and now_day < census
 	raise config.CenError(f'{run_date}: Census day exception, attempting to run if census newest snapshot.')
 
 else:
-	sas = saspy.SASsession()
-
-	sas.symput('strm', strm)
-
-	sas.submit("""
-	%let dsn = census;
-
-	libname &dsn. odbc dsn=&dsn. schema=dbo;
-
-	proc sql;
-		select distinct
-			max(case when snapshot = 'census' 	then 1
-				when snapshot = 'midterm' 		then 2
-				when snapshot = 'eot'			then 3
-												else 0
-												end) as snap_order
-			into: snap_check
-			separated by ''
-		from &dsn..class_registration
-		where acad_career = 'UGRD'
-			and strm = (select distinct
-							max(strm)
-						from &dsn..class_registration where acad_career = 'UGRD')
-	;quit;
-	""")
-
-	snap_check = sas.symget('snap_check')
-
-	sas.endsas()
-
-	if snap_check != 1:
-		raise config.CenError(f'{run_date}: No census date exception but snapshot exception, attempting to run from admissions.')
-
-	else:
-		print(f'{run_date}: No census date or snapshot exceptions, running from census.')
+	print(f'{run_date}: No census date exceptions, running from census.')
 
 #%%
 # SAS dataset builder

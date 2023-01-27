@@ -6513,9 +6513,9 @@ class DatasetBuilderProd:
 				select distinct
 					a.emplid
 					,sum(b.total_enrl_hc) as fall_enrl_sum
-					,avg(b.total_enrl_hc) as fall_enrl_avg
+					,round(avg(b.total_enrl_hc), .01) as fall_enrl_avg
 					,sum(c.total_enrl_hc) as spring_enrl_sum
-					,avg(c.total_enrl_hc) as spring_enrl_avg
+					,round(avg(c.total_enrl_hc), .01) as spring_enrl_avg
 				from class_registration_&cohort_year. as a
 				left join &dsn..class_vw as b
 					on a.class_nbr = b.class_nbr
@@ -8587,9 +8587,9 @@ class DatasetBuilderProd:
 				select distinct
 					a.emplid
 					,sum(b.total_enrl_hc) as fall_enrl_sum
-					,avg(b.total_enrl_hc) as fall_enrl_avg
+					,round(avg(b.total_enrl_hc), .01) as fall_enrl_avg
 					,sum(c.total_enrl_hc) as spring_enrl_sum
-					,avg(c.total_enrl_hc) as spring_enrl_avg
+					,round(avg(c.total_enrl_hc), .01) as spring_enrl_avg
 				from class_registration_&cohort_year. as a
 				left join &dsn..class_vw as b
 					on a.class_nbr = b.class_nbr
@@ -9357,6 +9357,14 @@ class DatasetBuilderProd:
 			if fall_enrl_avg = . then fall_enrl_avg = 0;
 			if spring_enrl_sum = . then spring_enrl_sum = 0;
 			if spring_enrl_avg = . then spring_enrl_avg = 0;
+			if fall_class_time_early = . then fall_class_time_early_mi = 1; else fall_class_time_early_mi = 0;
+			if fall_class_time_late = . then fall_class_time_late_mi = 1; else fall_class_time_late_mi = 0;
+			if spring_class_time_early = . then spring_class_time_early_mi = 1; else spring_class_time_early_mi = 0;
+			if spring_class_time_late = . then spring_class_time_late_mi = 1; else spring_class_time_late_mi = 0;
+			if fall_class_time_early = . then fall_class_time_early = 0;
+			if fall_class_time_late = . then fall_class_time_late = 0;
+			if spring_class_time_early = . then spring_class_time_early = 0;
+			if spring_class_time_late = . then spring_class_time_late = 0;
 			if total_fall_units = . then total_fall_units = 0;
 			if total_spring_units = . then total_spring_units = 0;
 			if fall_credit_hours = . then fall_credit_hours = 0;
@@ -9541,6 +9549,14 @@ class DatasetBuilderProd:
 			if fall_enrl_avg = . then fall_enrl_avg = 0;
 			if spring_enrl_sum = . then spring_enrl_sum = 0;
 			if spring_enrl_avg = . then spring_enrl_avg = 0;
+			if fall_class_time_early = . then fall_class_time_early_mi = 1; else fall_class_time_early_mi = 0;
+			if fall_class_time_late = . then fall_class_time_late_mi = 1; else fall_class_time_late_mi = 0;
+			if spring_class_time_early = . then spring_class_time_early_mi = 1; else spring_class_time_early_mi = 0;
+			if spring_class_time_late = . then spring_class_time_late_mi = 1; else spring_class_time_late_mi = 0;
+			if fall_class_time_early = . then fall_class_time_early = 0;
+			if fall_class_time_late = . then fall_class_time_late = 0;
+			if spring_class_time_early = . then spring_class_time_early = 0;
+			if spring_class_time_late = . then spring_class_time_late = 0;
 			if total_fall_units = . then total_fall_units = 0;
 			if total_spring_units = . then total_spring_units = 0;
 			if fall_credit_hours = . then fall_credit_hours = 0;
@@ -9725,6 +9741,14 @@ class DatasetBuilderProd:
 			if fall_enrl_avg = . then fall_enrl_avg = 0;
 			if spring_enrl_sum = . then spring_enrl_sum = 0;
 			if spring_enrl_avg = . then spring_enrl_avg = 0;
+			if fall_class_time_early = . then fall_class_time_early_mi = 1; else fall_class_time_early_mi = 0;
+			if fall_class_time_late = . then fall_class_time_late_mi = 1; else fall_class_time_late_mi = 0;
+			if spring_class_time_early = . then spring_class_time_early_mi = 1; else spring_class_time_early_mi = 0;
+			if spring_class_time_late = . then spring_class_time_late_mi = 1; else spring_class_time_late_mi = 0;
+			if fall_class_time_early = . then fall_class_time_early = 0;
+			if fall_class_time_late = . then fall_class_time_late = 0;
+			if spring_class_time_early = . then spring_class_time_early = 0;
+			if spring_class_time_late = . then spring_class_time_late = 0;
 			if total_fall_units = . then total_fall_units = 0;
 			if total_spring_units = . then total_spring_units = 0;
 			if fall_credit_hours = . then fall_credit_hours = 0;

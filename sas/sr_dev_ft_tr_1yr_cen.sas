@@ -1592,9 +1592,9 @@ run;
 		select distinct
 			a.emplid
 			,sum(b.total_enrl_hc) as fall_enrl_sum
-			,avg(b.total_enrl_hc) as fall_enrl_avg
+			,round(avg(b.total_enrl_hc), .01) as fall_enrl_avg
 			,sum(c.total_enrl_hc) as spring_enrl_sum
-			,avg(c.total_enrl_hc) as spring_enrl_avg
+			,round(avg(c.total_enrl_hc), .01) as spring_enrl_avg
 		from class_registration_&cohort_year. as a
 		left join &dsn..class_vw as b
 			on a.class_nbr = b.class_nbr
@@ -3696,9 +3696,9 @@ run;
 		select distinct
 			a.emplid
 			,sum(b.total_enrl_hc) as fall_enrl_sum
-			,avg(b.total_enrl_hc) as fall_enrl_avg
+			,round(avg(b.total_enrl_hc), .01) as fall_enrl_avg
 			,sum(c.total_enrl_hc) as spring_enrl_sum
-			,avg(c.total_enrl_hc) as spring_enrl_avg
+			,round(avg(c.total_enrl_hc), .01) as spring_enrl_avg
 		from class_registration_&cohort_year. as a
 		left join &dsn..class_vw as b
 			on a.class_nbr = b.class_nbr

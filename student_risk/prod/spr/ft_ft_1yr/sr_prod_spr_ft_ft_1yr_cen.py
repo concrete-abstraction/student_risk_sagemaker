@@ -89,41 +89,7 @@ elif (now_year == census_year and now_month == census_month and now_day < census
 	raise config.CenError(f'{run_date}: Census day exception, attempting to run if census newest snapshot.')
 
 else:
-	sas = saspy.SASsession()
-
-	sas.symput('strm', strm)
-
-	sas.submit("""
-	%let dsn = census;
-
-	libname &dsn. odbc dsn=&dsn. schema=dbo;
-
-	proc sql;
-		select distinct
-			max(case when snapshot = 'census' 	then 1
-				when snapshot = 'midterm' 		then 2
-				when snapshot = 'eot'			then 3
-												else 0
-												end) as snap_order
-			into: snap_check
-			separated by ''
-		from &dsn..class_registration
-		where acad_career = 'UGRD'
-			and strm = (select distinct
-							max(strm)
-						from &dsn..class_registration where acad_career = 'UGRD')
-	;quit;
-	""")
-
-	snap_check = sas.symget('snap_check')
-
-	sas.endsas()
-
-	if snap_check != 1:
-		raise config.CenError(f'{date.today()}: No census date exception but snapshot exception, attempting to run from eot.')
-
-	else:
-		print(f'{date.today()}: No census date or snapshot exceptions, running from census.')
+	print(f'{date.today()}: No census date exceptions, running from census.')
 
 #%%
 # SAS dataset builder
@@ -187,8 +153,6 @@ pullm_data_vars = [
 # 'fall_avg_pct_CDF',
 # 'fall_avg_pct_DFW',
 # 'fall_avg_pct_DF',
-'spring_enrl_avg',
-'spring_enrl_avg_mi',
 'spring_avg_difficulty',
 'spring_avg_pct_withdrawn',
 # 'spring_avg_pct_CDFW',
@@ -203,6 +167,19 @@ pullm_data_vars = [
 'spring_lab_count',
 'spring_stu_count',
 'spring_oth_count',
+'spring_enrl_avg',
+'spring_enrl_avg_mi',
+# 'spring_class_time_early',
+# 'spring_class_time_early_mi',
+# 'spring_class_time_late',
+# 'spring_class_time_late_mi',
+# 'spring_sun_class',
+# 'spring_mon_class',
+# 'spring_tues_class',
+# 'spring_wed_class',
+# 'spring_thurs_class',
+# 'spring_fri_class',
+# 'spring_sat_class',
 # 'spring_lec_contact_hrs',
 # 'spring_lab_contact_hrs',
 # 'total_fall_contact_hrs',
