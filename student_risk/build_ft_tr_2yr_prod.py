@@ -242,6 +242,7 @@ class DatasetBuilderProd:
 						and a2.ipeds_ind = 1
 						and a2.term_credit_hours > 0
 						and a2.WA_residency ^= 'NON-I'
+						and a2.acad_level_bot ^= '50'
 				left join acs.distance_km as b
 					on substr(a.last_sch_postal,1,5) = b.inputid
 						and a.adj_acad_prog_primary_campus = 'PULLM'
@@ -287,6 +288,7 @@ class DatasetBuilderProd:
 					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
 					and a.WA_residency ^= 'NON-I'
+					and a.acad_level_bot ^= '50'
 			;quit;
 			
 			proc sql;
@@ -5008,8 +5010,7 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;
-			
+		%let acs_lag = 2;			
 		%let lag_year = 1;
 		%let admit_lag = 0;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
@@ -5136,6 +5137,7 @@ class DatasetBuilderProd:
 						and a2.ipeds_ind = 1
 						and a2.term_credit_hours > 0
 						and a2.WA_residency ^= 'NON-I'
+						and a2.acad_level_bot ^= '50'
 				left join acs.distance_km as b
 					on substr(a.last_sch_postal,1,5) = b.inputid
 						and a.adj_acad_prog_primary_campus = 'PULLM'
@@ -5181,6 +5183,7 @@ class DatasetBuilderProd:
 					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
 					and a.WA_residency ^= 'NON-I'
+					and a.acad_level_bot ^= '50'
 			;quit;
 			
 			proc sql;
@@ -5223,7 +5226,7 @@ class DatasetBuilderProd:
 					and a.full_acad_year = "&cohort_year."
 					and a.ipeds_full_part_time = 'F'
 			;quit;
-		
+
 			proc sql;
 				create table enrolled_&cohort_year. as
 				select distinct 
@@ -5418,7 +5421,7 @@ class DatasetBuilderProd:
 					and primary_prog_flag = 'Y'
 					and calculated split_plan = 0
 			;quit;
-			
+					
 			proc sql;
 				create table need_&cohort_year. as
 				select distinct
@@ -5888,7 +5891,7 @@ class DatasetBuilderProd:
 					and subject_catalog_nbr ^= 'NURS 399'
 					and stdnt_enrl_status = 'E'
 			;quit;
-			
+					
 			proc sql;
 				create table eot_fall_term_grades_&cohort_year. as
 				select distinct
@@ -6711,7 +6714,7 @@ class DatasetBuilderProd:
 						and substr(a.strm,4,1) = '3'
 				group by a.emplid
 			;quit;
-			
+					
 			proc sql;
 				create table fall_midterm_&cohort_year. as
 				select distinct
@@ -6768,7 +6771,7 @@ class DatasetBuilderProd:
 					and stdnt_enrl_status = 'E'
 					and crse_grade_input ^= ''
 			;quit;
-			
+					
 			proc sql;
 				create table spring_midterm_&cohort_year. as
 				select distinct
@@ -6913,7 +6916,7 @@ class DatasetBuilderProd:
 				where snapshot = 'census'
 					and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
 			;quit;
-			
+					
 			proc sql;
 				create table dataset_&cohort_year. as
 				select 
@@ -7180,7 +7183,7 @@ class DatasetBuilderProd:
 				left join eot_cum_grades_&cohort_year. as aa
 					on a.emplid = aa.emplid
 				left join class_size_&cohort_year. as bb
- 					on a.emplid = bb.emplid
+					on a.emplid = bb.emplid
 			;quit;
 				
 			%end;
@@ -7260,6 +7263,7 @@ class DatasetBuilderProd:
 						and a2.ipeds_ind = 1
 						and a2.term_credit_hours > 0
 						and a2.WA_residency ^= 'NON-I'
+						and a2.acad_level_bot ^= '50'
 				left join acs.distance_km as b
 					on substr(a.last_sch_postal,1,5) = b.inputid
 						and a.adj_acad_prog_primary_campus = 'PULLM'
@@ -7303,6 +7307,7 @@ class DatasetBuilderProd:
 					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
 					and a.WA_residency ^= 'NON-I'
+					and a.acad_level_bot ^= '50'
 			;quit;
 			
 			proc sql;

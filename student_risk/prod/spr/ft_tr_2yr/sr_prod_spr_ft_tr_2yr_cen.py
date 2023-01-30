@@ -63,6 +63,10 @@ colsample_bynode = 0.8
 verbose = False
 
 #%%
+# SAS dataset builder
+build_ft_tr_2yr_prod.DatasetBuilderProd.build_census_prod()
+
+#%%
 # Import pre-split data
 validation_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_2yr_validation_set.sas7bdat', encoding='latin1')
 training_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_2yr_training_set.sas7bdat', encoding='latin1')
@@ -319,7 +323,7 @@ vanco_data_vars = [
 'first_gen_flag_mi',
 # 'LSAMP_STEM_Flag',
 # 'anywhere_STEM_Flag',
-'honors_program_ind',
+# 'honors_program_ind',
 # 'afl_greek_indicator',
 # 'high_school_gpa',
 'fall_term_gpa',
@@ -401,7 +405,7 @@ vanco_data_vars = [
 # 'total_spring_units',
 'spring_withdrawn_hours',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -420,7 +424,7 @@ vanco_data_vars = [
 # 'comm',
 # 'education',
 # 'medicine',
-'nursing',
+# 'nursing',
 # 'pharmacy',
 # 'provost',
 # 'vcea_bioe',
@@ -532,7 +536,7 @@ trici_data_vars = [
 'first_gen_flag_mi',
 # 'LSAMP_STEM_Flag',
 # 'anywhere_STEM_Flag',
-'honors_program_ind',
+# 'honors_program_ind',
 # 'afl_greek_indicator',
 # 'high_school_gpa',
 'fall_term_gpa',
@@ -614,7 +618,7 @@ trici_data_vars = [
 # 'total_spring_units',
 'spring_withdrawn_hours',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -745,7 +749,7 @@ univr_data_vars = [
 'first_gen_flag_mi',
 # 'LSAMP_STEM_Flag',
 # 'anywhere_STEM_Flag',
-'honors_program_ind',
+# 'honors_program_ind',
 # 'afl_greek_indicator',
 # 'high_school_gpa',
 'fall_term_gpa',
@@ -827,7 +831,7 @@ univr_data_vars = [
 # 'total_spring_units',
 'spring_withdrawn_hours',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
