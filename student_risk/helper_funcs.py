@@ -159,7 +159,7 @@ def aggregate_outcome(campus_aggregate_outcome, campus_xgbrf_pred_probs, campus,
 	campus_aggregate_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\predictions\\{campus}\\{campus}_{model_descr}_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 
-def results_output(auto_engine, model_id, run_date, campus_current_outcome, campus_xgbrf_pred_probs, campus, model_descr):
+def results_output(auto_engine, model_id: int, run_date: object, campus_current_outcome, campus_xgbrf_pred_probs, campus: str, model_descr: str):
 	campus_current_outcome['emplid'] = campus_current_outcome['emplid'].astype(str).str.zfill(9)
 	campus_current_outcome['risk_prob'] = 1 - pd.DataFrame(campus_xgbrf_pred_probs).round(4)
 
@@ -190,10 +190,10 @@ def shap_output(engine, student_shap, top_N, model_id, run_date, campus_shap_zip
 	
 		campus_shap_insert.append(str(campus_shap_sql[0]).zfill(9))
 
-	for index in range(top_N):
-		shap_str, shap_float = campus_shap_sql[1][index]
-		campus_shap_insert.append(shap_str) 
-		campus_shap_insert.append(round(shap_float, 4))
+		for index in range(top_N):
+			shap_str, shap_float = campus_shap_sql[1][index]
+			campus_shap_insert.append(shap_str) 
+			campus_shap_insert.append(round(shap_float, 4))
 
 	campus_shap_file.close()
 
