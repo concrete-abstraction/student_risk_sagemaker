@@ -1,14 +1,10 @@
 #%%
-import csv
 import datetime
-import os
 import pathlib
 import time
 import urllib
 from datetime import date
-from itertools import islice
 
-import gower
 import joblib
 import numpy as np
 import pandas as pd
@@ -16,7 +12,6 @@ import pyodbc
 import saspy
 import sklearn
 import sqlalchemy
-from imblearn.under_sampling import NearMiss, TomekLinks
 from patsy import dmatrices
 from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier
@@ -24,7 +19,6 @@ from sklearn.experimental import enable_halving_search_cv
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.model_selection import HalvingGridSearchCV, train_test_split
-from sklearn.neighbors import LocalOutlierFactor
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sqlalchemy import MetaData, Table
@@ -33,7 +27,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier, XGBRFClassifier
 
 import shap
-from student_risk import build_ft_tr_1yr_prod, config
+from student_risk import build_ft_tr_1yr_prod, config, helper_funcs
 
 #%%
 # Database connection
@@ -46,21 +40,22 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 
 #%%
 # Global variable initializaiton
-strm = None
-top_N = 5
-model_id = 5
-run_date = date.today()
-unwanted_vars = ['emplid','enrl_ind']
+strm: str = None
+top_N: int = 5
+model_id: int = 5
+model_descr: str = 'ft_tr_1yr'
+run_date: date = date.today()
+unwanted_vars: list = ['emplid','enrl_ind']
 
 #%%
 # Global XGBoost hyperparameter initialization
-min_child_weight = 8
-max_bin = 32
-num_parallel_tree = 64
-subsample = 0.8
-colsample_bytree = 0.8
-colsample_bynode = 0.8
-verbose = False
+min_child_weight: int = 8
+max_bin: int = 32
+num_parallel_tree: int = 64
+subsample: float = 0.8
+colsample_bytree: float = 0.8
+colsample_bynode: float = 0.8
+verbose: bool = False
 
 #%%
 # SAS dataset builder
@@ -68,9 +63,9 @@ build_ft_tr_1yr_prod.DatasetBuilderProd.build_census_prod()
 
 #%%
 # Import pre-split data
-validation_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_1yr_validation_set.sas7bdat', encoding='latin1')
-training_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_1yr_training_set.sas7bdat', encoding='latin1')
-testing_set = pd.read_sas('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_1yr_testing_set.sas7bdat', encoding='latin1')
+validation_set = pd.read_sas(f'Z:\\Nathan\\Models\\student_risk\\datasets\\{model_descr}_validation_set.sas7bdat', encoding='latin1')
+training_set = pd.read_sas(f'Z:\\Nathan\\Models\\student_risk\\datasets\\{model_descr}_training_set.sas7bdat', encoding='latin1')
+testing_set = pd.read_sas(f'Z:\\Nathan\\Models\\student_risk\\datasets\\{model_descr}_testing_set.sas7bdat', encoding='latin1')
 
 #%%
 # Prepare dataframes
@@ -256,39 +251,21 @@ pullm_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
+pullm_campus_var = ['PULLM']
+
+pullm_logit_df: pd.DataFrame
+pullm_validation_set: pd.DataFrame
+pullm_training_set: pd.DataFrame
+pullm_testing_set: pd.DataFrame
+pullm_shap_outcome: list
+pullm_pred_outcome: pd.DataFrame
+pullm_aggregate_outcome: pd.DataFrame
+pullm_current_outcome: pd.DataFrame
+
 pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 
 # Pullman dataframes
-pullm_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna().drop(columns=['emplid'])
-
-pullm_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
-
-pullm_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna()
-
-pullm_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'PULLM')][pullm_data_vars].dropna().drop(columns=['enrl_ind'])
-
-pullm_testing_set = pullm_testing_set.reset_index()
-
-pullm_shap_outcome = pullm_testing_set['emplid'].copy(deep=True).values.tolist()
-
-pullm_pred_outcome = pullm_testing_set[[ 
-							'emplid',
-							# 'enrl_ind'
-							]].copy(deep=True)
-
-pullm_aggregate_outcome = pullm_testing_set[[ 
-							'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag',
-							'resident'
-							# 'enrl_ind'
-							]].copy(deep=True)
-
-pullm_current_outcome = pullm_testing_set[[ 
-							'emplid',
-							# 'enrl_ind'
-							]].copy(deep=True)
+pullm_logit_df, pullm_validation_set, pullm_training_set, pullm_testing_set, pullm_shap_outcome, pullm_pred_outcome, pullm_aggregate_outcome, pullm_current_outcome = helper_funcs.prep_campus_dataframe(validation_set, training_set, testing_set, pullm_data_vars, pullm_campus_var)
 
 #%%
 # Vancouver variables
@@ -471,39 +448,21 @@ vanco_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
+vanco_campus_var = ['VANCO']
+
+vanco_logit_df: pd.DataFrame
+vanco_validation_set: pd.DataFrame
+vanco_training_set: pd.DataFrame
+vanco_testing_set: pd.DataFrame
+vanco_shap_outcome: list
+vanco_pred_outcome: pd.DataFrame
+vanco_aggregate_outcome: pd.DataFrame
+vanco_current_outcome: pd.DataFrame
+
 vanco_x_vars = [x for x in vanco_data_vars if x not in unwanted_vars]
 
 # Vancouver dataframes
-vanco_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna().drop(columns=['emplid'])
-
-vanco_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
-
-vanco_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna()
-
-vanco_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'VANCO')][vanco_data_vars].dropna().drop(columns=['enrl_ind'])
-
-vanco_testing_set = vanco_testing_set.reset_index()
-
-vanco_shap_outcome = vanco_testing_set['emplid'].copy(deep=True).values.tolist()
-
-vanco_pred_outcome = vanco_testing_set[[ 
-							'emplid',
-							# 'enrl_ind'
-							]].copy(deep=True)
-
-vanco_aggregate_outcome = vanco_testing_set[[ 
-							'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag',
-							'resident'
-							# 'enrl_ind'
-							]].copy(deep=True)
-
-vanco_current_outcome = vanco_testing_set[[ 
-							'emplid',
-							# 'enrl_ind'
-							]].copy(deep=True)
+vanco_logit_df, vanco_validation_set, vanco_training_set, vanco_testing_set, vanco_shap_outcome, vanco_pred_outcome, vanco_aggregate_outcome, vanco_current_outcome = helper_funcs.prep_campus_dataframe(validation_set, training_set, testing_set, vanco_data_vars, vanco_campus_var)
 
 #%%
 # Tri-Cities variables
@@ -684,39 +643,21 @@ trici_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
+trici_campus_var = ['TRICI']
+
+trici_logit_df: pd.DataFrame
+trici_validation_set: pd.DataFrame
+trici_training_set: pd.DataFrame
+trici_testing_set: pd.DataFrame
+trici_shap_outcome: list
+trici_pred_outcome: pd.DataFrame
+trici_aggregate_outcome: pd.DataFrame
+trici_current_outcome: pd.DataFrame
+
 trici_x_vars = [x for x in trici_data_vars if x not in unwanted_vars]
 
 # Tri-Cities dataframes
-trici_logit_df = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna().drop(columns=['emplid'])
-
-trici_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
-
-trici_training_set = training_set[(training_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna()
-
-trici_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'TRICI')][trici_data_vars].dropna().drop(columns=['enrl_ind'])
-								
-trici_testing_set = trici_testing_set.reset_index()
-
-trici_shap_outcome = trici_testing_set['emplid'].copy(deep=True).values.tolist()
-
-trici_pred_outcome = trici_testing_set[[ 
-							'emplid',
-							# 'enrl_ind'
-							]].copy(deep=True)
-
-trici_aggregate_outcome = trici_testing_set[[ 
-							'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag',
-							'resident'
-							# 'enrl_ind'
-							]].copy(deep=True)
-
-trici_current_outcome = trici_testing_set[[ 
-							'emplid',
-							# 'enrl_ind'
-							]].copy(deep=True)
+trici_logit_df, trici_validation_set, trici_training_set, trici_testing_set, trici_shap_outcome, trici_pred_outcome, trici_aggregate_outcome, trici_current_outcome = helper_funcs.prep_campus_dataframe(validation_set, training_set, testing_set, trici_data_vars, trici_campus_var)
 							
 #%%
 # University variables
@@ -897,41 +838,22 @@ univr_data_vars = [
 'unmet_need_ofr_mi'
 ]
 
+univr_system_var = ['EVERE','SPOKA','ONLIN']
+
+univr_logit_df: pd.DataFrame
+univr_validation_set: pd.DataFrame
+univr_training_set: pd.DataFrame
+univr_testing_set: pd.DataFrame
+univr_shap_outcome: list
+univr_pred_outcome: pd.DataFrame
+univr_aggregate_outcome: pd.DataFrame
+univr_current_outcome: pd.DataFrame
+
 univr_x_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 
 # University dataframes
-univr_logit_df = training_set[univr_data_vars].dropna().drop(columns=['emplid'])
 
-univr_validation_set = validation_set[univr_data_vars].dropna()
-
-univr_training_set = training_set[univr_data_vars].dropna()
-
-univr_testing_set = testing_set[(testing_set['adj_acad_prog_primary_campus'] == 'EVERE')
-								| (testing_set['adj_acad_prog_primary_campus'] == 'SPOKA') 
-								| (testing_set['adj_acad_prog_primary_campus'] == 'ONLIN')][univr_data_vars].dropna().drop(columns=['enrl_ind'])
-
-univr_testing_set = univr_testing_set.reset_index()
-
-univr_shap_outcome = univr_testing_set['emplid'].copy(deep=True).values.tolist()
-
-univr_pred_outcome = univr_testing_set[[ 
-							'emplid',
-							# 'enrl_ind'
-							]].copy(deep=True)
-
-univr_aggregate_outcome = univr_testing_set[[ 
-							'emplid',
-							'male',
-							'underrep_minority',
-							'first_gen_flag',
-							'resident'
-							# 'enrl_ind'
-							]].copy(deep=True)
-
-univr_current_outcome = univr_testing_set[[ 
-							'emplid',
-							# 'enrl_ind'
-							]].copy(deep=True)
+univr_logit_df, univr_validation_set, univr_training_set, univr_testing_set, univr_shap_outcome, univr_pred_outcome, univr_aggregate_outcome, univr_current_outcome = helper_funcs.prep_system_dataframe(validation_set, training_set, testing_set, univr_data_vars, univr_system_var)
 
 #%%
 # Detect and remove outliers
@@ -944,28 +866,14 @@ pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','empl
 pullm_onehot_vars = pullm_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
 pullm_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), pullm_onehot_vars),
-    remainder='passthrough'
+	(OneHotEncoder(drop='first'), pullm_onehot_vars),
+	remainder='passthrough'
 )
 
 pullm_x_training_outlier = pullm_outlier_prep.fit_transform(pullm_x_training_outlier)
 pullm_x_validation_outlier = pullm_outlier_prep.transform(pullm_x_validation_outlier)
 
-pullm_x_training_gower = gower.gower_matrix(pullm_x_training_outlier)
-pullm_x_validation_gower = gower.gower_matrix(pullm_x_validation_outlier)
-
-pullm_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_training_gower)
-pullm_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(pullm_x_validation_gower)
-
-pullm_training_outlier_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == 1].index)
-pullm_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_ft_tr_1yr_training_outlier_set.csv', encoding='utf-8', index=False)
-pullm_validation_outlier_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == 1].index)
-pullm_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_ft_tr_1yr_validation_outlier_set.csv', encoding='utf-8', index=False)
-
-pullm_training_set = pullm_training_set.drop(pullm_training_set[pullm_training_set['mask'] == -1].index)
-pullm_training_set = pullm_training_set.drop(columns='mask')
-pullm_validation_set = pullm_validation_set.drop(pullm_validation_set[pullm_validation_set['mask'] == -1].index)
-pullm_validation_set = pullm_validation_set.drop(columns='mask')
+pullm_validation_set, pullm_training_set = helper_funcs.remove_outliers(pullm_validation_set, pullm_training_set, pullm_x_training_outlier, pullm_x_validation_outlier, 'pullm', model_descr)
 
 #%%
 # Vancouver outliers
@@ -975,28 +883,14 @@ vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','empl
 vanco_onehot_vars = vanco_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
 vanco_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), vanco_onehot_vars),
-    remainder='passthrough'
+	(OneHotEncoder(drop='first'), vanco_onehot_vars),
+	remainder='passthrough'
 )
 
 vanco_x_training_outlier = vanco_outlier_prep.fit_transform(vanco_x_training_outlier)
 vanco_x_validation_outlier = vanco_outlier_prep.transform(vanco_x_validation_outlier)
 
-vanco_x_training_gower = gower.gower_matrix(vanco_x_training_outlier)
-vanco_x_validation_gower = gower.gower_matrix(vanco_x_validation_outlier)
-
-vanco_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_training_gower)
-vanco_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(vanco_x_validation_gower)
-
-vanco_training_outlier_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == 1].index)
-vanco_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_ft_tr_1yr_training_outlier_set.csv', encoding='utf-8', index=False)
-vanco_validation_outlier_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == 1].index)
-vanco_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_ft_tr_1yr_validation_outlier_set.csv', encoding='utf-8', index=False)
-
-vanco_training_set = vanco_training_set.drop(vanco_training_set[vanco_training_set['mask'] == -1].index)
-vanco_training_set = vanco_training_set.drop(columns='mask')
-vanco_validation_set = vanco_validation_set.drop(vanco_validation_set[vanco_validation_set['mask'] == -1].index)
-vanco_validation_set = vanco_validation_set.drop(columns='mask')
+vanco_validation_set, vanco_training_set = helper_funcs.remove_outliers(vanco_validation_set, vanco_training_set, vanco_x_training_outlier, vanco_x_validation_outlier, 'vanco', model_descr)
 
 #%%
 # Tri-Cities outliers
@@ -1006,28 +900,14 @@ trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','empl
 trici_onehot_vars = trici_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
 trici_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), trici_onehot_vars),
-    remainder='passthrough'
+	(OneHotEncoder(drop='first'), trici_onehot_vars),
+	remainder='passthrough'
 )
 
 trici_x_training_outlier = trici_outlier_prep.fit_transform(trici_x_training_outlier)
 trici_x_validation_outlier = trici_outlier_prep.transform(trici_x_validation_outlier)
 
-trici_x_training_gower = gower.gower_matrix(trici_x_training_outlier)
-trici_x_validation_gower = gower.gower_matrix(trici_x_validation_outlier)
-
-trici_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_training_gower)
-trici_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(trici_x_validation_gower)
-
-trici_training_outlier_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == 1].index)
-trici_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_ft_tr_1yr_training_outlier_set.csv', encoding='utf-8', index=False)
-trici_validation_outlier_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == 1].index)
-trici_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_ft_tr_1yr_validation_outlier_set.csv', encoding='utf-8', index=False)
-
-trici_training_set = trici_training_set.drop(trici_training_set[trici_training_set['mask'] == -1].index)
-trici_training_set = trici_training_set.drop(columns='mask')
-trici_validation_set = trici_validation_set.drop(trici_validation_set[trici_validation_set['mask'] == -1].index)
-trici_validation_set = trici_validation_set.drop(columns='mask')
+trici_validation_set, trici_training_set = helper_funcs.remove_outliers(trici_validation_set, trici_training_set, trici_x_training_outlier, trici_x_validation_outlier, 'trici', model_descr)
 
 #%%
 # University outliers
@@ -1037,28 +917,14 @@ univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','empl
 univr_onehot_vars = univr_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
 univr_outlier_prep = make_column_transformer(
-    (OneHotEncoder(drop='first'), univr_onehot_vars),
-    remainder='passthrough'
+	(OneHotEncoder(drop='first'), univr_onehot_vars),
+	remainder='passthrough'
 )
 
 univr_x_training_outlier = univr_outlier_prep.fit_transform(univr_x_training_outlier)
 univr_x_validation_outlier = univr_outlier_prep.transform(univr_x_validation_outlier)
 
-univr_x_training_gower = gower.gower_matrix(univr_x_training_outlier)
-univr_x_validation_gower = gower.gower_matrix(univr_x_validation_outlier)
-
-univr_training_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_training_gower)
-univr_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(univr_x_validation_gower)
-
-univr_training_outlier_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == 1].index)
-univr_training_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_ft_tr_1yr_training_outlier_set.csv', encoding='utf-8', index=False)
-univr_validation_outlier_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == 1].index)
-univr_validation_outlier_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_ft_tr_1yr_validation_outlier_set.csv', encoding='utf-8', index=False)
-
-univr_training_set = univr_training_set.drop(univr_training_set[univr_training_set['mask'] == -1].index)
-univr_training_set = univr_training_set.drop(columns='mask')
-univr_validation_set = univr_validation_set.drop(univr_validation_set[univr_validation_set['mask'] == -1].index)
-univr_validation_set = univr_validation_set.drop(columns='mask')
+univr_validation_set, univr_training_set = helper_funcs.remove_outliers(univr_validation_set, univr_training_set, univr_x_training_outlier, univr_x_validation_outlier, 'univr', model_descr)
 
 #%%
 # Create Tomek Link undersampled validation and training sets
@@ -1080,41 +946,16 @@ pullm_centered_vars = [b for b in pullm_x_vars if all(a not in b for a in pullm_
 pullm_tomek_prep = make_column_transformer(
 	# (StandardScaler(), pullm_centered_vars),
 	(OneHotEncoder(drop='first'), pullm_onehot_vars),
-    remainder='passthrough'
+	remainder='passthrough'
 )
 
 pullm_x_train = pullm_tomek_prep.fit_transform(pullm_x_train)
 pullm_x_cv = pullm_tomek_prep.transform(pullm_x_cv)
 pullm_x_test = pullm_tomek_prep.transform(pullm_x_test)
 
-pullm_feat_names = []
+pullm_feat_names: list = []
 
-for name, transformer, features, _ in pullm_tomek_prep._iter(fitted=True):
-
-	if transformer != 'passthrough':
-		try:
-			pullm_feat_names.extend(pullm_tomek_prep.named_transformers_[name].get_feature_names())
-		except AttributeError:
-			pullm_feat_names.extend(features)
-
-	if transformer == 'passthrough':
-		pullm_feat_names.extend(pullm_tomek_prep._feature_names_in[features])
-
-pullm_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-pullm_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
-
-pullm_x_train, pullm_y_train = pullm_under_train.fit_resample(pullm_x_train, pullm_y_train)
-pullm_x_cv, pullm_y_cv = pullm_under_valid.fit_resample(pullm_x_cv, pullm_y_cv)
-
-pullm_tomek_train_index = pullm_under_train.sample_indices_
-pullm_tomek_valid_index = pullm_under_valid.sample_indices_
-pullm_training_set = pullm_training_set.reset_index(drop=True)
-pullm_validation_set = pullm_validation_set.reset_index(drop=True)
-
-pullm_tomek_train_set = pullm_training_set.drop(pullm_tomek_train_index)
-pullm_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_ft_tr_1yr_tomek_training_set.csv', encoding='utf-8', index=False)
-pullm_tomek_valid_set = pullm_validation_set.drop(pullm_tomek_valid_index)
-pullm_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\pullm_ft_tr_1yr_tomek_validation_set.csv', encoding='utf-8', index=False)
+pullm_x_train, pullm_x_cv, pullm_y_train, pullm_y_cv = helper_funcs.tomek_undersample(pullm_validation_set, pullm_training_set, pullm_x_train, pullm_x_cv, pullm_y_train, pullm_y_cv, pullm_tomek_prep, pullm_feat_names, 'pullm', model_descr)
 
 #%%
 # Vancouver undersample
@@ -1134,41 +975,16 @@ vanco_centered_vars = [b for b in vanco_x_vars if all(a not in b for a in vanco_
 vanco_tomek_prep = make_column_transformer(
 	# (StandardScaler(), vanco_centered_vars),
 	(OneHotEncoder(drop='first'), vanco_onehot_vars),
-    remainder='passthrough'
+	remainder='passthrough'
 )
 
 vanco_x_train = vanco_tomek_prep.fit_transform(vanco_x_train)
 vanco_x_cv = vanco_tomek_prep.transform(vanco_x_cv)
 vanco_x_test = vanco_tomek_prep.transform(vanco_x_test)
 
-vanco_feat_names = []
+vanco_feat_names: list = []
 
-for name, transformer, features, _ in vanco_tomek_prep._iter(fitted=True):
-
-	if transformer != 'passthrough':
-		try:
-			vanco_feat_names.extend(vanco_tomek_prep.named_transformers_[name].get_feature_names())
-		except AttributeError:
-			vanco_feat_names.extend(features)
-
-	if transformer == 'passthrough':
-		vanco_feat_names.extend(vanco_tomek_prep._feature_names_in[features])
-
-vanco_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-vanco_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
-
-vanco_x_train, vanco_y_train = vanco_under_train.fit_resample(vanco_x_train, vanco_y_train)
-vanco_x_cv, vanco_y_cv = vanco_under_valid.fit_resample(vanco_x_cv, vanco_y_cv)
-
-vanco_tomek_train_index = vanco_under_train.sample_indices_
-vanco_tomek_valid_index = vanco_under_valid.sample_indices_
-vanco_training_set = vanco_training_set.reset_index(drop=True)
-vanco_validation_set = vanco_validation_set.reset_index(drop=True)
-
-vanco_tomek_train_set = vanco_training_set.drop(vanco_tomek_train_index)
-vanco_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_ft_tr_1yr_tomek_training_set.csv', encoding='utf-8', index=False)
-vanco_tomek_valid_set = vanco_validation_set.drop(vanco_tomek_valid_index)
-vanco_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\vanco_ft_tr_1yr_tomek_validation_set.csv', encoding='utf-8', index=False)
+vanco_x_train, vanco_x_cv, vanco_y_train, vanco_y_cv = helper_funcs.tomek_undersample(vanco_validation_set, vanco_training_set, vanco_x_train, vanco_x_cv, vanco_y_train, vanco_y_cv, vanco_tomek_prep, vanco_feat_names, 'vanco', model_descr)
 
 #%%
 # Tri-Cities undersample
@@ -1188,41 +1004,16 @@ trici_centered_vars = [b for b in trici_x_vars if all(a not in b for a in trici_
 trici_tomek_prep = make_column_transformer(
 	# (StandardScaler(), trici_centered_vars),
 	(OneHotEncoder(drop='first'), trici_onehot_vars),
-    remainder='passthrough'
+	remainder='passthrough'
 )
 
 trici_x_train = trici_tomek_prep.fit_transform(trici_x_train)
 trici_x_cv = trici_tomek_prep.transform(trici_x_cv)
 trici_x_test = trici_tomek_prep.transform(trici_x_test)
 
-trici_feat_names = []
+trici_feat_names: list = []
 
-for name, transformer, features, _ in trici_tomek_prep._iter(fitted=True):
-
-	if transformer != 'passthrough':
-		try:
-			trici_feat_names.extend(trici_tomek_prep.named_transformers_[name].get_feature_names())
-		except AttributeError:
-			trici_feat_names.extend(features)
-
-	if transformer == 'passthrough':
-		trici_feat_names.extend(trici_tomek_prep._feature_names_in[features])
-
-trici_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-trici_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
-
-trici_x_train, trici_y_train = trici_under_train.fit_resample(trici_x_train, trici_y_train)
-trici_x_cv, trici_y_cv = trici_under_valid.fit_resample(trici_x_cv, trici_y_cv)
-
-trici_tomek_train_index = trici_under_train.sample_indices_
-trici_tomek_valid_index = trici_under_valid.sample_indices_
-trici_training_set = trici_training_set.reset_index(drop=True)
-trici_validation_set = trici_validation_set.reset_index(drop=True)
-
-trici_tomek_train_set = trici_training_set.drop(trici_tomek_train_index)
-trici_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_ft_tr_1yr_tomek_training_set.csv', encoding='utf-8', index=False)
-trici_tomek_valid_set = trici_validation_set.drop(trici_tomek_valid_index)
-trici_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\trici_ft_tr_1yr_tomek_validation_set.csv', encoding='utf-8', index=False)
+trici_x_train, trici_x_cv, trici_y_train, trici_y_cv = helper_funcs.tomek_undersample(trici_validation_set, trici_training_set, trici_x_train, trici_x_cv, trici_y_train, trici_y_cv, trici_tomek_prep, trici_feat_names, 'trici', model_descr)
 
 #%%
 # University undersample
@@ -1242,41 +1033,16 @@ univr_centered_vars = [b for b in univr_x_vars if all(a not in b for a in univr_
 univr_tomek_prep = make_column_transformer(
 	# (StandardScaler(), univr_centered_vars),
 	(OneHotEncoder(drop='first'), univr_onehot_vars),
-    remainder='passthrough'
+	remainder='passthrough'
 )
 
 univr_x_train = univr_tomek_prep.fit_transform(univr_x_train)
 univr_x_cv = univr_tomek_prep.transform(univr_x_cv)
 univr_x_test = univr_tomek_prep.transform(univr_x_test)
 
-univr_feat_names = []
+univr_feat_names: list = []
 
-for name, transformer, features, _ in univr_tomek_prep._iter(fitted=True):
-
-	if transformer != 'passthrough':
-		try:
-			univr_feat_names.extend(univr_tomek_prep.named_transformers_[name].get_feature_names())
-		except AttributeError:
-			univr_feat_names.extend(features)
-
-	if transformer == 'passthrough':
-		univr_feat_names.extend(univr_tomek_prep._feature_names_in[features])
-
-univr_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-univr_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
-
-univr_x_train, univr_y_train = univr_under_train.fit_resample(univr_x_train, univr_y_train)
-univr_x_cv, univr_y_cv = univr_under_valid.fit_resample(univr_x_cv, univr_y_cv)
-
-univr_tomek_train_index = univr_under_train.sample_indices_
-univr_tomek_valid_index = univr_under_valid.sample_indices_
-univr_training_set = univr_training_set.reset_index(drop=True)
-univr_validation_set = univr_validation_set.reset_index(drop=True)
-
-univr_tomek_train_set = univr_training_set.drop(univr_tomek_train_index)
-univr_tomek_train_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_ft_tr_1yr_tomek_training_set.csv', encoding='utf-8', index=False)
-univr_tomek_valid_set = univr_validation_set.drop(univr_tomek_valid_index)
-univr_tomek_valid_set.to_csv('Z:\\Nathan\\Models\\student_risk\\outliers\\univr_ft_tr_1yr_tomek_validation_set.csv', encoding='utf-8', index=False)
+univr_x_train, univr_x_cv, univr_y_train, univr_y_cv = helper_funcs.tomek_undersample(univr_validation_set, univr_training_set, univr_x_train, univr_x_cv, univr_y_train, univr_y_cv, univr_tomek_prep, univr_feat_names, 'univr', model_descr)
 
 #%%
 # Standard logistic model
@@ -1765,7 +1531,7 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 else:
-	pullm_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_ft_tr_1yr_model_v{sklearn.__version__}.pkl')
+	pullm_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 	pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
 	pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
@@ -1806,7 +1572,7 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 else:
-	vanco_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_ft_tr_1yr_model_v{sklearn.__version__}.pkl')
+	vanco_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 	vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
 	vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
@@ -1847,7 +1613,7 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 else:
-	trici_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\trici_ft_tr_1yr_model_v{sklearn.__version__}.pkl')
+	trici_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\trici_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 	trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
 	trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
@@ -1888,7 +1654,7 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 else:
-	univr_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\univr_ft_tr_1yr_model_v{sklearn.__version__}.pkl')
+	univr_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\univr_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 	univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
 	univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
@@ -2124,7 +1890,7 @@ pullm_pred_outcome['xgbrf_pred'] = pullm_xgbrf.predict(pullm_x_test)
 # pullm_pred_outcome['mlp_pred'] = pullm_mlp.predict(pullm_x_test)
 # pullm_pred_outcome['vcf_prob'] = pd.DataFrame(pullm_vcf_pred_probs)
 # pullm_pred_outcome['vcf_pred'] = pullm_vcf.predict(pullm_x_test)
-pullm_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_tr_1yr_pred_outcome.csv', encoding='utf-8', index=False)
+pullm_pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_{model_descr}_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Vancouver predicted outcome
@@ -2142,7 +1908,7 @@ vanco_pred_outcome['xgbrf_pred'] = vanco_xgbrf.predict(vanco_x_test)
 # vanco_pred_outcome['mlp_pred'] = vanco_mlp.predict(vanco_x_test)
 # vanco_pred_outcome['vcf_prob'] = pd.DataFrame(vanco_vcf_pred_probs)
 # vanco_pred_outcome['vcf_pred'] = vanco_vcf.predict(vanco_x_test)
-vanco_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_tr_1yr_pred_outcome.csv', encoding='utf-8', index=False)
+vanco_pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_{model_descr}_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # Tri-Cities predicted outcome
@@ -2160,7 +1926,7 @@ trici_pred_outcome['xgbrf_pred'] = trici_xgbrf.predict(trici_x_test)
 # trici_pred_outcome['mlp_pred'] = trici_mlp.predict(trici_x_test)
 # trici_pred_outcome['vcf_prob'] = pd.DataFrame(trici_vcf_pred_probs)
 # trici_pred_outcome['vcf_pred'] = trici_vcf.predict(trici_x_test)
-trici_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_tr_1yr_pred_outcome.csv', encoding='utf-8', index=False)
+trici_pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_{model_descr}_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
 # University predicted outcome
@@ -2178,333 +1944,34 @@ univr_pred_outcome['xgbrf_pred'] = univr_xgbrf.predict(univr_x_test)
 # univr_pred_outcome['mlp_pred'] = univr_mlp.predict(univr_x_test)
 # univr_pred_outcome['vcf_prob'] = pd.DataFrame(univr_vcf_pred_probs)
 # univr_pred_outcome['vcf_pred'] = univr_vcf.predict(univr_x_test)
-univr_pred_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_tr_1yr_pred_outcome.csv', encoding='utf-8', index=False)
+univr_pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_{model_descr}_pred_outcome.csv', encoding='utf-8', index=False)
 
 #%%
-# Pullman aggregate outcome
-pullm_aggregate_outcome['emplid'] = pullm_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-pullm_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_xgbrf_pred_probs).round(4)
-
-pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"male": "sex_ind"})
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['sex_ind'] == 0, 'sex_descr'] = 'Female'
-
-pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"underrep_minority": "underrep_minority_ind"})
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['underrep_minority_ind'] == 1, 'underrep_minority_descr'] = 'Minority'
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['underrep_minority_ind'] == 0, 'underrep_minority_descr'] = 'Non-minority'
-
-pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"resident": "resident_ind"})
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['resident_ind'] == 1, 'resident_descr'] = 'Resident'
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['resident_ind'] == 0, 'resident_descr'] = 'non-Resident'
-
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_flag'] == 'Y', 'first_gen_flag'] = 1
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_flag'] == 'N', 'first_gen_flag'] = 0
-
-pullm_aggregate_outcome = pullm_aggregate_outcome.rename(columns={"first_gen_flag": "first_gen_ind"})
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
-pullm_aggregate_outcome.loc[pullm_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
-
-pullm_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_tr_1yr_aggregate_outcome.csv', encoding='utf-8', index=False)
+# Pullman output
+helper_funcs.aggregate_outcome(pullm_aggregate_outcome, pullm_xgbrf_pred_probs, 'pullm', model_descr)
+helper_funcs.results_output(auto_engine, model_id, run_date, pullm_current_outcome, pullm_xgbrf_pred_probs, 'pullm', model_descr)
+helper_funcs.shap_output(engine, student_shap, top_N, model_id, run_date, pullm_shap_zip, 'pullm', model_descr)
+joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 #%%
-# Vancouver aggregate outcome
-vanco_aggregate_outcome['emplid'] = vanco_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-vanco_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_xgbrf_pred_probs).round(4)
-
-vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"male": "sex_ind"})
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['sex_ind'] == 0, 'sex_descr'] = 'Female'
-
-vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"underrep_minority": "underrep_minority_ind"})
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['underrep_minority_ind'] == 1, 'underrep_minority_descr'] = 'Minority'
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['underrep_minority_ind'] == 0, 'underrep_minority_descr'] = 'Non-minority'
-
-vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"resident": "resident_ind"})
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['resident_ind'] == 1, 'resident_descr'] = 'Resident'
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['resident_ind'] == 0, 'resident_descr'] = 'non-Resident'
-
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_flag'] == 'Y', 'first_gen_flag'] = 1
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_flag'] == 'N', 'first_gen_flag'] = 0
-
-vanco_aggregate_outcome = vanco_aggregate_outcome.rename(columns={"first_gen_flag": "first_gen_ind"})
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
-vanco_aggregate_outcome.loc[vanco_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
-
-vanco_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_tr_1yr_aggregate_outcome.csv', encoding='utf-8', index=False)
+# Vancouver output
+helper_funcs.aggregate_outcome(vanco_aggregate_outcome, vanco_xgbrf_pred_probs, 'vanco', model_descr)
+helper_funcs.results_output(auto_engine, model_id, run_date, vanco_current_outcome, vanco_xgbrf_pred_probs, 'vanco', model_descr)
+helper_funcs.shap_output(engine, student_shap, top_N, model_id, run_date, vanco_shap_zip, 'vanco', model_descr)
+joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 #%%
-# Tri-Cities aggregate outcome
-trici_aggregate_outcome['emplid'] = trici_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-trici_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(trici_xgbrf_pred_probs).round(4)
-
-trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"male": "sex_ind"})
-trici_aggregate_outcome.loc[trici_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
-trici_aggregate_outcome.loc[trici_aggregate_outcome['sex_ind'] == 0, 'sex_descr'] = 'Female'
-
-trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"underrep_minority": "underrep_minority_ind"})
-trici_aggregate_outcome.loc[trici_aggregate_outcome['underrep_minority_ind'] == 1, 'underrep_minority_descr'] = 'Minority'
-trici_aggregate_outcome.loc[trici_aggregate_outcome['underrep_minority_ind'] == 0, 'underrep_minority_descr'] = 'Non-minority'
-
-trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"resident": "resident_ind"})
-trici_aggregate_outcome.loc[trici_aggregate_outcome['resident_ind'] == 1, 'resident_descr'] = 'Resident'
-trici_aggregate_outcome.loc[trici_aggregate_outcome['resident_ind'] == 0, 'resident_descr'] = 'non-Resident'
-
-trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_flag'] == 'Y', 'first_gen_flag'] = 1
-trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_flag'] == 'N', 'first_gen_flag'] = 0
-
-trici_aggregate_outcome = trici_aggregate_outcome.rename(columns={"first_gen_flag": "first_gen_ind"})
-trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
-trici_aggregate_outcome.loc[trici_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
-
-trici_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_tr_1yr_aggregate_outcome.csv', encoding='utf-8', index=False)
+# Tri-Cities output
+helper_funcs.aggregate_outcome(trici_aggregate_outcome, trici_xgbrf_pred_probs, 'trici', model_descr)
+helper_funcs.results_output(auto_engine, model_id, run_date, trici_current_outcome, trici_xgbrf_pred_probs, 'trici', model_descr)
+helper_funcs.shap_output(engine, student_shap, top_N, model_id, run_date, trici_shap_zip, 'trici', model_descr)
+joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 #%%
-# University aggregate outcome
-univr_aggregate_outcome['emplid'] = univr_aggregate_outcome['emplid'].astype(str).str.zfill(9)
-univr_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgbrf_pred_probs).round(4)
-
-univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"male": "sex_ind"})
-univr_aggregate_outcome.loc[univr_aggregate_outcome['sex_ind'] == 1, 'sex_descr'] = 'Male'
-univr_aggregate_outcome.loc[univr_aggregate_outcome['sex_ind'] == 0, 'sex_descr'] = 'Female'
-
-univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"underrep_minority": "underrep_minority_ind"})
-univr_aggregate_outcome.loc[univr_aggregate_outcome['underrep_minority_ind'] == 1, 'underrep_minority_descr'] = 'Minority'
-univr_aggregate_outcome.loc[univr_aggregate_outcome['underrep_minority_ind'] == 0, 'underrep_minority_descr'] = 'Non-minority'
-
-univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"resident": "resident_ind"})
-univr_aggregate_outcome.loc[univr_aggregate_outcome['resident_ind'] == 1, 'resident_descr'] = 'Resident'
-univr_aggregate_outcome.loc[univr_aggregate_outcome['resident_ind'] == 0, 'resident_descr'] = 'non-Resident'
-
-univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_flag'] == 'Y', 'first_gen_flag'] = 1
-univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_flag'] == 'N', 'first_gen_flag'] = 0
-
-univr_aggregate_outcome = univr_aggregate_outcome.rename(columns={"first_gen_flag": "first_gen_ind"})
-univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_ind'] == 1, 'first_gen_descr'] = 'non-First Gen'
-univr_aggregate_outcome.loc[univr_aggregate_outcome['first_gen_ind'] == 0, 'first_gen_descr'] = 'First Gen'
-
-univr_aggregate_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_tr_1yr_aggregate_outcome.csv', encoding='utf-8', index=False)
-
-#%%
-# Pullman current outcome
-pullm_current_outcome['emplid'] = pullm_current_outcome['emplid'].astype(str).str.zfill(9)
-pullm_current_outcome['risk_prob'] = 1 - pd.DataFrame(pullm_xgbrf_pred_probs).round(4)
-
-pullm_current_outcome['date'] = run_date
-pullm_current_outcome['model_id'] = model_id
-
-#%%
-# Vancouver current outcome
-vanco_current_outcome['emplid'] = vanco_current_outcome['emplid'].astype(str).str.zfill(9)
-vanco_current_outcome['risk_prob'] = 1 - pd.DataFrame(vanco_xgbrf_pred_probs).round(4)
-
-vanco_current_outcome['date'] = run_date
-vanco_current_outcome['model_id'] = model_id
-
-#%%
-# Tri-Cities current outcome
-trici_current_outcome['emplid'] = trici_current_outcome['emplid'].astype(str).str.zfill(9)
-trici_current_outcome['risk_prob'] = 1 - pd.DataFrame(trici_xgbrf_pred_probs).round(4)
-
-trici_current_outcome['date'] = run_date
-trici_current_outcome['model_id'] = model_id
-
-#%%
-# University current outcome
-univr_current_outcome['emplid'] = univr_current_outcome['emplid'].astype(str).str.zfill(9)
-univr_current_outcome['risk_prob'] = 1 - pd.DataFrame(univr_xgbrf_pred_probs).round(4)
-
-univr_current_outcome['date'] = run_date
-univr_current_outcome['model_id'] = model_id
-
-#%%
-# Pullman to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_tr_1yr_student_outcome.csv'):
-	pullm_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_tr_1yr_student_outcome.csv', encoding='utf-8', index=False)
-	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-else:
-	pullm_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_tr_1yr_student_outcome.csv', encoding='utf-8', low_memory=False)
-	pullm_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_tr_1yr_student_backup.csv', encoding='utf-8', index=False)
-	pullm_student_outcome = pd.concat([pullm_prior_outcome, pullm_current_outcome])
-	pullm_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\pullm\\pullm_ft_tr_1yr_student_outcome.csv', encoding='utf-8', index=False)
-	pullm_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-
-#%%
-# Vancouver to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_tr_1yr_student_outcome.csv'):
-	vanco_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_tr_1yr_student_outcome.csv', encoding='utf-8', index=False)
-	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-else:
-	vanco_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_tr_1yr_student_outcome.csv', encoding='utf-8', low_memory=False)
-	vanco_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_tr_1yr_student_backup.csv', encoding='utf-8', index=False)
-	vanco_student_outcome = pd.concat([vanco_prior_outcome, vanco_current_outcome])
-	vanco_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\vanco\\vanco_ft_tr_1yr_student_outcome.csv', encoding='utf-8', index=False)
-	vanco_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-
-#%%
-# Tri-Cities to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_tr_1yr_student_outcome.csv'):
-	trici_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_tr_1yr_student_outcome.csv', encoding='utf-8', index=False)
-	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-else:
-	trici_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_tr_1yr_student_outcome.csv', encoding='utf-8', low_memory=False)
-	trici_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_tr_1yr_student_backup.csv', encoding='utf-8', index=False)
-	trici_student_outcome = pd.concat([trici_prior_outcome, trici_current_outcome])
-	trici_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\trici\\trici_ft_tr_1yr_student_outcome.csv', encoding='utf-8', index=False)
-	trici_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-
-#%%
-# University to csv and to sql
-if not os.path.isfile('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_tr_1yr_student_outcome.csv'):
-	univr_current_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_tr_1yr_student_outcome.csv', encoding='utf-8', index=False)
-	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-else:
-	univr_prior_outcome = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_tr_1yr_student_outcome.csv', encoding='utf-8', low_memory=False)
-	univr_prior_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_tr_1yr_student_backup.csv', encoding='utf-8', index=False)
-	univr_student_outcome = pd.concat([univr_prior_outcome, univr_current_outcome])
-	univr_student_outcome.to_csv('Z:\\Nathan\\Models\\student_risk\\predictions\\univr\\univr_ft_tr_1yr_student_outcome.csv', encoding='utf-8', index=False)
-	univr_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
-
-#%%
-# Pullman top-N SHAP values to csv and to sql
-pullm_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\pullm\\pullm_ft_tr_1yr_shap.csv', 'w', newline='')
-pullm_shap_writer = csv.writer(pullm_shap_file)
-pullm_shap_insert = []
-
-pullm_shap_writer.writerow(['emplid','shap_values'])
-
-for emplid in pullm_shap_zip:
-	pullm_shap_writer.writerow([emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))])
-	pullm_shap_sql = [emplid, list(islice(pullm_shap_zip[emplid].items(), top_N))]
-	
-	pullm_shap_insert.append(str(pullm_shap_sql[0]).zfill(9))
-
-	for index in range(top_N):
-		shap_str, shap_float = pullm_shap_sql[1][index]
-		pullm_shap_insert.append(shap_str) 
-		pullm_shap_insert.append(round(shap_float, 4))
-
-pullm_shap_file.close()
-
-while pullm_shap_insert:
-	ins = student_shap.insert().values(emplid=pullm_shap_insert.pop(0), 
-										shap_descr_1=pullm_shap_insert.pop(0), shap_value_1=pullm_shap_insert.pop(0), 
-										shap_descr_2=pullm_shap_insert.pop(0), shap_value_2=pullm_shap_insert.pop(0), 
-										shap_descr_3=pullm_shap_insert.pop(0), shap_value_3=pullm_shap_insert.pop(0), 
-										shap_descr_4=pullm_shap_insert.pop(0), shap_value_4=pullm_shap_insert.pop(0), 
-										shap_descr_5=pullm_shap_insert.pop(0), shap_value_5=pullm_shap_insert.pop(0), 
-										date=run_date, model_id=model_id)
-	engine.execute(ins)
-
-#%%
-# Vancouver top-N SHAP values to csv and to sql
-vanco_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\vanco\\vanco_ft_tr_1yr_shap.csv', 'w', newline='')
-vanco_shap_writer = csv.writer(vanco_shap_file)
-vanco_shap_insert = []
-
-vanco_shap_writer.writerow(['emplid','shap_values'])
-
-for emplid in vanco_shap_zip:
-	vanco_shap_writer.writerow([emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))])
-	vanco_shap_sql = [emplid, list(islice(vanco_shap_zip[emplid].items(), top_N))]
-	
-	vanco_shap_insert.append(str(vanco_shap_sql[0]).zfill(9))
-
-	for index in range(top_N):
-		shap_str, shap_float = vanco_shap_sql[1][index]
-		vanco_shap_insert.append(shap_str) 
-		vanco_shap_insert.append(round(shap_float, 4))
-
-vanco_shap_file.close()
-
-#%%
-while vanco_shap_insert:
-	ins = student_shap.insert().values(emplid=vanco_shap_insert.pop(0), 
-										shap_descr_1=vanco_shap_insert.pop(0), shap_value_1=vanco_shap_insert.pop(0), 
-										shap_descr_2=vanco_shap_insert.pop(0), shap_value_2=vanco_shap_insert.pop(0), 
-										shap_descr_3=vanco_shap_insert.pop(0), shap_value_3=vanco_shap_insert.pop(0), 
-										shap_descr_4=vanco_shap_insert.pop(0), shap_value_4=vanco_shap_insert.pop(0), 
-										shap_descr_5=vanco_shap_insert.pop(0), shap_value_5=vanco_shap_insert.pop(0), 
-										date=run_date, model_id=model_id)
-	engine.execute(ins)
-
-#%%
-# Tri-Cities top-N SHAP values to csv and to sql
-trici_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\trici\\trici_ft_tr_1yr_shap.csv', 'w', newline='')
-trici_shap_writer = csv.writer(trici_shap_file)
-trici_shap_insert = []
-
-trici_shap_writer.writerow(['emplid','shap_values'])
-
-for emplid in trici_shap_zip:
-	trici_shap_writer.writerow([emplid, list(islice(trici_shap_zip[emplid].items(), top_N))])
-	trici_shap_sql = [emplid, list(islice(trici_shap_zip[emplid].items(), top_N))]
-	
-	trici_shap_insert.append(str(trici_shap_sql[0]).zfill(9))
-
-	for index in range(top_N):
-		shap_str, shap_float = trici_shap_sql[1][index]
-		trici_shap_insert.append(shap_str) 
-		trici_shap_insert.append(round(shap_float, 4))
-
-trici_shap_file.close()
-
-while trici_shap_insert:
-	ins = student_shap.insert().values(emplid=trici_shap_insert.pop(0), 
-										shap_descr_1=trici_shap_insert.pop(0), shap_value_1=trici_shap_insert.pop(0), 
-										shap_descr_2=trici_shap_insert.pop(0), shap_value_2=trici_shap_insert.pop(0), 
-										shap_descr_3=trici_shap_insert.pop(0), shap_value_3=trici_shap_insert.pop(0), 
-										shap_descr_4=trici_shap_insert.pop(0), shap_value_4=trici_shap_insert.pop(0), 
-										shap_descr_5=trici_shap_insert.pop(0), shap_value_5=trici_shap_insert.pop(0), 
-										date=run_date, model_id=model_id)
-	engine.execute(ins)
-
-#%%
-# University top-N SHAP values to csv and to sql
-univr_shap_file = open('Z:\\Nathan\\Models\\student_risk\\shap\\univr\\univr_ft_tr_1yr_shap.csv', 'w', newline='')
-univr_shap_writer = csv.writer(univr_shap_file)
-univr_shap_insert = []
-
-univr_shap_writer.writerow(['emplid','shap_values'])
-
-for emplid in univr_shap_zip:
-	univr_shap_writer.writerow([emplid, list(islice(univr_shap_zip[emplid].items(), top_N))])
-	univr_shap_sql = [emplid, list(islice(univr_shap_zip[emplid].items(), top_N))]
-	
-	univr_shap_insert.append(str(univr_shap_sql[0]).zfill(9))
-
-	for index in range(top_N):
-		shap_str, shap_float = univr_shap_sql[1][index]
-		univr_shap_insert.append(shap_str) 
-		univr_shap_insert.append(round(shap_float, 4))
-
-univr_shap_file.close()
-
-while univr_shap_insert:
-	ins = student_shap.insert().values(emplid=univr_shap_insert.pop(0), 
-										shap_descr_1=univr_shap_insert.pop(0), shap_value_1=univr_shap_insert.pop(0), 
-										shap_descr_2=univr_shap_insert.pop(0), shap_value_2=univr_shap_insert.pop(0), 
-										shap_descr_3=univr_shap_insert.pop(0), shap_value_3=univr_shap_insert.pop(0), 
-										shap_descr_4=univr_shap_insert.pop(0), shap_value_4=univr_shap_insert.pop(0), 
-										shap_descr_5=univr_shap_insert.pop(0), shap_value_5=univr_shap_insert.pop(0), 
-										date=run_date, model_id=model_id)
-	engine.execute(ins)
-
-#%%
-# Output model
-
-# Pullman model output
-joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_ft_tr_1yr_model_v{sklearn.__version__}.pkl')
-
-#%%
-# Vancouver model output
-joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_ft_tr_1yr_model_v{sklearn.__version__}.pkl')
-
-#%%
-# Tri-Cities model output
-joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_ft_tr_1yr_model_v{sklearn.__version__}.pkl')
-
-#%%
-# University model output
-joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_ft_tr_1yr_model_v{sklearn.__version__}.pkl')
+# University output
+helper_funcs.aggregate_outcome(univr_aggregate_outcome, univr_xgbrf_pred_probs, 'univr', model_descr)
+helper_funcs.results_output(auto_engine, model_id, run_date, univr_current_outcome, univr_xgbrf_pred_probs, 'univr', model_descr)
+helper_funcs.shap_output(engine, student_shap, top_N, model_id, run_date, univr_shap_zip, 'univr', model_descr)
+joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')
