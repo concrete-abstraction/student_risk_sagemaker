@@ -24,14 +24,8 @@ reference_files/*.sas
 documentation/resources/Thumbs.db
 reference_files/dummy_encoding.ipynb
 supplemental_files/SAS_batch_nightly_my_wsu.bat
-supplemental_files/nightly_my_wsu_v2.sas
+supplemental_files/nightly_my_wsu.sas
 supplemental_files/nightly_my_wsu_error_checking_in_log_files.sas
 committee
 student_risk.egg-info
-student_risk/prod/fal/ft_tr_3yr
-student_risk/prod/fal/ft_tr_4yr
-student_risk/build_ft_tr_3yr_prod.py
-student_risk/build_ft_tr_4yr_prod.py
-sas/sr_dev_ft_tr_3yr_cen.sas
-sas/sr_dev_ft_tr_4yr_cen.sas
 build
