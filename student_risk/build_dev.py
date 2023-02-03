@@ -2337,7 +2337,7 @@ class DatasetBuilderDev:
 		print('Export data from SAS...')
 
 		sas_log = sas.submit("""
-		libname valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+		libname valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\\" outencoding=\'UTF-8\';
 
 		%let valid_pass = 0;
 
@@ -2369,7 +2369,7 @@ class DatasetBuilderDev:
 				%let valid_pass = 1;
 			%end;
 
-		libname training \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+		libname training \"Z:\\Nathan\\Models\\student_risk\\datasets\\\" outencoding=\'UTF-8\';
 
 		%let training_pass = 0;
 
@@ -2401,7 +2401,7 @@ class DatasetBuilderDev:
 				%let training_pass = 1;
 			%end;
 			
-		libname testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+		libname testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\\" outencoding=\'UTF-8\';
 
 		%let testing_pass = 0;
 
@@ -7250,7 +7250,7 @@ class DatasetBuilderDev:
 		print('Export data from SAS...')
 
 		sas_log = sas.submit("""
-		libname valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+		libname valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\\" outencoding=\'UTF-8\';
 
 		%let valid_pass = 0;
 
@@ -7282,7 +7282,7 @@ class DatasetBuilderDev:
 				%let valid_pass = 1;
 			%end;
 
-		libname training \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+		libname training \"Z:\\Nathan\\Models\\student_risk\\datasets\\\" outencoding=\'UTF-8\';
 
 		%let training_pass = 0;
 
@@ -7314,7 +7314,7 @@ class DatasetBuilderDev:
 				%let training_pass = 1;
 			%end;
 			
-		libname testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
+		libname testing \"Z:\\Nathan\\Models\\student_risk\\datasets\\\" outencoding=\'UTF-8\';
 
 		%let testing_pass = 0;
 

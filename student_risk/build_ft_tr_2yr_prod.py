@@ -4822,6 +4822,9 @@ class DatasetBuilderProd:
 				data work.validation_set_compare;
 					set valid.ft_tr_2yr_validation_set;
 				run;
+
+				proc compare data=validation_set compare=validation_set_compare method=absolute;
+				run;
 			%end;
 			
 			%else %do;
@@ -4829,9 +4832,6 @@ class DatasetBuilderProd:
 					set work.validation_set;
 				run;
 			%end;
-
-		proc compare data=validation_set compare=validation_set_compare method=absolute;
-		run;
 
 		%if &sysinfo ^= 0
 			 
@@ -4854,6 +4854,9 @@ class DatasetBuilderProd:
 				data work.training_set_compare;
 					set training.ft_tr_2yr_training_set;
 				run;
+
+				proc compare data=training_set compare=training_set_compare method=absolute;
+				run;
 			%end;
 			
 			%else %do;
@@ -4861,9 +4864,6 @@ class DatasetBuilderProd:
 					set work.training_set;
 				run;
 			%end;
-
-		proc compare data=training_set compare=training_set_compare method=absolute;
-		run;
 
 		%if &sysinfo ^= 0
 			 
@@ -4886,6 +4886,9 @@ class DatasetBuilderProd:
 				data work.testing_set_compare;
 					set testing.ft_tr_2yr_testing_set;
 				run;
+				
+				proc compare data=testing_set compare=testing_set_compare method=absolute;
+				run;
 			%end;
 			
 			%else %do;
@@ -4893,9 +4896,6 @@ class DatasetBuilderProd:
 					set work.testing_set;
 				run;
 			%end;
-
-		proc compare data=testing_set compare=testing_set_compare method=absolute;
-		run;
 			
 		%if &sysinfo ^= 0
 			 
@@ -9864,6 +9864,9 @@ class DatasetBuilderProd:
 				data work.validation_set_compare;
 					set valid.ft_tr_2yr_validation_set;
 				run;
+
+				proc compare data=validation_set compare=validation_set_compare method=absolute;
+				run;
 			%end;
 			
 			%else %do;
@@ -9871,9 +9874,6 @@ class DatasetBuilderProd:
 					set work.validation_set;
 				run;
 			%end;
-
-		proc compare data=validation_set compare=validation_set_compare method=absolute;
-		run;
 
 		%if &sysinfo ^= 0
 			 
@@ -9896,6 +9896,9 @@ class DatasetBuilderProd:
 				data work.training_set_compare;
 					set training.ft_tr_2yr_training_set;
 				run;
+						
+				proc compare data=training_set compare=training_set_compare method=absolute;
+				run;
 			%end;
 			
 			%else %do;
@@ -9903,9 +9906,6 @@ class DatasetBuilderProd:
 					set work.training_set;
 				run;
 			%end;
-
-		proc compare data=training_set compare=training_set_compare method=absolute;
-		run;
 
 		%if &sysinfo ^= 0
 			 
@@ -9928,6 +9928,9 @@ class DatasetBuilderProd:
 				data work.testing_set_compare;
 					set testing.ft_tr_2yr_testing_set;
 				run;
+				
+				proc compare data=testing_set compare=testing_set_compare method=absolute;
+				run;
 			%end;
 			
 			%else %do;
@@ -9935,9 +9938,6 @@ class DatasetBuilderProd:
 					set work.testing_set;
 				run;
 			%end;
-
-		proc compare data=testing_set compare=testing_set_compare method=absolute;
-		run;
 			
 		%if &sysinfo ^= 0
 			 

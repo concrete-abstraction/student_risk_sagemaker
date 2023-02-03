@@ -863,7 +863,6 @@ univr_current_outcome: pd.DataFrame
 univr_x_vars = [x for x in univr_data_vars if x not in unwanted_vars]
 
 # University dataframes
-
 univr_logit_df, univr_validation_set, univr_training_set, univr_testing_set, univr_shap_outcome, univr_pred_outcome, univr_aggregate_outcome, univr_current_outcome = helper_funcs.prep_system_dataframe(validation_set, training_set, testing_set, univr_data_vars, univr_system_var)
 
 #%%
