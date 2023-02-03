@@ -133,7 +133,7 @@ def tomek_undersample(campus_validation_set: pd.DataFrame, campus_training_set: 
 	return campus_x_train, campus_x_cv, campus_y_train, campus_y_cv
 
 
-def aggregate_outcome(campus_aggregate_outcome, campus_xgbrf_pred_probs, campus, model_descr):
+def aggregate_outcome(campus_aggregate_outcome: pd.DataFrame, campus_xgbrf_pred_probs, campus: str, model_descr: str) -> None:
 	campus_aggregate_outcome['emplid'] = campus_aggregate_outcome['emplid'].astype(str).str.zfill(9)
 	campus_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(campus_xgbrf_pred_probs).round(4)
 
@@ -159,7 +159,7 @@ def aggregate_outcome(campus_aggregate_outcome, campus_xgbrf_pred_probs, campus,
 	campus_aggregate_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\predictions\\{campus}\\{campus}_{model_descr}_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 
-def results_output(auto_engine, model_id: int, run_date: object, campus_current_outcome, campus_xgbrf_pred_probs, campus: str, model_descr: str):
+def results_output(auto_engine, model_id: int, run_date: object, campus_current_outcome: pd.DataFrame, campus_xgbrf_pred_probs, campus: str, model_descr: str) -> None:
 	campus_current_outcome['emplid'] = campus_current_outcome['emplid'].astype(str).str.zfill(9)
 	campus_current_outcome['risk_prob'] = 1 - pd.DataFrame(campus_xgbrf_pred_probs).round(4)
 
@@ -177,7 +177,7 @@ def results_output(auto_engine, model_id: int, run_date: object, campus_current_
 		campus_current_outcome.to_sql('student_outcome', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 
-def shap_output(engine, student_shap, top_N, model_id, run_date, campus_shap_zip, campus, model_descr):
+def shap_output(engine, student_shap, top_N: int, model_id: int, run_date: object, campus_shap_zip: dict, campus: str, model_descr: str) -> None:
 	campus_shap_file = open(f'Z:\\Nathan\\Models\\student_risk\\shap\\{campus}\\{campus}_{model_descr}_shap.csv', 'w', newline='')
 	campus_shap_writer = csv.writer(campus_shap_file)
 	campus_shap_insert = []
