@@ -1,7 +1,7 @@
 from setuptools import setup    
 
 setup(name='student_risk',
-    version='0.1',
+    version='0.2',
     description='WSU student risk model',
     author='Nathan Lindstedt',
     author_email='nathan.lindstedt@wsu.edu',
