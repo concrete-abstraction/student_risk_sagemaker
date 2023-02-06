@@ -83,7 +83,7 @@ proc sql;
 ;quit;
 
 proc sql;
-	select distinct a.snapshot into: aid_snapshot
+	select distinct a.snapshot into: aid_check
 	from &dsn..fa_award_aid_year_vw as a
 	inner join (select distinct 
 					emplid, 
@@ -95,8 +95,15 @@ proc sql;
 		on a.emplid = b.emplid
 			and a.aid_year = b.aid_year
 			and a.snapshot = b.snapshot
-	where a.aid_year = "&full_acad_year."	
+	where a.aid_year = "&full_acad_year."
 ;quit;
+
+%if %symexist(aid_check) = 0 %then %do;
+	%let aid_snapshot = 'yrbegin';
+%end;
+%else %do;
+	%let aid_snapshot = &aid_check.;
+%end;
 
 proc sql;
 	create table snap_check as

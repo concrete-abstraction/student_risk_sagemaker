@@ -4854,7 +4854,7 @@ class DatasetBuilderProd:
 				data work.training_set_compare;
 					set training.ft_tr_2yr_training_set;
 				run;
-
+						
 				proc compare data=training_set compare=training_set_compare method=absolute;
 				run;
 			%end;
