@@ -2349,8 +2349,12 @@ class DatasetBuilderDev:
 			%end;
 			
 			%else %do;
-				data valid.ft_ft_1yr_validation_set;
+				data work.validation_set_compare;
 					set work.validation_set;
+					stop;
+				run;
+				
+				proc compare data=validation_set compare=validation_set_compare method=absolute;
 				run;
 			%end;
 
@@ -2381,8 +2385,12 @@ class DatasetBuilderDev:
 			%end;
 			
 			%else %do;
-				data training.ft_ft_1yr_training_set;
+				data work.training_set_compare;
 					set work.training_set;
+					stop;
+				run;
+				
+				proc compare data=training_set compare=training_set_compare method=absolute;
 				run;
 			%end;
 
@@ -2413,8 +2421,12 @@ class DatasetBuilderDev:
 			%end;
 			
 			%else %do;
-				data testing.ft_ft_1yr_testing_set;
+				data work.testing_set_compare;
 					set work.testing_set;
+					stop;
+				run;
+				
+				proc compare data=testing_set compare=testing_set_compare method=absolute;
 				run;
 			%end;
 
@@ -7262,8 +7274,12 @@ class DatasetBuilderDev:
 			%end;
 			
 			%else %do;
-				data valid.ft_ft_1yr_validation_set;
+				data work.validation_set_compare;
 					set work.validation_set;
+					stop;
+				run;
+				
+				proc compare data=validation_set compare=validation_set_compare method=absolute;
 				run;
 			%end;
 
@@ -7294,8 +7310,12 @@ class DatasetBuilderDev:
 			%end;
 			
 			%else %do;
-				data training.ft_ft_1yr_training_set;
+				data work.training_set_compare;
 					set work.training_set;
+					stop;
+				run;
+				
+				proc compare data=training_set compare=training_set_compare method=absolute;
 				run;
 			%end;
 
@@ -7326,8 +7346,12 @@ class DatasetBuilderDev:
 			%end;
 			
 			%else %do;
-				data testing.ft_ft_1yr_testing_set;
+				data work.testing_set_compare;
 					set work.testing_set;
+					stop;
+				run;
+				
+				proc compare data=testing_set compare=testing_set_compare method=absolute;
 				run;
 			%end;
 
