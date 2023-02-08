@@ -55,7 +55,7 @@ num_parallel_tree: int = 64
 subsample: float = 0.8
 colsample_bytree: float = 0.8
 colsample_bynode: float = 0.8
-verbose: bool = True
+verbose: bool = False
 
 #%%
 # SAS dataset builder
