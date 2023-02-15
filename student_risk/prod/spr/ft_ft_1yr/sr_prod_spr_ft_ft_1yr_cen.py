@@ -75,13 +75,13 @@ census_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_
 census_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['census_year'].values[0]
 
 if now_year < census_year:
-	raise config.CenError(f'{run_date}: Census year exception, attempting to run if census newest snapshot.')
+	raise config.CenError(f'{run_date}: Census year exception, outside of date range.')
 
 elif (now_year == census_year and now_month < census_month):
-	raise config.CenError(f'{run_date}: Census month exception, attempting to run if census newest snapshot.')
+	raise config.CenError(f'{run_date}: Census month exception, outside of date range.')
 
 elif (now_year == census_year and now_month == census_month and now_day < census_day):
-	raise config.CenError(f'{run_date}: Census day exception, attempting to run if census newest snapshot.')
+	raise config.CenError(f'{run_date}: Census day exception, outside of date range.')
 
 else:
 	print(f'{date.today()}: No census date exceptions, running from census.')

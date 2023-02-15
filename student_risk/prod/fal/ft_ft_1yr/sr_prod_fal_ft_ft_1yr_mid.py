@@ -75,13 +75,13 @@ midterm_month = calendar[(calendar['midterm_begin_dt'] <= now_dt) & (calendar['t
 midterm_year = calendar[(calendar['midterm_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_year'].values[0]
 
 if now_year < midterm_year:
-	raise config.MidError(f'{date.today()}: Midterm year exception, attempting to run if midterm newest snapshot.')
+	raise config.MidError(f'{date.today()}: Midterm year exception, outside of date range.')
 
 elif (now_year == midterm_year and now_month < midterm_month):
-	raise config.MidError(f'{date.today()}: Midterm month exception, attempting to run if midterm newest snapshot.')
+	raise config.MidError(f'{date.today()}: Midterm month exception, outside of date range.')
 
 elif (now_year == midterm_year and now_month == midterm_month and now_day < midterm_day):
-	raise config.MidError(f'{date.today()}: Midterm day exception, attempting to run if midterm newest snapshot.')
+	raise config.MidError(f'{date.today()}: Midterm day exception, outside of date range.')
 
 else:
 	print(f'{date.today()}: No midterm date exceptions, running from midterm.')
