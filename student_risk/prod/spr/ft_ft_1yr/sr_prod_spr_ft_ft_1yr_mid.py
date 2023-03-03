@@ -162,6 +162,8 @@ pullm_data_vars = [
 'spring_lab_count',
 'spring_stu_count',
 'spring_oth_count',
+'spring_enrl_avg',
+'spring_enrl_avg_mi',
 # 'spring_lec_contact_hrs',
 # 'spring_lab_contact_hrs',
 # 'total_fall_contact_hrs',
@@ -292,6 +294,9 @@ pullm_aggregate_outcome: pd.DataFrame
 pullm_current_outcome: pd.DataFrame
 
 pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
+
+# Pullman dataframes
+pullm_logit_df, pullm_validation_set, pullm_training_set, pullm_testing_set, pullm_shap_outcome, pullm_pred_outcome, pullm_aggregate_outcome, pullm_current_outcome = helper_funcs.prep_campus_dataframe(validation_set, training_set, testing_set, pullm_data_vars, pullm_campus_var)
 
 #%%
 # Vancouver variables
@@ -679,6 +684,8 @@ trici_aggregate_outcome: pd.DataFrame
 trici_current_outcome: pd.DataFrame
 
 trici_x_vars = [x for x in trici_data_vars if x not in unwanted_vars]
+
+trici_logit_df, trici_validation_set, trici_training_set, trici_testing_set, trici_shap_outcome, trici_pred_outcome, trici_aggregate_outcome, trici_current_outcome = helper_funcs.prep_campus_dataframe(validation_set, training_set, testing_set, trici_data_vars, trici_campus_var)
 
 #%%
 # University variables
