@@ -164,6 +164,17 @@ pullm_data_vars = [
 'spring_oth_count',
 'spring_enrl_avg',
 'spring_enrl_avg_mi',
+# 'spring_class_time_early',
+# 'spring_class_time_early_mi',
+# 'spring_class_time_late',
+# 'spring_class_time_late_mi',
+# 'spring_sun_class',
+# 'spring_mon_class',
+# 'spring_tues_class',
+# 'spring_wed_class',
+# 'spring_thurs_class',
+# 'spring_fri_class',
+# 'spring_sat_class',
 # 'spring_lec_contact_hrs',
 # 'spring_lab_contact_hrs',
 # 'total_fall_contact_hrs',
@@ -278,8 +289,8 @@ pullm_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 pullm_campus_var = ['PULLM']
@@ -359,6 +370,17 @@ vanco_data_vars = [
 # 'fall_lab_contact_hrs',
 'spring_lec_count',
 'spring_lab_count',
+# 'spring_class_time_early',
+# 'spring_class_time_early_mi',
+# 'spring_class_time_late',
+# 'spring_class_time_late_mi',
+# 'spring_sun_class',
+# 'spring_mon_class',
+# 'spring_tues_class',
+# 'spring_wed_class',
+# 'spring_thurs_class',
+# 'spring_fri_class',
+# 'spring_sat_class',
 # 'spring_lec_contact_hrs',
 # 'spring_lab_contact_hrs',
 # 'total_fall_contact_hrs',
@@ -473,8 +495,8 @@ vanco_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 vanco_campus_var = ['VANCO']
@@ -554,6 +576,17 @@ trici_data_vars = [
 # 'fall_lab_contact_hrs',
 'spring_lec_count',
 'spring_lab_count',
+# 'spring_class_time_early',
+# 'spring_class_time_early_mi',
+# 'spring_class_time_late',
+# 'spring_class_time_late_mi',
+# 'spring_sun_class',
+# 'spring_mon_class',
+# 'spring_tues_class',
+# 'spring_wed_class',
+# 'spring_thurs_class',
+# 'spring_fri_class',
+# 'spring_sat_class',
 # 'spring_lec_contact_hrs',
 # 'spring_lab_contact_hrs',
 # 'total_fall_contact_hrs',
@@ -668,8 +701,8 @@ trici_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 trici_campus_var = ['TRICI']
@@ -748,6 +781,17 @@ univr_data_vars = [
 # 'fall_lab_contact_hrs',
 'spring_lec_count',
 'spring_lab_count',
+# 'spring_class_time_early',
+# 'spring_class_time_early_mi',
+# 'spring_class_time_late',
+# 'spring_class_time_late_mi',
+# 'spring_sun_class',
+# 'spring_mon_class',
+# 'spring_tues_class',
+# 'spring_wed_class',
+# 'spring_thurs_class',
+# 'spring_fri_class',
+# 'spring_sat_class',
 # 'spring_lec_contact_hrs',
 # 'spring_lab_contact_hrs',
 # 'total_fall_contact_hrs',
@@ -862,8 +906,8 @@ univr_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 univr_system_var = ['EVERE','SPOKA','ONLIN']

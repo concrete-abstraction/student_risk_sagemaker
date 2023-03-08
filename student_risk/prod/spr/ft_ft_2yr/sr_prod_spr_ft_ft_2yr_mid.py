@@ -247,8 +247,8 @@ pullm_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 pullm_campus_var = ['PULLM']
@@ -442,8 +442,8 @@ vanco_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 vanco_campus_var = ['VANCO']
@@ -637,8 +637,8 @@ trici_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 trici_campus_var = ['TRICI']
@@ -832,8 +832,8 @@ univr_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 univr_system_var = ['EVERE','SPOKA','ONLIN']
