@@ -43,15 +43,22 @@ proc sql;
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
+		datepart(base.term_census_dt) as term_census_dt format=mmddyyd10.,
         day(datepart(base.term_census_dt)) as census_day,
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
+		datepart(base.term_midterm_dt) as term_midterm_dt format=mmddyyd10.,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
         year(datepart(base.term_midterm_dt)) as midterm_year,
-        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt,
+		datepart(base.term_end_dt) as term_eot_dt format=mmddyyd10.,
+        day(datepart(base.term_end_dt)) as eot_day,
+        week(datepart(base.term_end_dt)) as eot_week,
+        month(datepart(base.term_end_dt)) as eot_month,
+        year(datepart(base.term_end_dt)) as eot_year,
+        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
 		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
 		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
 		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
@@ -59,7 +66,7 @@ proc sql;
 	from work.xw_term as base
 	left join work.xw_term as next
 		on base.acad_career = next.acad_career
-		and base.idx = next.idx - 1
+			and base.idx = next.idx - 1
 ;quit;
 
 /* Note: Code review needed. */
@@ -99,29 +106,18 @@ proc sql;
 ;quit;
 
 proc sql;
-	create table snap_check as
 	select distinct
-		max(case when snapshot = 'census' 	then 1
-			when snapshot = 'midterm' 		then 2
-			when snapshot = 'eot'			then 3
-											else 0
-											end) as snap_order
-	from &dsn..class_registration_vw
+		case when term_census_dt <= today() < term_midterm_dt	then 'census'
+			when term_midterm_dt <= today() < term_eot_dt		then 'midterm'
+			when term_eot_dt <= today()	< term_end_dt			then 'eot'
+																else 'eot' end as snapshot
+	into: snapshot
+	from acs.adj_term
 	where acad_career = 'UGRD'
 		and strm = (select distinct
 						max(strm)
 					from &dsn..class_registration_vw where acad_career = 'UGRD')
 		and full_acad_year = "&full_acad_year."
-;quit;
-
-proc sql;
-	select distinct 
-		case when snap_order = 1	then 'census'
-			when snap_order = 2		then 'midterm'
-			when snap_order = 3		then 'eot'
-									else 'census' end
-		into: snapshot
-	from snap_check
 ;quit;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */

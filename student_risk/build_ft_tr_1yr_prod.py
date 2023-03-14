@@ -2243,29 +2243,18 @@ class DatasetBuilderProd:
 		;quit;
 
 		proc sql;
-			create table snap_check as
 			select distinct
-				max(case when snapshot = 'census' 	then 1
-					when snapshot = 'midterm' 		then 2
-					when snapshot = 'eot'			then 3
-													else 0
-													end) as snap_order
-			from &dsn..class_registration_vw
+				case when term_census_dt <= today() < term_midterm_dt	then 'census'
+					when term_midterm_dt <= today() < term_eot_dt		then 'midterm'
+					when term_eot_dt <= today()	< term_end_dt			then 'eot'
+																		else 'eot' end as snapshot
+			into: snapshot
+			from acs.adj_term
 			where acad_career = 'UGRD'
 				and strm = (select distinct
 								max(strm)
 							from &dsn..class_registration_vw where acad_career = 'UGRD')
 				and full_acad_year = "&full_acad_year."
-		;quit;
-
-		proc sql;
-			select distinct 
-				case when snap_order = 1	then 'census'
-					when snap_order = 2		then 'midterm'
-					when snap_order = 3		then 'eot'
-											else '' end
-				into: snapshot
-			from snap_check
 		;quit;
 		""")
 

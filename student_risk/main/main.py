@@ -40,24 +40,30 @@ proc sql;
 	select
 		base.acad_career,
 		base.term_year,
-		base.term_type,
-		base.strm,
+        base.term_type,
+        base.strm,
 		base.full_acad_year,
 		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
 		day(datepart(base.term_begin_dt)) as begin_day,
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
-		day(datepart(base.term_census_dt)) as census_day,
+		datepart(base.term_census_dt) as term_census_dt format=mmddyyd10.,
+        day(datepart(base.term_census_dt)) as census_day,
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
-		datepart(base.term_midterm_dt) as midterm_begin_dt format=mmddyyd10.,
-		day(datepart(base.term_midterm_dt)) as midterm_day,
-		week(datepart(base.term_midterm_dt)) as midterm_week,
-		month(datepart(base.term_midterm_dt)) as midterm_month,
-		year(datepart(base.term_midterm_dt)) as midterm_year,
-		coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
+		datepart(base.term_midterm_dt) as term_midterm_dt format=mmddyyd10.,
+        day(datepart(base.term_midterm_dt)) as midterm_day,
+        week(datepart(base.term_midterm_dt)) as midterm_week,
+        month(datepart(base.term_midterm_dt)) as midterm_month,
+        year(datepart(base.term_midterm_dt)) as midterm_year,
+		datepart(base.term_end_dt) as term_eot_dt format=mmddyyd10.,
+        day(datepart(base.term_end_dt)) as eot_day,
+        week(datepart(base.term_end_dt)) as eot_week,
+        month(datepart(base.term_end_dt)) as eot_month,
+        year(datepart(base.term_end_dt)) as eot_year,
+        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
 		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
 		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
 		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
@@ -65,7 +71,7 @@ proc sql;
 	from work.xw_term as base
 	left join work.xw_term as next
 		on base.acad_career = next.acad_career
-		and base.idx = next.idx - 1
+			and base.idx = next.idx - 1
 ;quit;
 
 filename adj_term \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv\" encoding=\"utf-8\";
