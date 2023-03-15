@@ -2244,8 +2244,8 @@ class DatasetBuilderProd:
 
 		proc sql;
 			select distinct
-				case when term_census_dt <= today() < term_midterm_dt	then 'census'
-					when term_midterm_dt <= today() < term_eot_dt		then 'midterm'
+				case when term_census_dt <= today() < midterm_begin_dt	then 'census'
+					when midterm_begin_dt <= today() < term_eot_dt		then 'midterm'
 					when term_eot_dt <= today()	< term_end_dt			then 'eot'
 																		else 'eot' end as snapshot
 			into: snapshot

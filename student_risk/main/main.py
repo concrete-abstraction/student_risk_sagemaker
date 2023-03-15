@@ -53,7 +53,7 @@ proc sql;
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
-		datepart(base.term_midterm_dt) as term_midterm_dt format=mmddyyd10.,
+		datepart(base.term_midterm_dt) as midterm_begin_dt format=mmddyyd10.,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
