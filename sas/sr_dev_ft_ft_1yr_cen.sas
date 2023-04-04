@@ -469,13 +469,7 @@ run;
 			end as split_plan,
 			lsamp_stem_flag,
 			anywhere_stem_flag
-		from (select distinct 
-					emplid
-					,acad_plan_descr
-					,degree_descr 
-				from &dsn..student_acad_prog_plan_vw 
-				where snapshot = 'census'
-/* 					and cum_gpa >= 2 */
+		from &dsn..student_acad_prog_plan_vw 
 		where snapshot = 'census'
 			and full_acad_year = "&cohort_year."
 			and substr(strm, 4, 1) = '7'
