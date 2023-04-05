@@ -1559,7 +1559,7 @@ if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_p
 	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 else:
-	pullm_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
+	pullm_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 	pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
 	pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
@@ -1600,7 +1600,7 @@ if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_p
 	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 else:
-	vanco_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
+	vanco_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 	vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
 	vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
@@ -1641,7 +1641,7 @@ if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_p
 	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 else:
-	trici_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\trici_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
+	trici_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\trici_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 	trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
 	trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
@@ -1682,7 +1682,7 @@ if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_p
 	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
 
 else:
-	univr_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\univr_ft_ft_1yr_model_v{sklearn.__version__}.pkl')
+	univr_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\univr_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 	univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
 	univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
