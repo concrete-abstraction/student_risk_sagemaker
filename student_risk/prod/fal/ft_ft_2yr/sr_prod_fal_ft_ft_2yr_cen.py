@@ -1692,26 +1692,27 @@ pullm_metrics = {
     'False positive rate': false_positive_rate,
     'False negative rate': false_negative_rate,
     'Selection rate': selection_rate,
+    'Confusion matrix': confusion_matrix,
     'Count': count
 }
 
 pullm_sex = pd.DataFrame(pullm_x_train[:, 7], columns=['male'])
 pullm_race = pd.DataFrame(pullm_x_train[:, 9], columns=['underrep_minority'])
 
-pullm_metric_frame_sex = MetricFrame(
+pullm_metric_frame = MetricFrame(
     metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_sex
 )
 
-pullm_metric_frame_race = MetricFrame(
+pullm_metric_frame = MetricFrame(
     metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_race
 )
 
 print('Pullman differences by sex indicator\n')
-print(pullm_metric_frame_sex.by_group)
+print(pullm_metric_frame.by_group)
 print('\n')
 
 print('Pullman differences by underrepresented minority indicator\n')
-print(pullm_metric_frame_race.by_group)
+print(pullm_metric_frame.by_group)
 print('\n')
 
 #%%
@@ -1725,26 +1726,29 @@ vanco_metrics = {
     'False positive rate': false_positive_rate,
     'False negative rate': false_negative_rate,
     'Selection rate': selection_rate,
+    'Confusion matrix': confusion_matrix,
     'Count': count
 }
 
-vanco_sex = pd.DataFrame(vanco_x_train[:, 7], columns=['male'])
-vanco_race = pd.DataFrame(vanco_x_train[:, 9], columns=['underrep_minority'])
+vanco_group = pd.DataFrame()
 
-vanco_metric_frame_sex = MetricFrame(
+vanco_group['male'] = vanco_x_train[:, 7]
+vanco_group['underrep_minority'] = vanco_x_train[:, 9]
+
+vanco_metric_frame = MetricFrame(
     metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_sex
 )
 
-vanco_metric_frame_race = MetricFrame(
+vanco_metric_frame = MetricFrame(
     metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_race
 )
 
 print('Vancouver differences by sex indicator\n')
-print(vanco_metric_frame_sex.by_group)
+print(vanco_metric_frame.by_group)
 print('\n')
 
 print('Vancouver differences by underrepresented minority indicator\n')
-print(vanco_metric_frame_race.by_group)
+print(vanco_metric_frame.by_group)
 print('\n')
 
 #%%
@@ -1758,26 +1762,21 @@ trici_metrics = {
     'False positive rate': false_positive_rate,
     'False negative rate': false_negative_rate,
     'Selection rate': selection_rate,
+    'Confusion matrix': confusion_matrix,
     'Count': count
 }
 
-trici_sex = pd.DataFrame(trici_x_train[:, 7], columns=['male'])
-trici_race = pd.DataFrame(trici_x_train[:, 9], columns=['underrep_minority'])
+trici_group = pd.DataFrame()
 
-trici_metric_frame_sex = MetricFrame(
-    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_sex
+trici_group['male'] = trici_x_train[:, 7]
+trici_group['underrep_minority'] = trici_x_train[:, 8]
+
+trici_metric_frame = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group
 )
 
-trici_metric_frame_race = MetricFrame(
-    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_race
-)
-
-print('Tri-Cities differences by sex indicator\n')
-print(trici_metric_frame_sex.by_group)
-print('\n')
-
-print('Tri-Cities differences by underrepresented minority indicator\n')
-print(trici_metric_frame_race.by_group)
+print('Tri-Cities metrics by sensitive features\n')
+print(trici_metric_frame.by_group)
 print('\n')
 
 #%%
@@ -1791,26 +1790,21 @@ univr_metrics = {
     'False positive rate': false_positive_rate,
     'False negative rate': false_negative_rate,
     'Selection rate': selection_rate,
+    'Confusion matrix': confusion_matrix,
     'Count': count
 }
 
-univr_sex = pd.DataFrame(univr_x_train[:, 7], columns=['male'])
-univr_race = pd.DataFrame(univr_x_train[:, 9], columns=['underrep_minority'])
+univr_group = pd.DataFrame()
 
-univr_metric_frame_sex = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_sex
+univr_group['male'] = univr_x_train[:, 7]
+univr_group['underrep_minority'] = univr_x_train[:, 8]
+
+univr_metric_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group
 )
 
-univr_metric_frame_race = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_race
-)
-
-print('University differences by sex indicator\n')
-print(univr_metric_frame_sex.by_group)
-print('\n')
-
-print('University differences by underrepresented minority indicator\n')
-print(univr_metric_frame_race.by_group)
+print('University metrics by sensitive features\n')
+print(univr_metric_frame.by_group)
 print('\n')
 
 #%%
