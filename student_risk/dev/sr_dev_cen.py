@@ -2289,23 +2289,19 @@ pullm_metrics = {
     'Count': count
 }
 
-pullm_sex = pd.DataFrame(pullm_x_test[:, 7], columns=['male'])
-pullm_race = pd.DataFrame(pullm_x_test[:, 8], columns=['underrep_minority'])
+pullm_group = pd.DataFrame()
+
+pullm_group['male'] = pullm_x_test[:, 7]
+pullm_group['underrep_minority'] = pullm_x_test[:, 8]
 
 pullm_metric_frame = MetricFrame(
-    metrics=pullm_metrics, y_true=pullm_y_test, y_pred=pullm_xgbrf_ccv.predict(pullm_x_test), sensitive_features=pullm_sex
-)
-
-pullm_metric_frame = MetricFrame(
-    metrics=pullm_metrics, y_true=pullm_y_test, y_pred=pullm_xgbrf_ccv.predict(pullm_x_test), sensitive_features=pullm_race
+    metrics=pullm_metrics, y_true=pullm_y_test, y_pred=pullm_xgbrf_ccv.predict(pullm_x_test), sensitive_features=pullm_group
 )
 
 print('Pullman metric differences by sex indicator...\n')
 print(pullm_metric_frame.by_group)
 print('\n')
-print('Pullman metric differences by minority indicator...\n')
-print(pullm_metric_frame.by_group)
-print('\n')
+
 #%%
 # Vancouver XGBoost Random Forest tuning
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
@@ -2379,12 +2375,10 @@ vanco_metrics = {
     'Count': count
 }
 
-vanco_group = pd.DataFrame(vanco_x_test[:, 7], columns=['male'])
-vanco_group = pd.DataFrame(vanco_x_test[:, 9], columns=['underrep_minority'])
+vanco_group = pd.DataFrame()
 
-vanco_metric_frame = MetricFrame(
-    metrics=vanco_metrics, y_true=vanco_y_test, y_pred=vanco_xgbrf_ccv.predict(vanco_x_test), sensitive_features=vanco_group
-)
+vanco_group['male'] = vanco_x_test[:, 7]
+vanco_group['underrep_minority'] = vanco_x_test[:, 8]
 
 vanco_metric_frame = MetricFrame(
     metrics=vanco_metrics, y_true=vanco_y_test, y_pred=vanco_xgbrf_ccv.predict(vanco_x_test), sensitive_features=vanco_group
@@ -2393,9 +2387,7 @@ vanco_metric_frame = MetricFrame(
 print('Vancouver metric differences by sex indicator...\n')
 print(vanco_metric_frame.by_group)
 print('\n')
-print('Vancouver metric differences by minority indicator...\n')
-print(vanco_metric_frame.by_group)
-print('\n')
+
 #%%
 # Tri-Cities XGBoost Random Forest tuning
 trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
@@ -2469,23 +2461,19 @@ trici_metrics = {
     'Count': count
 }
 
-trici_sex = pd.DataFrame(trici_x_test[:, 7], columns=['male'])
-trici_race = pd.DataFrame(trici_x_test[:, 8], columns=['underrep_minority'])
+trici_group = pd.DataFrame()
+
+trici_group['male'] = trici_x_test[:, 7]
+trici_group['underrep_minority'] = trici_x_test[:, 8]
 
 trici_metric_frame = MetricFrame(
-    metrics=trici_metrics, y_true=trici_y_test, y_pred=trici_xgbrf_ccv.predict(trici_x_test), sensitive_features=trici_sex
-)
-
-trici_metric_frame = MetricFrame(
-    metrics=trici_metrics, y_true=trici_y_test, y_pred=trici_xgbrf_ccv.predict(trici_x_test), sensitive_features=trici_race
+    metrics=trici_metrics, y_true=trici_y_test, y_pred=trici_xgbrf_ccv.predict(trici_x_test), sensitive_features=trici_group
 )
 
 print('Tri-Cities metric differences by sex indicator...\n')
 print(trici_metric_frame.by_group)
 print('\n')
-print('Tri-Cities metric differences by minority indicator...\n')
-print(trici_metric_frame.by_group)
-print('\n')
+
 #%%
 # University XGBoost Random Forest tuning
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
@@ -2559,23 +2547,19 @@ univr_metrics = {
     'Count': count
 }
 
-univr_sex = pd.DataFrame(univr_x_test[:, 7], columns=['male'])
-univr_race = pd.DataFrame(univr_x_test[:, 9], columns=['underrep_minority'])
+univr_group = pd.DataFrame()
+
+univr_group['male'] = univr_x_test[:, 7]
+univr_group['underrep_minority'] = univr_x_test[:, 8]
 
 univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_test, y_pred=univr_xgbrf_ccv.predict(univr_x_test), sensitive_features=univr_sex
-)
-
-univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_test, y_pred=univr_xgbrf_ccv.predict(univr_x_test), sensitive_features=univr_race
+    metrics=univr_metrics, y_true=univr_y_test, y_pred=univr_xgbrf_ccv.predict(univr_x_test), sensitive_features=univr_group
 )
 
 print('University metric differences by sex indicator...\n')
 print(univr_metric_frame.by_group)
 print('\n')
-print('University metric differences by minority indicator...\n')
-print(univr_metric_frame.by_group)
-print('\n')
+
 #%%
 # Ensemble model
 
