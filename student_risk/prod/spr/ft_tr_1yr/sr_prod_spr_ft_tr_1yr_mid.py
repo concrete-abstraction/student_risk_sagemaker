@@ -12,12 +12,13 @@ import pyodbc
 import saspy
 import sklearn
 import sqlalchemy
+from fairlearn.metrics import MetricFrame, true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate, selection_rate, count
 from patsy import dmatrices
 from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.linear_model import LogisticRegression, SGDClassifier
-from sklearn.metrics import roc_auc_score, roc_curve
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve
 from sklearn.model_selection import HalvingGridSearchCV, train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -39,7 +40,7 @@ metadata_engine = MetaData(engine.execution_options(autocommit=True, isolation_l
 student_shap = Table('student_shap', metadata_engine, autoload=True)
 
 #%%
-# Global variable initializaiton
+# Global variable initialization
 strm: str = None
 top_N: int = 5
 model_id: int = 6
@@ -1710,6 +1711,141 @@ else:
 
 # print(f'\nOverall accuracy for University ensemble model (training): {univr_vcf.score(univr_x_train, univr_y_train):.4f}')
 # print(f'ROC AUC for University ensemble model (training): {univr_vcf_auc:.4f}\n')
+
+#%%
+# Calculate fairness metrics
+print('Calculate fairness metrics for models (training)...\n')
+
+# Pullman metrics
+pullm_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Count': count
+}
+
+pullm_sex = pd.DataFrame(pullm_x_train[:, 7], columns=['male'])
+pullm_race = pd.DataFrame(pullm_x_train[:, 9], columns=['underrep_minority'])
+
+pullm_metric_frame_sex = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_sex
+)
+
+pullm_metric_frame_race = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_race
+)
+
+print('Pullman differences by sex indicator\n')
+print(pullm_metric_frame_sex.by_group)
+print('\n')
+
+print('Pullman differences by underrepresented minority indicator\n')
+print(pullm_metric_frame_race.by_group)
+print('\n')
+
+#%%
+# Vancouver metrics
+vanco_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Count': count
+}
+
+vanco_sex = pd.DataFrame(vanco_x_train[:, 7], columns=['male'])
+vanco_race = pd.DataFrame(vanco_x_train[:, 9], columns=['underrep_minority'])
+
+vanco_metric_frame_sex = MetricFrame(
+    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_sex
+)
+
+vanco_metric_frame_race = MetricFrame(
+    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_race
+)
+
+print('Vancouver differences by sex indicator\n')
+print(vanco_metric_frame_sex.by_group)
+print('\n')
+
+print('Vancouver differences by underrepresented minority indicator\n')
+print(vanco_metric_frame_race.by_group)
+print('\n')
+
+#%%
+# Tri-Cities metrics
+trici_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Count': count
+}
+
+trici_sex = pd.DataFrame(trici_x_train[:, 7], columns=['male'])
+trici_race = pd.DataFrame(trici_x_train[:, 9], columns=['underrep_minority'])
+
+trici_metric_frame_sex = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_sex
+)
+
+trici_metric_frame_race = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_race
+)
+
+print('Tri-Cities differences by sex indicator\n')
+print(trici_metric_frame_sex.by_group)
+print('\n')
+
+print('Tri-Cities differences by underrepresented minority indicator\n')
+print(trici_metric_frame_race.by_group)
+print('\n')
+
+#%%
+# University metrics
+univr_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Count': count
+}
+
+univr_sex = pd.DataFrame(univr_x_train[:, 7], columns=['male'])
+univr_race = pd.DataFrame(univr_x_train[:, 9], columns=['underrep_minority'])
+
+univr_metric_frame_sex = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_sex
+)
+
+univr_metric_frame_race = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_race
+)
+
+print('University differences by sex indicator\n')
+print(univr_metric_frame_sex.by_group)
+print('\n')
+
+print('University differences by underrepresented minority indicator\n')
+print(univr_metric_frame_race.by_group)
+print('\n')
 
 #%%
 print('Calculate SHAP values...')

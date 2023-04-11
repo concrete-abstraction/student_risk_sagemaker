@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from fairlearn.metrics import MetricFrame, true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate, selection_rate, count
 from imblearn.under_sampling import NearMiss, TomekLinks
 from matplotlib.legend_handler import HandlerLine2D
 from patsy import dmatrices
@@ -13,7 +14,7 @@ from sklearn.ensemble import VotingClassifier
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.linear_model import (LinearRegression, LogisticRegression,
                                   SGDClassifier)
-from sklearn.metrics import confusion_matrix, roc_auc_score, roc_curve
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve
 from sklearn.model_selection import HalvingGridSearchCV, cross_val_predict
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.neural_network import MLPClassifier
@@ -29,10 +30,11 @@ from student_risk import build_dev
 #%%
 # Global variables
 wsu_color = (0.596,0.117,0.196)
-wsu_cmap = sns.light_palette("#981e32",as_cmap=True)
+wsu_cmap = sns.light_palette('#981e32',as_cmap=True)
 unwanted_vars = ['emplid','enrl_ind']
 plt.rcParams['figure.figsize'] = [15, 10]
 plt.rcParams['font.size'] = '24'
+plt.rcParams['axes.labelsize'] = '24'
 
 #%%
 # Global XGBoost hyperparameter initialization
@@ -255,56 +257,72 @@ pullm_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
-'underrep_minority', 
+'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
-'pell_eligibility_ind',
+'pell_eligibility_ind', 
 # 'pell_recipient_ind',
-'first_gen_flag',
-'first_gen_flag_mi', 
+'first_gen_flag', 
+'first_gen_flag_mi',
 # 'LSAMP_STEM_Flag',
 # 'anywhere_STEM_Flag',
 'honors_program_ind',
 # 'afl_greek_indicator',
-'high_school_gpa',
-'high_school_gpa_mi',
-'fall_midterm_gpa_avg',
-'fall_midterm_gpa_avg_mi',
-'fall_midterm_grade_count',
-'fall_midterm_S_grade_count',
-'fall_midterm_W_grade_count',
+# 'high_school_gpa',
 'fall_term_gpa',
 'fall_term_gpa_mi',
-# 'fall_term_no_letter_count',
+'fall_term_D_grade_count',
 'fall_term_F_grade_count',
-'fall_term_S_grade_count',
-'fall_term_W_grade_count',
+# 'fall_term_S_grade_count',
+# 'fall_term_W_grade_count',
+# 'spring_midterm_gpa_change',
 # 'awe_instrument',
 # 'cdi_instrument',
-'fall_avg_difficulty',
-'fall_avg_pct_withdrawn',
+# 'fall_avg_difficulty',
+# 'fall_avg_pct_withdrawn',
 # 'fall_avg_pct_CDFW',
-'fall_avg_pct_CDF',
+# 'fall_avg_pct_CDF',
 # 'fall_avg_pct_DFW',
 # 'fall_avg_pct_DF',
-# 'fall_crse_mi',
-'fall_lec_count',
-'fall_lab_count',
-# 'fall_int_count',
-'fall_stu_count',
-# 'fall_sem_count',
-'fall_oth_count',
+'spring_avg_difficulty',
+'spring_avg_pct_withdrawn',
+# 'spring_avg_pct_CDFW',
+'spring_avg_pct_CDF',
+# 'spring_avg_pct_DFW',
+# 'spring_avg_pct_DF',
+# 'fall_lec_count',
+# 'fall_lab_count',
 # 'fall_lec_contact_hrs',
 # 'fall_lab_contact_hrs',
-# 'fall_int_contact_hrs',
-# 'fall_stu_contact_hrs',
-# 'fall_sem_contact_hrs',
-# 'fall_oth_contact_hrs',
+'spring_lec_count',
+'spring_lab_count',
+'spring_stu_count',
+'spring_oth_count',
+# 'spring_enrl_avg',
+# 'spring_enrl_avg_mi',
+# 'spring_class_time_early',
+# 'spring_class_time_early_mi',
+# 'spring_class_time_late',
+# 'spring_class_time_late_mi',
+# 'spring_sun_class',
+# 'spring_mon_class',
+# 'spring_tues_class',
+# 'spring_wed_class',
+# 'spring_thurs_class',
+# 'spring_fri_class',
+# 'spring_sat_class',
+# 'spring_lec_contact_hrs',
+# 'spring_lab_contact_hrs',
 # 'total_fall_contact_hrs',
+# 'total_spring_contact_hrs',
+# 'fall_midterm_gpa_avg',
+# 'fall_midterm_gpa_avg_ind',
+'spring_midterm_gpa_avg',
+'spring_midterm_gpa_avg_mi',
 'cum_adj_transfer_hours',
 'resident',
 # 'father_wsu_flag',
@@ -345,10 +363,9 @@ pullm_data_vars = [
 # 'IB',
 # 'AICE',
 'IB_AICE', 
-'fall_credit_hours',
-# 'total_fall_units',
-'fall_withdrawn_hours',
-# 'fall_withdrawn_ind',
+'spring_credit_hours',
+# 'total_spring_units',
+'spring_withdrawn_hours',
 # 'athlete',
 'remedial',
 # 'ACAD_PLAN',
@@ -412,8 +429,8 @@ pullm_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_acpt',
-'unmet_need_acpt_mi'
+'unmet_need_ofr',
+'unmet_need_ofr_mi'
 ]
 
 pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
@@ -1239,7 +1256,7 @@ pullm_filter_vars = pullm_binary_vars + pullm_onehot_vars
 pullm_centered_vars = [b for b in pullm_x_vars if all(a not in b for a in pullm_filter_vars)]
 
 pullm_tomek_prep = make_column_transformer(
-	(StandardScaler(), pullm_centered_vars),
+	# (StandardScaler(), pullm_centered_vars),
 	(OneHotEncoder(drop='first'), pullm_onehot_vars),
     remainder='passthrough'
 )
@@ -1293,7 +1310,7 @@ vanco_filter_vars = vanco_binary_vars + vanco_onehot_vars
 vanco_centered_vars = [b for b in vanco_x_vars if all(a not in b for a in vanco_filter_vars)]
 
 vanco_tomek_prep = make_column_transformer(
-	(StandardScaler(), vanco_centered_vars),
+	# (StandardScaler(), vanco_centered_vars),
 	(OneHotEncoder(drop='first'), vanco_onehot_vars),
     remainder='passthrough'
 )
@@ -1347,7 +1364,7 @@ trici_filter_vars = trici_binary_vars + trici_onehot_vars
 trici_centered_vars = [b for b in trici_x_vars if all(a not in b for a in trici_filter_vars)]
 
 trici_tomek_prep = make_column_transformer(
-	(StandardScaler(), trici_centered_vars),
+	# (StandardScaler(), trici_centered_vars),
 	(OneHotEncoder(drop='first'), trici_onehot_vars),
     remainder='passthrough'
 )
@@ -1401,7 +1418,7 @@ univr_filter_vars = univr_binary_vars + univr_onehot_vars
 univr_centered_vars = [b for b in univr_x_vars if all(a not in b for a in univr_filter_vars)]
 
 univr_tomek_prep = make_column_transformer(
-	(StandardScaler(), univr_centered_vars),
+	# (StandardScaler(), univr_centered_vars),
 	(OneHotEncoder(drop='first'), univr_onehot_vars),
     remainder='passthrough'
 )
@@ -2259,6 +2276,37 @@ plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
+pullm_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Count': count
+}
+
+pullm_sex = pd.DataFrame(pullm_x_test[:, 7], columns=['male'])
+pullm_race = pd.DataFrame(pullm_x_test[:, 8], columns=['underrep_minority'])
+
+pullm_metric_frame_sex = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_test, y_pred=pullm_xgbrf_ccv.predict(pullm_x_test), sensitive_features=pullm_sex
+)
+
+pullm_metric_frame_race = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_test, y_pred=pullm_xgbrf_ccv.predict(pullm_x_test), sensitive_features=pullm_race
+)
+
+print('Pullman metric differences by sex indicator...\n')
+print(pullm_metric_frame_sex.by_group)
+print('\n')
+
+print('Pullman metric differences by minority indicator...\n')
+print(pullm_metric_frame_race.by_group)
+print('\n')
+
 #%%
 # Vancouver XGBoost Random Forest tuning
 vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[vanco_y_train == 1].count()
@@ -2318,6 +2366,37 @@ sns.heatmap(vanco_xgbrf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
+
+vanco_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Count': count
+}
+
+vanco_sex = pd.DataFrame(vanco_x_test[:, 7], columns=['male'])
+vanco_race = pd.DataFrame(vanco_x_test[:, 9], columns=['underrep_minority'])
+
+vanco_metric_frame_sex = MetricFrame(
+    metrics=vanco_metrics, y_true=vanco_y_test, y_pred=vanco_xgbrf_ccv.predict(vanco_x_test), sensitive_features=vanco_sex
+)
+
+vanco_metric_frame_race = MetricFrame(
+    metrics=vanco_metrics, y_true=vanco_y_test, y_pred=vanco_xgbrf_ccv.predict(vanco_x_test), sensitive_features=vanco_race
+)
+
+print('Vancouver metric differences by sex indicator...\n')
+print(vanco_metric_frame_sex.by_group)
+print('\n')
+
+print('Vancouver metric differences by minority indicator...\n')
+print(vanco_metric_frame_race.by_group)
+print('\n')
 
 #%%
 # Tri-Cities XGBoost Random Forest tuning
@@ -2379,6 +2458,37 @@ plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
+trici_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Count': count
+}
+
+trici_sex = pd.DataFrame(trici_x_test[:, 7], columns=['male'])
+trici_race = pd.DataFrame(trici_x_test[:, 8], columns=['underrep_minority'])
+
+trici_metric_frame_sex = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_test, y_pred=trici_xgbrf_ccv.predict(trici_x_test), sensitive_features=trici_sex
+)
+
+trici_metric_frame_race = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_test, y_pred=trici_xgbrf_ccv.predict(trici_x_test), sensitive_features=trici_race
+)
+
+print('Tri-Cities metric differences by sex indicator...\n')
+print(trici_metric_frame_sex.by_group)
+print('\n')
+
+print('Tri-Cities metric differences by minority indicator...\n')
+print(trici_metric_frame_race.by_group)
+print('\n')
+
 #%%
 # University XGBoost Random Forest tuning
 univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
@@ -2438,6 +2548,37 @@ sns.heatmap(univr_xgbrf_df, annot=True, fmt='d', cbar=None, cmap=wsu_cmap)
 plt.title('XGBOOST CONFUSION MATRIX'), plt.tight_layout()
 plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
+
+univr_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Count': count
+}
+
+univr_sex = pd.DataFrame(univr_x_test[:, 7], columns=['male'])
+univr_race = pd.DataFrame(univr_x_test[:, 9], columns=['underrep_minority'])
+
+univr_metric_frame_sex = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_test, y_pred=univr_xgbrf_ccv.predict(univr_x_test), sensitive_features=univr_sex
+)
+
+univr_metric_frame_race = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_test, y_pred=univr_xgbrf_ccv.predict(univr_x_test), sensitive_features=univr_race
+)
+
+print('University metric differences by sex indicator...\n')
+print(univr_metric_frame_sex.by_group)
+print('\n')
+
+print('University metric differences by minority indicator...\n')
+print(univr_metric_frame_race.by_group)
+print('\n')
 
 #%%
 # Ensemble model

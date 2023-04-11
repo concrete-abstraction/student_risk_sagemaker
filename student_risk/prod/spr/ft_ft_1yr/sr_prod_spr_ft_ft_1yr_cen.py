@@ -39,7 +39,7 @@ metadata_engine = MetaData(engine.execution_options(autocommit=True, isolation_l
 student_shap = Table('student_shap', metadata_engine, autoload=True)
 
 #%%
-# Global variable initializaiton
+# Global variable initialization
 strm: str = None
 top_N: int = 5
 model_id: int = 5
