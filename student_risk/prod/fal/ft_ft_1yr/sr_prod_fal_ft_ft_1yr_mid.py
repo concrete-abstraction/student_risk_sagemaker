@@ -28,7 +28,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier, XGBRFClassifier
 
 import shap
-from student_risk import build_ft_ft_2yr_prod, config, helper_funcs
+from student_risk import build_ft_ft_1yr_prod, config, helper_funcs
 
 #%%
 # Database connection
