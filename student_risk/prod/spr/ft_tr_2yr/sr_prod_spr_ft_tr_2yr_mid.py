@@ -1568,7 +1568,7 @@ pullm_group['male'] = pullm_x_train[:, 7]
 pullm_group['underrep_minority'] = pullm_x_train[:, 8]
 
 pullm_metric_frame = MetricFrame(
-    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group[['male','underrep_minority']]
+    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
 )
 
 print('Pullman metrics by sensitive features\n')
