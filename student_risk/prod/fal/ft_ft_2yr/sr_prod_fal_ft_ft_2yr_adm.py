@@ -1503,6 +1503,34 @@ else:
 	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
 
 #%%
+# Pullman metrics by sensitive features
+pullm_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Confusion matrix': confusion_matrix,
+    'Count': count
+}
+
+pullm_group = pd.DataFrame()
+
+pullm_group['male'] = pullm_x_train[:, 7]
+pullm_group['underrep_minority'] = pullm_x_train[:, 8]
+
+pullm_metric_frame = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group[['male','underrep_minority']]
+)
+
+print('Pullman metrics by sensitive features\n')
+print(pullm_metric_frame.by_group)
+print('\n')
+
+#%%
 # Vancouver XGBoost Random Forest model selection
 if build_ft_ft_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_2yr_prod.DatasetBuilderProd.training_pass == 0:
 	vanco_start = time.perf_counter()
@@ -1689,25 +1717,18 @@ pullm_metrics = {
     'Count': count
 }
 
-pullm_sex = pd.DataFrame(pullm_x_train[:, 7], columns=['male'])
-pullm_race = pd.DataFrame(pullm_x_train[:, 9], columns=['underrep_minority'])
+pullm_group = pd.DataFrame()
+
+pullm_group['male'] = pullm_x_train[:, 7]
+pullm_group['underrep_minority'] = pullm_x_train[:, 8]
 
 pullm_metric_frame = MetricFrame(
-    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_sex
+    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
 )
 
-pullm_metric_frame = MetricFrame(
-    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_race
-)
-
-print('Pullman differences by sex indicator\n')
+print('Pullman metrics by sensitive features\n')
 print(pullm_metric_frame.by_group)
 print('\n')
-
-print('Pullman differences by underrepresented minority indicator\n')
-print(pullm_metric_frame.by_group)
-print('\n')
-
 #%%
 # Vancouver metrics
 vanco_metrics = {
@@ -1726,24 +1747,15 @@ vanco_metrics = {
 vanco_group = pd.DataFrame()
 
 vanco_group['male'] = vanco_x_train[:, 7]
-vanco_group['underrep_minority'] = vanco_x_train[:, 9]
+vanco_group['underrep_minority'] = vanco_x_train[:, 8]
 
 vanco_metric_frame = MetricFrame(
-    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_sex
+    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_group
 )
 
-vanco_metric_frame = MetricFrame(
-    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_race
-)
-
-print('Vancouver differences by sex indicator\n')
+print('Vancouver metrics by sensitive features\n')
 print(vanco_metric_frame.by_group)
 print('\n')
-
-print('Vancouver differences by underrepresented minority indicator\n')
-print(vanco_metric_frame.by_group)
-print('\n')
-
 #%%
 # Tri-Cities metrics
 trici_metrics = {
@@ -1771,7 +1783,6 @@ trici_metric_frame = MetricFrame(
 print('Tri-Cities metrics by sensitive features\n')
 print(trici_metric_frame.by_group)
 print('\n')
-
 #%%
 # University metrics
 univr_metrics = {
@@ -1799,7 +1810,6 @@ univr_metric_frame = MetricFrame(
 print('University metrics by sensitive features\n')
 print(univr_metric_frame.by_group)
 print('\n')
-
 #%%
 print('Calculate SHAP values...')
 
