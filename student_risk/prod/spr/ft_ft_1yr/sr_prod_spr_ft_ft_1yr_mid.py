@@ -1637,7 +1637,7 @@ pullm_metric_frame = MetricFrame(
     metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
 )
 
-print('Pullman metrics by sensitive features\n')
+print('Pullman metrics by sensitive features (training)\n')
 print(pullm_metric_frame.by_group)
 print('\n')
 
@@ -1706,7 +1706,7 @@ vanco_metric_frame = MetricFrame(
     metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_group
 )
 
-print('Vancouver metrics by sensitive features\n')
+print('Vancouver metrics by sensitive features (training)\n')
 print(vanco_metric_frame.by_group)
 print('\n')
 
@@ -1775,7 +1775,7 @@ trici_metric_frame = MetricFrame(
     metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group
 )
 
-print('Tri-Cities metrics by sensitive features\n')
+print('Tri-Cities metrics by sensitive features (training)\n')
 print(trici_metric_frame.by_group)
 print('\n')
 
@@ -1844,7 +1844,7 @@ univr_metric_frame = MetricFrame(
     metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group
 )
 
-print('University metrics by sensitive features\n')
+print('University metrics by sensitive features (training)\n')
 print(univr_metric_frame.by_group)
 print('\n')
 

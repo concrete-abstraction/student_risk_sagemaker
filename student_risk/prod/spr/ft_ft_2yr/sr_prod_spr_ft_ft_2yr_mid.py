@@ -1563,7 +1563,7 @@ pullm_metric_frame = MetricFrame(
     metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
 )
 
-print('Pullman metrics by sensitive features\n')
+print('Pullman metrics by sensitive features (training)\n')
 print(pullm_metric_frame.by_group)
 print('\n')
 
@@ -1609,6 +1609,34 @@ else:
 	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
 
 #%%
+# Vancouver metrics
+vanco_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Confusion matrix': confusion_matrix,
+    'Count': count
+}
+
+vanco_group = pd.DataFrame()
+
+vanco_group['male'] = vanco_x_train[:, 7]
+vanco_group['underrep_minority'] = vanco_x_train[:, 8]
+
+vanco_metric_frame = MetricFrame(
+    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_group
+)
+
+print('Vancouver metrics by sensitive features (training)\n')
+print(vanco_metric_frame.by_group)
+print('\n')
+
+#%%
 # Tri-Cities XGBoost Random Forest model selection
 if build_ft_ft_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_2yr_prod.DatasetBuilderProd.training_pass == 0:
 	trici_start = time.perf_counter()
@@ -1650,6 +1678,34 @@ else:
 	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
 
 #%%
+# Tri-Cities metrics
+trici_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Confusion matrix': confusion_matrix,
+    'Count': count
+}
+
+trici_group = pd.DataFrame()
+
+trici_group['male'] = trici_x_train[:, 7]
+trici_group['underrep_minority'] = trici_x_train[:, 8]
+
+trici_metric_frame = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group
+)
+
+print('Tri-Cities metrics by sensitive features (training)\n')
+print(trici_metric_frame.by_group)
+print('\n')
+
+#%%
 # University XGBoost Random Forest model selection
 if build_ft_ft_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_2yr_prod.DatasetBuilderProd.training_pass == 0:
 	univr_start = time.perf_counter()
@@ -1689,6 +1745,39 @@ else:
 	print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
 	print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
 	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
+
+#%%
+# University metrics
+univr_metrics = {
+	'Accuracy': accuracy_score,
+    'Precision': precision_score,
+    'Recall': recall_score,
+    'True positive rate': true_positive_rate,
+    'True negative rate': true_negative_rate,
+    'False positive rate': false_positive_rate,
+    'False negative rate': false_negative_rate,
+    'Selection rate': selection_rate,
+    'Confusion matrix': confusion_matrix,
+    'Count': count
+}
+
+univr_sex = pd.DataFrame(univr_x_train[:, 7], columns=['male'])
+univr_race = pd.DataFrame(univr_x_train[:, 9], columns=['underrep_minority'])
+
+univr_metric_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_sex
+)
+
+univr_metric_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_race
+)
+
+print('University differences by sex indicator\n')
+print(univr_metric_frame.by_group)
+print('\n')
+print('University differences by underrepresented minority indicator\n')
+print(univr_metric_frame.by_group)
+print('\n')
 
 #%%
 # Ensemble model
@@ -1736,122 +1825,6 @@ else:
 # print(f'\nOverall accuracy for University ensemble model (training): {univr_vcf.score(univr_x_train, univr_y_train):.4f}')
 # print(f'ROC AUC for University ensemble model (training): {univr_vcf_auc:.4f}\n')
 
-#%%
-# Calculate fairness metrics
-print('Calculate fairness metrics for models (training)...\n')
-
-# Pullman metrics
-pullm_metrics = {
-	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
-    'Count': count
-}
-
-pullm_group = pd.DataFrame()
-
-pullm_group['male'] = pullm_x_train[:, 7]
-pullm_group['underrep_minority'] = pullm_x_train[:, 8]
-
-pullm_metric_frame = MetricFrame(
-    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
-)
-
-print('Pullman metrics by sensitive features\n')
-print(pullm_metric_frame.by_group)
-print('\n')
-#%%
-# Vancouver metrics
-vanco_metrics = {
-	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
-    'Count': count
-}
-
-vanco_group = pd.DataFrame()
-
-vanco_group['male'] = vanco_x_train[:, 7]
-vanco_group['underrep_minority'] = vanco_x_train[:, 8]
-
-vanco_metric_frame = MetricFrame(
-    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_group
-)
-
-print('Vancouver metrics by sensitive features\n')
-print(vanco_metric_frame.by_group)
-print('\n')
-#%%
-# Tri-Cities metrics
-trici_metrics = {
-	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
-    'Count': count
-}
-
-trici_group = pd.DataFrame()
-
-trici_group['male'] = trici_x_train[:, 7]
-trici_group['underrep_minority'] = trici_x_train[:, 8]
-
-trici_metric_frame = MetricFrame(
-    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group
-)
-
-print('Tri-Cities metrics by sensitive features\n')
-print(trici_metric_frame.by_group)
-print('\n')
-#%%
-# University metrics
-univr_metrics = {
-	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
-    'Count': count
-}
-
-univr_sex = pd.DataFrame(univr_x_train[:, 7], columns=['male'])
-univr_race = pd.DataFrame(univr_x_train[:, 9], columns=['underrep_minority'])
-
-univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_sex
-)
-
-univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_race
-)
-
-print('University differences by sex indicator\n')
-print(univr_metric_frame.by_group)
-print('\n')
-print('University differences by underrepresented minority indicator\n')
-print(univr_metric_frame.by_group)
-print('\n')
 #%%
 print('Calculate SHAP values...')
 

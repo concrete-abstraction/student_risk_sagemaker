@@ -1587,7 +1587,7 @@ pullm_metric_frame = MetricFrame(
     metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
 )
 
-print('Pullman metrics by sensitive features\n')
+print('Pullman metrics by sensitive features (training)\n')
 print(pullm_metric_frame.by_group)
 print('\n')
 
