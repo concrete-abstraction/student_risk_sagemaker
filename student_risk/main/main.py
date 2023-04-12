@@ -159,7 +159,7 @@ if __name__ == '__main__':
 		sys.stdout = Logger()
 
 		try:
-			# runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_mid.py')
+			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_1yr\\sr_prod_spr_ft_ft_1yr_mid.py')
 			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_1yr\\sr_prod_spr_ft_tr_1yr_mid.py')
 			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_ft_2yr\\sr_prod_spr_ft_ft_2yr_mid.py')
 			runpy.run_path(path_name='Z:\\Nathan\\Models\\student_risk\\student_risk\\prod\\spr\\ft_tr_2yr\\sr_prod_spr_ft_tr_2yr_mid.py')
