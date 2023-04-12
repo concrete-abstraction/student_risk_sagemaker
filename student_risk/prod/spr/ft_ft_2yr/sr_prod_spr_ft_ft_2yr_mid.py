@@ -1761,21 +1761,16 @@ univr_metrics = {
     'Count': count
 }
 
-univr_sex = pd.DataFrame(univr_x_train[:, 7], columns=['male'])
-univr_race = pd.DataFrame(univr_x_train[:, 9], columns=['underrep_minority'])
+univr_group = pd.DataFrame()
+
+univr_group['male'] = univr_x_train[:, 7]
+univr_group['underrep_minority'] = univr_x_train[:, 8]
 
 univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_sex
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group
 )
 
-univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_race
-)
-
-print('University differences by sex indicator\n')
-print(univr_metric_frame.by_group)
-print('\n')
-print('University differences by underrepresented minority indicator\n')
+print('University metrics by sensitive features (training)\n')
 print(univr_metric_frame.by_group)
 print('\n')
 

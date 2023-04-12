@@ -76,10 +76,11 @@ print('\nPrepare dataframes and preprocess data...')
 pullm_data_vars = [
 'emplid',
 'enrl_ind', 
+'male',
+'underrep_minority',
 # 'acad_year',
 # 'age_group', 
 # 'age',
-'male',
 # 'race_hispanic',
 # 'race_american_indian',
 # 'race_alaska',
@@ -94,7 +95,6 @@ pullm_data_vars = [
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
-'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
 'pell_eligibility_ind', 
 # 'pell_recipient_ind',
@@ -273,10 +273,11 @@ pullm_logit_df, pullm_validation_set, pullm_training_set, pullm_testing_set, pul
 vanco_data_vars = [
 'emplid',
 'enrl_ind', 
+'male',
+'underrep_minority',
 # 'acad_year',
 # 'age_group', 
 # 'age',
-'male',
 # 'race_hispanic',
 # 'race_american_indian',
 # 'race_alaska',
@@ -291,7 +292,6 @@ vanco_data_vars = [
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
-'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
 'pell_eligibility_ind', 
 # 'pell_recipient_ind',
@@ -470,10 +470,11 @@ vanco_logit_df, vanco_validation_set, vanco_training_set, vanco_testing_set, van
 trici_data_vars = [
 'emplid',
 'enrl_ind', 
+'male',
+'underrep_minority',
 # 'acad_year',
 # 'age_group', 
 # 'age',
-'male',
 # 'race_hispanic',
 # 'race_american_indian',
 # 'race_alaska',
@@ -488,7 +489,6 @@ trici_data_vars = [
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
-'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
 'pell_eligibility_ind', 
 # 'pell_recipient_ind',
@@ -665,10 +665,11 @@ trici_logit_df, trici_validation_set, trici_training_set, trici_testing_set, tri
 univr_data_vars = [
 'emplid',
 'enrl_ind', 
+'male',
+'underrep_minority',
 # 'acad_year',
 # 'age_group', 
 # 'age',
-'male',
 # 'race_hispanic',
 # 'race_american_indian',
 # 'race_alaska',
@@ -683,7 +684,6 @@ univr_data_vars = [
 # 'acs_mi',
 # 'distance',
 # 'pop_dens',
-'underrep_minority',
 # 'ipeds_ethnic_group_descrshort',
 'pell_eligibility_ind', 
 # 'pell_recipient_ind',
@@ -1765,21 +1765,16 @@ univr_metrics = {
     'Count': count
 }
 
-univr_sex = pd.DataFrame(univr_x_train[:, 7], columns=['male'])
-univr_race = pd.DataFrame(univr_x_train[:, 9], columns=['underrep_minority'])
+univr_group = pd.DataFrame()
+
+univr_group['male'] = univr_x_train[:, 7]
+univr_group['underrep_minority'] = univr_x_train[:, 8]
 
 univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_sex
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group
 )
 
-univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_race
-)
-
-print('University differences by sex indicator\n')
-print(univr_metric_frame.by_group)
-print('\n')
-print('University differences by underrepresented minority indicator\n')
+print('University metrics by sensitive features (training)\n')
 print(univr_metric_frame.by_group)
 print('\n')
 
