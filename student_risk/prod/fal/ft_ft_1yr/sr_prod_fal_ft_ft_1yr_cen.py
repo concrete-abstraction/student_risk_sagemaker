@@ -1547,8 +1547,8 @@ pullm_metrics = {
 
 pullm_group = pd.DataFrame()
 
-pullm_group['male'] = pullm_x_train[:, 7]
-pullm_group['underrep_minority'] = pullm_x_train[:, 8]
+pullm_group['male'] = pullm_x_train[:, pullm_feat_names.index('male')]
+pullm_group['underrep_minority'] = pullm_x_train[:, pullm_feat_names.index('underrep_minority')]
 
 pullm_metric_frame = MetricFrame(
     metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
@@ -1616,8 +1616,8 @@ vanco_metrics = {
 
 vanco_group = pd.DataFrame()
 
-vanco_group['male'] = vanco_x_train[:, 7]
-vanco_group['underrep_minority'] = vanco_x_train[:, 9]
+vanco_group['male'] = vanco_x_train[:, vanco_feat_names.index('male')]
+vanco_group['underrep_minority'] = vanco_x_train[:, vanco_feat_names.index('underrep_minority')]
 
 vanco_metric_frame = MetricFrame(
     metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_group
@@ -1685,8 +1685,8 @@ trici_metrics = {
 
 trici_group = pd.DataFrame()
 
-trici_group['male'] = trici_x_train[:, 7]
-trici_group['underrep_minority'] = trici_x_train[:, 8]
+trici_group['male'] = trici_x_train[:, trici_feat_names.index('male')]
+trici_group['underrep_minority'] = trici_x_train[:, trici_feat_names.index('underrep_minority')]
 
 trici_metric_frame = MetricFrame(
     metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group
@@ -1754,8 +1754,8 @@ univr_metrics = {
 
 univr_group = pd.DataFrame()
 
-univr_group['male'] = univr_x_train[:, 7]
-univr_group['underrep_minority'] = univr_x_train[:, 8]
+univr_group['male'] = univr_x_train[:, univr_feat_names.index('male')]
+univr_group['underrep_minority'] = univr_x_train[:, univr_feat_names.index('underrep_minority')]
 
 univr_metric_frame = MetricFrame(
     metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group
