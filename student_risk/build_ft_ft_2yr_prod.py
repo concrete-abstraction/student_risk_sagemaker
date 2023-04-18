@@ -9405,9 +9405,9 @@ class DatasetBuilderProd:
 				left join class_size_&cohort_year. as bb
  					on a.emplid = bb.emplid
 				left join class_time_&cohort_year. as cc
- 					on a.emplid = cc.emplid
- 				left join class_day_&cohort_year. as dd
- 					on a.emplid = dd.emplid
+					on a.emplid = cc.emplid
+				left join class_day_&cohort_year. as dd
+					on a.emplid = dd.emplid
 			;quit;
 			
 		%mend loop;

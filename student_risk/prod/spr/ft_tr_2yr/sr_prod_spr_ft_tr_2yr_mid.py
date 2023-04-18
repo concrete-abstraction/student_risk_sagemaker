@@ -50,7 +50,7 @@ unwanted_vars: list = ['emplid','enrl_ind']
 
 #%%
 # Global XGBoost hyperparameter initialization
-min_child_weight: int = 5
+min_child_weight: int = 6
 max_bin: int = 32
 num_parallel_tree: int = 64
 subsample: float = 0.8
