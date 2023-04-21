@@ -1562,17 +1562,28 @@ pullm_metrics = {
     'Count': count
 }
 
-pullm_group = pd.DataFrame()
+pullm_group_train = pd.DataFrame()
+pullm_group_valid = pd.DataFrame()
 
-pullm_group['male'] = pullm_x_train[:, pullm_feat_names.index('male')]
-pullm_group['underrep_minority'] = pullm_x_train[:, pullm_feat_names.index('underrep_minority')]
+pullm_group_train['male'] = pullm_x_train[:, pullm_feat_names.index('male')]
+pullm_group_train['underrep_minority'] = pullm_x_train[:, pullm_feat_names.index('underrep_minority')]
+pullm_group_valid['male'] = pullm_x_cv[:, pullm_feat_names.index('male')]
+pullm_group_valid['underrep_minority'] = pullm_x_cv[:, pullm_feat_names.index('underrep_minority')]
 
-pullm_metric_frame = MetricFrame(
-    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
+pullm_metric_train_frame = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group_train
+)
+
+pullm_metric_valid_frame = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_cv, y_pred=pullm_xgbrf.predict(pullm_x_cv), sensitive_features=pullm_group_valid
 )
 
 print('Pullman metrics by sensitive features (training)\n')
-print(pullm_metric_frame.by_group)
+print(pullm_metric_train_frame.by_group)
+print('\n')
+
+print('Pullman metrics by sensitive features (validation)\n')
+print(pullm_metric_valid_frame.by_group)
 print('\n')
 
 #%%
