@@ -1558,17 +1558,28 @@ pullm_metrics = {
     'Count': count
 }
 
-pullm_group = pd.DataFrame()
+pullm_group_train = pd.DataFrame()
+pullm_group_valid = pd.DataFrame()
 
-pullm_group['male'] = pullm_x_train[:, pullm_feat_names.index('male')]
-pullm_group['underrep_minority'] = pullm_x_train[:, pullm_feat_names.index('underrep_minority')]
+pullm_group_train['male'] = pullm_x_train[:, pullm_feat_names.index('male')]
+pullm_group_train['underrep_minority'] = pullm_x_train[:, pullm_feat_names.index('underrep_minority')]
+pullm_group_valid['male'] = pullm_x_cv[:, pullm_feat_names.index('male')]
+pullm_group_valid['underrep_minority'] = pullm_x_cv[:, pullm_feat_names.index('underrep_minority')]
 
-pullm_metric_frame = MetricFrame(
-    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group
+pullm_metric_train_frame = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_train, y_pred=pullm_xgbrf.predict(pullm_x_train), sensitive_features=pullm_group_train
+)
+
+pullm_metric_valid_frame = MetricFrame(
+    metrics=pullm_metrics, y_true=pullm_y_cv, y_pred=pullm_xgbrf.predict(pullm_x_cv), sensitive_features=pullm_group_valid
 )
 
 print('Pullman metrics by sensitive features (training)\n')
-print(pullm_metric_frame.by_group)
+print(pullm_metric_train_frame.by_group)
+print('\n')
+
+print('Pullman metrics by sensitive features (validation)\n')
+print(pullm_metric_valid_frame.by_group)
 print('\n')
 
 #%%
@@ -1627,17 +1638,28 @@ vanco_metrics = {
     'Count': count
 }
 
-vanco_group = pd.DataFrame()
+vanco_group_train = pd.DataFrame()
+vanco_group_valid = pd.DataFrame()
 
-vanco_group['male'] = vanco_x_train[:, vanco_feat_names.index('male')]
-vanco_group['underrep_minority'] = vanco_x_train[:, vanco_feat_names.index('underrep_minority')]
+vanco_group_train['male'] = vanco_x_train[:, vanco_feat_names.index('male')]
+vanco_group_train['underrep_minority'] = vanco_x_train[:, vanco_feat_names.index('underrep_minority')]
+vanco_group_valid['male'] = vanco_x_cv[:, vanco_feat_names.index('male')]
+vanco_group_valid['underrep_minority'] = vanco_x_cv[:, vanco_feat_names.index('underrep_minority')]
 
-vanco_metric_frame = MetricFrame(
-    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_group
+vanco_metric_train_frame = MetricFrame(
+    metrics=vanco_metrics, y_true=vanco_y_train, y_pred=vanco_xgbrf.predict(vanco_x_train), sensitive_features=vanco_group_train
+)
+
+vanco_metric_valid_frame = MetricFrame(
+    metrics=vanco_metrics, y_true=vanco_y_cv, y_pred=vanco_xgbrf.predict(vanco_x_cv), sensitive_features=vanco_group_valid
 )
 
 print('Vancouver metrics by sensitive features (training)\n')
-print(vanco_metric_frame.by_group)
+print(vanco_metric_train_frame.by_group)
+print('\n')
+
+print('Vancouver metrics by sensitive features (validation)\n')
+print(vanco_metric_valid_frame.by_group)
 print('\n')
 
 #%%
@@ -1696,17 +1718,28 @@ trici_metrics = {
     'Count': count
 }
 
-trici_group = pd.DataFrame()
+trici_group_train = pd.DataFrame()
+trici_group_valid = pd.DataFrame()
 
-trici_group['male'] = trici_x_train[:, trici_feat_names.index('male')]
-trici_group['underrep_minority'] = trici_x_train[:, trici_feat_names.index('underrep_minority')]
+trici_group_train['male'] = trici_x_train[:, trici_feat_names.index('male')]
+trici_group_train['underrep_minority'] = trici_x_train[:, trici_feat_names.index('underrep_minority')]
+trici_group_valid['male'] = trici_x_cv[:, trici_feat_names.index('male')]
+trici_group_valid['underrep_minority'] = trici_x_cv[:, trici_feat_names.index('underrep_minority')]
 
-trici_metric_frame = MetricFrame(
-    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group
+trici_metric_train_frame = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group_train
+)
+
+trici_metric_valid_frame = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_cv, y_pred=trici_xgbrf.predict(trici_x_cv), sensitive_features=trici_group_valid
 )
 
 print('Tri-Cities metrics by sensitive features (training)\n')
-print(trici_metric_frame.by_group)
+print(trici_metric_train_frame.by_group)
+print('\n')
+
+print('Tri-Cities metrics by sensitive features (validation)\n')
+print(trici_metric_valid_frame.by_group)
 print('\n')
 
 #%%
@@ -1765,17 +1798,28 @@ univr_metrics = {
     'Count': count
 }
 
-univr_group = pd.DataFrame()
+univr_group_train = pd.DataFrame()
+univr_group_valid = pd.DataFrame()
 
-univr_group['male'] = univr_x_train[:, univr_feat_names.index('male')]
-univr_group['underrep_minority'] = univr_x_train[:, univr_feat_names.index('underrep_minority')]
+univr_group_train['male'] = univr_x_train[:, univr_feat_names.index('male')]
+univr_group_train['underrep_minority'] = univr_x_train[:, univr_feat_names.index('underrep_minority')]
+univr_group_valid['male'] = univr_x_cv[:, univr_feat_names.index('male')]
+univr_group_valid['underrep_minority'] = univr_x_cv[:, univr_feat_names.index('underrep_minority')]
 
-univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group
+univr_metric_train_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group_train
+)
+
+univr_metric_valid_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_cv, y_pred=univr_xgbrf.predict(univr_x_cv), sensitive_features=univr_group_valid
 )
 
 print('University metrics by sensitive features (training)\n')
-print(univr_metric_frame.by_group)
+print(univr_metric_train_frame.by_group)
+print('\n')
+
+print('University metrics by sensitive features (validation)\n')
+print(univr_metric_valid_frame.by_group)
 print('\n')
 
 #%%
