@@ -1548,12 +1548,8 @@ else:
 # Pullman metrics by sensitive features
 pullm_metrics = {
 	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
     'Selection rate': selection_rate,
     'Confusion matrix': confusion_matrix,
     'Count': count
@@ -1628,12 +1624,8 @@ else:
 # Vancouver metrics
 vanco_metrics = {
 	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
     'Selection rate': selection_rate,
     'Confusion matrix': confusion_matrix,
     'Count': count
@@ -1708,12 +1700,8 @@ else:
 # Tri-Cities metrics
 trici_metrics = {
 	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
     'Selection rate': selection_rate,
     'Confusion matrix': confusion_matrix,
     'Count': count
@@ -1788,12 +1776,8 @@ else:
 # University metrics
 univr_metrics = {
 	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
     'Selection rate': selection_rate,
     'Confusion matrix': confusion_matrix,
     'Count': count
