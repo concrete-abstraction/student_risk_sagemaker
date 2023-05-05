@@ -1541,7 +1541,7 @@ pullm_xgbrf_cv_auc = roc_auc_score(pullm_y_cv, pullm_xgbrf_cv_probs)
 print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
 print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_train_auc:.4f}')
 print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}')
-print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_cv_auc:.4f}\n')
+print(f'ROC AUC for Pullman XGB Random Forest model (validation): {pullm_xgbrf_cv_auc:.4f}\n')
 
 # Pullman metrics by sensitive features
 pullm_metrics = {
@@ -1615,7 +1615,7 @@ vanco_xgbrf_cv_auc = roc_auc_score(vanco_y_cv, vanco_xgbrf_cv_probs)
 print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
 print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_train_auc:.4f}')
 print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}')
-print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_cv_auc:.4f}\n')
+print(f'ROC AUC for Vancouver XGB Random Forest model (validation): {vanco_xgbrf_cv_auc:.4f}\n')
 
 # Vancouver metrics by sensitive features
 vanco_metrics = {
@@ -1689,7 +1689,7 @@ trici_xgbrf_cv_auc = roc_auc_score(trici_y_cv, trici_xgbrf_cv_probs)
 print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
 print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_train_auc:.4f}')
 print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}')
-print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_cv_auc:.4f}\n')
+print(f'ROC AUC for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf_cv_auc:.4f}\n')
 
 # Tri-Cities metrics by sensitive features 
 trici_metrics = {
@@ -1763,7 +1763,7 @@ univr_xgbrf_cv_auc = roc_auc_score(univr_y_cv, univr_xgbrf_cv_probs)
 print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
 print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_train_auc:.4f}')
 print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}')
-print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_cv_auc:.4f}\n')
+print(f'ROC AUC for University XGB Random Forest model (validation): {univr_xgbrf_cv_auc:.4f}\n')
 
 # University metrics by sensitive features 
 univr_metrics = {
