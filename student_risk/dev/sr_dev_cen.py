@@ -14,7 +14,7 @@ from sklearn.ensemble import VotingClassifier
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.linear_model import (LinearRegression, LogisticRegression,
                                   SGDClassifier)
-from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve
 from sklearn.model_selection import HalvingGridSearchCV, cross_val_predict
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.neural_network import MLPClassifier
@@ -2277,11 +2277,11 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 pullm_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
+	'Overall Accuracy': accuracy_score,
+    'Positive Rate': true_positive_rate,
+    'Negative Rate': true_negative_rate,
+    'Balanced Accuracy': balanced_accuracy_score,
+    'Confusion Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -2359,11 +2359,11 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 vanco_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
+	'Overall Accuracy': accuracy_score,
+    'Positive Rate': true_positive_rate,
+    'Negative Rate': true_negative_rate,
+    'Balanced Accuracy': balanced_accuracy_score,
+    'Confusion Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -2441,11 +2441,11 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 trici_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
+	'Overall Accuracy': accuracy_score,
+    'Positive Rate': true_positive_rate,
+    'Negative Rate': true_negative_rate,
+    'Balanced Accuracy': balanced_accuracy_score,
+    'Confusion Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -2523,11 +2523,11 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 univr_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
+	'Overall Accuracy': accuracy_score,
+    'Positive Rate': true_positive_rate,
+    'Negative Rate': true_negative_rate,
+    'Balanced Accuracy': balanced_accuracy_score,
+    'Confusion Matrix': confusion_matrix,
     'Count': count
 }
 

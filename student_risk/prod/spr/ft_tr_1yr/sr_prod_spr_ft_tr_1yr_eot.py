@@ -18,7 +18,7 @@ from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.linear_model import LogisticRegression, SGDClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve
 from sklearn.model_selection import HalvingGridSearchCV, train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
@@ -1521,33 +1521,31 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 	pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
 									eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
-	pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
-	pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
-	pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
-
-	print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
-	print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
-	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
-
 else:
 	pullm_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_{model_descr}_model_v{sklearn.__version__}.pkl')
 
-	pullm_xgbrf_probs = pullm_xgbrf.predict_proba(pullm_x_train)
-	pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
-	pullm_xgbrf_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_probs)
-
-	print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
-	print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_auc:.4f}')
-	print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}\n')
-
 #%%
+# Pullman metrics
+pullm_xgbrf_train_probs = pullm_xgbrf.predict_proba(pullm_x_train)
+pullm_xgbrf_train_probs = pullm_xgbrf_train_probs[:, 1]
+pullm_xgbrf_train_auc = roc_auc_score(pullm_y_train, pullm_xgbrf_train_probs)
+
+pullm_xgbrf_cv_probs = pullm_xgbrf.predict_proba(pullm_x_cv)
+pullm_xgbrf_cv_probs = pullm_xgbrf_cv_probs[:, 1]
+pullm_xgbrf_cv_auc = roc_auc_score(pullm_y_cv, pullm_xgbrf_cv_probs)
+
+print(f'Overall accuracy for Pullman XGB Random Forest model (training): {pullm_xgbrf.score(pullm_x_train, pullm_y_train):.4f}')
+print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_train_auc:.4f}')
+print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}')
+print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_cv_auc:.4f}\n')
+
 # Pullman metrics by sensitive features
 pullm_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
+	'Overall Accuracy': accuracy_score,
+    'Positive Rate': true_positive_rate,
+    'Negative Rate': true_negative_rate,
+    'Balanced Accuracy': balanced_accuracy_score,
+    'Confusion Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -1597,33 +1595,31 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 	vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, 
 									eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 
-	vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
-	vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
-	vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
-
-	print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
-	print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
-	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
-
 else:
 	vanco_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_{model_descr}_model_v{sklearn.__version__}.pkl')
 
-	vanco_xgbrf_probs = vanco_xgbrf.predict_proba(vanco_x_train)
-	vanco_xgbrf_probs = vanco_xgbrf_probs[:, 1]
-	vanco_xgbrf_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_probs)
-
-	print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
-	print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_auc:.4f}')
-	print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}\n')
-
 #%%
 # Vancouver metrics
+vanco_xgbrf_train_probs = vanco_xgbrf.predict_proba(vanco_x_train)
+vanco_xgbrf_train_probs = vanco_xgbrf_train_probs[:, 1]
+vanco_xgbrf_train_auc = roc_auc_score(vanco_y_train, vanco_xgbrf_train_probs)
+
+vanco_xgbrf_cv_probs = vanco_xgbrf.predict_proba(vanco_x_cv)
+vanco_xgbrf_cv_probs = vanco_xgbrf_cv_probs[:, 1]
+vanco_xgbrf_cv_auc = roc_auc_score(vanco_y_cv, vanco_xgbrf_cv_probs)
+
+print(f'Overall accuracy for Vancouver XGB Random Forest model (training): {vanco_xgbrf.score(vanco_x_train, vanco_y_train):.4f}')
+print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_train_auc:.4f}')
+print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}')
+print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_cv_auc:.4f}\n')
+
+# Vancouver metrics by sensitive features
 vanco_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
+	'Overall Accuracy': accuracy_score,
+    'Positive Rate': true_positive_rate,
+    'Negative Rate': true_negative_rate,
+    'Balanced Accuracy': balanced_accuracy_score,
+    'Confusion Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -1673,33 +1669,31 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 	trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, 
 									eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
 
-	trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
-	trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
-	trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
-
-	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
-	print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
-	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
-
 else:
 	trici_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\trici_{model_descr}_model_v{sklearn.__version__}.pkl')
 
-	trici_xgbrf_probs = trici_xgbrf.predict_proba(trici_x_train)
-	trici_xgbrf_probs = trici_xgbrf_probs[:, 1]
-	trici_xgbrf_auc = roc_auc_score(trici_y_train, trici_xgbrf_probs)
-
-	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
-	print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_auc:.4f}')
-	print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}\n')
-
 #%%
 # Tri-Cities metrics
+trici_xgbrf_train_probs = trici_xgbrf.predict_proba(trici_x_train)
+trici_xgbrf_train_probs = trici_xgbrf_train_probs[:, 1]
+trici_xgbrf_train_auc = roc_auc_score(trici_y_train, trici_xgbrf_train_probs)
+
+trici_xgbrf_cv_probs = trici_xgbrf.predict_proba(trici_x_cv)
+trici_xgbrf_cv_probs = trici_xgbrf_cv_probs[:, 1]
+trici_xgbrf_cv_auc = roc_auc_score(trici_y_cv, trici_xgbrf_cv_probs)
+
+print(f'Overall accuracy for Tri-Cities XGB Random Forest model (training): {trici_xgbrf.score(trici_x_train, trici_y_train):.4f}')
+print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_train_auc:.4f}')
+print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}')
+print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_cv_auc:.4f}\n')
+
+# Tri-Cities metrics by sensitive features 
 trici_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
+	'Overall Accuracy': accuracy_score,
+    'Positive Rate': true_positive_rate,
+    'Negative Rate': true_negative_rate,
+    'Balanced Accuracy': balanced_accuracy_score,
+    'Confusion Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -1749,33 +1743,31 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 	univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, 
 									eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
 
-	univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
-	univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
-	univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
-
-	print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
-	print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
-	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
-
 else:
 	univr_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\univr_{model_descr}_model_v{sklearn.__version__}.pkl')
 
-	univr_xgbrf_probs = univr_xgbrf.predict_proba(univr_x_train)
-	univr_xgbrf_probs = univr_xgbrf_probs[:, 1]
-	univr_xgbrf_auc = roc_auc_score(univr_y_train, univr_xgbrf_probs)
-
-	print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
-	print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_auc:.4f}')
-	print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}\n')
-
 #%%
 # University metrics
+univr_xgbrf_train_probs = univr_xgbrf.predict_proba(univr_x_train)
+univr_xgbrf_train_probs = univr_xgbrf_train_probs[:, 1]
+univr_xgbrf_train_auc = roc_auc_score(univr_y_train, univr_xgbrf_train_probs)
+
+univr_xgbrf_cv_probs = univr_xgbrf.predict_proba(univr_x_cv)
+univr_xgbrf_cv_probs = univr_xgbrf_cv_probs[:, 1]
+univr_xgbrf_cv_auc = roc_auc_score(univr_y_cv, univr_xgbrf_cv_probs)
+
+print(f'Overall accuracy for University XGB Random Forest model (training): {univr_xgbrf.score(univr_x_train, univr_y_train):.4f}')
+print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_train_auc:.4f}')
+print(f'Overall accuracy for University XGB Random Forest model (validation): {univr_xgbrf.score(univr_x_cv, univr_y_cv):.4f}')
+print(f'ROC AUC for University XGB Random Forest model (training): {univr_xgbrf_cv_auc:.4f}\n')
+
+# University metrics by sensitive features 
 univr_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
+	'Overall Accuracy': accuracy_score,
+    'Positive Rate': true_positive_rate,
+    'Negative Rate': true_negative_rate,
+    'Balanced Accuracy': balanced_accuracy_score,
+    'Confusion Matrix': confusion_matrix,
     'Count': count
 }
 
