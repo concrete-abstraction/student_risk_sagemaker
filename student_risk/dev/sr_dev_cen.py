@@ -2277,11 +2277,11 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 pullm_metrics = {
-	'Overall Accuracy': accuracy_score,
-    'Positive Rate': true_positive_rate,
-    'Negative Rate': true_negative_rate,
-    'Balanced Accuracy': balanced_accuracy_score,
-    'Confusion Matrix': confusion_matrix,
+	'Accuracy': accuracy_score,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
+    'Balanced': balanced_accuracy_score,
+    'Conf. Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -2359,11 +2359,11 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 vanco_metrics = {
-	'Overall Accuracy': accuracy_score,
-    'Positive Rate': true_positive_rate,
-    'Negative Rate': true_negative_rate,
-    'Balanced Accuracy': balanced_accuracy_score,
-    'Confusion Matrix': confusion_matrix,
+	'Accuracy': accuracy_score,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
+    'Balanced': balanced_accuracy_score,
+    'Conf. Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -2441,11 +2441,11 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 trici_metrics = {
-	'Overall Accuracy': accuracy_score,
-    'Positive Rate': true_positive_rate,
-    'Negative Rate': true_negative_rate,
-    'Balanced Accuracy': balanced_accuracy_score,
-    'Confusion Matrix': confusion_matrix,
+	'Accuracy': accuracy_score,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
+    'Balanced': balanced_accuracy_score,
+    'Conf. Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -2523,11 +2523,11 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 univr_metrics = {
-	'Overall Accuracy': accuracy_score,
-    'Positive Rate': true_positive_rate,
-    'Negative Rate': true_negative_rate,
-    'Balanced Accuracy': balanced_accuracy_score,
-    'Confusion Matrix': confusion_matrix,
+	'Accuracy': accuracy_score,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
+    'Balanced': balanced_accuracy_score,
+    'Conf. Matrix': confusion_matrix,
     'Count': count
 }
 

@@ -1570,11 +1570,11 @@ print(f'ROC AUC for Pullman XGB Random Forest model (validation): {pullm_xgbrf_c
 
 # Pullman metrics by sensitive features
 pullm_metrics = {
-	'Overall Accuracy': accuracy_score,
-    'Positive Rate': true_positive_rate,
-    'Negative Rate': true_negative_rate,
-    'Balanced Accuracy': balanced_accuracy_score,
-    'Confusion Matrix': confusion_matrix,
+	'Accuracy': accuracy_score,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
+    'Balanced': balanced_accuracy_score,
+    'Conf. Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -1644,11 +1644,11 @@ print(f'ROC AUC for Vancouver XGB Random Forest model (validation): {vanco_xgbrf
 
 # Vancouver metrics by sensitive features
 vanco_metrics = {
-	'Overall Accuracy': accuracy_score,
-    'Positive Rate': true_positive_rate,
-    'Negative Rate': true_negative_rate,
-    'Balanced Accuracy': balanced_accuracy_score,
-    'Confusion Matrix': confusion_matrix,
+	'Accuracy': accuracy_score,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
+    'Balanced': balanced_accuracy_score,
+    'Conf. Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -1718,11 +1718,11 @@ print(f'ROC AUC for Tri-Cities XGB Random Forest model (validation): {trici_xgbr
 
 # Tri-Cities metrics by sensitive features 
 trici_metrics = {
-	'Overall Accuracy': accuracy_score,
-    'Positive Rate': true_positive_rate,
-    'Negative Rate': true_negative_rate,
-    'Balanced Accuracy': balanced_accuracy_score,
-    'Confusion Matrix': confusion_matrix,
+	'Accuracy': accuracy_score,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
+    'Balanced': balanced_accuracy_score,
+    'Conf. Matrix': confusion_matrix,
     'Count': count
 }
 
@@ -1781,11 +1781,11 @@ print(f'ROC AUC for University XGB Random Forest model (validation): {univr_xgbr
 
 # University metrics by sensitive features 
 univr_metrics = {
-	'Overall Accuracy': accuracy_score,
-    'Positive Rate': true_positive_rate,
-    'Negative Rate': true_negative_rate,
-    'Balanced Accuracy': balanced_accuracy_score,
-    'Confusion Matrix': confusion_matrix,
+	'Accuracy': accuracy_score,
+    'TPR': true_positive_rate,
+    'TNR': true_negative_rate,
+    'Balanced': balanced_accuracy_score,
+    'Conf. Matrix': confusion_matrix,
     'Count': count
 }
 
