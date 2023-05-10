@@ -4,7 +4,8 @@ import runpy
 import sys
 import time
 import traceback
-from datetime import date
+from datetime import date, datetime
+from glob import glob
 
 import saspy
 
@@ -85,9 +86,18 @@ proc sql;
 		and term_end_dt >= today()
 		and acad_career = 'UGRD'
 ;quit;
+
+proc sql;
+	select term_begin_dt into: term_begin_dt 
+	from acs.adj_term 
+	where term_begin_dt <= today()
+		and term_end_dt >= today()
+		and acad_career = 'UGRD'
+;quit;
 """)
 
 term_type = sas.symget('term_type')
+term_begin_dt = datetime.strptime(sas.symget('term_begin_dt'), '%m-%d-%Y').date()
 
 sas.endsas()
 
@@ -109,20 +119,10 @@ class Logger(object):
 #%%
 if __name__ == '__main__':
 
-	if date.today().weekday() == 6:
+	if date.today() == term_begin_dt or date.today().weekday() == 5:
 
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_validation_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_training_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_1yr_testing_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_1yr_validation_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_1yr_training_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_1yr_testing_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_validation_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_training_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_ft_2yr_testing_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_2yr_validation_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_2yr_training_set.sas7bdat')
-		os.remove('Z:\\Nathan\\Models\\student_risk\\datasets\\ft_tr_2yr_testing_set.sas7bdat')
+		for filename in glob('Z:/Nathan/Models/student_risk/datasets/*.sas7bdat'):
+			os.remove(filename)
 
 	if term_type == 'SUM':
 		
