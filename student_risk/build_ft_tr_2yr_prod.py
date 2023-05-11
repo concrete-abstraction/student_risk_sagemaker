@@ -333,32 +333,31 @@ class DatasetBuilderProd:
 			;quit;
 
 			proc sql;
-				create table enrolled_&admit_lag._&cohort_year. as
+				create table enrolled_&cohort_year. as
 				select distinct 
-					a.emplid,
+					a.emplid, 
+					b.cont_term,
 					case when b.emplid is not null 	then 1
-						when c.emplid is not null 	then 1
-													else 0
-													end as enrl_ind,
-					case when c.emplid is not null 	then 1
-													else 0
-													end as degr_ind
+													else a.enrl_ind
+													end as enrl_ind
 				from &dsn..student_enrolled_vw as a
-				left join (select distinct
-								emplid
+				full join (select distinct 
+								emplid 
+								,term_code as cont_term
+								,enrl_ind
 							from &dsn..student_enrolled_vw 
 							where snapshot = 'census'
 								and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+								and substr(strm,4,1) = '7'
 								and acad_career = 'UGRD'
-								and ipeds_ind = 1
-								and term_credit_hours > 0
-								and WA_residency ^= 'NON-I') as b
+								and new_continue_status = 'CTU'
+								and term_credit_hours > 0) as b
 					on a.emplid = b.emplid
 				full join (select distinct 
-								emplid
+								emplid 
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
-								and "&cohort_year." <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+								and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
 								and acad_career = 'UGRD'
 								and ipeds_award_lvl = 5) as c
 					on a.emplid = c.emplid
@@ -366,10 +365,7 @@ class DatasetBuilderProd:
 					and a.full_acad_year = "&cohort_year."
 					and substr(a.strm,4,1) = '7'
 					and a.acad_career = 'UGRD'
-					and a.ipeds_full_part_time = 'F'
-					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
-					and a.WA_residency ^= 'NON-I'
 			;quit;
 			
 			proc sql;
@@ -5231,30 +5227,29 @@ class DatasetBuilderProd:
 			proc sql;
 				create table enrolled_&cohort_year. as
 				select distinct 
-					a.emplid,
+					a.emplid, 
+					b.cont_term,
 					case when b.emplid is not null 	then 1
-						when c.emplid is not null 	then 1
-													else 0
-													end as enrl_ind,
-					case when c.emplid is not null 	then 1
-													else 0
-													end as degr_ind
+													else a.enrl_ind
+													end as enrl_ind
 				from &dsn..student_enrolled_vw as a
-				left join (select distinct
-								emplid
+				full join (select distinct 
+								emplid 
+								,term_code as cont_term
+								,enrl_ind
 							from &dsn..student_enrolled_vw 
 							where snapshot = 'census'
 								and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+								and substr(strm,4,1) = '7'
 								and acad_career = 'UGRD'
-								and ipeds_ind = 1
-								and term_credit_hours > 0
-								and WA_residency ^= 'NON-I') as b
+								and new_continue_status = 'CTU'
+								and term_credit_hours > 0) as b
 					on a.emplid = b.emplid
 				full join (select distinct 
-								emplid
+								emplid 
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
-								and "&cohort_year." <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+								and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
 								and acad_career = 'UGRD'
 								and ipeds_award_lvl = 5) as c
 					on a.emplid = c.emplid
@@ -5262,10 +5257,7 @@ class DatasetBuilderProd:
 					and a.full_acad_year = "&cohort_year."
 					and substr(a.strm,4,1) = '7'
 					and a.acad_career = 'UGRD'
-					and a.ipeds_full_part_time = 'F'
-					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
-					and a.WA_residency ^= 'NON-I'
 			;quit;
 			
 			proc sql;
