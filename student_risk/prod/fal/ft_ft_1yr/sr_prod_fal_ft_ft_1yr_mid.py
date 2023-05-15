@@ -60,7 +60,7 @@ verbose: bool = False
 
 #%%
 # Midterm date and snapshot check
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=['term_begin_dt', 'midterm_begin_dt', 'term_end_dt']).fillna(9999)
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=['term_begin_dt', 'term_midterm_dt', 'term_end_dt']).fillna(9999)
 
 now = datetime.datetime.now()
 now_dt = datetime.datetime.strptime(f'{now.month:02}-{now.day:02}-{now.year:04}', '%m-%d-%Y')
@@ -71,9 +71,9 @@ now_year = now.year
 
 strm = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['STRM'].values[0]
 
-midterm_day = calendar[(calendar['midterm_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_day'].values[0]
-midterm_month = calendar[(calendar['midterm_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_month'].values[0]
-midterm_year = calendar[(calendar['midterm_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_year'].values[0]
+midterm_day = calendar[(calendar['term_midterm_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_day'].values[0]
+midterm_month = calendar[(calendar['term_midterm_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_month'].values[0]
+midterm_year = calendar[(calendar['term_midterm_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_year'].values[0]
 
 if now_year < midterm_year:
 	raise config.MidError(f'{date.today()}: Midterm year exception, outside of date range.')

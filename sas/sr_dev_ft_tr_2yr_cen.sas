@@ -128,10 +128,8 @@ proc sql;
 ;quit;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
-%let end_lag = 3;
-%let start_lag = 1;
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 0);
+%let start_cohort = %eval(&end_cohort. - 7);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -158,8 +156,8 @@ proc sql;
 %macro loop;
 
 	%do cohort_year=&start_cohort. %to &end_cohort.;
-			
-		proc sql;
+
+	proc sql;
 		create table cohort_&cohort_year. (drop=enrl_ind) as
 		select distinct 
 			a.strm as init_strm,
@@ -331,30 +329,32 @@ proc sql;
 	proc sql;
 		create table enrolled_&cohort_year. as
 		select distinct 
-			a.emplid,
+			a.emplid, 
+			b.cont_term,
+			c.grad_term,
 			case when b.emplid is not null 	then 1
-				when c.emplid is not null 	then 1
+				when c.emplid is not null	then 1
 											else 0
-											end as enrl_ind,
-			case when c.emplid is not null 	then 1
-											else 0
-											end as degr_ind
+											end as enrl_ind
 		from &dsn..student_enrolled_vw as a
-		left join (select distinct
-						emplid
+		full join (select distinct 
+						emplid 
+						,term_code as cont_term
+						,enrl_ind
 					from &dsn..student_enrolled_vw 
 					where snapshot = 'census'
 						and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+						and substr(strm,4,1) = '7'
 						and acad_career = 'UGRD'
-						and ipeds_ind = 1
-						and term_credit_hours > 0
-						and WA_residency ^= 'NON-I') as b
+						and new_continue_status = 'CTU'
+						and term_credit_hours > 0) as b
 			on a.emplid = b.emplid
 		full join (select distinct 
 						emplid
+						,term_code as grad_term
 					from &dsn..student_degree_vw 
 					where snapshot = 'degree'
-						and "&cohort_year." <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+						and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
 						and acad_career = 'UGRD'
 						and ipeds_award_lvl = 5) as c
 			on a.emplid = c.emplid
@@ -362,10 +362,7 @@ proc sql;
 			and a.full_acad_year = "&cohort_year."
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.ipeds_full_part_time = 'F'
-			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
-			and a.WA_residency ^= 'NON-I'
 	;quit;
 	
 	proc sql;
@@ -1693,7 +1690,7 @@ proc sql;
 				and substr(c.strm, 4, 1) = '3'
 		group by a.emplid
 	;quit;
-	
+
 	proc sql;
 		create table term_contact_hrs_&cohort_year. as
 		select distinct
@@ -2361,10 +2358,10 @@ proc sql;
 			on a.emplid = aa.emplid
 		left join class_size_&cohort_year. as bb
 			on a.emplid = bb.emplid
- 		left join class_time_&cohort_year. as cc
- 			on a.emplid = cc.emplid 
- 		left join class_day_&cohort_year. as dd
- 			on a.emplid = dd.emplid 
+		left join class_time_&cohort_year. as cc
+			on a.emplid = cc.emplid 
+		left join class_day_&cohort_year. as dd
+			on a.emplid = dd.emplid 
 	;quit;
 		
 	%end;
@@ -3791,7 +3788,7 @@ proc sql;
 				and substr(c.strm, 4, 1) = '3'
 		group by a.emplid
 	;quit;
-	
+
 	proc sql;
 		create table class_time_&cohort_year. as
 		select distinct
@@ -4505,18 +4502,18 @@ proc sql;
 			on a.emplid = aa.emplid
 		left join class_size_&cohort_year. as bb
 			on a.emplid = bb.emplid
- 		left join class_time_&cohort_year. as cc
+		left join class_time_&cohort_year. as cc
 			on a.emplid = cc.emplid
- 		left join class_day_&cohort_year. as dd
- 			on a.emplid = dd.emplid
+		left join class_day_&cohort_year. as dd
+			on a.emplid = dd.emplid
 	;quit;
 
 %mend loop;
-
+		
 %loop;
 
 data validation_set;
-	set dataset_&start_cohort.;
+	set dataset_&start_cohort.-dataset_%eval(&start_cohort. + &lag_year.);
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
 	if distance = . then distance = 0;
@@ -4708,7 +4705,7 @@ data validation_set;
 run;
 
 data training_set;
-	set dataset_%eval(&start_cohort. + &lag_year.)-dataset_&end_cohort.;
+	set dataset_%eval(&start_cohort. + (2 * &lag_year.))-dataset_&end_cohort.;
 	if enrl_ind = . then enrl_ind = 0;
 	if distance = . then acs_mi = 1; else acs_mi = 0;
 	if distance = . then distance = 0;

@@ -4673,21 +4673,23 @@ class DatasetBuilderProd:
 		proc sql;
 			select term_type into: term_type 
 			from acs.adj_term 
-			where term_begin_dt <= today()
-				and term_end_dt >= today()
-				and acad_career = 'UGRD'
-		;quit;
-		
-		proc sql;
-			select distinct full_acad_year into: full_acad_year 
-			from acs.adj_term 
-			where term_begin_dt <= today()
+			where term_year = year(today())
+				and term_begin_dt <= today()
 				and term_end_dt >= today()
 				and acad_career = 'UGRD'
 		;quit;
 
 		proc sql;
-			select distinct a.snapshot into: aid_snapshot
+			select full_acad_year into: full_acad_year 
+			from acs.adj_term 
+			where term_year = year(today())
+				and term_begin_dt <= today()
+				and term_end_dt >= today()
+				and acad_career = 'UGRD'
+		;quit;
+
+		proc sql;
+			select distinct a.snapshot into: aid_check
 			from &dsn..fa_award_aid_year_vw as a
 			inner join (select distinct 
 							emplid, 
@@ -4699,13 +4701,20 @@ class DatasetBuilderProd:
 				on a.emplid = b.emplid
 					and a.aid_year = b.aid_year
 					and a.snapshot = b.snapshot
-			where a.aid_year = "&full_acad_year."	
+			where a.aid_year = "&full_acad_year."
 		;quit;
+
+		%if %symexist(aid_check) = 0 %then %do;
+			%let aid_snapshot = 'yrbegin';
+		%end;
+		%else %do;
+			%let aid_snapshot = &aid_check.;
+		%end;
 
 		proc sql;
 			select distinct
-				case when term_census_dt <= today() < midterm_begin_dt	then 'census'
-					when midterm_begin_dt <= today() < term_eot_dt		then 'midterm'
+				case when term_census_dt <= today() < term_midterm_dt	then 'census'
+					when term_midterm_dt <= today() < term_eot_dt		then 'midterm'
 					when term_eot_dt <= today()	< term_end_dt			then 'eot'
 																		else 'eot' end as snapshot
 			into: snapshot
@@ -9237,20 +9246,6 @@ class DatasetBuilderProd:
 			if fall_class_time_late = . then fall_class_time_late = 0;
 			if spring_class_time_early = . then spring_class_time_early = 0;
 			if spring_class_time_late = . then spring_class_time_late = 0;
-			if fall_sun_class = . then fall_sun_class = 0;
-			if fall_mon_class = . then fall_mon_class = 0;
-			if fall_tues_class = . then fall_tues_class = 0;
-			if fall_wed_class = . then fall_wed_class = 0;
-			if fall_thurs_class = . then fall_thurs_class = 0;
-			if fall_fri_class = . then fall_fri_class = 0;
-			if fall_sat_class = . then fall_sat_class = 0;
-			if spring_sun_class = . then spring_sun_class = 0;
-			if spring_mon_class = . then spring_mon_class = 0;
-			if spring_tues_class = . then spring_tues_class = 0;
-			if spring_wed_class = . then spring_wed_class = 0;
-			if spring_thurs_class = . then spring_thurs_class = 0;
-			if spring_fri_class = . then spring_fri_class = 0;
-			if spring_sat_class = . then spring_sat_class = 0;
 			if total_fall_units = . then total_fall_units = 0;
 			if total_spring_units = . then total_spring_units = 0;
 			if fall_credit_hours = . then fall_credit_hours = 0;
@@ -9443,20 +9438,6 @@ class DatasetBuilderProd:
 			if fall_class_time_late = . then fall_class_time_late = 0;
 			if spring_class_time_early = . then spring_class_time_early = 0;
 			if spring_class_time_late = . then spring_class_time_late = 0;
-			if fall_sun_class = . then fall_sun_class = 0;
-			if fall_mon_class = . then fall_mon_class = 0;
-			if fall_tues_class = . then fall_tues_class = 0;
-			if fall_wed_class = . then fall_wed_class = 0;
-			if fall_thurs_class = . then fall_thurs_class = 0;
-			if fall_fri_class = . then fall_fri_class = 0;
-			if fall_sat_class = . then fall_sat_class = 0;
-			if spring_sun_class = . then spring_sun_class = 0;
-			if spring_mon_class = . then spring_mon_class = 0;
-			if spring_tues_class = . then spring_tues_class = 0;
-			if spring_wed_class = . then spring_wed_class = 0;
-			if spring_thurs_class = . then spring_thurs_class = 0;
-			if spring_fri_class = . then spring_fri_class = 0;
-			if spring_sat_class = . then spring_sat_class = 0;
 			if total_fall_units = . then total_fall_units = 0;
 			if total_spring_units = . then total_spring_units = 0;
 			if fall_credit_hours = . then fall_credit_hours = 0;
@@ -9649,20 +9630,6 @@ class DatasetBuilderProd:
 			if fall_class_time_late = . then fall_class_time_late = 0;
 			if spring_class_time_early = . then spring_class_time_early = 0;
 			if spring_class_time_late = . then spring_class_time_late = 0;
-			if fall_sun_class = . then fall_sun_class = 0;
-			if fall_mon_class = . then fall_mon_class = 0;
-			if fall_tues_class = . then fall_tues_class = 0;
-			if fall_wed_class = . then fall_wed_class = 0;
-			if fall_thurs_class = . then fall_thurs_class = 0;
-			if fall_fri_class = . then fall_fri_class = 0;
-			if fall_sat_class = . then fall_sat_class = 0;
-			if spring_sun_class = . then spring_sun_class = 0;
-			if spring_mon_class = . then spring_mon_class = 0;
-			if spring_tues_class = . then spring_tues_class = 0;
-			if spring_wed_class = . then spring_wed_class = 0;
-			if spring_thurs_class = . then spring_thurs_class = 0;
-			if spring_fri_class = . then spring_fri_class = 0;
-			if spring_sat_class = . then spring_sat_class = 0;
 			if total_fall_units = . then total_fall_units = 0;
 			if total_spring_units = . then total_spring_units = 0;
 			if fall_credit_hours = . then fall_credit_hours = 0;
@@ -9789,7 +9756,7 @@ class DatasetBuilderProd:
 			%end;
 
 		%if &sysinfo ^= 0
-			 
+
 			%then %do;
 				data valid.ft_tr_2yr_validation_set;
 					set work.validation_set;
@@ -9809,7 +9776,7 @@ class DatasetBuilderProd:
 				data work.training_set_compare;
 					set training.ft_tr_2yr_training_set;
 				run;
-						
+				
 				proc compare data=training_set compare=training_set_compare method=absolute;
 				run;
 			%end;
@@ -9825,7 +9792,7 @@ class DatasetBuilderProd:
 			%end;
 
 		%if &sysinfo ^= 0
-			 
+			
 			%then %do;
 				data training.ft_tr_2yr_training_set;
 					set work.training_set;
@@ -9845,7 +9812,7 @@ class DatasetBuilderProd:
 				data work.testing_set_compare;
 					set testing.ft_tr_2yr_testing_set;
 				run;
-				
+
 				proc compare data=testing_set compare=testing_set_compare method=absolute;
 				run;
 			%end;
@@ -9861,7 +9828,7 @@ class DatasetBuilderProd:
 			%end;
 			
 		%if &sysinfo ^= 0
-			 
+			
 			%then %do;
 				data testing.ft_tr_2yr_testing_set;
 					set work.testing_set;

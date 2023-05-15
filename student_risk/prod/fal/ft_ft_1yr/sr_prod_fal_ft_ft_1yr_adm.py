@@ -69,9 +69,9 @@ now_day = now.day
 now_month = now.month
 now_year = now.year
 
-adm_day = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['begin_day'].values[0]
-adm_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['begin_month'].values[0]
-adm_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['begin_year'].values[0]
+adm_day = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_midterm_dt'] >= now_dt)]['begin_day'].values[0]
+adm_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_midterm_dt'] >= now_dt)]['begin_month'].values[0]
+adm_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_midterm_dt'] >= now_dt)]['begin_year'].values[0]
 
 if now_year < adm_year:
 	raise config.AdmError(f'{date.today()}: Admissions year exception, outside of date range.')

@@ -60,7 +60,7 @@ verbose: bool = False
 
 #%%
 # Midterm date and snapshot check
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=['term_begin_dt', 'midterm_begin_dt', 'term_end_dt']).fillna(9999)
+calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=['term_begin_dt', 'term_midterm_dt', 'term_end_dt']).fillna(9999)
 
 now = datetime.datetime.now()
 now_dt = datetime.datetime.strptime(f'{now.month:02}-{now.day:02}-{now.year:04}', '%m-%d-%Y')

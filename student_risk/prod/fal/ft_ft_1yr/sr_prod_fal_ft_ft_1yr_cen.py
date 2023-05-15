@@ -71,9 +71,9 @@ now_year = now.year
 
 strm = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['STRM'].values[0]
 
-census_day = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['census_day'].values[0]
-census_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['census_month'].values[0]
-census_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['midterm_begin_dt'] >= now_dt)]['census_year'].values[0]
+census_day = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_midterm_dt'] >= now_dt)]['census_day'].values[0]
+census_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_midterm_dt'] >= now_dt)]['census_month'].values[0]
+census_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_midterm_dt'] >= now_dt)]['census_year'].values[0]
 
 if now_year < census_year:
 	raise config.CenError(f'{run_date}: Census year exception, outside of date range.')
