@@ -6657,7 +6657,7 @@ class DatasetBuilderProd:
 		sas.submit("""
 		data validation_set;
 			set dataset_&start_cohort.-dataset_%eval(&start_cohort. + &lag_year.);
-						if enrl_ind = . then enrl_ind = 0;
+			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
 			if pop_dens = . then pop_dens = 0;
