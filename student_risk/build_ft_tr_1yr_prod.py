@@ -2465,8 +2465,10 @@ class DatasetBuilderProd:
 				select distinct 
 					a.emplid, 
 					b.cont_term,
+					c.grad_term,
 					case when b.emplid is not null 	then 1
-													else a.enrl_ind
+						when c.emplid is not null	then 1
+													else 0
 													end as enrl_ind
 				from &dsn..student_enrolled_vw as a
 				full join (select distinct 
@@ -2482,7 +2484,8 @@ class DatasetBuilderProd:
 								and term_credit_hours > 0) as b
 					on a.emplid = b.emplid
 				full join (select distinct 
-								emplid 
+								emplid
+								,term_code as grad_term
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
 								and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
