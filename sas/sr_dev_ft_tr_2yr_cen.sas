@@ -8,7 +8,6 @@
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
-%let admit_lag = 0;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
@@ -132,7 +131,7 @@ proc sql;
 %let end_lag = 3;
 %let start_lag = 1;
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 0);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -278,7 +277,7 @@ proc sql;
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		left join cpi as l
 			on input(a.full_acad_year,4.) = l.acs_lag
-		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year. - &admit_lag.), 4.)
+		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'TRAN'
@@ -2482,7 +2481,7 @@ proc sql;
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
-		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year. - &admit_lag.), 4.)
+		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'TRAN'

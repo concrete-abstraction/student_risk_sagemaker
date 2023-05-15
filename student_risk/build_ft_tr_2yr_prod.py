@@ -337,8 +337,10 @@ class DatasetBuilderProd:
 				select distinct 
 					a.emplid, 
 					b.cont_term,
+					c.grad_term,
 					case when b.emplid is not null 	then 1
-													else a.enrl_ind
+						when c.emplid is not null	then 1
+													else 0
 													end as enrl_ind
 				from &dsn..student_enrolled_vw as a
 				full join (select distinct 
@@ -354,7 +356,8 @@ class DatasetBuilderProd:
 								and term_credit_hours > 0) as b
 					on a.emplid = b.emplid
 				full join (select distinct 
-								emplid 
+								emplid
+								,term_code as grad_term
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
 								and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
@@ -5007,11 +5010,10 @@ class DatasetBuilderProd:
 		""")
 
 		sas.submit("""
-		%let acs_lag = 2;			
+		%let acs_lag = 2;
 		%let lag_year = 1;
-		%let admit_lag = 0;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
-		%let start_cohort = %eval(&end_cohort. - 6);
+		%let start_cohort = %eval(&end_cohort. - 7);
 		""")
 
 		print('Done\n')
@@ -5054,7 +5056,7 @@ class DatasetBuilderProd:
 		%macro loop;
 
 			%do cohort_year=&start_cohort. %to &end_cohort.;
-			
+
 			proc sql;
 				create table cohort_&cohort_year. (drop=enrl_ind) as
 				select distinct 
@@ -5173,10 +5175,11 @@ class DatasetBuilderProd:
 					on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 				left join cpi as l
 					on input(a.full_acad_year,4.) = l.acs_lag
-				where a.full_acad_year = put(%eval(&cohort_year. - &lag_year. - &admit_lag.), 4.)
+				where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 					and substr(a.strm,4,1) = '7'
 					and a.acad_career = 'UGRD'
 					and a.adj_admit_type_cat = 'TRAN'
+					and a.ipeds_full_part_time = 'F'
 					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
 					and a.WA_residency ^= 'NON-I'
@@ -5229,8 +5232,10 @@ class DatasetBuilderProd:
 				select distinct 
 					a.emplid, 
 					b.cont_term,
+					c.grad_term,
 					case when b.emplid is not null 	then 1
-													else a.enrl_ind
+						when c.emplid is not null	then 1
+													else 0
 													end as enrl_ind
 				from &dsn..student_enrolled_vw as a
 				full join (select distinct 
@@ -5246,7 +5251,8 @@ class DatasetBuilderProd:
 								and term_credit_hours > 0) as b
 					on a.emplid = b.emplid
 				full join (select distinct 
-								emplid 
+								emplid
+								,term_code as grad_term
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
 								and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
@@ -7373,10 +7379,11 @@ class DatasetBuilderProd:
 					on substr(a.last_sch_postal,1,5) = j.geoid
 				left join acs.edge_locale14_zcta_table as k
 					on substr(a.last_sch_postal,1,5) = k.zcta5ce10
-				where a.full_acad_year = put(%eval(&cohort_year. - &lag_year. - &admit_lag.), 4.)
+				where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 					and substr(a.strm,4,1) = '7'
 					and a.acad_career = 'UGRD'
 					and a.adj_admit_type_cat = 'TRAN'
+					and a.ipeds_full_part_time = 'F'
 					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
 					and a.WA_residency ^= 'NON-I'
