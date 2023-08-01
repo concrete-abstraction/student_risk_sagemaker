@@ -1773,8 +1773,8 @@ print('University metrics by sensitive features (validation)\n')
 print(univr_metric_valid_frame.by_group)
 print('\n')
 
-helper_funcs.fairness_output(auto_engine, model_id, 'train', univr_metric_train_frame, run_date, 'UNIVR')
-helper_funcs.fairness_output(auto_engine, model_id, 'valid', univr_metric_valid_frame, run_date, 'UNIVR')
+helper_funcs.fairness_output(auto_engine, model_id, 'train', univr_metric_train_frame, run_date, ['UNIVR'])
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', univr_metric_valid_frame, run_date, ['UNIVR'])
 
 #%%
 # Ensemble model
