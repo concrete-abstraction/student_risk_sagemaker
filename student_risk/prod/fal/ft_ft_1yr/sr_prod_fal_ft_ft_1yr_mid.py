@@ -1570,12 +1570,12 @@ print(f'ROC AUC for Pullman XGB Random Forest model (validation): {pullm_xgbrf_c
 
 # Pullman metrics by sensitive features
 pullm_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 pullm_group_train = pd.DataFrame()
@@ -1601,6 +1601,9 @@ print('\n')
 print('Pullman metrics by sensitive features (validation)\n')
 print(pullm_metric_valid_frame.by_group)
 print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', pullm_metric_train_frame, run_date, pullm_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', pullm_metric_valid_frame, run_date, pullm_campus_var)
 
 #%%
 # Vancouver XGBoost Random Forest model selection
@@ -1644,12 +1647,12 @@ print(f'ROC AUC for Vancouver XGB Random Forest model (validation): {vanco_xgbrf
 
 # Vancouver metrics by sensitive features
 vanco_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 vanco_group_train = pd.DataFrame()
@@ -1675,6 +1678,9 @@ print('\n')
 print('Vancouver metrics by sensitive features (validation)\n')
 print(vanco_metric_valid_frame.by_group)
 print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', vanco_metric_train_frame, run_date, vanco_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', vanco_metric_valid_frame, run_date, vanco_campus_var)
 
 #%%
 # Tri-Cities XGBoost Random Forest model selection
@@ -1718,26 +1724,40 @@ print(f'ROC AUC for Tri-Cities XGB Random Forest model (validation): {trici_xgbr
 
 # Tri-Cities metrics by sensitive features 
 trici_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
-trici_group = pd.DataFrame()
+trici_group_train = pd.DataFrame()
+trici_group_valid = pd.DataFrame()
 
-trici_group['male'] = trici_x_train[:, 7]
-trici_group['underrep_minority'] = trici_x_train[:, 8]
+trici_group_train['male'] = trici_x_train[:, trici_feat_names.index('male')]
+trici_group_train['underrep_minority'] = trici_x_train[:, trici_feat_names.index('underrep_minority')]
+trici_group_valid['male'] = trici_x_cv[:, trici_feat_names.index('male')]
+trici_group_valid['underrep_minority'] = trici_x_cv[:, trici_feat_names.index('underrep_minority')]
 
-trici_metric_frame = MetricFrame(
-    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group
+trici_metric_train_frame = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_train, y_pred=trici_xgbrf.predict(trici_x_train), sensitive_features=trici_group_train
+)
+
+trici_metric_valid_frame = MetricFrame(
+    metrics=trici_metrics, y_true=trici_y_cv, y_pred=trici_xgbrf.predict(trici_x_cv), sensitive_features=trici_group_valid
 )
 
 print('Tri-Cities metrics by sensitive features (training)\n')
-print(trici_metric_frame.by_group)
+print(trici_metric_train_frame.by_group)
 print('\n')
+
+print('Tri-Cities metrics by sensitive features (validation)\n')
+print(trici_metric_valid_frame.by_group)
+print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', trici_metric_train_frame, run_date, trici_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', trici_metric_valid_frame, run_date, trici_campus_var)
 
 #%%
 # University XGBoost Random Forest model selection
@@ -1781,26 +1801,40 @@ print(f'ROC AUC for University XGB Random Forest model (validation): {univr_xgbr
 
 # University metrics by sensitive features 
 univr_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
-univr_group = pd.DataFrame()
+univr_group_train = pd.DataFrame()
+univr_group_valid = pd.DataFrame()
 
-univr_group['male'] = univr_x_train[:, 7]
-univr_group['underrep_minority'] = univr_x_train[:, 8]
+univr_group_train['male'] = univr_x_train[:, univr_feat_names.index('male')]
+univr_group_train['underrep_minority'] = univr_x_train[:, univr_feat_names.index('underrep_minority')]
+univr_group_valid['male'] = univr_x_cv[:, univr_feat_names.index('male')]
+univr_group_valid['underrep_minority'] = univr_x_cv[:, univr_feat_names.index('underrep_minority')]
 
-univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group
+univr_metric_train_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group_train
+)
+
+univr_metric_valid_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_cv, y_pred=univr_xgbrf.predict(univr_x_cv), sensitive_features=univr_group_valid
 )
 
 print('University metrics by sensitive features (training)\n')
-print(univr_metric_frame.by_group)
+print(univr_metric_train_frame.by_group)
 print('\n')
+
+print('University metrics by sensitive features (validation)\n')
+print(univr_metric_valid_frame.by_group)
+print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', univr_metric_train_frame, run_date, 'UNIVR')
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', univr_metric_valid_frame, run_date, 'UNIVR')
 
 #%%
 # Ensemble model

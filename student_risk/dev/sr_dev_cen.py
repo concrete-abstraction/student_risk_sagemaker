@@ -2277,12 +2277,12 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 pullm_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 pullm_group = pd.DataFrame()
@@ -2359,12 +2359,12 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 vanco_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 vanco_group = pd.DataFrame()
@@ -2441,12 +2441,12 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 trici_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 trici_group = pd.DataFrame()
@@ -2523,12 +2523,12 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 univr_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 univr_group = pd.DataFrame()

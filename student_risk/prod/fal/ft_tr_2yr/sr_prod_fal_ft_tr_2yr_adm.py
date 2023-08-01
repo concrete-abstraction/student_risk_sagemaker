@@ -1507,12 +1507,12 @@ print(f'ROC AUC for Pullman XGB Random Forest model (validation): {pullm_xgbrf_c
 
 # Pullman metrics by sensitive features
 pullm_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 pullm_group_train = pd.DataFrame()
@@ -1538,6 +1538,9 @@ print('\n')
 print('Pullman metrics by sensitive features (validation)\n')
 print(pullm_metric_valid_frame.by_group)
 print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', pullm_metric_train_frame, run_date, pullm_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', pullm_metric_valid_frame, run_date, pullm_campus_var)
 
 #%%
 # Vancouver XGBoost Random Forest model selection
@@ -1581,12 +1584,12 @@ print(f'ROC AUC for Vancouver XGB Random Forest model (validation): {vanco_xgbrf
 
 # Vancouver metrics by sensitive features
 vanco_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 vanco_group_train = pd.DataFrame()
@@ -1612,6 +1615,9 @@ print('\n')
 print('Vancouver metrics by sensitive features (validation)\n')
 print(vanco_metric_valid_frame.by_group)
 print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', vanco_metric_train_frame, run_date, vanco_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', vanco_metric_valid_frame, run_date, vanco_campus_var)
 
 #%%
 # Tri-Cities XGBoost Random Forest model selection
@@ -1655,12 +1661,12 @@ print(f'ROC AUC for Tri-Cities XGB Random Forest model (validation): {trici_xgbr
 
 # Tri-Cities metrics by sensitive features 
 trici_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 trici_group_train = pd.DataFrame()
@@ -1686,6 +1692,9 @@ print('\n')
 print('Tri-Cities metrics by sensitive features (validation)\n')
 print(trici_metric_valid_frame.by_group)
 print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', trici_metric_train_frame, run_date, trici_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', trici_metric_valid_frame, run_date, trici_campus_var)
 
 #%%
 # University XGBoost Random Forest model selection
@@ -1729,12 +1738,12 @@ print(f'ROC AUC for University XGB Random Forest model (validation): {univr_xgbr
 
 # University metrics by sensitive features 
 univr_metrics = {
-	'Accuracy': accuracy_score,
-    'TPR': true_positive_rate,
-    'TNR': true_negative_rate,
-    'Balanced': balanced_accuracy_score,
-    'Conf. Matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 univr_group_train = pd.DataFrame()
@@ -1760,6 +1769,9 @@ print('\n')
 print('University metrics by sensitive features (validation)\n')
 print(univr_metric_valid_frame.by_group)
 print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', univr_metric_train_frame, run_date, 'UNIVR')
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', univr_metric_valid_frame, run_date, 'UNIVR')
 
 #%%
 # Ensemble model
