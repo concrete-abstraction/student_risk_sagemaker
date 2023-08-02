@@ -1563,8 +1563,8 @@ print('Pullman metrics by sensitive features (validation)\n')
 print(pullm_metric_valid_frame.by_group)
 print('\n')
 
-helper_funcs.fairness_output(auto_engine, model_id, 'train', pullm_metric_train_frame, run_date, pullm_campus_var)
-helper_funcs.fairness_output(auto_engine, model_id, 'valid', pullm_metric_valid_frame, run_date, pullm_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'train', model_descr, pullm_metric_train_frame, run_date, pullm_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', model_descr, pullm_metric_valid_frame, run_date, pullm_campus_var)
 
 #%%
 # Vancouver XGBoost Random Forest model selection
@@ -1640,8 +1640,8 @@ print('Vancouver metrics by sensitive features (validation)\n')
 print(vanco_metric_valid_frame.by_group)
 print('\n')
 
-helper_funcs.fairness_output(auto_engine, model_id, 'train', vanco_metric_train_frame, run_date, vanco_campus_var)
-helper_funcs.fairness_output(auto_engine, model_id, 'valid', vanco_metric_valid_frame, run_date, vanco_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'train', model_descr, vanco_metric_train_frame, run_date, vanco_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', model_descr, vanco_metric_valid_frame, run_date, vanco_campus_var)
 
 #%%
 # Tri-Cities XGBoost Random Forest model selection
@@ -1717,8 +1717,8 @@ print('Tri-Cities metrics by sensitive features (validation)\n')
 print(trici_metric_valid_frame.by_group)
 print('\n')
 
-helper_funcs.fairness_output(auto_engine, model_id, 'train', trici_metric_train_frame, run_date, trici_campus_var)
-helper_funcs.fairness_output(auto_engine, model_id, 'valid', trici_metric_valid_frame, run_date, trici_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'train', model_descr, trici_metric_train_frame, run_date, trici_campus_var)
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', model_descr, trici_metric_valid_frame, run_date, trici_campus_var)
 
 #%%
 # University XGBoost Random Forest model selection
@@ -1794,8 +1794,8 @@ print('University metrics by sensitive features (validation)\n')
 print(univr_metric_valid_frame.by_group)
 print('\n')
 
-helper_funcs.fairness_output(auto_engine, model_id, 'train', univr_metric_train_frame, run_date, ['UNIVR'])
-helper_funcs.fairness_output(auto_engine, model_id, 'valid', univr_metric_valid_frame, run_date, ['UNIVR'])
+helper_funcs.fairness_output(auto_engine, model_id, 'train', model_descr, univr_metric_train_frame, run_date, ['UNIVR'])
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', model_descr, univr_metric_valid_frame, run_date, ['UNIVR'])
 
 #%%
 # Ensemble model

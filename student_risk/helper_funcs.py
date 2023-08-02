@@ -159,7 +159,7 @@ def aggregate_outcome(campus_aggregate_outcome: pd.DataFrame, campus_xgbrf_pred_
 	campus_aggregate_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\predictions\\{campus}\\{campus}_{model_descr}_aggregate_outcome.csv', encoding='utf-8', index=False)
 
 
-def fairness_output(auto_engine, model_id: int, model_type: str, metric_frame: object, run_date: object, campus_var: list) -> None:
+def fairness_output(auto_engine, model_id: int, model_type: str, model_descr: str, metric_frame: object, run_date: object, campus_var: list) -> None:
 	fairness_df = pd.DataFrame(metric_frame.by_group)
 	fairness_df = fairness_df.reset_index()
 	fairness_df = fairness_df.astype({"male":"int", "underrep_minority":"int"})
@@ -167,10 +167,11 @@ def fairness_output(auto_engine, model_id: int, model_type: str, metric_frame: o
 	fairness_df['record_date'] = run_date
 	fairness_df['model_id'] = model_id
 	fairness_df['model_type'] = model_type
+	fairness_df['model_descr'] = model_descr
 	fairness_df['matrix'] = fairness_df.matrix.astype(str)
 	fairness_df['adj_acad_prog_primary_campus'] = campus_var[0]
 
-	fairness_df.astype(str).to_sql('placement_fairness', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
+	fairness_df.astype(str).to_sql('student_fairness', con=auto_engine, if_exists='append', index=False, schema='oracle_int.dbo')
 
 
 def results_output(auto_engine, model_id: int, run_date: object, campus_current_outcome: pd.DataFrame, campus_xgbrf_pred_probs, campus: str, model_descr: str) -> None:
