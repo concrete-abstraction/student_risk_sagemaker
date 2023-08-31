@@ -71,9 +71,9 @@ now_year = now.year
 
 strm = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['STRM'].values[0]
 
-midterm_day = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_day'].values[0]
-midterm_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_month'].values[0]
-midterm_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['midterm_year'].values[0]
+midterm_day = calendar[(calendar['STRM'] == strm)]['midterm_day'].values[0]
+midterm_month = calendar[(calendar['STRM'] == strm)]['midterm_month'].values[0]
+midterm_year = calendar[(calendar['STRM'] == strm)]['midterm_year'].values[0]
 
 if now_year < midterm_year:
 	raise config.MidError(f'{date.today()}: Midterm year exception, outside of date range.')

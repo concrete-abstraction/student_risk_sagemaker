@@ -43,15 +43,22 @@ proc sql;
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
+		datepart(base.term_census_dt) as term_census_dt format=mmddyyd10.,
         day(datepart(base.term_census_dt)) as census_day,
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
+		datepart(base.term_midterm_dt) as term_midterm_dt format=mmddyyd10.,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
         year(datepart(base.term_midterm_dt)) as midterm_year,
-        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt,
+		datepart(base.term_end_dt) as term_eot_dt format=mmddyyd10.,
+        day(datepart(base.term_end_dt)) as eot_day,
+        week(datepart(base.term_end_dt)) as eot_week,
+        month(datepart(base.term_end_dt)) as eot_month,
+        year(datepart(base.term_end_dt)) as eot_year,
+        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
 		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
 		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
 		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
@@ -102,7 +109,7 @@ proc sql;
 	%let aid_snapshot = 'yrbegin';
 %end;
 %else %do;
-	%let aid_snapshot = &aid_check.;
+	%let aid_snapshot = "&aid_check.";
 %end;
 
 proc sql;
@@ -133,7 +140,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 7);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -294,7 +301,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011','900101001012')
 			and award_status = 'A'
@@ -535,7 +542,7 @@ proc sql;
 			fed_efc,
 			fed_need
 		from &dsn..fa_award_period
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."	
 			and award_period = 'A'
 			and efc_status = 'O'
@@ -551,7 +558,7 @@ proc sql;
 			sum(offer_amt) as total_offer,
 			sum(accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and award_period in ('A','B')
 			and award_status in ('A','O')
@@ -2388,7 +2395,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011','900101001012')
 			and award_status = 'A'

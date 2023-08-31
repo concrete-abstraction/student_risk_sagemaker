@@ -36,19 +36,27 @@ proc sql;
         base.term_type,
         base.strm,
 		base.full_acad_year,
+		datepart(base.term_begin_dt) as term_begin_dt format=mmddyyd10.,
 		day(datepart(base.term_begin_dt)) as begin_day,
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
+		datepart(base.term_census_dt) as term_census_dt format=mmddyyd10.,
         day(datepart(base.term_census_dt)) as census_day,
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
+		datepart(base.term_midterm_dt) as term_midterm_dt format=mmddyyd10.,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
         year(datepart(base.term_midterm_dt)) as midterm_year,
-        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt,
+		datepart(base.term_end_dt) as term_eot_dt format=mmddyyd10.,
+        day(datepart(base.term_end_dt)) as eot_day,
+        week(datepart(base.term_end_dt)) as eot_week,
+        month(datepart(base.term_end_dt)) as eot_month,
+        year(datepart(base.term_end_dt)) as eot_year,
+        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
 		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
 		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
 		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
@@ -90,12 +98,12 @@ proc sql;
 	%let aid_snapshot = 'yrbegin';
 %end;
 %else %do;
-	%let aid_snapshot = &aid_check.;
+	%let aid_snapshot = "&aid_check.";
 %end;
 
 /* Note: This is a test date. Revert to 4 in production. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 7);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -125,7 +133,7 @@ run;
 /* 	Cohort base */
 
 	proc sql;
-		create table cohort_&start_lag._&cohort_year. as
+		create table cohort_&cohort_year. as
 		select distinct a.*,
 			substr(a.last_sch_postal,1,5) as targetid,
 			case when a.sex = 'M' then 1 
@@ -1443,31 +1451,284 @@ run;
 	proc sql;
 		create table cohort_&cohort_year. as
 		select distinct 
-			a.*,
-			p.admit_type,
-			q.adj_admit_type_cat,
+			SNAP_DATE,
+			week_from_term_begin_dt,
+			day_of_week,
+			STRM,
+			ADMIT_TERM,
+			EMPLID as emplid,
+			last_name,
+			first_name,
+			middle_name,
+			name_suffix,
+			name_display,
+			sex,
+			birthdate,
+			age,
+			domestic_international,
+			WA_residency,
+			ethnic_group,
+			ipeds_ethnic_group,
+			ipeds_ethnic_group_descr,
+			ipeds_ethnic_group_descrshort,
+			ipeds_ethnic_group_report_seq,
+			ipeds_minority_ind,
+			ipeds_legacy_ethnic_group,
+			visa_permit_type,
+			geog_origin_type,
+			geog_origin_type_descrshort,
+			geog_origin_area_code,
+			geog_origin_area_descr50,
+			citizenship_country,
+			citizenship_country_descr,
+			citizenship_status,
+			adm_parent1_highest_educ_lvl,
+			adm_parent1_highest_educ_descr,
+			adm_parent2_highest_educ_lvl,
+			adm_parent2_highest_educ_descr,
+			adm_first_gen_flag,
+			finaid_father_grade_lvl,
+			finaid_father_grade_lvl_descr,
+			finaid_mother_grade_lvl,
+			finaid_mother_grade_lvl_descr,
+			finaid_first_gen_flag,
+			first_gen_flag,
+			ACAD_CAREER,
+			STDNT_CAR_NBR,
+			ADM_APPL_NBR,
+			appl_prog_nbr,
+			adm_appl_dt,
+			adm_appl_min_effdt,
+			adm_appl_method,
+			appl_fee_type,
+			appl_fee_amt,
+			appl_fee_paid,
+			appl_fee_status,
+			appl_fee_dt,
+			adm_appl_complete,
+			adm_appl_complete_dt,
+			adm_appl_admit_dt,
+			adm_appl_cancel_dt,
+			housing_interest,
+			finaid_interest,
+			finaid_app_received_dt,
+			pell_eligibility_ind,
+			effdt,
+			campus as adj_acad_prog_primary_campus,
+			campus_descrshort,
+			campus_report_seq,
+			prog_status,
+			prog_action,
+			prog_reason,
+			adj_prog_status,
+			adj_prog_status_for_ranking,
+			sr_prog_campus,
+			sr_prog_campus_descrshort,
+			sr_prog_campus_report_seq,
+			sr_prog_status,
+			admit_type,
+			ACAD_PLAN,
+			acad_plan_descr,
+			acad_plan_cip_code,
+			last_sch_attend,
+			last_sch_type,
+			last_sch_fice_cd,
+			last_sch_atp_cd,
+			last_sch_descr,
+			last_sch_descr50,
+			last_sch_descrshort,
+			last_sch_city,
+			last_sch_county,
+			last_sch_state,
+			last_sch_state_descr,
+			last_sch_country,
+			last_sch_country_descr,
+			last_sch_postal,
+			last_sch_proprietorship,
+			last_sch_scc_nces_cd,
+			last_sch_nces_district,
+			last_sch_nces_school,
+			last_sch_state_district_code,
+			last_sch_state_district_name,
+			last_sch_state_school_code,
+			last_sch_state_school_name,
+			graduation_dt,
+			high_school_gpa,
+			high_school_gpa_group_report_seq,
+			high_school_gpa_group,
+			transfer_gpa,
+			transfer_gpa_group_report_seq,
+			transfer_gpa_group,
+			best,
+			bestr,
+			qvalue,
+			qgroup_report_seq,
+			qgroup,
+			avalue,
+			agroup_report_seq,
+			agroup,
+			sat_comp,
+			sat_i_ew,
+			sat_i_math,
+			sat_i_mulch,
+			sat_i_verb,
+			sat_i_wr,
+			sat_erws,
+			sat_mss,
+			sat_sup_ahssc,
+			sat_sup_asc,
+			sat_sup_ce,
+			sat_sup_ei,
+			sat_sup_esa,
+			sat_sup_esr,
+			sat_sup_esw,
+			sat_sup_ha,
+			sat_sup_mt,
+			sat_sup_pam,
+			sat_sup_psda,
+			sat_sup_rt,
+			sat_sup_rwc,
+			sat_sup_sec,
+			sat_sup_total,
+			sat_sup_wlt,
+			act_comp,
+			act_engl,
+			act_ew,
+			act_math,
+			act_read,
+			act_scire,
+			act_wr,
+			ielts_ielo,
+			toefl_tibl,
+			toefl_tibr,
+			toefl_tibs,
+			toefl_tibt,
+			toefl_tibw,
+			toefl_tpb1,
+			toefl_tpb2,
+			toefl_tpb3,
+			toefl_tpbt,
+			toefl_tpbw,
+			ugrd_applicant_counting_ind,
+			applied,
+			applied_completed,
+			waitlist_offer,
+			waitlist,
+			admitted,
+			admitted_then_cancelled,
+			confirmed,
+			denied,
+			ad_cancelled,
+			sr_cancelled_prog,
+			sr_active_prog,
+			enrolled as enrl_ind,
+			housing_waiver_ind,
+			housing_contract_app_ind,
+			housing_contract_completed_ind,
+			housing_contract_cancel_ind,
+			building,
+			FacilityFullName,
+			rm_num,
+			AssetType,
+			alive_attendance_desc,
+			alive_not_registered_ind,
+			alive_registered_ind,
+			alive_attended_ind,
+			alive_partial_completion_ind,
+			alive_cancelled_ind,
+			alive_no_show_ind,
+			alive_session_title,
+			isource_cd,
+			isource_cd_dt,
+			GO2,
+			GO2_dt,
+			OCV_DT,
+			OCV_DT_dt,
+			OCV_FCD,
+			OCV_FCD_dt,
+			OCV_FPRV,
+			OCV_FPRV_dt,
+			OCV_GDT,
+			OCV_GDT_dt,
+			OCV_JPRV,
+			OCV_JPRV_dt,
+			RI_COL,
+			RI_COL_dt,
+			RI_FAIR,
+			RI_FAIR_dt,
+			RI_HSV,
+			RI_HSV_dt,
+			RI_NAC,
+			RI_NAC_dt,
+			RI_WAC,
+			RI_WAC_dt,
+			RI_Other,
+			RI_Other_dt,
+			TAP,
+			TAP_dt,
+			TST,
+			TST_dt,
+			VI_CHEGG,
+			VI_CHEGG_dt,
+			VI_CRN,
+			VI_CRN_dt,
+			VI_CXC,
+			VI_CXC_dt,
+			VI_MCO,
+			VI_MCO_dt,
+			NP_group,
+			NP_group_dt,
+			OUT_group,
+			OUT_group_dt,
+			REF_group,
+			REF_group_dt,
+			aid_year,
+			scholarship,
+			checklist_cd,
+			scholarship_dt,
+			scholar_descr,
+			admit_type_descr,
+			admit_type_descrshort,
+			adj_admit_type_cat,
+			adj_admit_type_cat_descr,
+			OCV_DA,
+			OCV_DA_dt,
+			OCV_EA,
+			OCV_EA_dt,
+			OCV_FCED,
+			OCV_FCED_dt,
+			OCV_FCOC,
+			OCV_FCOC_dt,
+			OCV_FCOD,
+			OCV_FCOD_dt,
+			OCV_OOSD,
+			OCV_OOSD_dt,
+			OCV_OOSE,
+			OCV_OOSE_dt,
+			OCV_VE,
+			OCV_VE_dt,
+/* 			p.admit_type, */
+/* 			q.adj_admit_type_cat, */
 			case when a.sex = 'M' then 1 
 					else 0
 			end as male,
-			b.*,
-			case when b.WA_residency = 'RES' then 1
+			case when a.WA_residency = 'RES' then 1
 				else 0
 			end as resident,
-			case when b.adm_parent1_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
-				when b.adm_parent1_highest_educ_lvl = 'G' then 'bach'
-				when b.adm_parent1_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
+			case when a.adm_parent1_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
+				when a.adm_parent1_highest_educ_lvl = 'G' then 'bach'
+				when a.adm_parent1_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
 					else 'missing'
 			end as parent1_highest_educ_lvl,
-			case when b.adm_parent2_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
-				when b.adm_parent2_highest_educ_lvl = 'G' then 'bach'
-				when b.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
+			case when a.adm_parent2_highest_educ_lvl in ('B','C','D','E','F') then '< bach'
+				when a.adm_parent2_highest_educ_lvl = 'G' then 'bach'
+				when a.adm_parent2_highest_educ_lvl in ('H','I','J','K','L') then '> bach'
 					else 'missing'
 			end as parent2_highest_educ_lvl,
-			d.*,
-			case when d.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
+			case when a.ipeds_ethnic_group in ('2', '3', '5', '7', 'Z') then 1 
 				else 0
 			end as underrep_minority,
-			substr(e.ext_org_postal,1,5) as targetid,
+			substr(a.last_sch_postal,1,5) as targetid,
 			f.distance as distance,
 			g.median_inc,
 			g.gini_indx,
@@ -1495,48 +1756,42 @@ run;
 			case when o.locale = '41' then 1 else 0 end as rural_fringe,
 			case when o.locale = '42' then 1 else 0 end as rural_distant,
 			case when o.locale = '43' then 1 else 0 end as rural_remote
-		from &adm..fact_u as a
-		left join &adm..xd_person_demo as b
-			on a.sid_per_demo = b.sid_per_demo
-		left join &adm..xd_admit_type as c
-			on a.sid_admit_type = c.sid_admit_type
-				and c.admit_type in ('FRS','IFR','IPF','TRN','ITR','IPT')
-		left join &adm..xd_ipeds_ethnic_group as d
-			on a.sid_ipeds_ethnic_group = d.sid_ipeds_ethnic_group
-		left join &adm..xd_school as e
-			on a.sid_ext_org_id = e.sid_ext_org_id
+		from (select  * from &adm..UGRD_application_vw where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' ) as a
 		left join acs.distance as f
-			on substr(e.ext_org_postal,1,5) = f.targetid
-		left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
-			on substr(e.ext_org_postal,1,5) = g.geoid
-		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
-			on substr(e.ext_org_postal,1,5) = h.geoid
-		left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
-			on substr(e.ext_org_postal,1,5) = i.geoid
-		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
-			on substr(e.ext_org_postal,1,5) = j.geoid
-		left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k
-			on substr(e.ext_org_postal,1,5) = k.geoid
-		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l
-			on substr(e.ext_org_postal,1,5) = l.geoid
-		left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m
-			on substr(e.ext_org_postal,1,5) = m.geoid
-		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n
-			on substr(e.ext_org_postal,1,5) = n.geoid
+			on substr(a.last_sch_postal,1,5) = f.targetid
+/* 		left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g */
+		left join acs.acs_income_2021 as g
+			on substr(a.last_sch_postal,1,5) = g.geoid
+/* 		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h */
+		left join acs.acs_poverty_2021 as h
+			on substr(a.last_sch_postal,1,5) = h.geoid
+/* 		left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i */
+		left join acs.acs_education_2021 as i
+			on substr(a.last_sch_postal,1,5) = i.geoid
+/* 		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j */
+		left join acs.acs_demo_2021 as j
+			on substr(a.last_sch_postal,1,5) = j.geoid
+/* 		left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k */
+		left join acs.acs_area_2021 as k
+			on substr(a.last_sch_postal,1,5) = k.geoid
+/* 		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l */
+		left join acs.acs_housing_2021 as l
+			on substr(a.last_sch_postal,1,5) = l.geoid
+/* 		left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m */
+		left join acs.acs_race_2021 as m
+			on substr(a.last_sch_postal,1,5) = m.geoid
+/* 		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n */
+		left join acs.acs_ethnicity_2021 as n
+			on substr(a.last_sch_postal,1,5) = n.geoid
 		left join acs.edge_locale14_zcta_table as o
-			on substr(e.ext_org_postal,1,5) = o.zcta5ce10
-		left join &adm..xd_admit_type as p
-			on a.sid_admit_type = p.sid_admit_type
-		left join &dsn..xw_admit_type as q
-			on p.admit_type = q.admit_type
-		left join &adm..xd_person_demo as r
-			on a.sid_per_demo = r.sid_per_demo
-		where a.sid_snapshot = (select max(sid_snapshot) as sid_snapshot 
-								from &adm..fact_u where strm = (substr(put(%eval(&cohort_year. - &lag_year.), z4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), z4.), 3, 2) || '7'))
+			on substr(a.last_sch_postal,1,5) = o.zcta5ce10
+		where a.strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' 
+			and a.snap_date = (select distinct max(snap_date) as snap_date 
+								from acs.UGRD_application_vw where acad_career = 'UGRD' and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7')
 			and a.acad_career = 'UGRD' 
 			and a.enrolled = 1
-			and q.adj_admit_type_cat in ('TRAN')
-			and r.wa_residency ^= 'NON-I'
+			and a.adj_admit_type_cat in ('TRAN')
+			and a.wa_residency ^= 'NON-I'
 	;quit;
 
 /* 	Race/ethnicity detail */

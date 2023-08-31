@@ -78,7 +78,7 @@ class DatasetBuilderDev:
 			%let aid_snapshot = 'yrbegin';
 		%end;
 		%else %do;
-			%let aid_snapshot = &aid_check.;
+			%let aid_snapshot = "&aid_check.";
 		%end;
 		""")
 
@@ -2938,7 +2938,7 @@ class DatasetBuilderDev:
 					fed_efc,
 					fed_need
 				from &dsn..fa_award_period
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."	
 					and award_period = 'A'
 					and efc_status = 'O'
@@ -2954,7 +2954,7 @@ class DatasetBuilderDev:
 					sum(offer_amt) as total_offer,
 					sum(accept_amt) as total_accept
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."
 					and award_period in ('A','B')
 					and award_status in ('A','O')

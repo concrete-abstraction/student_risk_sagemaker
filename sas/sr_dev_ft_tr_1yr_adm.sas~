@@ -1,6 +1,6 @@
 * ------------------------------------------------------------------------------- ;
 *                                                                                 ;
-*                             STUDENT RISK (1 OF 8)                               ;
+*                             STUDENT RISK (5 OF 8)                               ;
 *                                                                                 ;
 * ------------------------------------------------------------------------------- ;
 
@@ -103,7 +103,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 4 in production. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 0);
+%let start_cohort = %eval(&end_cohort. - 7);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -225,7 +225,7 @@ run;
 		where a.full_acad_year = "&cohort_year"
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.adj_admit_type_cat in ('FRSH')
+			and a.adj_admit_type_cat in ('TRAN')
 			and a.ipeds_full_part_time = 'F'
 			and a.ipeds_ind = 1
 			and a.term_credit_hours > 0
@@ -437,7 +437,7 @@ run;
 /* 			and full_acad_year = "&cohort_year." */
 /* 			and substr(strm, 4, 1) = '7' */
 /* 			and acad_career = 'UGRD' */
-/* 			and adj_admit_type_cat in ('FRSH') */
+/* 			and adj_admit_type_cat in ('TRAN') */
 /* 			and WA_residency ^= 'NON-I' */
 /* 			and primary_plan_flag = 'Y' */
 /* 			and calculated split_plan = 0 */
@@ -446,8 +446,7 @@ run;
 /* 	Financial need */
 	
 	proc sql;
-/* 		create table need_&cohort_year. as */
-		create table need_2016 as
+		create table need_&cohort_year. as
 		select distinct
 			emplid,
 			snapshot as need_snap,
@@ -456,8 +455,7 @@ run;
 			fed_need
 		from &dsn..fa_award_period
 		where snapshot = &aid_snapshot.
-/* 			and aid_year = "&cohort_year."	 */
-			and aid_year = '2016'	
+			and aid_year = "&cohort_year."	
 			and award_period = 'A'
 			and efc_status = 'O'
 	;quit;
@@ -1246,7 +1244,7 @@ run;
 /* 		where snapshot = 'census' */
 /* 			and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' */
 /* 			and acad_career = 'UGRD' */
-/* 			and adj_admit_type_cat in ('FRSH') */
+/* 			and adj_admit_type_cat in ('TRAN') */
 /* 	;quit; */
 	
 /* 	Housing detail */
@@ -1709,8 +1707,6 @@ run;
 			OCV_OOSE_dt,
 			OCV_VE,
 			OCV_VE_dt,
-/* 			p.admit_type, */
-/* 			q.adj_admit_type_cat, */
 			case when a.sex = 'M' then 1 
 					else 0
 			end as male,
@@ -1784,7 +1780,7 @@ run;
 								from acs.UGRD_application_vw where acad_career = 'UGRD' and strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7')
 			and a.acad_career = 'UGRD' 
 			and a.enrolled = 1
-			and a.adj_admit_type_cat in ('FRSH')
+			and a.adj_admit_type_cat in ('TRAN')
 			and a.wa_residency ^= 'NON-I'
 	;quit;
 
@@ -2802,15 +2798,15 @@ libname valid "Z:\Nathan\Models\student_risk\datasets\";
 
 %let valid_pass = 0;
 
-%if %sysfunc(exist(valid.ft_ft_1yr_validation_set)) 
+%if %sysfunc(exist(valid.ft_tr_1yr_validation_set)) 
 	%then %do;
 		data work.validation_set_compare;
-			set valid.ft_ft_1yr_validation_set;
+			set valid.ft_tr_1yr_validation_set;
 		run;
 	%end;
 	
 	%else %do;
-		data valid.ft_ft_1yr_validation_set;
+		data valid.ft_tr_1yr_validation_set;
 			set work.validation_set;
 		run;
 	%end;
@@ -2820,7 +2816,7 @@ proc compare data=validation_set compare=validation_set_compare;
 %if &sysinfo ^= 0
 			 
 	%then %do;
-		data valid.ft_ft_1yr_validation_set;
+		data valid.ft_tr_1yr_validation_set;
 			set work.validation_set;
 		run;
 	%end;
@@ -2833,15 +2829,15 @@ libname training "Z:\Nathan\Models\student_risk\datasets\";
 
 %let training_pass = 0;
 
-%if %sysfunc(exist(training.ft_ft_1yr_training_set)) 
+%if %sysfunc(exist(training.ft_tr_1yr_training_set)) 
 	%then %do;
 		data work.training_set_compare;
-			set training.ft_ft_1yr_training_set;
+			set training.ft_tr_1yr_training_set;
 		run;
 	%end;
 	
 	%else %do;
-		data training.ft_ft_1yr_training_set;
+		data training.ft_tr_1yr_training_set;
 			set work.training_set;
 		run;
 	%end;
@@ -2851,7 +2847,7 @@ proc compare data=training_set compare=training_set_compare;
 %if &sysinfo ^= 0
 			 
 	%then %do;
-		data training.ft_ft_1yr_training_set;
+		data training.ft_tr_1yr_training_set;
 			set work.training_set;
 		run;
 	%end;
@@ -2864,15 +2860,15 @@ libname testing "Z:\Nathan\Models\student_risk\datasets\";
 
 %let testing_pass = 0;
 
-%if %sysfunc(exist(testing.ft_ft_1yr_testing_set)) 
+%if %sysfunc(exist(testing.ft_tr_1yr_testing_set)) 
 	%then %do;
 		data work.testing_set_compare;
-			set testing.ft_ft_1yr_testing_set;
+			set testing.ft_tr_1yr_testing_set;
 		run;
 	%end;
 	
 	%else %do;
-		data testing.ft_ft_1yr_testing_set;
+		data testing.ft_tr_1yr_testing_set;
 			set work.testing_set;
 		run;
 	%end;
@@ -2882,7 +2878,7 @@ proc compare data=testing_set compare=testing_set_compare;
 %if &sysinfo ^= 0
 			 
 	%then %do;
-		data testing.ft_ft_1yr_testing_set;
+		data testing.ft_tr_1yr_testing_set;
 			set work.testing_set;
 		run;
 	%end;

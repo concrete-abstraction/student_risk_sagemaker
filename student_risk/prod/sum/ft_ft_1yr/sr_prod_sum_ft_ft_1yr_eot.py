@@ -71,9 +71,9 @@ now_year = now.year
 
 strm = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['STRM'].values[0]
 
-eot_day = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['begin_day'].values[0]
-eot_month = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['begin_month'].values[0]
-eot_year = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_end_dt'] >= now_dt)]['begin_year'].values[0]
+eot_day = calendar[(calendar['STRM'] == strm)]['begin_day'].values[0]
+eot_month = calendar[(calendar['STRM'] == strm)]['begin_month'].values[0]
+eot_year = calendar[(calendar['STRM'] == strm)]['begin_year'].values[0]
 
 if now_year < eot_year:
 	raise config.EOTError(f'{date.today()}: End of term year exception, outside of date range.')

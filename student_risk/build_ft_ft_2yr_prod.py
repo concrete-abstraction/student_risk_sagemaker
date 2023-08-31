@@ -81,7 +81,7 @@ class DatasetBuilderProd:
 			%let aid_snapshot = 'yrbegin';
 		%end;
 		%else %do;
-			%let aid_snapshot = &aid_check.;
+			%let aid_snapshot = "&aid_check.";
 		%end;
 
 		proc sql;
@@ -291,7 +291,7 @@ class DatasetBuilderProd:
 					emplid,
 					case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."
 					and item_type in ('900101001000','900101001010','900101001011','900101001012')
 					and award_status = 'A'
@@ -542,7 +542,7 @@ class DatasetBuilderProd:
 					fed_efc,
 					fed_need
 				from &dsn..fa_award_period
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."	
 					and award_period = 'A'
 					and efc_status = 'O'
@@ -558,7 +558,7 @@ class DatasetBuilderProd:
 					sum(offer_amt) as total_offer,
 					sum(accept_amt) as total_accept
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."
 					and award_period in ('A','B')
 					and award_status in ('A','O')
@@ -2353,7 +2353,7 @@ class DatasetBuilderProd:
 					emplid,
 					case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."
 					and item_type in ('900101001000','900101001010','900101001011','900101001012')
 					and award_status = 'A'
@@ -4950,6 +4950,10 @@ class DatasetBuilderProd:
 			%end;
 		""")
 
+		DatasetBuilderProd.valid_pass = sas.symget('valid_pass')
+		DatasetBuilderProd.training_pass = sas.symget('training_pass')
+		DatasetBuilderProd.testing_pass = sas.symget('testing_pass')
+
 		HTML(sas_log['LOG'])
 
 		print('Done\n')
@@ -5218,7 +5222,7 @@ class DatasetBuilderProd:
 					emplid,
 					case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."
 					and item_type in ('900101001000','900101001010','900101001011','900101001012')
 					and award_status = 'A'
@@ -5456,7 +5460,7 @@ class DatasetBuilderProd:
 					fed_efc,
 					fed_need
 				from &dsn..fa_award_period
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."	
 					and award_period = 'A'
 					and efc_status = 'O'
@@ -5472,7 +5476,7 @@ class DatasetBuilderProd:
 					sum(offer_amt) as total_offer,
 					sum(accept_amt) as total_accept
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."
 					and award_period in ('A','B')
 					and award_status in ('A','O')
@@ -7421,7 +7425,7 @@ class DatasetBuilderProd:
 					emplid,
 					case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."
 					and item_type in ('900101001000','900101001010','900101001011','900101001012')
 					and award_status = 'A'
