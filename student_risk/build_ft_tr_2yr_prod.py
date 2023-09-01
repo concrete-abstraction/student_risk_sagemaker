@@ -157,8 +157,6 @@ class DatasetBuilderProd:
 		sas.submit("""
 		%macro loop;
 
-		%do admit_lag=&start_lag. %to &end_lag.;
-			
 			%do cohort_year=&start_cohort. %to &end_cohort.;
 			
 			proc sql;
@@ -240,7 +238,6 @@ class DatasetBuilderProd:
 						and a2.ipeds_ind = 1
 						and a2.term_credit_hours > 0
 						and a2.WA_residency ^= 'NON-I'
-						and a2.acad_level_bot ^= '50'
 				left join acs.distance_km as b
 					on substr(a.last_sch_postal,1,5) = b.inputid
 						and a.adj_acad_prog_primary_campus = 'PULLM'
@@ -286,7 +283,6 @@ class DatasetBuilderProd:
 					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
 					and a.WA_residency ^= 'NON-I'
-					and a.acad_level_bot ^= '50'
 			;quit;
 			
 			proc sql;
@@ -333,32 +329,31 @@ class DatasetBuilderProd:
 			proc sql;
 				create table enrolled_&cohort_year. as
 				select distinct 
-					a.emplid, 
-					b.cont_term,
-					c.grad_term,
+					a.emplid,
+					a.term_code as cont_term,
 					case when b.emplid is not null 	then 1
-						when c.emplid is not null	then 1
+						when c.emplid is not null 	then 1
 													else 0
-													end as enrl_ind
+													end as enrl_ind,
+					case when c.emplid is not null 	then 1
+													else 0
+													end as degr_ind
 				from &dsn..student_enrolled_vw as a
-				full join (select distinct 
-								emplid 
-								,term_code as cont_term
-								,enrl_ind
+				left join (select distinct
+								emplid
 							from &dsn..student_enrolled_vw 
 							where snapshot = 'census'
 								and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-								and substr(strm,4,1) = '7'
 								and acad_career = 'UGRD'
-								and new_continue_status = 'CTU'
-								and term_credit_hours > 0) as b
+								and ipeds_ind = 1
+								and term_credit_hours > 0
+								and WA_residency ^= 'NON-I') as b
 					on a.emplid = b.emplid
 				full join (select distinct 
 								emplid
-								,term_code as grad_term
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
-								and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+								and "&cohort_year." <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
 								and acad_career = 'UGRD'
 								and ipeds_award_lvl = 5) as c
 					on a.emplid = c.emplid
@@ -366,7 +361,10 @@ class DatasetBuilderProd:
 					and a.full_acad_year = "&cohort_year."
 					and substr(a.strm,4,1) = '7'
 					and a.acad_career = 'UGRD'
+					and a.ipeds_full_part_time = 'F'
+					and a.ipeds_ind = 1
 					and a.term_credit_hours > 0
+					and a.WA_residency ^= 'NON-I'
 			;quit;
 			
 			proc sql;
@@ -2259,16 +2257,25 @@ class DatasetBuilderProd:
 					case when k.locale = '42' then 1 else 0 end as rural_distant,
 					case when k.locale = '43' then 1 else 0 end as rural_remote
 				from &dsn..new_student_enrolled_vw as a
-				inner join &dsn..student_enrolled_vw as a2
+				inner join (select distinct
+								strm,
+								emplid, 
+								case when emplid is not null 	then 1 
+																else 0
+																end as enrl_ind,
+								sum(unt_taken) as total_fall_units
+							from acs.subcatnbr_data 
+							where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+							group by emplid) as a2
 					on a.emplid = a2.emplid
-						and a2.snapshot = 'eot'
-						and a2.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-						and substr(a2.strm,4,1) = '7'
-						and a2.acad_career = 'UGRD'
-						and a2.ipeds_full_part_time = 'F'
-						and a2.ipeds_ind = 1
-						and a2.term_credit_hours > 0
-						and a2.WA_residency ^= 'NON-I'
+						and total_fall_units >= 12
+				left join &dsn..student_enrolled_vw (drop=enrl_ind) as a3
+					on a.emplid = a3.emplid
+						and a3.snapshot = 'eot'
+						and a3.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+						and substr(a3.strm,4,1) = '7'
+						and a3.acad_career = 'UGRD'
+						and a3.WA_residency ^= 'NON-I'
 				left join acs.distance_km as b
 					on substr(a.last_sch_postal,1,5) = b.inputid
 						and a.adj_acad_prog_primary_campus = 'PULLM'
@@ -2287,21 +2294,21 @@ class DatasetBuilderProd:
 				left join acs.distance_km as b6
 					on substr(a.last_sch_postal,1,5) = b6.inputid
 						and a.adj_acad_prog_primary_campus = 'ONLIN'
-				left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
+				left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as c
 					on substr(a.last_sch_postal,1,5) = c.geoid
-				left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
+				left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as d
 					on substr(a.last_sch_postal,1,5) = d.geoid
-				left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
+				left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as e
 					on substr(a.last_sch_postal,1,5) = e.geoid
-				left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
+				left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as f
 					on substr(a.last_sch_postal,1,5) = f.geoid
-				left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
+				left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
 					on substr(a.last_sch_postal,1,5) = g.geoid
-				left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
+				left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
 					on substr(a.last_sch_postal,1,5) = h.geoid
-				left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
+				left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
 					on substr(a.last_sch_postal,1,5) = i.geoid
-				left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
+				left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
 					on substr(a.last_sch_postal,1,5) = j.geoid
 				left join acs.edge_locale14_zcta_table as k
 					on substr(a.last_sch_postal,1,5) = k.zcta5ce10
@@ -4042,6 +4049,7 @@ class DatasetBuilderProd:
 					v.stdnt_agi_blank,
 					d.fed_need,
 					e.total_offer,
+					e.total_accept,
 					f.best,
 					f.bestr,
 					f.qvalue,
@@ -4222,8 +4230,6 @@ class DatasetBuilderProd:
 				left join eot_cum_grades_&cohort_year. as aa
 					on a.emplid = aa.emplid
 			;quit;
-
-		%end;
 
 		%mend loop;
 		""")

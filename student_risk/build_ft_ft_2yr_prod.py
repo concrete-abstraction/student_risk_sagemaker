@@ -331,35 +331,24 @@ class DatasetBuilderProd:
 					create table enrolled_&cohort_year. as
 					select distinct 
 						a.emplid, 
-						b.cont_term,
+						a.term_code as cont_term,
 						case when b.emplid is not null 	then 1
 														else a.enrl_ind
 														end as enrl_ind
 					from &dsn..student_enrolled_vw as a
 					full join (select distinct 
 									emplid 
-									,term_code as cont_term
-									,enrl_ind
-								from &dsn..student_enrolled_vw 
-								where snapshot = 'census'
-									and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-									and substr(strm,4,1) = '7'
-									and acad_career = 'UGRD'
-									and new_continue_status = 'CTU'
-									and term_credit_hours > 0) as b
-						on a.emplid = b.emplid
-					full join (select distinct 
-									emplid 
 								from &dsn..student_degree_vw 
 								where snapshot = 'degree'
 									and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
 									and acad_career = 'UGRD'
-									and ipeds_award_lvl = 5) as c
-						on a.emplid = c.emplid
+									and ipeds_award_lvl = 5) as b
+						on a.emplid = b.emplid
 					where a.snapshot = 'census'
-						and a.full_acad_year = "&cohort_year."
+						and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
 						and substr(a.strm,4,1) = '7'
 						and a.acad_career = 'UGRD'
+						and a.new_continue_status = 'CTU'
 						and a.term_credit_hours > 0
 				;quit;
 			%end;
@@ -2320,21 +2309,21 @@ class DatasetBuilderProd:
 				left join acs.distance_km as b6
 					on substr(a.last_sch_postal,1,5) = b6.inputid
 						and a.adj_acad_prog_primary_campus = 'ONLIN'
-				left join acs.acs_income_%eval(&cohort_year. - &acs_lag.) as c
+				left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as c
 					on substr(a.last_sch_postal,1,5) = c.geoid
-				left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag.) as d
+				left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as d
 					on substr(a.last_sch_postal,1,5) = d.geoid
-				left join acs.acs_education_%eval(&cohort_year. - &acs_lag.) as e
+				left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as e
 					on substr(a.last_sch_postal,1,5) = e.geoid
-				left join acs.acs_demo_%eval(&cohort_year. - &acs_lag.) as f
+				left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as f
 					on substr(a.last_sch_postal,1,5) = f.geoid
-				left join acs.acs_area_%eval(&cohort_year. - &acs_lag.) as g
+				left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
 					on substr(a.last_sch_postal,1,5) = g.geoid
-				left join acs.acs_housing_%eval(&cohort_year. - &acs_lag.) as h
+				left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
 					on substr(a.last_sch_postal,1,5) = h.geoid
-				left join acs.acs_race_%eval(&cohort_year. - &acs_lag.) as i
+				left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
 					on substr(a.last_sch_postal,1,5) = i.geoid
-				left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag.) as j
+				left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
 					on substr(a.last_sch_postal,1,5) = j.geoid
 				left join acs.edge_locale14_zcta_table as k
 					on substr(a.last_sch_postal,1,5) = k.zcta5ce10

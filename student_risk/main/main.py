@@ -244,4 +244,3 @@ if __name__ == '__main__':
 			stop = time.perf_counter()
 			print(f'Completed in {(stop - start)/60:.1f} minutes\n')
 
-# %%

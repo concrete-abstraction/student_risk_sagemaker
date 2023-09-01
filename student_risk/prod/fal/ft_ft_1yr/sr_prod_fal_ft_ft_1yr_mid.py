@@ -85,7 +85,41 @@ elif (now_year == midterm_year and now_month == midterm_month and now_day < midt
 	raise config.MidError(f'{date.today()}: Midterm day exception, outside of date range.')
 
 else:
-	print(f'{date.today()}: No midterm date exceptions, running from midterm.')
+	sas = saspy.SASsession()
+
+	sas.symput('strm', strm)
+
+	sas.submit("""
+	%let dsn = census;
+
+	libname &dsn. odbc dsn=&dsn. schema=dbo;
+
+	proc sql;
+		select distinct
+			max(case when snapshot = 'census' 	then 1
+				when snapshot = 'midterm' 		then 2
+				when snapshot = 'eot'			then 3
+												else 0
+												end) as snap_order
+			into: snap_check
+			separated by ''
+		from &dsn..class_registration
+		where acad_career = 'UGRD'
+			and strm = (select distinct
+							max(strm)
+						from &dsn..class_registration where acad_career = 'UGRD')
+	;quit;
+	""")
+
+	snap_check = sas.symget('snap_check')
+
+	sas.endsas()
+
+	if snap_check != 2:
+		raise config.MidError(f'{date.today()}: No midterm date exception but snapshot exception, attempting to run from census.')
+
+	else:
+		print(f'{date.today()}: No midterm date or snapshot exceptions, running from midterm.')
 
 #%%
 # SAS dataset builder

@@ -1707,8 +1707,6 @@ run;
 			OCV_OOSE_dt,
 			OCV_VE,
 			OCV_VE_dt,
-/* 			p.admit_type, */
-/* 			q.adj_admit_type_cat, */
 			case when a.sex = 'M' then 1 
 					else 0
 			end as male,
@@ -1759,29 +1757,21 @@ run;
 		from (select  * from &adm..UGRD_application_vw where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7' ) as a
 		left join acs.distance as f
 			on substr(a.last_sch_postal,1,5) = f.targetid
-/* 		left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g */
-		left join acs.acs_income_2021 as g
+		left join acs.acs_income_%eval(&cohort_year. - &acs_lag. - &lag_year.) as g
 			on substr(a.last_sch_postal,1,5) = g.geoid
-/* 		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h */
-		left join acs.acs_poverty_2021 as h
+		left join acs.acs_poverty_%eval(&cohort_year. - &acs_lag. - &lag_year.) as h
 			on substr(a.last_sch_postal,1,5) = h.geoid
-/* 		left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i */
-		left join acs.acs_education_2021 as i
+		left join acs.acs_education_%eval(&cohort_year. - &acs_lag. - &lag_year.) as i
 			on substr(a.last_sch_postal,1,5) = i.geoid
-/* 		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j */
-		left join acs.acs_demo_2021 as j
+		left join acs.acs_demo_%eval(&cohort_year. - &acs_lag. - &lag_year.) as j
 			on substr(a.last_sch_postal,1,5) = j.geoid
-/* 		left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k */
-		left join acs.acs_area_2021 as k
+		left join acs.acs_area_%eval(&cohort_year. - &acs_lag. - &lag_year.) as k
 			on substr(a.last_sch_postal,1,5) = k.geoid
-/* 		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l */
-		left join acs.acs_housing_2021 as l
+		left join acs.acs_housing_%eval(&cohort_year. - &acs_lag. - &lag_year.) as l
 			on substr(a.last_sch_postal,1,5) = l.geoid
-/* 		left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m */
-		left join acs.acs_race_2021 as m
+		left join acs.acs_race_%eval(&cohort_year. - &acs_lag. - &lag_year.) as m
 			on substr(a.last_sch_postal,1,5) = m.geoid
-/* 		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n */
-		left join acs.acs_ethnicity_2021 as n
+		left join acs.acs_ethnicity_%eval(&cohort_year. - &acs_lag. - &lag_year.) as n
 			on substr(a.last_sch_postal,1,5) = n.geoid
 		left join acs.edge_locale14_zcta_table as o
 			on substr(a.last_sch_postal,1,5) = o.zcta5ce10
