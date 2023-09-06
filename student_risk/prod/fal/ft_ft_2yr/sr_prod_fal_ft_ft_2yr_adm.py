@@ -255,6 +255,9 @@ pullm_current_outcome: pd.DataFrame
 
 pullm_x_vars = [x for x in pullm_data_vars if x not in unwanted_vars]
 
+# Pullman dataframes
+pullm_logit_df, pullm_validation_set, pullm_training_set, pullm_testing_set, pullm_shap_outcome, pullm_pred_outcome, pullm_aggregate_outcome, pullm_current_outcome = helper_funcs.prep_campus_dataframe(validation_set, training_set, testing_set, pullm_data_vars, pullm_campus_var)
+
 #%%
 # Vancouver variables
 vanco_data_vars = [

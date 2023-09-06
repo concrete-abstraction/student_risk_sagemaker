@@ -72,7 +72,7 @@ proc sql;
 /* Note: Code review needed. */
 
 proc sql;
-	select full_acad_year into: full_acad_year 
+	select term_type into: term_type 
 	from acs.adj_term 
 	where term_year = year(today())
 		and term_begin_dt <= today()
@@ -81,7 +81,7 @@ proc sql;
 ;quit;
 
 proc sql;
-	select term_type into: term_type 
+	select full_acad_year into: full_acad_year 
 	from acs.adj_term 
 	where term_year = year(today())
 		and term_begin_dt <= today()
@@ -140,7 +140,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 5 in production or 6 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 3);
+%let start_cohort = %eval(&end_cohort. - 7);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"

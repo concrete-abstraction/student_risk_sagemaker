@@ -2196,7 +2196,11 @@ class DatasetBuilderProd:
 				create table cohort_&cohort_year. as
 				select distinct 
 					a.strm as init_strm,
-					a2.*,
+					a2.strm as curr_strm,
+					a2.emplid as init_emplid,
+					a2.enrl_ind,
+					a2.total_fall_units,
+					a3.*,
 					substr(a.last_sch_postal,1,5) as targetid,
 					case when a.sex = 'M' then 1 
 						else 0
