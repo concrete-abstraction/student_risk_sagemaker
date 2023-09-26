@@ -3445,8 +3445,8 @@ proc sql;
 					group by subject_catalog_nbr) as g
 			on a.subject_catalog_nbr = g.subject_catalog_nbr
 				and a.ssr_component = g.ssr_component
-		where a.snapshot = 'census'
-			and a.full_acad_year = "&cohort_year."
+		where a.snapshot = 'eot'
+			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and a.grading_basis = 'GRD'
 	;quit;
 	

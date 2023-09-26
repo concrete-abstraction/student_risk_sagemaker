@@ -1112,7 +1112,7 @@ except:
 print('\n')
 
 #%%
-print('Run machine learning models for sophomores...\n')
+print('Run machine learning models for second-year transfers...\n')
 
 # Logistic model
 
