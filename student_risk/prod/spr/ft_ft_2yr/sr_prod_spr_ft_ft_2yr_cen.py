@@ -13,7 +13,7 @@ import saspy
 import sklearn
 import sqlalchemy
 from fairlearn.metrics import MetricFrame, true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate, selection_rate, count
-from patsy import dmatrices
+from patsy.highlevel import dmatrices
 from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier
 from sklearn.experimental import enable_halving_search_cv

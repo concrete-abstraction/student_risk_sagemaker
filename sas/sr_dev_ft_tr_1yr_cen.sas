@@ -127,9 +127,9 @@ proc sql;
 		and full_acad_year = "&full_acad_year."
 ;quit;
 
-/* Note: This is a test date. Revert to 5 in production or 6 in development. */
+/* Note: This is a test date. Revert to 7 in production or 1 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 7);
+%let start_cohort = %eval(&end_cohort. - 1);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -313,6 +313,9 @@ run;
 			a.emplid, 
 			b.cont_term,
 			c.grad_term,
+			case when c.emplid is not null	then 1
+											else 0
+											end as deg_ind,
 			case when b.emplid is not null 	then 1
 				when c.emplid is not null	then 1
 											else 0
@@ -343,7 +346,6 @@ run;
 			and a.full_acad_year = "&cohort_year."
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-/* 			and a.new_continue_status = 'TRAN' */
 			and a.term_credit_hours > 0
 	;quit;
 	
@@ -2109,6 +2111,10 @@ run;
 		create table dataset_&cohort_year. as
 		select 
 			a.*,
+			c.cont_term,
+			c.enrl_ind,
+			c.grad_term,
+			c.deg_ind,
 			b.pell_recipient_ind,
 			coalesce(y.fall_term_gpa, x.fall_term_gpa) as fall_term_gpa,
 			coalesce(y.fall_term_gpa_hours, x.fall_term_gpa_hours) as fall_term_gpa_hours,
@@ -2138,8 +2144,6 @@ run;
 			z.spring_term_grade_count,
 			aa.cum_gpa,
 			aa.cum_gpa_hours,
-			c.cont_term,
-			c.enrl_ind,
 			d.acad_plan,
 			d.acad_plan_descr,
 			d.plan_owner_org,

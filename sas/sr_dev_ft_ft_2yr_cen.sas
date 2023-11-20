@@ -127,9 +127,9 @@ proc sql;
 		and full_acad_year = "&full_acad_year."
 ;quit;
 
-/* Note: This is a test date. Revert to 5 in production or 6 in development. */
+/* Note: This is a test date. Revert to 7 in production or 6 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 1);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -325,24 +325,41 @@ run;
 		create table enrolled_&cohort_year. as
 		select distinct 
 			a.emplid, 
-			a.term_code as cont_term,
+			b.cont_term,
+			c.grad_term,
+			case when c.emplid is not null	then 1
+											else 0
+											end as deg_ind,
 			case when b.emplid is not null 	then 1
-											else a.enrl_ind
+				when c.emplid is not null	then 1
+											else 0
 											end as enrl_ind
 		from &dsn..student_enrolled_vw as a
 		full join (select distinct 
 						emplid 
+						,term_code as cont_term
+						,enrl_ind
+					from &dsn..student_enrolled_vw 
+					where snapshot = 'census'
+						and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+						and substr(strm,4,1) = '7'
+						and acad_career = 'UGRD'
+						and new_continue_status = 'CTU'
+						and term_credit_hours > 0) as b
+			on a.emplid = b.emplid
+		full join (select distinct 
+						emplid
+						,term_code as grad_term
 					from &dsn..student_degree_vw 
 					where snapshot = 'degree'
 						and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
 						and acad_career = 'UGRD'
-						and ipeds_award_lvl = 5) as b
-			on a.emplid = b.emplid
+						and ipeds_award_lvl = 5) as c
+			on a.emplid = c.emplid
 		where a.snapshot = 'census'
-			and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+			and a.full_acad_year = "&cohort_year."
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
-			and a.new_continue_status = 'CTU'
 			and a.term_credit_hours > 0
 	;quit;
 	
@@ -2108,6 +2125,10 @@ run;
 		create table dataset_&cohort_year. as
 		select 
 			a.*,
+			c.cont_term,
+			c.enrl_ind,
+			c.grad_term,
+			c.deg_ind,
 			b.pell_recipient_ind,
 			coalesce(y.fall_term_gpa, x.fall_term_gpa) as fall_term_gpa,
 			coalesce(y.fall_term_gpa_hours, x.fall_term_gpa_hours) as fall_term_gpa_hours,
@@ -2137,8 +2158,6 @@ run;
 			z.spring_term_grade_count,
 			aa.cum_gpa,
 			aa.cum_gpa_hours,
-			c.cont_term,
-			c.enrl_ind,
 			d.acad_plan,
 			d.acad_plan_descr,
 			d.plan_owner_org,

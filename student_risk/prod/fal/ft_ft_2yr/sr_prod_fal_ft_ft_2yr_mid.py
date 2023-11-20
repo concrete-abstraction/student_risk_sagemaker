@@ -13,7 +13,7 @@ import saspy
 import sklearn
 import sqlalchemy
 from fairlearn.metrics import MetricFrame, true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate, selection_rate, count
-from patsy import dmatrices
+from patsy.highlevel import dmatrices
 from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier
 from sklearn.experimental import enable_halving_search_cv
@@ -307,7 +307,7 @@ vanco_data_vars = [
 'fall_midterm_gpa_avg',
 'fall_midterm_gpa_avg_mi',
 'fall_midterm_grade_count',
-'fall_midterm_F_grade_count',
+# 'fall_midterm_F_grade_count',
 'fall_midterm_S_grade_count',
 'fall_midterm_W_grade_count',
 # 'awe_instrument',
@@ -1493,7 +1493,6 @@ print('Run machine learning models for sophomores...\n')
 #%%
 # Pullman XGBoost Random Forest model selection
 if build_ft_ft_2yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_2yr_prod.DatasetBuilderProd.training_pass == 0:
-if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_prod.DatasetBuilderProd.training_pass == 0:
 	pullm_start = time.perf_counter()
 
 	pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()

@@ -164,7 +164,7 @@ def fairness_output(auto_engine, model_id: int, model_type: str, model_descr: st
 	fairness_df = fairness_df.reset_index()
 	fairness_df = fairness_df.astype({"male":"int", "underrep_minority":"int"})
 	
-	fairness_df['record_date'] = run_date
+	fairness_df['date'] = run_date
 	fairness_df['model_id'] = model_id
 	fairness_df['model_type'] = model_type
 	fairness_df['model_descr'] = model_descr

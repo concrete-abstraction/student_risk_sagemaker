@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 from imblearn.under_sampling import NearMiss, TomekLinks
 from matplotlib.legend_handler import HandlerLine2D
-from patsy import dmatrices
+from patsy.highlevel import dmatrices
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier

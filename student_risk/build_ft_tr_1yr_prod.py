@@ -2714,6 +2714,9 @@ class DatasetBuilderProd:
 					a.emplid, 
 					b.cont_term,
 					c.grad_term,
+					case when c.emplid is not null	then 1
+													else 0
+													end as deg_ind,
 					case when b.emplid is not null 	then 1
 						when c.emplid is not null	then 1
 													else 0

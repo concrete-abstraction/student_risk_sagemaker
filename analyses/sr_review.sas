@@ -54,6 +54,7 @@ proc sql;
 		sum(nonenroll_nonmatch) as nonenroll_nonmatch,
 		date
 	from return
+	where date ^= '01FEB2023'd and date ^= '30AUG2022'd
 	group by date
 	order by date
 ;quit;

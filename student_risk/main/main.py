@@ -97,7 +97,7 @@ proc sql;
 """)
 
 term_type = sas.symget('term_type')
-term_begin_dt = datetime.strptime(sas.symget('term_begin_dt'), '%m-%d-%Y').date()
+term_begin_dt = datetime.strptime(str(sas.symget('term_begin_dt')), '%m-%d-%Y').date()
 
 sas.endsas()
 
