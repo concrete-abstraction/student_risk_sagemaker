@@ -56,7 +56,7 @@ num_parallel_tree: int = 64
 subsample: float = 0.8
 colsample_bytree: float = 0.8
 colsample_bynode: float = 0.8
-verbose: bool = False
+verbose: bool = True
 
 #%%
 # Midterm date and snapshot check
@@ -142,7 +142,7 @@ pullm_data_vars = [
 'male',
 'underrep_minority', 
 # 'acad_year',
-# 'age_group', 
+# 'age_group',
 # 'age',
 # 'race_hispanic',
 # 'race_american_indian',
@@ -151,9 +151,9 @@ pullm_data_vars = [
 # 'race_black',
 # 'race_native_hawaiian',
 # 'race_white',
-# 'min_week_from_term_begin_dt',
+# # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
@@ -338,7 +338,7 @@ vanco_data_vars = [
 'male',
 'underrep_minority', 
 # 'acad_year',
-# 'age_group', 
+# 'age_group',
 # 'age',
 # 'race_hispanic',
 # 'race_american_indian',
@@ -349,7 +349,7 @@ vanco_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
@@ -534,7 +534,7 @@ trici_data_vars = [
 'male',
 'underrep_minority', 
 # 'acad_year',
-# 'age_group', 
+# 'age_group',
 # 'age',
 # 'race_hispanic',
 # 'race_american_indian',
@@ -545,7 +545,7 @@ trici_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
@@ -730,7 +730,7 @@ univr_data_vars = [
 'male',
 'underrep_minority', 
 # 'acad_year',
-# 'age_group', 
+# 'age_group',
 # 'age',
 # 'race_hispanic',
 # 'race_american_indian',
@@ -741,7 +741,7 @@ univr_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',

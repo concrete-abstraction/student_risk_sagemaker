@@ -1,50 +1,55 @@
-#%%
+# %%
 import time
 
 import saspy
 from IPython.display import HTML
 
 
-#%%
+# %%
 class DatasetBuilderProd:
+    valid_pass = None
+    training_pass = None
+    testing_pass = None
 
-	valid_pass = None
-	training_pass = None
-	testing_pass = None
+    @staticmethod
+    def build_admissions_prod():
+        # Start SAS session
+        print("\nStart SAS session...")
 
-	@staticmethod
-	def build_admissions_prod():
-		
-		# Start SAS session
-		print('\nStart SAS session...')
+        sas = saspy.SASsession()
 
-		sas = saspy.SASsession()
-
-		sas.submit("""
+        sas.submit(
+            """
 		options sqlreduceput=all sqlremerge;
 		run;
-		""")
-		
-		# Set libname statements
-		print('Set libname statements...')
+		"""
+        )
 
-		sas.submit("""
+        # Set libname statements
+        print("Set libname statements...")
+
+        sas.submit(
+            """
 		%let dsn = census;
 		%let adm = adm;
-		""")
+		"""
+        )
 
-		sas.submit("""
+        sas.submit(
+            """
 		libname &dsn. odbc dsn=&dsn. schema=dbo;
 		libname &adm. odbc dsn=&adm. schema=dbo;
 		libname acs \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\\";
-		""")
+		"""
+        )
 
-		print('Done\n')
+        print("Done\n")
 
-		# Set macro variables
-		print('Set macro variables...')
+        # Set macro variables
+        print("Set macro variables...")
 
-		sas.submit("""
+        sas.submit(
+            """
 		proc sql;
 			select term_type into: term_type 
 			from acs.adj_term 
@@ -83,52 +88,62 @@ class DatasetBuilderProd:
 		%else %do;
 			%let aid_snapshot = "&aid_check.";
 		%end;
-		""")
+		"""
+        )
 
-		sas.submit("""
+        sas.submit(
+            """
 		%let acs_lag = 2;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 7);
-		""")
+		"""
+        )
 
-		print('Done\n')
+        print("Done\n")
 
-		# Import supplemental files
-		print('Import supplemental files...')
-		start = time.perf_counter()
+        # Import supplemental files
+        print("Import supplemental files...")
+        start = time.perf_counter()
 
-		sas.submit("""
+        sas.submit(
+            """
 		proc import out=act_to_sat_engl_read
 			datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_engl_read.xlsx\"
 			dbms=XLSX REPLACE;
 			getnames=YES;
 			run;
-		""")
+		"""
+        )
 
-		sas.submit("""
+        sas.submit(
+            """
 		proc import out=act_to_sat_math
 			datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_math.xlsx\"
 			dbms=XLSX REPLACE;
 			getnames=YES;
 			run;
-		""")
+		"""
+        )
 
-		sas.submit("""
+        sas.submit(
+            """
 		proc import out=cpi
 			datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\cpi.xlsx\"
 			dbms=XLSX REPLACE;
 			getnames=YES;
 		run;
-		""")
+		"""
+        )
 
-		stop = time.perf_counter()
-		print(f'Done in {stop - start:.1f} seconds\n')
+        stop = time.perf_counter()
+        print(f"Done in {stop - start:.1f} seconds\n")
 
-		# Create SAS macro
-		print('Create SAS macro...')
+        # Create SAS macro
+        print("Create SAS macro...")
 
-		sas.submit("""
+        sas.submit(
+            """
 		%macro loop;
 
 			%do cohort_year=&start_cohort. %to &end_cohort.;
@@ -2003,27 +2018,31 @@ class DatasetBuilderProd:
 			;quit;
 			
 		%mend loop;
-		""")
+		"""
+        )
 
-		print('Done\n')
+        print("Done\n")
 
-		# Run SAS macro program to prepare data from precensus
-		print('Run SAS macro program...')
-		start = time.perf_counter()
+        # Run SAS macro program to prepare data from precensus
+        print("Run SAS macro program...")
+        start = time.perf_counter()
 
-		sas_log = sas.submit("""
+        sas_log = sas.submit(
+            """
 		%loop;
-		""")
+		"""
+        )
 
-		HTML(sas_log['LOG'])
+        HTML(sas_log["LOG"])
 
-		stop = time.perf_counter()
-		print(f'Done in {(stop - start)/60:.1f} minutes\n')
+        stop = time.perf_counter()
+        print(f"Done in {(stop - start)/60:.1f} minutes\n")
 
-		# Prepare data
-		print('Prepare data...')
+        # Prepare data
+        print("Prepare data...")
 
-		sas.submit("""
+        sas.submit(
+            """
 		data validation_set;
 			set dataset_&start_cohort.-dataset_%eval(&start_cohort. + &lag_year.);
 			if enrl_ind = . then enrl_ind = 0;
@@ -2290,14 +2309,16 @@ class DatasetBuilderProd:
 			if total_offer = . then total_offer = 0;
 			if total_accept = . then total_accept = 0;
 		run;
-		""")
+		"""
+        )
 
-		print('Done\n')
+        print("Done\n")
 
-		# Export data from SAS
-		print('Export data from SAS...')
+        # Export data from SAS
+        print("Export data from SAS...")
 
-		sas_log = sas.submit("""
+        sas_log = sas.submit(
+            """
 		libname valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
 
 		%let valid_pass = 0;
@@ -2405,52 +2426,59 @@ class DatasetBuilderProd:
 			%else %do;
 				%let testing_pass = 1;
 			%end;
-		""")
+		"""
+        )
 
-		DatasetBuilderProd.valid_pass = sas.symget('valid_pass')
-		DatasetBuilderProd.training_pass = sas.symget('training_pass')
-		DatasetBuilderProd.testing_pass = sas.symget('testing_pass')
+        DatasetBuilderProd.valid_pass = sas.symget("valid_pass")
+        DatasetBuilderProd.training_pass = sas.symget("training_pass")
+        DatasetBuilderProd.testing_pass = sas.symget("testing_pass")
 
-		HTML(sas_log['LOG'])
+        HTML(sas_log["LOG"])
 
-		print('Done\n')
+        print("Done\n")
 
-		# End SAS session
-		sas.endsas()
+        # End SAS session
+        sas.endsas()
 
-	@staticmethod
-	def build_census_prod():
+    @staticmethod
+    def build_census_prod():
+        # Start SAS session
+        print("\nStart SAS session...")
 
-		# Start SAS session
-		print('\nStart SAS session...')
+        sas = saspy.SASsession()
 
-		sas = saspy.SASsession()
-
-		sas.submit("""
+        sas.submit(
+            """
 		options sqlreduceput=all sqlremerge;
 		run;
-		""")
-		
-		# Set libname statements
-		print('Set libname statements...')
+		"""
+        )
 
-		sas.submit("""
+        # Set libname statements
+        print("Set libname statements...")
+
+        sas.submit(
+            """
 		%let dsn = census;
 		%let adm = adm;
-		""")
+		"""
+        )
 
-		sas.submit("""
+        sas.submit(
+            """
 		libname &dsn. odbc dsn=&dsn. schema=dbo;
 		libname &adm. odbc dsn=&adm. schema=dbo;
 		libname acs \"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\\";
-		""")
+		"""
+        )
 
-		print('Done\n')
+        print("Done\n")
 
-		# Set macro variables
-		print('Set macro variables...')
+        # Set macro variables
+        print("Set macro variables...")
 
-		sas.submit("""
+        sas.submit(
+            """
 		proc sql;
 			select term_type into: term_type 
 			from acs.adj_term 
@@ -2504,52 +2532,62 @@ class DatasetBuilderProd:
 							from &dsn..class_registration_vw where acad_career = 'UGRD')
 				and full_acad_year = "&full_acad_year."
 		;quit;
-		""")
+		"""
+        )
 
-		sas.submit("""
+        sas.submit(
+            """
 		%let acs_lag = 2;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 7);
-		""")
+		"""
+        )
 
-		print('Done\n')
+        print("Done\n")
 
-		# Import supplemental files
-		print('Import supplemental files...')
-		start = time.perf_counter()
+        # Import supplemental files
+        print("Import supplemental files...")
+        start = time.perf_counter()
 
-		sas.submit("""
+        sas.submit(
+            """
 		proc import out=act_to_sat_engl_read
 			datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_engl_read.xlsx\"
 			dbms=XLSX REPLACE;
 			getnames=YES;
 			run;
-		""")
+		"""
+        )
 
-		sas.submit("""
+        sas.submit(
+            """
 		proc import out=act_to_sat_math
 			datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_math.xlsx\"
 			dbms=XLSX REPLACE;
 			getnames=YES;
 			run;
-		""")
+		"""
+        )
 
-		sas.submit("""
+        sas.submit(
+            """
 		proc import out=cpi
 			datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\cpi.xlsx\"
 			dbms=XLSX REPLACE;
 			getnames=YES;
 		run;
-		""")
+		"""
+        )
 
-		stop = time.perf_counter()
-		print(f'Done in {stop - start:.1f} seconds\n')
+        stop = time.perf_counter()
+        print(f"Done in {stop - start:.1f} seconds\n")
 
-		# Create SAS macro
-		print('Create SAS macro...')
+        # Create SAS macro
+        print("Create SAS macro...")
 
-		sas.submit("""
+        sas.submit(
+            """
 		%macro loop;
 	
 			%do cohort_year=&start_cohort. %to &end_cohort.;
@@ -3012,6 +3050,14 @@ class DatasetBuilderProd:
 				from &dsn..student_ext_acad_subj
 				where snapshot = 'census'
 					and ext_subject_area in ('CHS','RS','AP','IB','AICE')
+				union
+				select distinct
+					emplid,
+					'RS' as ext_subject_area,
+					 1 as ind
+				from &dsn..student_acad_prog_plan_vw
+				where snapshot = 'census'
+					and tuition_group in ('1RS','1TRS')
 				order by emplid
 			;quit;
 			
@@ -5203,7 +5249,15 @@ class DatasetBuilderProd:
 					1 as ind
 				from &dsn..student_ext_acad_subj
 				where snapshot = 'census'
-					and ext_subject_area in ('CHS','RS', 'AP','IB','AICE')
+					and ext_subject_area in ('CHS','RS','AP','IB','AICE')
+				union
+				select distinct
+					emplid,
+					'RS' as ext_subject_area,
+					 1 as ind
+				from &dsn..student_acad_prog_plan_vw
+				where snapshot = 'census'
+					and tuition_group in ('1RS','1TRS')
 				order by emplid
 			;quit;
 			
@@ -6982,27 +7036,31 @@ class DatasetBuilderProd:
 			;quit;
 			
 		%mend loop;
-		""")
+		"""
+        )
 
-		print('Done\n')
+        print("Done\n")
 
-		# Run SAS macro program to prepare data from census
-		print('Run SAS macro program...')
-		start = time.perf_counter()
+        # Run SAS macro program to prepare data from census
+        print("Run SAS macro program...")
+        start = time.perf_counter()
 
-		sas_log = sas.submit("""
+        sas_log = sas.submit(
+            """
 		%loop;
-		""")
+		"""
+        )
 
-		HTML(sas_log['LOG'])
+        HTML(sas_log["LOG"])
 
-		stop = time.perf_counter()
-		print(f'Done in {(stop - start)/60:.1f} minutes\n')
+        stop = time.perf_counter()
+        print(f"Done in {(stop - start)/60:.1f} minutes\n")
 
-		# Prepare data
-		print('Prepare data...')
+        # Prepare data
+        print("Prepare data...")
 
-		sas.submit("""
+        sas.submit(
+            """
 		data validation_set;
 			set dataset_&start_cohort.-dataset_%eval(&start_cohort. + &lag_year.);
 			if enrl_ind = . then enrl_ind = 0;
@@ -7620,14 +7678,16 @@ class DatasetBuilderProd:
 			if total_offer = . then total_offer = 0;
 			if total_accept = . then total_accept = 0;
 		run;
-		""")
+		"""
+        )
 
-		print('Done\n')
+        print("Done\n")
 
-		# Export data from SAS
-		print('Export data from SAS...')
+        # Export data from SAS
+        print("Export data from SAS...")
 
-		sas_log = sas.submit("""
+        sas_log = sas.submit(
+            """
 		libname valid \"Z:\\Nathan\\Models\\student_risk\\datasets\\\";
 
 		%let valid_pass = 0;
@@ -7735,15 +7795,16 @@ class DatasetBuilderProd:
 			%else %do;
 				%let testing_pass = 1;
 			%end;
-		""")
+		"""
+        )
 
-		DatasetBuilderProd.valid_pass = sas.symget('valid_pass')
-		DatasetBuilderProd.training_pass = sas.symget('training_pass')
-		DatasetBuilderProd.testing_pass = sas.symget('testing_pass')
+        DatasetBuilderProd.valid_pass = sas.symget("valid_pass")
+        DatasetBuilderProd.training_pass = sas.symget("training_pass")
+        DatasetBuilderProd.testing_pass = sas.symget("testing_pass")
 
-		HTML(sas_log['LOG'])
+        HTML(sas_log["LOG"])
 
-		print('Done\n')
+        print("Done\n")
 
-		# End SAS session
-		sas.endsas()
+        # End SAS session
+        sas.endsas()
