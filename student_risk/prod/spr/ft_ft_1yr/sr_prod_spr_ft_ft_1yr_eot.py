@@ -1549,6 +1549,8 @@ if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_p
 	pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
 	pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
 									eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
+	
+	joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 else:
 	pullm_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_{model_descr}_model_v{sklearn.__version__}.pkl')
@@ -1627,6 +1629,8 @@ if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_p
 	vanco_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, 
 									eval_metric='logloss', **vanco_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 
+	joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_{model_descr}_model_v{sklearn.__version__}.pkl')
+
 else:
 	vanco_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_{model_descr}_model_v{sklearn.__version__}.pkl')
 
@@ -1689,6 +1693,8 @@ if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_p
 	trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[trici_y_train == 1].count()
 	trici_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, 
 									eval_metric='logloss', **trici_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
+
+	joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 else:
 	trici_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\trici_{model_descr}_model_v{sklearn.__version__}.pkl')
@@ -1766,6 +1772,8 @@ if build_ft_ft_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_ft_1yr_p
 	univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[univr_y_train == 1].count()
 	univr_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, 
 									eval_metric='logloss', **univr_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
+
+	joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 else:
 	univr_xgbrf = joblib.load(f'Z:\\Nathan\\Models\\student_risk\\models\\univr_{model_descr}_model_v{sklearn.__version__}.pkl')
@@ -2109,27 +2117,23 @@ univr_pred_outcome.to_csv(f'Z:\\Nathan\\Models\\student_risk\\predictions\\univr
 helper_funcs.aggregate_outcome(pullm_aggregate_outcome, pullm_xgbrf_pred_probs, 'pullm', model_descr)
 helper_funcs.results_output(auto_engine, model_id, run_date, pullm_current_outcome, pullm_xgbrf_pred_probs, 'pullm', model_descr)
 helper_funcs.shap_output(engine, student_shap, top_N, model_id, run_date, pullm_shap_zip, 'pullm', model_descr)
-joblib.dump(pullm_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\pullm_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Vancouver output
 helper_funcs.aggregate_outcome(vanco_aggregate_outcome, vanco_xgbrf_pred_probs, 'vanco', model_descr)
 helper_funcs.results_output(auto_engine, model_id, run_date, vanco_current_outcome, vanco_xgbrf_pred_probs, 'vanco', model_descr)
 helper_funcs.shap_output(engine, student_shap, top_N, model_id, run_date, vanco_shap_zip, 'vanco', model_descr)
-joblib.dump(vanco_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\vanco_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 #%%
 # Tri-Cities output
 helper_funcs.aggregate_outcome(trici_aggregate_outcome, trici_xgbrf_pred_probs, 'trici', model_descr)
 helper_funcs.results_output(auto_engine, model_id, run_date, trici_current_outcome, trici_xgbrf_pred_probs, 'trici', model_descr)
 helper_funcs.shap_output(engine, student_shap, top_N, model_id, run_date, trici_shap_zip, 'trici', model_descr)
-joblib.dump(trici_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\trici_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 #%%
 # University output
 helper_funcs.aggregate_outcome(univr_aggregate_outcome, univr_xgbrf_pred_probs, 'univr', model_descr)
 helper_funcs.results_output(auto_engine, model_id, run_date, univr_current_outcome, univr_xgbrf_pred_probs, 'univr', model_descr)
 helper_funcs.shap_output(engine, student_shap, top_N, model_id, run_date, univr_shap_zip, 'univr', model_descr)
-joblib.dump(univr_xgbrf, f'Z:\\Nathan\\Models\\student_risk\\models\\univr_{model_descr}_model_v{sklearn.__version__}.pkl')
 
 print('Done\n')
