@@ -2812,7 +2812,15 @@ run;
 			1 as ind
 		from &dsn..student_ext_acad_subj
 		where snapshot = 'census'
-			and ext_subject_area in ('CHS','RS', 'AP','IB','AICE')
+			and ext_subject_area in ('CHS','RS','AP','IB','AICE')
+		union
+		select distinct
+			emplid,
+			'RS' as ext_subject_area,
+			 1 as ind
+		from &dsn..student_acad_prog_plan_vw
+		where snapshot = 'census'
+			and tuition_group in ('1RS','1TRS')
 		order by emplid
 	;quit;
 	
