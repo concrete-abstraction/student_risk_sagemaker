@@ -42,6 +42,7 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 #%%
 # Global variable initialization
 strm: str = None
+outcome: str = 'term'
 top_N: int = 5
 model_id: int = 3
 model_descr: str = 'ft_ft_1yr'
@@ -105,9 +106,7 @@ else:
 			separated by ''
 		from &dsn..class_registration
 		where acad_career = 'UGRD'
-			and strm = (select distinct
-							max(strm)
-						from &dsn..class_registration where acad_career = 'UGRD')
+			and strm = &strm.
 	;quit;
 	""")
 
@@ -123,7 +122,7 @@ else:
 
 #%%
 # SAS dataset builder
-build_ft_ft_1yr_prod.DatasetBuilderProd.build_census_prod()
+build_ft_ft_1yr_prod.DatasetBuilderProd.build_census_prod(outcome)
 
 #%%
 # Import pre-split data
@@ -151,7 +150,7 @@ pullm_data_vars = [
 # 'race_black',
 # 'race_native_hawaiian',
 # 'race_white',
-# # 'min_week_from_term_begin_dt',
+# 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
 # 'count_week_from_term_begin_dt',
 # 'marital_status',
@@ -1604,6 +1603,7 @@ print(f'ROC AUC for Pullman XGB Random Forest model (training): {pullm_xgbrf_tra
 print(f'Overall accuracy for Pullman XGB Random Forest model (validation): {pullm_xgbrf.score(pullm_x_cv, pullm_y_cv):.4f}')
 print(f'ROC AUC for Pullman XGB Random Forest model (validation): {pullm_xgbrf_cv_auc:.4f}\n')
 
+#%%
 # Pullman metrics by sensitive features
 pullm_metrics = {
 	'accuracy': accuracy_score,
@@ -1683,6 +1683,7 @@ print(f'ROC AUC for Vancouver XGB Random Forest model (training): {vanco_xgbrf_t
 print(f'Overall accuracy for Vancouver XGB Random Forest model (validation): {vanco_xgbrf.score(vanco_x_cv, vanco_y_cv):.4f}')
 print(f'ROC AUC for Vancouver XGB Random Forest model (validation): {vanco_xgbrf_cv_auc:.4f}\n')
 
+#%%
 # Vancouver metrics by sensitive features
 vanco_metrics = {
 	'accuracy': accuracy_score,
@@ -1762,6 +1763,7 @@ print(f'ROC AUC for Tri-Cities XGB Random Forest model (training): {trici_xgbrf_
 print(f'Overall accuracy for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf.score(trici_x_cv, trici_y_cv):.4f}')
 print(f'ROC AUC for Tri-Cities XGB Random Forest model (validation): {trici_xgbrf_cv_auc:.4f}\n')
 
+#%%
 # Tri-Cities metrics by sensitive features 
 trici_metrics = {
 	'accuracy': accuracy_score,

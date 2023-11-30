@@ -964,7 +964,6 @@ class DatasetBuilderDev:
 					on a.emplid = b.emplid
 				left join enrolled_&cohort_year. as c
 					on a.emplid = c.emplid
-						and a.term_code + 10 = c.cont_term
 				left join need_&cohort_year. as e
 					on a.emplid = e.emplid
 						and a.aid_year = e.aid_year
@@ -2757,7 +2756,7 @@ class DatasetBuilderDev:
 													else a.enrl_ind
 													end as enrl_ind
 				from &dsn..student_enrolled_vw as a
-				full join (select distinct 
+				left join (select distinct 
 								emplid 
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
@@ -4615,7 +4614,6 @@ class DatasetBuilderDev:
 					on a.emplid = x.emplid
 				left join enrolled_&cohort_year. as c
 					on a.emplid = c.emplid
-						and a.term_code + 10 = c.cont_term
 				left join plan_&cohort_year. as d
 					on a.emplid = d.emplid
 				left join need_&cohort_year. as e

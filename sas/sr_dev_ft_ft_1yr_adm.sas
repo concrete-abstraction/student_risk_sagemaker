@@ -1409,9 +1409,8 @@ run;
 			on a.emplid = b.emplid
 		left join enrolled_&cohort_year. as c
 			on a.emplid = c.emplid
- 				and a.term_code + 10 = c.cont_term
-/*  		left join plan_&cohort_year. as d */
-/*  			on a.emplid = d.emplid */
+/* 		left join plan_&cohort_year. as d */
+/* 			on a.emplid = d.emplid */
  		left join need_&cohort_year. as e
  			on a.emplid = e.emplid
  				and a.aid_year = e.aid_year

@@ -105,9 +105,7 @@ else:
 			separated by ''
 		from &dsn..class_registration
 		where acad_career = 'UGRD'
-			and strm = (select distinct
-							max(strm)
-						from &dsn..class_registration where acad_career = 'UGRD')
+			and strm = &strm.
 	;quit;
 	""")
 
