@@ -115,7 +115,7 @@ class DatasetBuilderProd:
 		%let acs_lag = 2;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
-		%let start_cohort = %eval(&end_cohort. - 7);
+		%let start_cohort = %eval(&end_cohort. - 8);
 		""")
 
 		sas.symput('outcome', outcome)
@@ -4700,7 +4700,7 @@ class DatasetBuilderProd:
 		%let acs_lag = 2;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
-		%let start_cohort = %eval(&end_cohort. - 7);
+		%let start_cohort = %eval(&end_cohort. - 8);
 		""")
 
 		sas.symput('outcome', outcome)

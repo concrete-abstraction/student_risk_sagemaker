@@ -127,9 +127,9 @@ proc sql;
 		and full_acad_year = "&full_acad_year."
 ;quit;
 
-/* Note: This is a test date. Revert to 7 in production or 1 in development. */
+/* Note: This is a test date. Revert to 8 in production or 7 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 7);
+%let start_cohort = %eval(&end_cohort. - 8);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
