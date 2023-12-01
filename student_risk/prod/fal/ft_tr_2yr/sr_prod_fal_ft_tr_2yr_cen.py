@@ -42,6 +42,7 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 #%%
 # Global variable initialization
 strm: str = None
+outcome: str = 'term'
 top_N: int = 5
 model_id: int = 2
 model_descr: str = 'ft_tr_2yr'
@@ -60,7 +61,7 @@ verbose: bool = False
 
 #%%
 # SAS dataset builder
-build_ft_tr_2yr_prod.DatasetBuilderProd.build_census_prod()
+build_ft_tr_2yr_prod.DatasetBuilderProd.build_census_prod(outcome)
 
 #%%
 # Import pre-split data

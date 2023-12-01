@@ -106,7 +106,7 @@ else:
 			separated by ''
 		from &dsn..class_registration
 		where acad_career = 'UGRD'
-			and strm = &strm.
+			and strm = "&strm."
 	;quit;
 	""")
 

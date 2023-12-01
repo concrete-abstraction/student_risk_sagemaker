@@ -42,6 +42,7 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 #%%
 # Global variable initialization
 strm: str = None
+outcome: str = 'term'
 top_N: int = 5
 model_id: int = 2
 model_descr: str = 'ft_ft_1yr'
@@ -105,7 +106,7 @@ else:
 			separated by ''
 		from &dsn..class_registration
 		where acad_career = 'UGRD'
-			and strm = &strm.
+			and strm = "&strm."
 	;quit;
 	""")
 
@@ -121,7 +122,7 @@ else:
 
 #%%
 # SAS dataset builder
-build_ft_ft_1yr_prod.DatasetBuilderProd.build_census_prod()
+build_ft_ft_1yr_prod.DatasetBuilderProd.build_census_prod(outcome)
 
 #%%
 # Import pre-split data

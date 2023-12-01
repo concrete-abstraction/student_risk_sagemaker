@@ -42,6 +42,7 @@ student_shap = Table('student_shap', metadata_engine, autoload=True)
 #%%
 # Global variable initialization
 strm: str = None
+outcome: str = 'term'
 top_N: int = 5
 model_id: int = 1
 model_descr: str = 'ft_tr_1yr'
