@@ -1780,18 +1780,32 @@ univr_metrics = {
     'headcount': count
 }
 
-univr_group = pd.DataFrame()
+univr_group_train = pd.DataFrame()
+univr_group_valid = pd.DataFrame()
 
-univr_group['male'] = univr_x_train[:, univr_feat_names.index('male')]
-univr_group['underrep_minority'] = univr_x_train[:, univr_feat_names.index('underrep_minority')]
+univr_group_train['male'] = univr_x_train[:, univr_feat_names.index('male')]
+univr_group_train['underrep_minority'] = univr_x_train[:, univr_feat_names.index('underrep_minority')]
+univr_group_valid['male'] = univr_x_cv[:, univr_feat_names.index('male')]
+univr_group_valid['underrep_minority'] = univr_x_cv[:, univr_feat_names.index('underrep_minority')]
 
-univr_metric_frame = MetricFrame(
-    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group
+univr_metric_train_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_train, y_pred=univr_xgbrf.predict(univr_x_train), sensitive_features=univr_group_train
+)
+
+univr_metric_valid_frame = MetricFrame(
+    metrics=univr_metrics, y_true=univr_y_cv, y_pred=univr_xgbrf.predict(univr_x_cv), sensitive_features=univr_group_valid
 )
 
 print('University metrics by sensitive features (training)\n')
-print(univr_metric_frame.by_group)
+print(univr_metric_train_frame.by_group)
 print('\n')
+
+print('University metrics by sensitive features (validation)\n')
+print(univr_metric_valid_frame.by_group)
+print('\n')
+
+helper_funcs.fairness_output(auto_engine, model_id, 'train', model_descr, univr_metric_train_frame, run_date, ['UNIVR'])
+helper_funcs.fairness_output(auto_engine, model_id, 'valid', model_descr, univr_metric_valid_frame, run_date, ['UNIVR'])
 
 #%%
 # Ensemble model
