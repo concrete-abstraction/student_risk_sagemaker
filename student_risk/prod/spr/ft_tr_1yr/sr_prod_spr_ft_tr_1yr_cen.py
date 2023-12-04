@@ -177,8 +177,8 @@ pullm_data_vars = [
 # 'rural_fringe',
 # 'rural_distant',
 # 'rural_remote',
-'AD_DTA',
-'AD_AST',
+# 'AD_DTA',
+# 'AD_AST',
 'AP',
 'RS',
 'CHS',
@@ -1518,7 +1518,7 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 							'learning_rate': [0.01, 0.5, 1.0]}]
 
 	pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
-	pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
+	pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
 	pullm_stop = time.perf_counter()
 
@@ -1597,7 +1597,7 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 							'learning_rate': [0.01, 0.5, 1.0]}]
 
 	vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
-	vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
+	vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train, eval_set=[(vanco_x_cv, vanco_y_cv)], early_stopping_rounds=20, verbose=False)
 
 	vanco_stop = time.perf_counter()
 
@@ -1676,7 +1676,7 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 							'learning_rate': [0.01, 0.5, 1.0]}]
 
 	trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
-	trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
+	trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train, eval_set=[(trici_x_cv, trici_y_cv)], early_stopping_rounds=20, verbose=False)
 
 	trici_stop = time.perf_counter()
 
@@ -1755,7 +1755,7 @@ if build_ft_tr_1yr_prod.DatasetBuilderProd.valid_pass == 0 and build_ft_tr_1yr_p
 							'learning_rate': [0.01, 0.5, 1.0]}]
 
 	univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
-	univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
+	univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train, eval_set=[(univr_x_cv, univr_y_cv)], early_stopping_rounds=20, verbose=False)
 
 	univr_stop = time.perf_counter()
 

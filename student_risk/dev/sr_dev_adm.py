@@ -336,8 +336,8 @@ pullm_data_vars = [
 # 'rural_fringe',
 # 'rural_distant',
 # 'rural_remote',
-'AD_DTA',
-'AD_AST',
+# 'AD_DTA',
+# 'AD_AST',
 'AP',
 'RS',
 'CHS',
@@ -1275,8 +1275,8 @@ for name, transformer, features, _ in pullm_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		pullm_feat_names.extend(pullm_tomek_prep._feature_names_in[features])
 
-pullm_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-pullm_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
+pullm_under_train = TomekLinks(sampling_strategy='auto', n_jobs=-1)
+pullm_under_valid = TomekLinks(sampling_strategy='auto', n_jobs=-1)
 
 pullm_x_train, pullm_y_train = pullm_under_train.fit_resample(pullm_x_train, pullm_y_train)
 pullm_x_cv, pullm_y_cv = pullm_under_valid.fit_resample(pullm_x_cv, pullm_y_cv)
@@ -1329,8 +1329,8 @@ for name, transformer, features, _ in vanco_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		vanco_feat_names.extend(vanco_tomek_prep._feature_names_in[features])
 
-vanco_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-vanco_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
+vanco_under_train = TomekLinks(sampling_strategy='auto', n_jobs=-1)
+vanco_under_valid = TomekLinks(sampling_strategy='auto', n_jobs=-1)
 
 vanco_x_train, vanco_y_train = vanco_under_train.fit_resample(vanco_x_train, vanco_y_train)
 vanco_x_cv, vanco_y_cv = vanco_under_valid.fit_resample(vanco_x_cv, vanco_y_cv)
@@ -1383,8 +1383,8 @@ for name, transformer, features, _ in trici_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		trici_feat_names.extend(trici_tomek_prep._feature_names_in[features])
 
-trici_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-trici_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
+trici_under_train = TomekLinks(sampling_strategy='auto', n_jobs=-1)
+trici_under_valid = TomekLinks(sampling_strategy='auto', n_jobs=-1)
 
 trici_x_train, trici_y_train = trici_under_train.fit_resample(trici_x_train, trici_y_train)
 trici_x_cv, trici_y_cv = trici_under_valid.fit_resample(trici_x_cv, trici_y_cv)
@@ -1437,8 +1437,8 @@ for name, transformer, features, _ in univr_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		univr_feat_names.extend(univr_tomek_prep._feature_names_in[features])
 
-univr_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-univr_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
+univr_under_train = TomekLinks(sampling_strategy='auto', n_jobs=-1)
+univr_under_valid = TomekLinks(sampling_strategy='auto', n_jobs=-1)
 
 univr_x_train, univr_y_train = univr_under_train.fit_resample(univr_x_train, univr_y_train)
 univr_x_cv, univr_y_cv = univr_under_valid.fit_resample(univr_x_cv, univr_y_cv)

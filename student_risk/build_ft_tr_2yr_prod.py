@@ -4266,8 +4266,8 @@ class DatasetBuilderProd:
 		print('Prepare data...')
 
 		sas.submit("""
-		data training_set;
-			set dataset_&start_cohort.-dataset_%eval(&end_cohort. - (2 * &lag_year.));
+		data validation_set;
+			set dataset_&start_cohort.-dataset_%eval(&start_cohort. + (2 * &lag_year.));
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
@@ -4337,8 +4337,8 @@ class DatasetBuilderProd:
 			if total_accept = . then total_accept = 0;
 		run;
 
-		data validation_set;
-			set dataset_%eval(&end_cohort. - &lag_year.)-dataset_&end_cohort.;
+		data training_set;
+			set dataset_%eval(&start_cohort. + (3 * &lag_year.))-dataset_&end_cohort.;
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
@@ -9185,8 +9185,8 @@ class DatasetBuilderProd:
 		print('Prepare data...')
 
 		sas.submit("""
-		data training_set;
-			set dataset_&start_cohort.-dataset_%eval(&end_cohort. - (2 * &lag_year.));
+		data validation_set;
+			set dataset_&start_cohort.-dataset_%eval(&start_cohort. + (2 * &lag_year.));
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
@@ -9403,8 +9403,8 @@ class DatasetBuilderProd:
 			if total_accept = . then total_accept = 0;
 		run;
 
-		data validation_set;
-			set dataset_%eval(&end_cohort. - &lag_year.)-dataset_&end_cohort.;
+		data training_set;
+			set dataset_%eval(&start_cohort. + (3 * &lag_year.))-dataset_&end_cohort.;
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
