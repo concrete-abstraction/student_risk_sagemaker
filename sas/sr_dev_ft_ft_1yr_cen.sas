@@ -8,6 +8,7 @@
 %let adm = adm;
 %let acs_lag = 2;
 %let lag_year = 1;
+%let outcome = term;
 
 libname &dsn. odbc dsn=&dsn. schema=dbo;
 libname &adm. odbc dsn=&adm. schema=dbo;
@@ -129,7 +130,7 @@ proc sql;
 
 /* Note: This is a test date. Revert to 8 in production or 7 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 8);
+%let start_cohort = %eval(&end_cohort. - 9);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
