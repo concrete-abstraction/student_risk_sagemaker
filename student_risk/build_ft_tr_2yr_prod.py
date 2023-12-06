@@ -9186,7 +9186,7 @@ class DatasetBuilderProd:
 
 		sas.submit("""
 		data training_set;
-			set dataset_&start_cohort.-dataset_%eval(&end_cohort. - (2 * &lag_year.));
+			set dataset_&start_cohort.-dataset_%eval(&end_cohort. - (3 * &lag_year.));
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
@@ -9404,7 +9404,7 @@ class DatasetBuilderProd:
 		run;
 
 		data validation_set;
-			set dataset_%eval(&end_cohort. - &lag_year.)-dataset_&end_cohort.;
+			set dataset_%eval(&end_cohort. - (2 * &lag_year.))-dataset_&end_cohort.;
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
