@@ -175,12 +175,12 @@ pullm_data_vars = [
 # 'rural_remote',
 # 'AD_DTA',
 # 'AD_AST',
-'AP',
-'RS',
-'CHS',
+# 'AP',
+# 'RS',
+# 'CHS',
 # 'IB',
 # 'AICE',
-'IB_AICE', 
+# 'IB_AICE', 
 'fall_credit_hours',
 # 'total_fall_units',
 'fall_withdrawn_hours',
@@ -371,9 +371,9 @@ vanco_data_vars = [
 # 'rural_remote',
 # 'AD_DTA',
 # 'AD_AST',
-'AP',
-'RS',
-'CHS',
+# 'AP',
+# 'RS',
+# 'CHS',
 # 'IB',
 # 'AICE',
 # 'IB_AICE', 
@@ -567,9 +567,9 @@ univr_data_vars = [
 # 'rural_remote',
 # 'AD_DTA',
 # 'AD_AST',
-'AP',
-'RS',
-'CHS',
+# 'AP',
+# 'RS',
+# 'CHS',
 # 'IB',
 # 'AICE',
 # 'IB_AICE', 
@@ -813,7 +813,7 @@ try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_x_vars), data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
-	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
+	pullm_logit_res = pullm_logit_mod.fit(maxiter=500, method='bfgs')
 	print(pullm_logit_res.summary())
 
 	# Pullman VIF
@@ -838,7 +838,7 @@ try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_x_vars), data=vanco_logit_df, return_type='dataframe')
 
 	vanco_logit_mod = Logit(vanco_y, vanco_x)
-	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
+	vanco_logit_res = vanco_logit_mod.fit(maxiter=500, method='bfgs')
 	print(vanco_logit_res.summary())
 
 	# Vancouver VIF
@@ -863,7 +863,7 @@ try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_x_vars), data=univr_logit_df, return_type='dataframe')
 
 	univr_logit_mod = Logit(univr_y, univr_x)
-	univr_logit_res = univr_logit_mod.fit(maxiter=500)
+	univr_logit_res = univr_logit_mod.fit(maxiter=500, method='bfgs')
 	print(univr_logit_res.summary())
 
 	# University VIF

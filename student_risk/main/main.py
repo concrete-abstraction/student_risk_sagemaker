@@ -64,7 +64,7 @@ proc sql;
         week(datepart(base.term_end_dt)) as eot_week,
         month(datepart(base.term_end_dt)) as eot_month,
         year(datepart(base.term_end_dt)) as eot_year,
-        datepart(intnx('dtday', next.term_begin_dt, -1)) as term_end_dt format=mmddyyd10.,
+       	coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
 		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
 		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
 		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
