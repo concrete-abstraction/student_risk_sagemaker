@@ -4867,7 +4867,7 @@ data training_set;
 	if total_accept = . then total_accept = 0;
 run;
 
-proc sort data=validation_set nodupkey dupout=validation_dups;
+proc sort data=training_set nodupkey dupout=training_dups;
 	by emplid;
 run;
 
@@ -5089,7 +5089,7 @@ data validation_set;
 	if total_accept = . then total_accept = 0;
 run;
 
-proc sort data=training_set nodupkey dupout=training_dups;
+proc sort data=validation_set nodupkey dupout=validation_dups;
 	by emplid;
 run;
 
