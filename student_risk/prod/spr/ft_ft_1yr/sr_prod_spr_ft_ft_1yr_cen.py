@@ -119,7 +119,7 @@ else:
 	sas.endsas()
 
 	if snap_check != 1:
-		raise config.CenError(f'{run_date}: No census date exception but snapshot exception, attempting to run from admissions.')
+		raise config.CenError(f'{run_date}: No census date exception but snapshot exception, attempting to run from eot.')
 
 	else:
 		print(f'{run_date}: No census date or snapshot exceptions, running from census.')
