@@ -105,8 +105,12 @@ else:
 			into: snap_check
 			separated by ''
 		from &dsn..class_registration
-		where acad_career = 'UGRD'
-			and strm = "&strm."
+			where acad_career = 'UGRD'
+				and strm = (select distinct
+								max(strm)
+							from &dsn..class_registration_vw 
+							where acad_career = 'UGRD'
+							and substr(strm,4,1) ^= '9')
 	;quit;
 	""")
 

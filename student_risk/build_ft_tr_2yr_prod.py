@@ -96,7 +96,9 @@ class DatasetBuilderProd:
 			where acad_career = 'UGRD'
 				and strm = (select distinct
 								max(strm)
-							from &dsn..class_registration_vw where acad_career = 'UGRD')
+							from &dsn..class_registration_vw 
+							where acad_career = 'UGRD'
+							and substr(strm,4,1) ^= '9')
 				and full_acad_year = "&full_acad_year."
 		;quit;
 
@@ -4691,7 +4693,9 @@ class DatasetBuilderProd:
 			where acad_career = 'UGRD'
 				and strm = (select distinct
 								max(strm)
-							from &dsn..class_registration_vw where acad_career = 'UGRD')
+							from &dsn..class_registration_vw 
+							where acad_career = 'UGRD'
+							and substr(strm,4,1) ^= '9')
 				and full_acad_year = "&full_acad_year."
 		;quit;
 		""")
