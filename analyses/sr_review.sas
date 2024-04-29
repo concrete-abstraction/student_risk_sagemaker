@@ -7,8 +7,8 @@
 libname acs "Z:\Nathan\Models\student_risk\supplemental_files";
 libname tableau odbc dsn=oracle_int schema = dbo;
 
-%let strm = 2227;
-%let full_acad_year = 2022;
+%let strm = 2237;
+%let full_acad_year = 2023;
 
 proc sql;
 	create table enrollment as 
@@ -36,7 +36,7 @@ proc sql;
 		case when a.risk_prob > .5 and a.emplid = b.emplid				then 1
 																		else 0
 																		end as nonenroll_nonmatch
-	from (select *, max(date) as max_date from tableau.outcome_archive) as a
+	from (select *, max(date) as max_date from tableau.outcome_archive where full_acad_year = "&full_acad_year.") as a
 	left join enrollment as b	
 		on a.emplid = b.emplid
 /* 	where date = max_date */
@@ -54,6 +54,7 @@ proc sql;
 		sum(nonenroll_nonmatch) as nonenroll_nonmatch,
 		date
 	from return
+	where date ^= '01FEB2023'd and date ^= '30AUG2022'd
 	group by date
 	order by date
 ;quit;

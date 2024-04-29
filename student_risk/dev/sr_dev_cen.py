@@ -7,14 +7,14 @@ import seaborn as sns
 from fairlearn.metrics import MetricFrame, true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate, selection_rate, count
 from imblearn.under_sampling import NearMiss, TomekLinks
 from matplotlib.legend_handler import HandlerLine2D
-from patsy import dmatrices
+from patsy.highlevel import dmatrices
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.linear_model import (LinearRegression, LogisticRegression,
                                   SGDClassifier)
-from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve
+from sklearn.metrics import accuracy_score, balanced_accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve
 from sklearn.model_selection import HalvingGridSearchCV, cross_val_predict
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.neural_network import MLPClassifier
@@ -247,7 +247,7 @@ pullm_data_vars = [
 'male',
 'underrep_minority',
 # 'acad_year',
-# 'age_group', 
+# 'age_group',
 # 'age',
 # 'race_hispanic',
 # 'race_american_indian',
@@ -355,8 +355,8 @@ pullm_data_vars = [
 # 'rural_fringe',
 # 'rural_distant',
 # 'rural_remote',
-'AD_DTA',
-'AD_AST',
+# 'AD_DTA',
+# 'AD_AST',
 'AP',
 'RS',
 'CHS',
@@ -475,7 +475,7 @@ vanco_data_vars = [
 'male',
 'underrep_minority', 
 # 'acad_year',
-# 'age_group', 
+# 'age_group',
 # 'age',
 # 'race_hispanic',
 # 'race_american_indian',
@@ -486,7 +486,7 @@ vanco_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
@@ -689,7 +689,7 @@ trici_data_vars = [
 'male',
 'underrep_minority', 
 # 'acad_year',
-# 'age_group', 
+# 'age_group',
 # 'age',
 # 'race_hispanic',
 # 'race_american_indian',
@@ -700,7 +700,7 @@ trici_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
@@ -903,7 +903,7 @@ univr_data_vars = [
 'male',
 'underrep_minority', 
 # 'acad_year',
-# 'age_group', 
+# 'age_group',
 # 'age',
 # 'race_hispanic',
 # 'race_american_indian',
@@ -914,7 +914,7 @@ univr_data_vars = [
 # 'race_white',
 # 'min_week_from_term_begin_dt',
 # 'max_week_from_term_begin_dt',
-'count_week_from_term_begin_dt',
+# 'count_week_from_term_begin_dt',
 # 'marital_status',
 # 'acs_mi',
 # 'distance',
@@ -1278,8 +1278,8 @@ for name, transformer, features, _ in pullm_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		pullm_feat_names.extend(pullm_tomek_prep._feature_names_in[features])
 
-pullm_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-pullm_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
+pullm_under_train = TomekLinks(sampling_strategy='auto', n_jobs=-1)
+pullm_under_valid = TomekLinks(sampling_strategy='auto', n_jobs=-1)
 
 pullm_x_train, pullm_y_train = pullm_under_train.fit_resample(pullm_x_train, pullm_y_train)
 pullm_x_cv, pullm_y_cv = pullm_under_valid.fit_resample(pullm_x_cv, pullm_y_cv)
@@ -1332,8 +1332,8 @@ for name, transformer, features, _ in vanco_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		vanco_feat_names.extend(vanco_tomek_prep._feature_names_in[features])
 
-vanco_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-vanco_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
+vanco_under_train = TomekLinks(sampling_strategy='auto', n_jobs=-1)
+vanco_under_valid = TomekLinks(sampling_strategy='auto', n_jobs=-1)
 
 vanco_x_train, vanco_y_train = vanco_under_train.fit_resample(vanco_x_train, vanco_y_train)
 vanco_x_cv, vanco_y_cv = vanco_under_valid.fit_resample(vanco_x_cv, vanco_y_cv)
@@ -1386,8 +1386,8 @@ for name, transformer, features, _ in trici_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		trici_feat_names.extend(trici_tomek_prep._feature_names_in[features])
 
-trici_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-trici_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
+trici_under_train = TomekLinks(sampling_strategy='auto', n_jobs=-1)
+trici_under_valid = TomekLinks(sampling_strategy='auto', n_jobs=-1)
 
 trici_x_train, trici_y_train = trici_under_train.fit_resample(trici_x_train, trici_y_train)
 trici_x_cv, trici_y_cv = trici_under_valid.fit_resample(trici_x_cv, trici_y_cv)
@@ -1440,8 +1440,8 @@ for name, transformer, features, _ in univr_tomek_prep._iter(fitted=True):
 	if transformer == 'passthrough':
 		univr_feat_names.extend(univr_tomek_prep._feature_names_in[features])
 
-univr_under_train = TomekLinks(sampling_strategy='all', n_jobs=-1)
-univr_under_valid = TomekLinks(sampling_strategy='all', n_jobs=-1)
+univr_under_train = TomekLinks(sampling_strategy='auto', n_jobs=-1)
+univr_under_valid = TomekLinks(sampling_strategy='auto', n_jobs=-1)
 
 univr_x_train, univr_y_train = univr_under_train.fit_resample(univr_x_train, univr_y_train)
 univr_x_cv, univr_y_cv = univr_under_valid.fit_resample(univr_x_cv, univr_y_cv)
@@ -1466,7 +1466,7 @@ try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_x_vars), data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
-	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
+	pullm_logit_res = pullm_logit_mod.fit(maxiter=500, method='bfgs')
 	print(pullm_logit_res.summary())
 
 	# Pullman VIF
@@ -1491,7 +1491,7 @@ try:
 	vanco_y, vanco_x = dmatrices('enrl_ind ~ ' + ' + '.join(vanco_x_vars), data=vanco_logit_df, return_type='dataframe')
 
 	vanco_logit_mod = Logit(vanco_y, vanco_x)
-	vanco_logit_res = vanco_logit_mod.fit(maxiter=500)
+	vanco_logit_res = vanco_logit_mod.fit(maxiter=500, method='bfgs')
 	print(vanco_logit_res.summary())
 
 	# Vancouver VIF
@@ -1516,7 +1516,7 @@ try:
 	trici_y, trici_x = dmatrices('enrl_ind ~ ' + ' + '.join(trici_x_vars), data=trici_logit_df, return_type='dataframe')
 
 	trici_logit_mod = Logit(trici_y, trici_x)
-	trici_logit_res = trici_logit_mod.fit(maxiter=500)
+	trici_logit_res = trici_logit_mod.fit(maxiter=500, method='bfgs')
 	print(trici_logit_res.summary())
 
 	# Tri-Cities VIF
@@ -1541,7 +1541,7 @@ try:
 	univr_y, univr_x = dmatrices('enrl_ind ~ ' + ' + '.join(univr_x_vars), data=univr_logit_df, return_type='dataframe')
 
 	univr_logit_mod = Logit(univr_y, univr_x)
-	univr_logit_res = univr_logit_mod.fit(maxiter=500)
+	univr_logit_res = univr_logit_mod.fit(maxiter=500, method='bfgs')
 	print(univr_logit_res.summary())
 
 	# University VIF
@@ -1989,7 +1989,7 @@ pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[p
 pullm_hyperparameters = [{'max_depth': np.linspace(1, 16, 16, dtype=int, endpoint=True),
 						'gamma': np.linspace(1, 16, 16, dtype=int, endpoint=True)}]
 
-pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False), pullm_hyperparameters, scoring='roc_auc', cv=3, verbose=0, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -2047,7 +2047,7 @@ vanco_class_weight = vanco_y_train[vanco_y_train == 0].count() / vanco_y_train[v
 vanco_hyperparameters = [{'max_depth': np.linspace(5, 15, 11, dtype=int, endpoint=True),
 						'gamma': np.linspace(1, 16, 16, dtype=int, endpoint=True)}]
 
-vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False), vanco_hyperparameters, scoring='roc_auc', cv=3, verbose=0, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -2105,7 +2105,7 @@ trici_class_weight = trici_y_train[trici_y_train == 0].count() / trici_y_train[t
 trici_hyperparameters = [{'max_depth': np.linspace(1, 16, 16, dtype=int, endpoint=True),
 						'gamma': np.linspace(1, 16, 16, dtype=int, endpoint=True)}]
 
-trici_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+trici_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False), trici_hyperparameters, scoring='roc_auc', cv=3, verbose=0, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -2163,7 +2163,7 @@ univr_class_weight = univr_y_train[univr_y_train == 0].count() / univr_y_train[u
 univr_hyperparameters = [{'max_depth': np.linspace(1, 16, 16, dtype=int, endpoint=True),
 						'gamma': np.linspace(1, 16, 16, dtype=int, endpoint=True)}]
 
-univr_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=5, verbose=0, n_jobs=-1)
+univr_gridsearch = HalvingGridSearchCV(XGBClassifier(n_estimators=100, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False), univr_hyperparameters, scoring='roc_auc', cv=3, verbose=0, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -2224,7 +2224,7 @@ pullm_hyperparameters = [{'max_depth': np.linspace(1, 16, 16, dtype=int, endpoin
 						'gamma': np.linspace(1, 16, 16, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
+pullm_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), pullm_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=3, aggressive_elimination=True, verbose=verbose, n_jobs=-1)
 pullm_best_model = pullm_gridsearch.fit(pullm_x_train, pullm_y_train)
 
 print(f'Best parameters: {pullm_gridsearch.best_params_}')
@@ -2277,16 +2277,12 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 pullm_metrics = {
-	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 pullm_group = pd.DataFrame()
@@ -2309,7 +2305,7 @@ vanco_hyperparameters = [{'max_depth': np.linspace(1, 16, 16, dtype=int, endpoin
 						'gamma': np.linspace(1, 16, 16, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+vanco_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=vanco_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), vanco_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=3, aggressive_elimination=True, verbose=False, n_jobs=-1)
 vanco_best_model = vanco_gridsearch.fit(vanco_x_train, vanco_y_train)
 
 print(f'Best parameters: {vanco_gridsearch.best_params_}')
@@ -2363,16 +2359,12 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 vanco_metrics = {
-	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 vanco_group = pd.DataFrame()
@@ -2395,7 +2387,7 @@ trici_hyperparameters = [{'max_depth': np.linspace(1, 16, 16, dtype=int, endpoin
 						'gamma': np.linspace(1, 16, 16, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+trici_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=trici_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), trici_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=3, aggressive_elimination=True, verbose=False, n_jobs=-1)
 trici_best_model = trici_gridsearch.fit(trici_x_train, trici_y_train)
 
 print(f'Best parameters: {trici_gridsearch.best_params_}')
@@ -2449,16 +2441,12 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 trici_metrics = {
-	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 trici_group = pd.DataFrame()
@@ -2481,7 +2469,7 @@ univr_hyperparameters = [{'max_depth': np.linspace(1, 16, 16, dtype=int, endpoin
 						'gamma': np.linspace(1, 16, 16, dtype=int, endpoint=True),
 						'learning_rate': [0.01, 0.5, 1.0]}]
 
-univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=5, aggressive_elimination=True, verbose=False, n_jobs=-1)
+univr_gridsearch = HalvingGridSearchCV(XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=univr_class_weight, eval_metric='logloss', use_label_encoder=False, n_jobs=-1), univr_hyperparameters, resource='n_estimators', factor=3, min_resources=2, max_resources=500, scoring='roc_auc', cv=3, aggressive_elimination=True, verbose=False, n_jobs=-1)
 univr_best_model = univr_gridsearch.fit(univr_x_train, univr_y_train)
 
 print(f'Best parameters: {univr_gridsearch.best_params_}')
@@ -2535,16 +2523,12 @@ plt.ylabel('TRUE CLASS'), plt.xlabel('PREDICTED CLASS')
 plt.show()
 
 univr_metrics = {
-	'Accuracy': accuracy_score,
-    'Precision': precision_score,
-    'Recall': recall_score,
-    'True positive rate': true_positive_rate,
-    'True negative rate': true_negative_rate,
-    'False positive rate': false_positive_rate,
-    'False negative rate': false_negative_rate,
-    'Selection rate': selection_rate,
-    'Confusion matrix': confusion_matrix,
-    'Count': count
+	'accuracy': accuracy_score,
+    'tpr': true_positive_rate,
+    'tnr': true_negative_rate,
+    'balanced': balanced_accuracy_score,
+    'matrix': confusion_matrix,
+    'headcount': count
 }
 
 univr_group = pd.DataFrame()

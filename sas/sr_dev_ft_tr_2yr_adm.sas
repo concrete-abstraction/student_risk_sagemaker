@@ -43,15 +43,22 @@ proc sql;
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
+		datepart(base.term_census_dt) as term_census_dt format=mmddyyd10.,
         day(datepart(base.term_census_dt)) as census_day,
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
+		datepart(base.term_midterm_dt) as term_midterm_dt format=mmddyyd10.,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
         year(datepart(base.term_midterm_dt)) as midterm_year,
-        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt,
+		datepart(base.term_end_dt) as term_eot_dt format=mmddyyd10.,
+        day(datepart(base.term_end_dt)) as eot_day,
+        week(datepart(base.term_end_dt)) as eot_week,
+        month(datepart(base.term_end_dt)) as eot_month,
+        year(datepart(base.term_end_dt)) as eot_year,
+        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
 		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
 		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
 		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
@@ -65,7 +72,7 @@ proc sql;
 /* Note: Code review needed. */
 
 proc sql;
-	select full_acad_year into: full_acad_year 
+	select term_type into: term_type 
 	from acs.adj_term 
 	where term_year = year(today())
 		and term_begin_dt <= today()
@@ -74,7 +81,7 @@ proc sql;
 ;quit;
 
 proc sql;
-	select term_type into: term_type 
+	select full_acad_year into: full_acad_year 
 	from acs.adj_term 
 	where term_year = year(today())
 		and term_begin_dt <= today()
@@ -102,7 +109,7 @@ proc sql;
 	%let aid_snapshot = 'yrbegin';
 %end;
 %else %do;
-	%let aid_snapshot = &aid_check.;
+	%let aid_snapshot = "&aid_check.";
 %end;
 
 proc sql;
@@ -131,9 +138,9 @@ proc sql;
 	from snap_check
 ;quit;
 
-/* Note: This is a test date. Revert to 5 in production or 6 in development. */
+/* Note: This is a test date. Revert to 8 in production or 7 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 8);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -278,7 +285,7 @@ proc sql;
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
 		left join cpi as l
 			on input(a.full_acad_year,4.) = l.acs_lag
-		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year. - &admit_lag.), 4.)
+		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'TRAN'
@@ -660,7 +667,15 @@ proc sql;
 			1 as ind
 		from &dsn..student_ext_acad_subj
 		where snapshot = 'census'
-			and ext_subject_area in ('CHS','RS', 'AP','IB','AICE')
+			and ext_subject_area in ('CHS','RS','AP','IB','AICE')
+		union
+		select distinct
+			emplid,
+			'RS' as ext_subject_area,
+			 1 as ind
+		from &dsn..student_acad_prog_plan_vw
+		where snapshot = 'census'
+			and tuition_group in ('1RS','1TRS')
 		order by emplid
 	;quit;
 	
@@ -2330,16 +2345,28 @@ proc sql;
 			case when k.locale = '42' then 1 else 0 end as rural_distant,
 			case when k.locale = '43' then 1 else 0 end as rural_remote
 		from &dsn..new_student_enrolled_vw as a
-		inner join &dsn..student_enrolled_vw as a2
+		inner join (select distinct
+						strm,
+						emplid, 
+						case when emplid is not null 	then 1 
+														else 0
+														end as enrl_ind,
+						sum(unt_taken) as total_fall_units
+					from acs.subcatnbr_data 
+					where strm = substr(put(%eval(&cohort_year. - &lag_year.), 4.), 1, 1) || substr(put(%eval(&cohort_year. - &lag_year.), 4.), 3, 2) || '7'
+					group by emplid) as a2
 			on a.emplid = a2.emplid
-				and a2.snapshot = 'eot'
-				and a2.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
-				and substr(a2.strm,4,1) = '7'
-				and a2.acad_career = 'UGRD'
-				and a2.ipeds_full_part_time = 'F'
-				and a2.ipeds_ind = 1
-				and a2.term_credit_hours > 0
-				and a2.WA_residency ^= 'NON-I'
+				and total_fall_units >= 12
+		left join &dsn..student_enrolled_vw (drop=enrl_ind) as a3
+			on a.emplid = a3.emplid
+				and a3.snapshot = 'eot'
+				and a3.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
+				and substr(a3.strm,4,1) = '7'
+				and a3.acad_career = 'UGRD'
+/* 				and a3.ipeds_full_part_time = 'F' */
+/* 				and a3.ipeds_ind = 1 */
+/* 				and a3.term_credit_hours > 0 */
+				and a3.WA_residency ^= 'NON-I'
 		left join acs.distance_km as b
 			on substr(a.last_sch_postal,1,5) = b.inputid
 				and a.adj_acad_prog_primary_campus = 'PULLM'
@@ -2376,7 +2403,7 @@ proc sql;
 			on substr(a.last_sch_postal,1,5) = j.geoid
 		left join acs.edge_locale14_zcta_table as k
 			on substr(a.last_sch_postal,1,5) = k.zcta5ce10
-		where a.full_acad_year = put(%eval(&cohort_year. - &admit_lag.), 4.)
+		where a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and substr(a.strm,4,1) = '7'
 			and a.acad_career = 'UGRD'
 			and a.adj_admit_type_cat = 'TRAN'
@@ -2677,7 +2704,15 @@ proc sql;
 			1 as ind
 		from &dsn..student_ext_acad_subj
 		where snapshot = 'census'
-			and ext_subject_area in ('CHS','RS', 'AP','IB','AICE')
+			and ext_subject_area in ('CHS','RS','AP','IB','AICE')
+		union
+		select distinct
+			emplid,
+			'RS' as ext_subject_area,
+			 1 as ind
+		from &dsn..student_acad_prog_plan_vw
+		where snapshot = 'census'
+			and tuition_group in ('1RS','1TRS')
 		order by emplid
 	;quit;
 	
@@ -3426,8 +3461,8 @@ proc sql;
 					group by subject_catalog_nbr) as g
 			on a.subject_catalog_nbr = g.subject_catalog_nbr
 				and a.ssr_component = g.ssr_component
-		where a.snapshot = 'census'
-			and a.full_acad_year = "&cohort_year."
+		where a.snapshot = 'eot'
+			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and a.grading_basis = 'GRD'
 	;quit;
 	
@@ -4895,31 +4930,6 @@ data testing_set;
 	if total_offer = . then total_offer = 0;
 	if total_accept = . then total_accept = 0;
 run;
-
-%macro export;
-
-%do admit_lag=&start_lag. %to &end_lag.;
-
-	filename valid "Z:\Nathan\Models\student_risk\datasets\tran_%eval(&admit_lag. + &lag_year.)_validation_set.csv" encoding="utf-8";
-	
-	proc export data=validation_set_&admit_lag. outfile=valid dbms=csv replace;
-	run;
-	
-	filename training "Z:\Nathan\Models\student_risk\datasets\tran_%eval(&admit_lag. + &lag_year.)_training_set.csv" encoding="utf-8";
-	
-	proc export data=training_set_&admit_lag. outfile=training dbms=csv replace;
-	run;
-	
-	filename testing "Z:\Nathan\Models\student_risk\datasets\tran_%eval(&admit_lag. + &lag_year.)_testing_set.csv" encoding="utf-8";
-	
-	proc export data=testing_set_&admit_lag. outfile=testing dbms=csv replace;
-	run;
-
-%end;
-
-%mend export;
-
-%export;
 
 /* data training_set_anon; */
 /* 	set training_set; */

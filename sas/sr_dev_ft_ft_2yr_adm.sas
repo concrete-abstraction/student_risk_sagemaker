@@ -43,15 +43,22 @@ proc sql;
 		week(datepart(base.term_begin_dt)) as begin_week,
 		month(datepart(base.term_begin_dt)) as begin_month,
 		year(datepart(base.term_begin_dt)) as begin_year,
+		datepart(base.term_census_dt) as term_census_dt format=mmddyyd10.,
         day(datepart(base.term_census_dt)) as census_day,
 		week(datepart(base.term_census_dt)) as census_week,
 		month(datepart(base.term_census_dt)) as census_month,
 		year(datepart(base.term_census_dt)) as census_year,
+		datepart(base.term_midterm_dt) as term_midterm_dt format=mmddyyd10.,
         day(datepart(base.term_midterm_dt)) as midterm_day,
         week(datepart(base.term_midterm_dt)) as midterm_week,
         month(datepart(base.term_midterm_dt)) as midterm_month,
         year(datepart(base.term_midterm_dt)) as midterm_year,
-        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt,
+		datepart(base.term_end_dt) as term_eot_dt format=mmddyyd10.,
+        day(datepart(base.term_end_dt)) as eot_day,
+        week(datepart(base.term_end_dt)) as eot_week,
+        month(datepart(base.term_end_dt)) as eot_month,
+        year(datepart(base.term_end_dt)) as eot_year,
+        coalesce(datepart(intnx('dtday', next.term_begin_dt, -1)),99999) as term_end_dt format=mmddyyd10.,
 		coalesce(day(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_day,
 		coalesce(week(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_week,
 		coalesce(month(datepart(intnx('dtday', next.term_begin_dt, -1))),99999) as end_month,
@@ -102,7 +109,7 @@ proc sql;
 	%let aid_snapshot = 'yrbegin';
 %end;
 %else %do;
-	%let aid_snapshot = &aid_check.;
+	%let aid_snapshot = "&aid_check.";
 %end;
 
 proc sql;
@@ -131,9 +138,9 @@ proc sql;
 	from snap_check
 ;quit;
 
-/* Note: This is a test date. Revert to 5 in production or 6 in development. */
+/* Note: This is a test date. Revert to 8 in production or 7 in development. */
 %let end_cohort = %eval(&full_acad_year. - &lag_year.);
-%let start_cohort = %eval(&end_cohort. - 5);
+%let start_cohort = %eval(&end_cohort. - 8);
 
 proc import out=act_to_sat_engl_read
 	datafile="Z:\Nathan\Models\student_risk\supplemental_files\act_to_sat_engl_read.xlsx"
@@ -294,7 +301,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011','900101001012')
 			and award_status = 'A'
@@ -535,7 +542,7 @@ proc sql;
 			fed_efc,
 			fed_need
 		from &dsn..fa_award_period
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."	
 			and award_period = 'A'
 			and efc_status = 'O'
@@ -551,7 +558,7 @@ proc sql;
 			sum(offer_amt) as total_offer,
 			sum(accept_amt) as total_accept
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and award_period in ('A','B')
 			and award_status in ('A','O')
@@ -631,7 +638,15 @@ proc sql;
 			1 as ind
 		from &dsn..student_ext_acad_subj
 		where snapshot = 'census'
-			and ext_subject_area in ('CHS','RS', 'AP','IB','AICE')
+			and ext_subject_area in ('CHS','RS','AP','IB','AICE')
+		union
+		select distinct
+			emplid,
+			'RS' as ext_subject_area,
+			 1 as ind
+		from &dsn..student_acad_prog_plan_vw
+		where snapshot = 'census'
+			and tuition_group in ('1RS','1TRS')
 		order by emplid
 	;quit;
 	
@@ -2193,7 +2208,6 @@ proc sql;
 			on a.emplid = x.emplid
 		left join enrolled_&cohort_year. as c
 			on a.emplid = c.emplid
- 				and a.term_code + 10 = c.cont_term
  		left join plan_&cohort_year. as d
  			on a.emplid = d.emplid
  		left join need_&cohort_year. as e
@@ -2388,7 +2402,7 @@ proc sql;
 			emplid,
 			case when sum(disbursed_amt) > 0 then 1 else . end as pell_recipient_ind
 		from &dsn..fa_award_aid_year_vw
-		where snapshot = "&aid_snapshot."
+		where snapshot = &aid_snapshot.
 			and aid_year = "&cohort_year."
 			and item_type in ('900101001000','900101001010','900101001011','900101001012')
 			and award_status = 'A'
@@ -2569,7 +2583,7 @@ proc sql;
 			anywhere_stem_flag
 		from &dsn..student_acad_prog_plan_vw
 		where snapshot = 'census'
-			and full_acad_year = "&cohort_year."
+			and full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and substr(strm, 4, 1) = '7'
 			and acad_career = 'UGRD'
 /* 			and adj_admit_type_cat in ('FRSH','TRAN') */
@@ -2674,7 +2688,15 @@ proc sql;
 			1 as ind
 		from &dsn..student_ext_acad_subj
 		where snapshot = 'census'
-			and ext_subject_area in ('CHS','RS', 'AP','IB','AICE')
+			and ext_subject_area in ('CHS','RS','AP','IB','AICE')
+		union
+		select distinct
+			emplid,
+			'RS' as ext_subject_area,
+			 1 as ind
+		from &dsn..student_acad_prog_plan_vw
+		where snapshot = 'census'
+			and tuition_group in ('1RS','1TRS')
 		order by emplid
 	;quit;
 	
@@ -3431,8 +3453,8 @@ proc sql;
 					group by subject_catalog_nbr) as g
 			on a.subject_catalog_nbr = g.subject_catalog_nbr
 				and a.ssr_component = g.ssr_component
-		where a.snapshot = 'census'
-			and a.full_acad_year = "&cohort_year."
+		where a.snapshot = 'eot'
+			and a.full_acad_year = put(%eval(&cohort_year. - &lag_year.), 4.)
 			and a.grading_basis = 'GRD'
 	;quit;
 	

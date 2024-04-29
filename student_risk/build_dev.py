@@ -78,7 +78,7 @@ class DatasetBuilderDev:
 			%let aid_snapshot = 'yrbegin';
 		%end;
 		%else %do;
-			%let aid_snapshot = &aid_check.;
+			%let aid_snapshot = "&aid_check.";
 		%end;
 		""")
 
@@ -964,7 +964,6 @@ class DatasetBuilderDev:
 					on a.emplid = b.emplid
 				left join enrolled_&cohort_year. as c
 					on a.emplid = c.emplid
-						and a.term_code + 10 = c.cont_term
 				left join need_&cohort_year. as e
 					on a.emplid = e.emplid
 						and a.aid_year = e.aid_year
@@ -2531,7 +2530,9 @@ class DatasetBuilderDev:
 			where acad_career = 'UGRD'
 				and strm = (select distinct
 								max(strm)
-							from &dsn..class_registration_vw where acad_career = 'UGRD')
+							from &dsn..class_registration_vw 
+							where acad_career = 'UGRD'
+							and substr(strm,4,1) ^= '9')
 				and full_acad_year = "&full_acad_year."
 		;quit;
 
@@ -2757,7 +2758,7 @@ class DatasetBuilderDev:
 													else a.enrl_ind
 													end as enrl_ind
 				from &dsn..student_enrolled_vw as a
-				full join (select distinct 
+				left join (select distinct 
 								emplid 
 							from &dsn..student_degree_vw 
 							where snapshot = 'degree'
@@ -2938,7 +2939,7 @@ class DatasetBuilderDev:
 					fed_efc,
 					fed_need
 				from &dsn..fa_award_period
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."	
 					and award_period = 'A'
 					and efc_status = 'O'
@@ -2954,7 +2955,7 @@ class DatasetBuilderDev:
 					sum(offer_amt) as total_offer,
 					sum(accept_amt) as total_accept
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = "&aid_snapshot."
+				where snapshot = &aid_snapshot.
 					and aid_year = "&cohort_year."
 					and award_period in ('A','B')
 					and award_status in ('A','O')
@@ -4615,7 +4616,6 @@ class DatasetBuilderDev:
 					on a.emplid = x.emplid
 				left join enrolled_&cohort_year. as c
 					on a.emplid = c.emplid
-						and a.term_code + 10 = c.cont_term
 				left join plan_&cohort_year. as d
 					on a.emplid = d.emplid
 				left join need_&cohort_year. as e
