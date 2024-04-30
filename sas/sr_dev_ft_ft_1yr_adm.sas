@@ -446,8 +446,7 @@ run;
 /* 	Financial need */
 	
 	proc sql;
-/* 		create table need_&cohort_year. as */
-		create table need_2016 as
+		create table need_&cohort_year. as
 		select distinct
 			emplid,
 			snapshot as need_snap,
@@ -456,8 +455,7 @@ run;
 			fed_need
 		from &dsn..fa_award_period
 		where snapshot = &aid_snapshot.
-/* 			and aid_year = "&cohort_year."	 */
-			and aid_year = '2016'	
+			and aid_year = "&cohort_year."	
 			and award_period = 'A'
 			and efc_status = 'O'
 	;quit;
