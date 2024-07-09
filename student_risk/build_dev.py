@@ -42,51 +42,10 @@ class DatasetBuilderDev:
 		print('Set macro variables...')
 
 		sas.submit("""
-				proc sql;
-			select term_type into: term_type 
-			from acs.adj_term 
-			where term_begin_dt <= today()
-				and term_end_dt >= today()
-				and acad_career = 'UGRD'
-		;quit;
-		
-		proc sql;
-			select distinct full_acad_year into: full_acad_year 
-			from acs.adj_term 
-			where term_begin_dt <= today()
-				and term_end_dt >= today()
-				and acad_career = 'UGRD'
-		;quit;
-
-		proc sql;
-			select distinct a.snapshot into: aid_check
-			from &dsn..fa_award_aid_year_vw as a
-			inner join (select distinct 
-							emplid, 
-							aid_year, 
-							min(snapshot) as snapshot 
-						from &dsn..fa_award_aid_year_vw 
-						where aid_year = "&full_acad_year." 
-							and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
-				on a.emplid = b.emplid
-					and a.aid_year = b.aid_year
-					and a.snapshot = b.snapshot
-			where a.aid_year = "&full_acad_year."
-		;quit;
-
-		%if %symexist(aid_check) = 0 %then %do;
-			%let aid_snapshot = 'yrbegin';
-		%end;
-		%else %do;
-			%let aid_snapshot = "&aid_check.";
-		%end;
-		""")
-
-		sas.submit("""
 		%let acs_lag = 2;
 		%let lag_year = 1;
-		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
-		%let start_cohort = %eval(&end_cohort. - 5);
+		%let end_cohort = %eval(&full_acad_year. - (2 * &lag_year.));
+		%let start_cohort = %eval(&end_cohort. - 9);
 		""")
 
 		print('Done\n')
@@ -367,7 +326,7 @@ class DatasetBuilderDev:
 					fed_efc,
 					fed_need
 				from &dsn..fa_award_period
-				where snapshot = &aid_snapshot.
+				where snapshot = "&aid_snapshot."
 					and aid_year = "&cohort_year."	
 					and award_period = 'A'
 					and efc_status = 'O'
@@ -383,7 +342,7 @@ class DatasetBuilderDev:
 					sum(offer_amt) as total_offer,
 					sum(accept_amt) as total_accept
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = &aid_snapshot.
+				where snapshot = "&aid_snapshot."
 					and aid_year = "&cohort_year."
 					and award_period in ('A','B')
 					and award_status in ('A','O')
@@ -2453,7 +2412,7 @@ class DatasetBuilderDev:
 		sas.endsas()
 
 	@staticmethod
-	def build_census_dev():
+	def build_census_dev(outcome: str, full_acad_year: int, aid_snapshot: str, snapshot: str, term_type: str) -> None:
 
 		# Start SAS session
 		print('\nStart SAS session...')
@@ -2485,73 +2444,17 @@ class DatasetBuilderDev:
 		# Set macro variables
 		print('Set macro variables...')
 
-		sas.submit("""
-		proc sql;
-			select term_type into: term_type 
-			from acs.adj_term 
-			where term_begin_dt <= today()
-				and term_end_dt >= today()
-				and acad_career = 'UGRD'
-		;quit;
-		
-		proc sql;
-            select distinct full_acad_year into: full_acad_year 
-            from acs.adj_term 
-            where term_begin_dt <= today()
-                and term_end_dt >= today()
-                and acad_career = 'UGRD'
-        ;quit;
-
-		proc sql;
-			select distinct a.snapshot into: aid_snapshot
-			from &dsn..fa_award_aid_year_vw as a
-			inner join (select distinct 
-							emplid, 
-							aid_year, 
-							min(snapshot) as snapshot 
-						from &dsn..fa_award_aid_year_vw 
-						where aid_year = "&full_acad_year." 
-							and snapshot in ('yrpaug', 'yrbegin', 'usnews', 'budreq', 'aidyear')) as b
-				on a.emplid = b.emplid
-					and a.aid_year = b.aid_year
-					and a.snapshot = b.snapshot
-			where a.aid_year = "&full_acad_year."	
-		;quit;
-
-		proc sql;
-			create table snap_check as
-			select distinct
-				max(case when snapshot = 'census' 	then 1
-					when snapshot = 'midterm' 		then 2
-					when snapshot = 'eot'			then 3
-													else 0
-													end) as snap_order
-			from &dsn..class_registration_vw
-			where acad_career = 'UGRD'
-				and strm = (select distinct
-								max(strm)
-							from &dsn..class_registration_vw 
-							where acad_career = 'UGRD'
-							and substr(strm,4,1) ^= '9')
-				and full_acad_year = "&full_acad_year."
-		;quit;
-
-		proc sql;
-			select distinct 
-				case when snap_order = 1	then 'census'
-					when snap_order = 2		then 'midterm'
-					when snap_order = 3		then 'eot'
-											else '' end
-				into: snapshot
-			from snap_check
-		;quit;
-		""")
+		sas.symput('outcome', outcome)
+		sas.symput('full_acad_year', full_acad_year)
+		sas.symput('aid_snapshot', aid_snapshot)
+		sas.symput('snapshot', snapshot)
+		sas.symput('term_type', term_type)
 
 		sas.submit("""
 		%let acs_lag = 2;
 		%let lag_year = 1;
-		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
-		%let start_cohort = %eval(&end_cohort. - 5);
+		%let end_cohort = %eval(&full_acad_year. - (2 * &lag_year.));
+		%let start_cohort = %eval(&end_cohort. - 8);
 		""")
 
 		print('Done\n')
@@ -2561,7 +2464,7 @@ class DatasetBuilderDev:
 		start = time.perf_counter()
 
 		sas.submit("""
-		proc import out=act_to_sat_engl_read
+		proc import out=act_to_sat_engl_read--
 			datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_engl_read.xlsx\"
 			dbms=XLSX REPLACE;
 			getnames=YES;
@@ -2749,30 +2652,94 @@ class DatasetBuilderDev:
 					and a.ipeds_full_part_time = 'F'
 			;quit;
 			
-			proc sql;
-				create table enrolled_&cohort_year. as
-				select distinct 
-					a.emplid, 
-					a.term_code as cont_term,
-					case when b.emplid is not null 	then 1
-													else a.enrl_ind
-													end as enrl_ind
-				from &dsn..student_enrolled_vw as a
-				left join (select distinct 
-								emplid 
-							from &dsn..student_degree_vw 
-							where snapshot = 'degree'
-								and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
-								and acad_career = 'UGRD'
-								and ipeds_award_lvl = 5) as b
-					on a.emplid = b.emplid
-				where a.snapshot = 'census'
-					and a.full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
-					and substr(a.strm,4,1) = '7'
-					and a.acad_career = 'UGRD'
-					and a.new_continue_status = 'CTU'
-					and a.term_credit_hours > 0
-			;quit;
+			%if &outcome. = term %then %do;
+				proc sql;
+					create table enrolled_&cohort_year. as
+					select distinct 
+						a.emplid, 
+						b.cont_term,
+						c.grad_term,
+						case when c.emplid is not null	then 1
+														else 0
+														end as deg_ind,
+						case when b.emplid is not null 	then 1
+							when c.emplid is not null	then 1
+														else 0
+														end as enrl_ind
+					from &dsn..student_enrolled_vw as a
+					left join (select distinct 
+									emplid 
+									,term_code as cont_term
+									,enrl_ind
+								from &dsn..student_enrolled_vw 
+								where snapshot = 'census'
+									and full_acad_year = put(&cohort_year., 4.)
+									and substr(strm,4,1) = '3'
+									and acad_career = 'UGRD'
+									and new_continue_status = 'CTU'
+									and term_credit_hours > 0) as b
+						on a.emplid = b.emplid
+					left join (select distinct 
+									emplid
+									,term_code as grad_term
+								from &dsn..student_degree_vw 
+								where snapshot = 'degree'
+									and full_acad_year = put(&cohort_year., 4.)
+									and substr(strm,4,1) = '3'
+									and acad_career = 'UGRD'
+									and ipeds_award_lvl = 5) as c
+						on a.emplid = c.emplid
+					where a.snapshot = 'census'
+						and a.full_acad_year = "&cohort_year."
+						and substr(a.strm,4,1) = '7'
+						and a.acad_career = 'UGRD'
+						and a.term_credit_hours > 0
+				;quit;
+			%end;
+
+			%if &outcome. = year %then %do;
+				proc sql;
+					create table enrolled_&cohort_year. as
+					select distinct 
+						a.emplid, 
+						b.cont_term,
+						c.grad_term,
+						case when c.emplid is not null	then 1
+														else 0
+														end as deg_ind,
+						case when b.emplid is not null 	then 1
+							when c.emplid is not null	then 1
+														else 0
+														end as enrl_ind
+					from &dsn..student_enrolled_vw as a
+					left join (select distinct 
+									emplid 
+									,term_code as cont_term
+									,enrl_ind
+								from &dsn..student_enrolled_vw 
+								where snapshot = 'census'
+									and full_acad_year = put(%eval(&cohort_year. + &lag_year.), 4.)
+									and substr(strm,4,1) = '7'
+									and acad_career = 'UGRD'
+									and new_continue_status = 'CTU'
+									and term_credit_hours > 0) as b
+						on a.emplid = b.emplid
+					left join (select distinct 
+									emplid
+									,term_code as grad_term
+								from &dsn..student_degree_vw 
+								where snapshot = 'degree'
+									and put(&cohort_year., 4.) <= full_acad_year <= put(%eval(&cohort_year. + &lag_year.), 4.)
+									and acad_career = 'UGRD'
+									and ipeds_award_lvl = 5) as c
+						on a.emplid = c.emplid
+					where a.snapshot = 'census'
+						and a.full_acad_year = "&cohort_year."
+						and substr(a.strm,4,1) = '7'
+						and a.acad_career = 'UGRD'
+						and a.term_credit_hours > 0
+				;quit;
+			%end;
 			
 			proc sql;
 				create table race_detail_&cohort_year. as
@@ -2939,7 +2906,7 @@ class DatasetBuilderDev:
 					fed_efc,
 					fed_need
 				from &dsn..fa_award_period
-				where snapshot = &aid_snapshot.
+				where snapshot = "&aid_snapshot."
 					and aid_year = "&cohort_year."	
 					and award_period = 'A'
 					and efc_status = 'O'
@@ -2955,7 +2922,7 @@ class DatasetBuilderDev:
 					sum(offer_amt) as total_offer,
 					sum(accept_amt) as total_accept
 				from &dsn..fa_award_aid_year_vw
-				where snapshot = &aid_snapshot.
+				where snapshot = "&aid_snapshot."
 					and aid_year = "&cohort_year."
 					and award_period in ('A','B')
 					and award_status in ('A','O')
@@ -6709,8 +6676,8 @@ class DatasetBuilderDev:
 		print('Prepare data...')
 
 		sas.submit("""
-		data validation_set;
-			set dataset_&start_cohort.;
+		data training_set;
+			set dataset_&start_cohort.-dataset_%eval(&end_cohort. - (3 * &lag_year.));
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
@@ -6729,6 +6696,18 @@ class DatasetBuilderDev:
 			if gini_indx = . then gini_indx = 0;
 			if pvrt_rate = . then pvrt_rate = 0;
 			if educ_rate = . then educ_rate = 0;
+			if city_large = . then city_large = 0;
+			if city_mid = . then city_mid = 0;
+			if city_small = . then city_small = 0;
+			if suburb_large = . then suburb_large = 0;
+			if suburb_mid = . then suburb_mid = 0;
+			if suburb_small = . then suburb_small = 0;
+			if town_fringe = . then town_fringe = 0;
+			if town_distant = . then town_distant = 0;
+			if town_remote = . then town_remote = 0;
+			if rural_fringe = . then rural_fringe = 0;
+			if rural_distant = . then rural_distant = 0;
+			if rural_remote = . then rural_remote = 0;
 			if ad_dta = . then ad_dta = 0;
 			if ad_ast = . then ad_ast = 0;
 			if ad_hsdip = . then ad_hsdip = 0;
@@ -6752,12 +6731,12 @@ class DatasetBuilderDev:
 			if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 			if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 			if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
-			if fall_lec_count = . then fall_lec_count = 0;
-			if fall_lab_count = . then fall_lab_count = 0;
-			if fall_int_count = . then fall_int_count = 0;
-			if fall_stu_count = . then fall_stu_count = 0;
-			if fall_sem_count = . then fall_sem_count = 0;
-			if fall_oth_count = . then fall_oth_count = 0;
+			if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+			if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+			if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+			if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+			if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
+			if fall_avg_difficulty = . then fall_avg_difficulty = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if fall_int_contact_hrs = . then fall_int_contact_hrs = 0;
@@ -6915,8 +6894,8 @@ class DatasetBuilderDev:
 			if total_accept = . then total_accept = 0;
 		run;
 
-		data training_set;
-			set dataset_%eval(&start_cohort. + &lag_year.)-dataset_%eval(&end_cohort. - &lag_year.);
+		data validation_set;
+			set dataset_%eval(&end_cohort. - (2 * &lag_year.))-dataset_%eval(&end_cohort. - &lag_year.);
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
@@ -6935,6 +6914,18 @@ class DatasetBuilderDev:
 			if gini_indx = . then gini_indx = 0;
 			if pvrt_rate = . then pvrt_rate = 0;
 			if educ_rate = . then educ_rate = 0;
+			if city_large = . then city_large = 0;
+			if city_mid = . then city_mid = 0;
+			if city_small = . then city_small = 0;
+			if suburb_large = . then suburb_large = 0;
+			if suburb_mid = . then suburb_mid = 0;
+			if suburb_small = . then suburb_small = 0;
+			if town_fringe = . then town_fringe = 0;
+			if town_distant = . then town_distant = 0;
+			if town_remote = . then town_remote = 0;
+			if rural_fringe = . then rural_fringe = 0;
+			if rural_distant = . then rural_distant = 0;
+			if rural_remote = . then rural_remote = 0;
 			if ad_dta = . then ad_dta = 0;
 			if ad_ast = . then ad_ast = 0;
 			if ad_hsdip = . then ad_hsdip = 0;
@@ -6958,12 +6949,12 @@ class DatasetBuilderDev:
 			if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 			if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 			if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
-			if fall_lec_count = . then fall_lec_count = 0;
-			if fall_lab_count = . then fall_lab_count = 0;
-			if fall_int_count = . then fall_int_count = 0;
-			if fall_stu_count = . then fall_stu_count = 0;
-			if fall_sem_count = . then fall_sem_count = 0;
-			if fall_oth_count = . then fall_oth_count = 0;
+			if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+			if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+			if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+			if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+			if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
+			if fall_avg_difficulty = . then fall_avg_difficulty = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if fall_int_contact_hrs = . then fall_int_contact_hrs = 0;
@@ -7129,7 +7120,7 @@ class DatasetBuilderDev:
 			if pop_dens = . then pop_dens = 0;
 			if educ_rate = . then educ_rate = 0;	
 			if pct_blk = . then pct_blk = 0;	
-			if pct_ai = . then pct_ai = 0;	
+			if pct_ai = . then pct_ai = 0;
 			if pct_asn = .	then pct_asn = 0;
 			if pct_hawi = . then pct_hawi = 0;
 			if pct_two = . then pct_two = 0;
@@ -7141,6 +7132,18 @@ class DatasetBuilderDev:
 			if gini_indx = . then gini_indx = 0;
 			if pvrt_rate = . then pvrt_rate = 0;
 			if educ_rate = . then educ_rate = 0;
+			if city_large = . then city_large = 0;
+			if city_mid = . then city_mid = 0;
+			if city_small = . then city_small = 0;
+			if suburb_large = . then suburb_large = 0;
+			if suburb_mid = . then suburb_mid = 0;
+			if suburb_small = . then suburb_small = 0;
+			if town_fringe = . then town_fringe = 0;
+			if town_distant = . then town_distant = 0;
+			if town_remote = . then town_remote = 0;
+			if rural_fringe = . then rural_fringe = 0;
+			if rural_distant = . then rural_distant = 0;
+			if rural_remote = . then rural_remote = 0;
 			if ad_dta = . then ad_dta = 0;
 			if ad_ast = . then ad_ast = 0;
 			if ad_hsdip = . then ad_hsdip = 0;
@@ -7164,12 +7167,12 @@ class DatasetBuilderDev:
 			if last_sch_proprietorship = '' then last_sch_proprietorship = 'UNKN';
 			if ipeds_ethnic_group_descrshort = '' then ipeds_ethnic_group_descrshort = 'NS';
 			if fall_avg_pct_withdrawn = . then fall_avg_pct_withdrawn = 0;
-			if fall_lec_count = . then fall_lec_count = 0;
-			if fall_lab_count = . then fall_lab_count = 0;
-			if fall_int_count = . then fall_int_count = 0;
-			if fall_stu_count = . then fall_stu_count = 0;
-			if fall_sem_count = . then fall_sem_count = 0;
-			if fall_oth_count = . then fall_oth_count = 0;
+			if fall_avg_pct_CDFW = . then fall_avg_pct_CDFW = 0;
+			if fall_avg_pct_CDF = . then fall_avg_pct_CDF = 0;
+			if fall_avg_pct_DFW = . then fall_avg_pct_DFW = 0;
+			if fall_avg_pct_DF = . then fall_avg_pct_DF = 0;
+			if fall_avg_difficulty = . then fall_crse_mi = 1; else fall_crse_mi = 0; 
+			if fall_avg_difficulty = . then fall_avg_difficulty = 0;
 			if fall_lec_contact_hrs = . then fall_lec_contact_hrs = 0;
 			if fall_lab_contact_hrs = . then fall_lab_contact_hrs = 0;
 			if fall_int_contact_hrs = . then fall_int_contact_hrs = 0;
@@ -7326,7 +7329,8 @@ class DatasetBuilderDev:
 			if total_offer = . then total_offer = 0;
 			if total_accept = . then total_accept = 0;
 		run;
-		""")
+		"""
+		)
 
 		print('Done\n')
 

@@ -662,6 +662,8 @@ univr_logit_df, univr_validation_set, univr_training_set, univr_testing_set, uni
 
 #%%
 # Detect and remove outliers
+# https://scikit-learn.org/dev/auto_examples/neighbors/plot_lof_outlier_detection.html
+# https://en.wikipedia.org/wiki/Gower%27s_distance
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
@@ -716,6 +718,7 @@ univr_validation_set, univr_training_set = helper_funcs.remove_outliers(univr_va
 
 #%%
 # Create Tomek Link undersampled validation and training sets
+# https://imbalanced-learn.org/stable/under_sampling.html#tomek-s-links
 
 # Pullman undersample
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
@@ -1418,9 +1421,11 @@ helper_funcs.fairness_output(auto_engine, model_id, 'valid', model_descr, univr_
 # print(f'ROC AUC for University ensemble model (training): {univr_vcf_auc:.4f}\n')
 
 #%%
+# Calculate SHAP values
+# https://github.com/slundberg/shap
 print('Calculate SHAP values...')
 
-# Pullman SHAP training (see: https://github.com/slundberg/shap)
+# Pullman SHAP training
 pullm_explainer = shap.TreeExplainer(model=pullm_xgbrf, data=pullm_x_train, model_output='predict_proba')
 
 #%%
@@ -1441,7 +1446,7 @@ for index in range(len(pullm_shap_values[0])):
 pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 
 #%%
-# Vancouver SHAP training (see: https://github.com/slundberg/shap)
+# Vancouver SHAP training
 vanco_explainer = shap.TreeExplainer(model=vanco_xgbrf, data=vanco_x_train, model_output='predict_proba')
 
 #%%
@@ -1462,7 +1467,7 @@ for index in range(len(vanco_shap_values[0])):
 vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
 
 #%%
-# University SHAP training (see: https://github.com/slundberg/shap)
+# University SHAP training
 univr_explainer = shap.TreeExplainer(model=univr_xgbrf, data=univr_x_train, model_output='predict_proba')
 
 #%%

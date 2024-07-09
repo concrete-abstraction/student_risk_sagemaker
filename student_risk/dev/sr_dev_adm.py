@@ -1110,6 +1110,8 @@ univr_current_outcome = univr_testing_set[[
 
 #%%
 # Detect and remove outliers
+# https://scikit-learn.org/dev/auto_examples/neighbors/plot_lof_outlier_detection.html
+# https://en.wikipedia.org/wiki/Gower%27s_distance
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
@@ -1237,6 +1239,7 @@ univr_validation_set = univr_validation_set.drop(columns='mask')
 
 #%%
 # Create Tomek Link undersampled validation and training sets
+# https://imbalanced-learn.org/stable/under_sampling.html#tomek-s-links
 
 # Pullman undersample
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
@@ -2569,7 +2572,7 @@ plt.show()
 # pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
 
 #%%
-# Pullman SHAP training (see: https://github.com/slundberg/shap)
+# Pullman SHAP training
 pullm_explainer = shap.TreeExplainer(model=pullm_xgb_ccv, data=pullm_x_train, model_output='predict_proba')
 
 #%%
@@ -2595,7 +2598,7 @@ pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 # vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
 
 #%%
-# Vancouver SHAP training (see: https://github.com/slundberg/shap)
+# Vancouver SHAP training
 vanco_explainer = shap.TreeExplainer(model=vanco_xgb_ccv, data=vanco_x_train, model_output='predict_proba')
 
 #%%
@@ -2621,7 +2624,7 @@ vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
 # trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
 
 #%%
-# Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
+# Tri-Cities SHAP training
 trici_explainer = shap.TreeExplainer(model=trici_xgb_ccv, data=trici_x_train, model_output='predict_proba')
 
 #%%
