@@ -85,14 +85,14 @@ class DatasetBuilderProd:
 		%end;
 		""")
 
+		sas.symput('outcome', outcome)
+
 		sas.submit("""
 		%let acs_lag = 2;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 9);
 		""")
-
-		sas.symput('outcome', outcome)
 
 		print('Done\n')
 
@@ -2455,14 +2455,14 @@ class DatasetBuilderProd:
 		;quit;
 		""")
 
+		sas.symput('outcome', outcome)
+
 		sas.submit("""
 		%let acs_lag = 2;
 		%let lag_year = 1;
 		%let end_cohort = %eval(&full_acad_year. - &lag_year.);
 		%let start_cohort = %eval(&end_cohort. - 9);
 		""")
-
-		sas.symput('outcome', outcome)
 
 		print('Done\n')
 

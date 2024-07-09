@@ -28,10 +28,24 @@ import shap
 from student_risk import build_dev
 
 #%%
-# Global variables
-wsu_color = (0.596,0.117,0.196)
+# Global variable initialization
+strm: str = None
+outcome: str = 'term'
+top_N: int = 5
+model_descr: str = 'ft_ft_1yr'
+unwanted_vars: list = ['emplid','enrl_ind']
+
+#%%
+# Development variable initialization
+full_acad_year: int = 2024
+aid_snapshot: str = 'usnews'
+snapshot: str = 'eot'
+term_type: str = 'FAL'
+
+#%%
+# WSU branding
+wsu_color: tuple = (0.596,0.117,0.196)
 wsu_cmap = sns.light_palette('#981e32',as_cmap=True)
-unwanted_vars = ['emplid','enrl_ind']
 plt.rcParams['figure.figsize'] = [15, 10]
 plt.rcParams['font.size'] = '24'
 plt.rcParams['axes.labelsize'] = '24'
@@ -48,7 +62,7 @@ verbose = True
 
 #%%
 # SAS dataset builder
-build_dev.DatasetBuilderDev.build_census_dev()
+build_dev.DatasetBuilderDev.build_census_dev(outcome, full_acad_year, aid_snapshot, snapshot, term_type)
 
 #%%
 # Import pre-split data
@@ -288,20 +302,20 @@ pullm_data_vars = [
 # 'fall_avg_pct_CDF',
 # 'fall_avg_pct_DFW',
 # 'fall_avg_pct_DF',
-'spring_avg_difficulty',
-'spring_avg_pct_withdrawn',
+# 'spring_avg_difficulty',
+# 'spring_avg_pct_withdrawn',
 # 'spring_avg_pct_CDFW',
-'spring_avg_pct_CDF',
+# 'spring_avg_pct_CDF',
 # 'spring_avg_pct_DFW',
 # 'spring_avg_pct_DF',
 # 'fall_lec_count',
 # 'fall_lab_count',
 # 'fall_lec_contact_hrs',
 # 'fall_lab_contact_hrs',
-'spring_lec_count',
-'spring_lab_count',
-'spring_stu_count',
-'spring_oth_count',
+# 'spring_lec_count',
+# 'spring_lab_count',
+# 'spring_stu_count',
+# 'spring_oth_count',
 # 'spring_enrl_avg',
 # 'spring_enrl_avg_mi',
 # 'spring_class_time_early',
@@ -321,8 +335,8 @@ pullm_data_vars = [
 # 'total_spring_contact_hrs',
 # 'fall_midterm_gpa_avg',
 # 'fall_midterm_gpa_avg_ind',
-'spring_midterm_gpa_avg',
-'spring_midterm_gpa_avg_mi',
+# 'spring_midterm_gpa_avg',
+# 'spring_midterm_gpa_avg_mi',
 'cum_adj_transfer_hours',
 'resident',
 # 'father_wsu_flag',
@@ -363,11 +377,11 @@ pullm_data_vars = [
 # 'IB',
 # 'AICE',
 'IB_AICE', 
-'spring_credit_hours',
+# 'spring_credit_hours',
 # 'total_spring_units',
-'spring_withdrawn_hours',
+# 'spring_withdrawn_hours',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 'business',
@@ -581,7 +595,7 @@ vanco_data_vars = [
 'fall_withdrawn_hours',
 # 'fall_withdrawn_ind',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -795,7 +809,7 @@ trici_data_vars = [
 'fall_withdrawn_hours',
 # 'fall_withdrawn_ind',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -1009,7 +1023,7 @@ univr_data_vars = [
 'fall_withdrawn_hours',
 # 'fall_withdrawn_ind',
 # 'athlete',
-'remedial',
+# 'remedial',
 # 'ACAD_PLAN',
 # 'plan_owner_org',
 # 'business',
@@ -1113,6 +1127,8 @@ univr_current_outcome = univr_testing_set[[
 
 #%%
 # Detect and remove outliers
+# https://scikit-learn.org/dev/auto_examples/neighbors/plot_lof_outlier_detection.html
+# https://en.wikipedia.org/wiki/Gower%27s_distance
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
@@ -1240,6 +1256,7 @@ univr_validation_set = univr_validation_set.drop(columns='mask')
 
 #%%
 # Create Tomek Link undersampled validation and training sets
+# https://imbalanced-learn.org/stable/under_sampling.html#tomek-s-links
 
 # Pullman undersample
 pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
@@ -2232,13 +2249,13 @@ print(f'Best parameters: {pullm_gridsearch.best_params_}')
 #%%
 # Pullman XGB Random Forest
 pullm_class_weight = pullm_y_train[pullm_y_train == 0].count() / pullm_y_train[pullm_y_train == 1].count()
-pullm_xgbrf_ccv = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
-								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
+# pullm_xgbrf_ccv = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, colsample_bynode=colsample_bynode, scale_pos_weight=pullm_class_weight, 
+# 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
 
 # Pullman XGB Random Forest calibration
-# pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=pullm_class_weight, 
-# 								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
-# pullm_xgbrf_ccv = CalibratedClassifierCV(pullm_xgbrf, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
+pullm_xgbrf = XGBClassifier(tree_method='hist', grow_policy='depthwise', min_child_weight=min_child_weight, max_bin=max_bin, num_parallel_tree=num_parallel_tree, subsample=subsample, colsample_bytree=colsample_bytree, scale_pos_weight=pullm_class_weight, 
+								eval_metric='logloss', **pullm_gridsearch.best_params_, use_label_encoder=False, n_jobs=-1).fit(pullm_x_train, pullm_y_train, eval_set=[(pullm_x_cv, pullm_y_cv)], early_stopping_rounds=20, verbose=False)
+pullm_xgbrf_ccv = CalibratedClassifierCV(pullm_xgbrf, method='isotonic', cv=5).fit(pullm_x_train, pullm_y_train)
 
 pullm_xgbrf_probs = pullm_xgbrf_ccv.predict_proba(pullm_x_train)
 pullm_xgbrf_probs = pullm_xgbrf_probs[:, 1]
@@ -2660,7 +2677,7 @@ plt.show()
 # pullm_x_shap, pullm_y_shap = pullm_under_shap.fit_resample(pullm_x_train, pullm_y_train)
 
 #%%
-# Pullman SHAP training (see: https://github.com/slundberg/shap)
+# Pullman SHAP training
 pullm_explainer = shap.TreeExplainer(model=pullm_xgb_ccv, data=pullm_x_train, model_output='predict_proba')
 
 #%%
@@ -2686,7 +2703,7 @@ pullm_shap_zip = dict(zip(pullm_shap_outcome, pullm_shap_results))
 # vanco_x_shap, vanco_y_shap = vanco_under_shap.fit_resample(vanco_x_train, vanco_y_train)
 
 #%%
-# Vancouver SHAP training (see: https://github.com/slundberg/shap)
+# Vancouver SHAP training
 vanco_explainer = shap.TreeExplainer(model=vanco_xgb_ccv, data=vanco_x_train, model_output='predict_proba')
 
 #%%
@@ -2712,7 +2729,7 @@ vanco_shap_zip = dict(zip(vanco_shap_outcome, vanco_shap_results))
 # trici_x_shap, trici_y_shap = trici_under_shap.fit_resample(trici_x_train, trici_y_train)
 
 #%%
-# Tri-Cities SHAP training (see: https://github.com/slundberg/shap)
+# Tri-Cities SHAP training
 trici_explainer = shap.TreeExplainer(model=trici_xgb_ccv, data=trici_x_train, model_output='predict_proba')
 
 #%%
