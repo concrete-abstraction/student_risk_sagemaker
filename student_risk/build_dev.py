@@ -2464,7 +2464,7 @@ class DatasetBuilderDev:
 		start = time.perf_counter()
 
 		sas.submit("""
-		proc import out=act_to_sat_engl_read
+		proc import out=act_to_sat_engl_read--
 			datafile=\"Z:\\Nathan\\Models\\student_risk\\supplemental_files\\act_to_sat_engl_read.xlsx\"
 			dbms=XLSX REPLACE;
 			getnames=YES;
@@ -6895,7 +6895,7 @@ class DatasetBuilderDev:
 		run;
 
 		data validation_set;
-			set dataset_%eval(&end_cohort. - (2 * &lag_year.))-dataset_&end_cohort.;
+			set dataset_%eval(&end_cohort. - (2 * &lag_year.))-dataset_%eval(&end_cohort. - &lag_year.);
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
@@ -7113,7 +7113,7 @@ class DatasetBuilderDev:
 		run;
 
 		data testing_set;
-			set dataset_%eval(&end_cohort. + &lag_year.);
+			set dataset_&end_cohort.;
 			if enrl_ind = . then enrl_ind = 0;
 			if distance = . then acs_mi = 1; else acs_mi = 0;
 			if distance = . then distance = 0;
