@@ -11,7 +11,7 @@ from sklearn.neighbors import LocalOutlierFactor
 
 
 def prep_campus_dataframe(validation_set: pd.DataFrame, training_set: pd.DataFrame, testing_set: pd.DataFrame, data_vars: list, campus: list) -> Union[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, list, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-	campus_logit_df = training_set[training_set['adj_acad_prog_primary_campus'].isin(campus)][data_vars].dropna().drop(columns=['emplid'])
+	campus_logit_df = training_set[training_set['adj_acad_prog_primary_campus'].isin(campus)][data_vars].dropna().drop(columns=['random_id'])
 
 	campus_validation_set = validation_set[(validation_set['adj_acad_prog_primary_campus'].isin(campus))][data_vars].dropna()
 
@@ -21,15 +21,15 @@ def prep_campus_dataframe(validation_set: pd.DataFrame, training_set: pd.DataFra
 
 	campus_testing_set = campus_testing_set.reset_index()
 
-	campus_shap_outcome = campus_testing_set['emplid'].copy(deep=True).values.tolist()
+	campus_shap_outcome = campus_testing_set['random_id'].copy(deep=True).values.tolist()
 
 	campus_pred_outcome = campus_testing_set[[ 
-							'emplid',
+							'random_id',
 							# 'enrl_ind'
 							]].copy(deep=True)
 
 	campus_aggregate_outcome = campus_testing_set[[ 
-							'emplid',
+							'random_id',
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
@@ -38,7 +38,7 @@ def prep_campus_dataframe(validation_set: pd.DataFrame, training_set: pd.DataFra
 							]].copy(deep=True)
 
 	campus_current_outcome = campus_testing_set[[ 
-							'emplid',
+							'random_id',
 							# 'enrl_ind'
 							]].copy(deep=True)
 		
@@ -46,7 +46,7 @@ def prep_campus_dataframe(validation_set: pd.DataFrame, training_set: pd.DataFra
 	
 
 def prep_system_dataframe(validation_set: pd.DataFrame, training_set: pd.DataFrame, testing_set: pd.DataFrame, data_vars: list, campus: list) -> Union[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, list, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-	system_logit_df = training_set[data_vars].dropna().drop(columns=['emplid'])
+	system_logit_df = training_set[data_vars].dropna().drop(columns=['random_id'])
 
 	system_validation_set = validation_set[data_vars].dropna()
 
@@ -58,15 +58,15 @@ def prep_system_dataframe(validation_set: pd.DataFrame, training_set: pd.DataFra
 
 	system_testing_set = system_testing_set.reset_index()
 
-	system_shap_outcome = system_testing_set['emplid'].copy(deep=True).values.tolist()
+	system_shap_outcome = system_testing_set['random_id'].copy(deep=True).values.tolist()
 
 	system_pred_outcome = system_testing_set[[ 
-							'emplid',
+							'random_id',
 							# 'enrl_ind'
 							]].copy(deep=True)
 
 	system_aggregate_outcome = system_testing_set[[ 
-							'emplid',
+							'random_id',
 							'male',
 							'underrep_minority',
 							'first_gen_flag',
@@ -75,7 +75,7 @@ def prep_system_dataframe(validation_set: pd.DataFrame, training_set: pd.DataFra
 							]].copy(deep=True)
 
 	system_current_outcome = system_testing_set[[ 
-							'emplid',
+							'random_id',
 							# 'enrl_ind'
 							]].copy(deep=True)
 		   
@@ -90,9 +90,9 @@ def remove_outliers(campus_validation_set: pd.DataFrame, campus_training_set: pd
 	campus_validation_set['mask'] = LocalOutlierFactor(metric='precomputed', n_jobs=-1).fit_predict(campus_x_validation_gower)
 
 	campus_training_outlier_set = campus_training_set.drop(campus_training_set[campus_training_set['mask'] == 1].index)
-	campus_training_outlier_set.to_csv(f'Z:\\Nathan\\Models\\student_risk\\outliers\\{campus}_{model_descr}_training_outlier_set.csv', encoding='utf-8', index=False)
+	# campus_training_outlier_set.to_csv(f'Z:\\Nathan\\Models\\student_risk\\outliers\\{campus}_{model_descr}_training_outlier_set.csv', encoding='utf-8', index=False)
 	campus_validation_outlier_set = campus_validation_set.drop(campus_validation_set[campus_validation_set['mask'] == 1].index)
-	campus_validation_outlier_set.to_csv(f'Z:\\Nathan\\Models\\student_risk\\outliers\\{campus}_{model_descr}_validation_outlier_set.csv', encoding='utf-8', index=False)
+	# campus_validation_outlier_set.to_csv(f'Z:\\Nathan\\Models\\student_risk\\outliers\\{campus}_{model_descr}_validation_outlier_set.csv', encoding='utf-8', index=False)
 
 	campus_training_set = campus_training_set.drop(campus_training_set[campus_training_set['mask'] == -1].index)
 	campus_training_set = campus_training_set.drop(columns='mask')
@@ -126,15 +126,15 @@ def tomek_undersample(campus_validation_set: pd.DataFrame, campus_training_set: 
 	campus_validation_set = campus_validation_set.reset_index(drop=True)
 
 	campus_tomek_train_set = campus_training_set.drop(campus_tomek_train_index)
-	campus_tomek_train_set.to_csv(f'Z:\\Nathan\\Models\\student_risk\\outliers\\{campus}_{model_descr}_tomek_training_set.csv', encoding='utf-8', index=False)
+	# campus_tomek_train_set.to_csv(f'Z:\\Nathan\\Models\\student_risk\\outliers\\{campus}_{model_descr}_tomek_training_set.csv', encoding='utf-8', index=False)
 	campus_tomek_valid_set = campus_validation_set.drop(campus_tomek_valid_index)
-	campus_tomek_valid_set.to_csv(f'Z:\\Nathan\\Models\\student_risk\\outliers\\{campus}_{model_descr}_tomek_validation_set.csv', encoding='utf-8', index=False)
+	# campus_tomek_valid_set.to_csv(f'Z:\\Nathan\\Models\\student_risk\\outliers\\{campus}_{model_descr}_tomek_validation_set.csv', encoding='utf-8', index=False)
 	
 	return campus_x_train, campus_x_cv, campus_y_train, campus_y_cv
 
 
 def aggregate_outcome(campus_aggregate_outcome: pd.DataFrame, campus_xgbrf_pred_probs, campus: str, model_descr: str) -> None:
-	campus_aggregate_outcome['emplid'] = campus_aggregate_outcome['emplid'].astype(str).str.zfill(9)
+	campus_aggregate_outcome['random_id'] = campus_aggregate_outcome['random_id'].astype(str).str.zfill(9)
 	campus_aggregate_outcome['risk_prob'] = 1 - pd.DataFrame(campus_xgbrf_pred_probs).round(4)
 
 	campus_aggregate_outcome = campus_aggregate_outcome.rename(columns={"male": "sex_ind"})
@@ -175,7 +175,7 @@ def fairness_output(auto_engine, model_id: int, model_type: str, model_descr: st
 
 
 def results_output(auto_engine, model_id: int, run_date: object, campus_current_outcome: pd.DataFrame, campus_xgbrf_pred_probs, campus: str, model_descr: str) -> None:
-	campus_current_outcome['emplid'] = campus_current_outcome['emplid'].astype(str).str.zfill(9)
+	campus_current_outcome['random_id'] = campus_current_outcome['random_id'].astype(str).str.zfill(9)
 	campus_current_outcome['risk_prob'] = 1 - pd.DataFrame(campus_xgbrf_pred_probs).round(4)
 
 	campus_current_outcome['date'] = run_date
@@ -197,11 +197,11 @@ def shap_output(engine, student_shap, top_N: int, model_id: int, run_date: objec
 	campus_shap_writer = csv.writer(campus_shap_file)
 	campus_shap_insert = []
 
-	campus_shap_writer.writerow(['emplid','shap_values'])
+	campus_shap_writer.writerow(['random_id','shap_values'])
 
-	for emplid in campus_shap_zip:
-		campus_shap_writer.writerow([emplid, list(islice(campus_shap_zip[emplid].items(), top_N))])
-		campus_shap_sql = [emplid, list(islice(campus_shap_zip[emplid].items(), top_N))]
+	for random_id in campus_shap_zip:
+		campus_shap_writer.writerow([random_id, list(islice(campus_shap_zip[random_id].items(), top_N))])
+		campus_shap_sql = [random_id, list(islice(campus_shap_zip[random_id].items(), top_N))]
 	
 		campus_shap_insert.append(str(campus_shap_sql[0]).zfill(9))
 
@@ -213,7 +213,7 @@ def shap_output(engine, student_shap, top_N: int, model_id: int, run_date: objec
 	campus_shap_file.close()
 
 	while campus_shap_insert:
-		ins = student_shap.insert().values(emplid=campus_shap_insert.pop(0), 
+		ins = student_shap.insert().values(random_id=campus_shap_insert.pop(0), 
 											shap_descr_1=campus_shap_insert.pop(0), shap_value_1=campus_shap_insert.pop(0), 
 											shap_descr_2=campus_shap_insert.pop(0), shap_value_2=campus_shap_insert.pop(0), 
 											shap_descr_3=campus_shap_insert.pop(0), shap_value_3=campus_shap_insert.pop(0), 

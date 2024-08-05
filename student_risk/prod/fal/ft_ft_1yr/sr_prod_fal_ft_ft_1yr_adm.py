@@ -1,18 +1,22 @@
 #%%
 import datetime
+import html
+import os
 import pathlib
 import time
 import urllib
 from datetime import date
 
+import boto3
+import botocore
 import joblib
 import numpy as np
 import pandas as pd
-import pyodbc
-import saspy
+# import s3fs
+# import sagemaker
 import sklearn
-import sqlalchemy
-from fairlearn.metrics import MetricFrame, true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate, selection_rate, count
+# from fairlearn.metrics import MetricFrame, true_positive_rate, true_negative_rate, false_positive_rate, false_negative_rate, selection_rate, count
+from io import StringIO
 from patsy.highlevel import dmatrices
 from sklearn.compose import make_column_transformer
 from sklearn.ensemble import VotingClassifier
@@ -22,22 +26,13 @@ from sklearn.metrics import accuracy_score, balanced_accuracy_score, precision_s
 from sklearn.model_selection import HalvingGridSearchCV, train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sqlalchemy import MetaData, Table
+# from sqlalchemy import MetaData, Table
 from statsmodels.discrete.discrete_model import Logit
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from xgboost import XGBClassifier, XGBRFClassifier
 
 import shap
-from student_risk import build_ft_ft_1yr_prod, config, helper_funcs
-
-#%%
-# Database connection
-cred = pathlib.Path('Z:\\Nathan\\Models\\student_risk\\login.bin').read_text().split('|')
-params = urllib.parse.quote_plus(f'TRUSTED_CONNECTION=YES; DRIVER={{SQL Server Native Client 11.0}}; SERVER={cred[0]}; DATABASE={cred[1]}')
-engine = sqlalchemy.create_engine(f'mssql+pyodbc:///?odbc_connect={params}')
-auto_engine = engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT')
-metadata_engine = MetaData(engine.execution_options(autocommit=True, isolation_level='AUTOCOMMIT'))
-student_shap = Table('student_shap', metadata_engine, autoload=True)
+from student_risk import config, helper_funcs
 
 #%%
 # Global variable initialization
@@ -47,7 +42,9 @@ top_N: int = 5
 model_id: int = 1
 model_descr: str = 'ft_ft_1yr'
 run_date: date = date.today()
-unwanted_vars: list = ['emplid','enrl_ind']
+unwanted_vars: list = ['random_id','enrl_ind']
+bucket_name: str = 'xxx'
+folder_name: str = 'demo-datasets'
 
 #%%
 # Global XGBoost hyperparameter initialization
@@ -57,46 +54,16 @@ num_parallel_tree: int = 96
 subsample: float = 0.8
 colsample_bytree: float = 0.8
 colsample_bynode: float = 0.8
-verbose: bool = False
-
-#%%
-# Precensus date check
-calendar = pd.read_csv('Z:\\Nathan\\Models\\student_risk\\supplemental_files\\acad_calendar.csv', encoding='utf-8', parse_dates=['term_begin_dt', 'term_midterm_dt', 'term_end_dt'])
-
-now = datetime.datetime.now()
-now_dt = datetime.datetime.strptime(f'{now.month:02}-{now.day:02}-{now.year:04}', '%m-%d-%Y')
-
-now_day = now.day
-now_month = now.month
-now_year = now.year
-
-strm = calendar[(calendar['term_begin_dt'] <= now_dt) & (calendar['term_midterm_dt'] >= now_dt)]['STRM'].values[0]
-
-adm_day = calendar[(calendar['STRM'] == strm)]['begin_day'].values[0]
-adm_month = calendar[(calendar['STRM'] == strm)]['begin_month'].values[0]
-adm_year = calendar[(calendar['STRM'] == strm)]['begin_year'].values[0]
-
-if now_year < adm_year:
-	raise config.AdmError(f'{date.today()}: Admissions year exception, outside of date range.')
-
-elif (now_year == adm_year and now_month < adm_month):
-	raise config.AdmError(f'{date.today()}: Admissions month exception, outside of date range.')
-
-elif (now_year == adm_year and now_month == adm_month and now_day < adm_day):
-	raise config.AdmError(f'{date.today()}: Admissions day exception, outside of date range.')
-
-else:
-	print(f'{date.today()}: No admissions date exceptions, running from admissions.')
-
-#%%
-# SAS dataset builder
-build_ft_ft_1yr_prod.DatasetBuilderProd.build_admissions_prod()
+verbose: bool = True
 
 #%%
 # Import pre-split data
-validation_set = pd.read_sas(f'Z:\\Nathan\\Models\\student_risk\\datasets\\{model_descr}_validation_set.sas7bdat', encoding='latin1')
-training_set = pd.read_sas(f'Z:\\Nathan\\Models\\student_risk\\datasets\\{model_descr}_training_set.sas7bdat', encoding='latin1')
-testing_set = pd.read_sas(f'Z:\\Nathan\\Models\\student_risk\\datasets\\{model_descr}_testing_set.sas7bdat', encoding='latin1')
+# training_set = pd.read_sas(f's3://{bucket_name}/{folder_name}/{model_descr}_training_set.sas7bdat', encoding='latin1', format='sas7bdat')
+# validation_set = pd.read_sas(f's3://{bucket_name}/{folder_name}/{model_descr}_validation_set.sas7bdat', encoding='latin1', format='sas7bdat')
+# testing_set = pd.read_sas(f's3://{bucket_name}/{folder_name}/{model_descr}_testing_set.sas7bdat', encoding='latin1', format='sas7bdat')
+training_set = pd.read_sas(f's3://{bucket_name}/{folder_name}/train.sas7bdat', encoding='latin1', format='sas7bdat')
+validation_set = pd.read_sas(f's3://{bucket_name}/{folder_name}/valid.sas7bdat', encoding='latin1', format='sas7bdat')
+testing_set = pd.read_sas(f's3://{bucket_name}/{folder_name}/test.sas7bdat', encoding='latin1', format='sas7bdat')
 
 #%%
 # Prepare dataframes
@@ -104,7 +71,7 @@ print('\nPrepare dataframes and preprocess data...')
 
 # Pullman variables
 pullm_data_vars = [
-'emplid',
+'random_id',
 'enrl_ind', 
 # 'acad_year',
 # 'age_group',
@@ -266,7 +233,7 @@ pullm_data_vars = [
 # 'qvalue',
 # 'fed_efc',
 # 'fed_need',
-'unmet_need_ofr',
+# 'unmet_need_ofr',
 'unmet_need_ofr_mi'
 ]
 
@@ -289,7 +256,7 @@ pullm_logit_df, pullm_validation_set, pullm_training_set, pullm_testing_set, pul
 #%%
 # Vancouver variables
 vanco_data_vars = [
-'emplid',
+'random_id',
 'enrl_ind', 
 # 'acad_year',
 # 'age_group',
@@ -474,7 +441,7 @@ vanco_logit_df, vanco_validation_set, vanco_training_set, vanco_testing_set, van
 #%%
 # Tri-Cities variables
 trici_data_vars = [
-'emplid',
+'random_id',
 'enrl_ind', 
 # 'acad_year',
 # 'age_group',
@@ -659,7 +626,7 @@ trici_logit_df, trici_validation_set, trici_training_set, trici_testing_set, tri
 #%%
 # University variables
 univr_data_vars = [
-'emplid',
+'random_id',
 'enrl_ind', 
 # 'acad_year',
 # 'age_group',
@@ -848,8 +815,8 @@ univr_logit_df, univr_validation_set, univr_training_set, univr_testing_set, uni
 print('\nDetect and remove outliers...')
 
 # Pullman outliers
-pullm_x_training_outlier = pullm_training_set.drop(columns=['enrl_ind','emplid'])
-pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_training_outlier = pullm_training_set.drop(columns=['enrl_ind','random_id'])
+pullm_x_validation_outlier = pullm_validation_set.drop(columns=['enrl_ind','random_id'])
 
 pullm_onehot_vars = pullm_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
@@ -865,8 +832,8 @@ pullm_validation_set, pullm_training_set = helper_funcs.remove_outliers(pullm_va
 
 #%%
 # Vancouver outliers
-vanco_x_training_outlier = vanco_training_set.drop(columns=['enrl_ind','emplid'])
-vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_training_outlier = vanco_training_set.drop(columns=['enrl_ind','random_id'])
+vanco_x_validation_outlier = vanco_validation_set.drop(columns=['enrl_ind','random_id'])
 
 vanco_onehot_vars = vanco_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
@@ -882,8 +849,8 @@ vanco_validation_set, vanco_training_set = helper_funcs.remove_outliers(vanco_va
 
 #%%
 # Tri-Cities outliers
-trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','emplid'])
-trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','emplid'])
+trici_x_training_outlier = trici_training_set.drop(columns=['enrl_ind','random_id'])
+trici_x_validation_outlier = trici_validation_set.drop(columns=['enrl_ind','random_id'])
 
 trici_onehot_vars = trici_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
@@ -899,8 +866,8 @@ trici_validation_set, trici_training_set = helper_funcs.remove_outliers(trici_va
 
 #%%
 # University outliers
-univr_x_training_outlier = univr_training_set.drop(columns=['enrl_ind','emplid'])
-univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','emplid'])
+univr_x_training_outlier = univr_training_set.drop(columns=['enrl_ind','random_id'])
+univr_x_validation_outlier = univr_validation_set.drop(columns=['enrl_ind','random_id'])
 
 univr_onehot_vars = univr_x_training_outlier.select_dtypes(include='object').columns.tolist()
 
@@ -919,8 +886,8 @@ univr_validation_set, univr_training_set = helper_funcs.remove_outliers(univr_va
 # https://imbalanced-learn.org/stable/under_sampling.html#tomek-s-links
 
 # Pullman undersample
-pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','emplid'])
-pullm_x_cv = pullm_validation_set.drop(columns=['enrl_ind','emplid'])
+pullm_x_train = pullm_training_set.drop(columns=['enrl_ind','random_id'])
+pullm_x_cv = pullm_validation_set.drop(columns=['enrl_ind','random_id'])
 
 pullm_x_test = pullm_testing_set[pullm_x_vars]
 
@@ -948,8 +915,8 @@ pullm_x_train, pullm_x_cv, pullm_y_train, pullm_y_cv = helper_funcs.tomek_unders
 
 #%%
 # Vancouver undersample
-vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','emplid'])
-vanco_x_cv = vanco_validation_set.drop(columns=['enrl_ind','emplid'])
+vanco_x_train = vanco_training_set.drop(columns=['enrl_ind','random_id'])
+vanco_x_cv = vanco_validation_set.drop(columns=['enrl_ind','random_id'])
 
 vanco_x_test = vanco_testing_set[vanco_x_vars]
 
@@ -977,8 +944,8 @@ vanco_x_train, vanco_x_cv, vanco_y_train, vanco_y_cv = helper_funcs.tomek_unders
 
 #%%
 # Tri-Cities undersample
-trici_x_train = trici_training_set.drop(columns=['enrl_ind','emplid'])
-trici_x_cv = trici_validation_set.drop(columns=['enrl_ind','emplid'])
+trici_x_train = trici_training_set.drop(columns=['enrl_ind','random_id'])
+trici_x_cv = trici_validation_set.drop(columns=['enrl_ind','random_id'])
 
 trici_x_test = trici_testing_set[trici_x_vars]
 
@@ -1006,8 +973,8 @@ trici_x_train, trici_x_cv, trici_y_train, trici_y_cv = helper_funcs.tomek_unders
 
 #%%
 # University undersample
-univr_x_train = univr_training_set.drop(columns=['enrl_ind','emplid'])
-univr_x_cv = univr_validation_set.drop(columns=['enrl_ind','emplid'])
+univr_x_train = univr_training_set.drop(columns=['enrl_ind','random_id'])
+univr_x_cv = univr_validation_set.drop(columns=['enrl_ind','random_id'])
 
 univr_x_test = univr_testing_set[univr_x_vars]
 
@@ -1043,7 +1010,7 @@ try:
 	pullm_y, pullm_x = dmatrices('enrl_ind ~ ' + ' + '.join(pullm_x_vars), data=pullm_logit_df, return_type='dataframe')
 
 	pullm_logit_mod = Logit(pullm_y, pullm_x)
-	pullm_logit_res = pullm_logit_mod.fit(maxiter=500, method='bfgs')
+	pullm_logit_res = pullm_logit_mod.fit(maxiter=500)
 	print(pullm_logit_res.summary())
 
 	# Pullman VIF
